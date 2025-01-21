@@ -17,6 +17,8 @@ import { Button } from '@mui/material'
 import { getLocalizedUrl } from '@/utils/i18n'
 import { Locale } from '@/configs/i18n'
 import { useParams } from 'next/navigation'
+import DataTableWithSearchBarAndFilters from '@/@core/components/mui/DataTableWithSearchBarAndFilters'
+import { GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
 
 // Type Definitions
 type User = {
@@ -121,6 +123,56 @@ const columns = [
   })
 ]
 
+const newCols: GridColDef[] = [
+  { field: 'id', headerName: 'ID', flex: 0.5 },
+  {
+    field: 'firstName',
+    headerName: 'Client',
+    flex: 1.5,
+    renderCell: (params: GridRenderCellParams) => (
+      <div style={{ height: '50px', display: 'flex', alignItems: 'center', gap: '8px', margin: 0, padding: 0 }}>
+        <Avatar alt={params.row.fullName} src={params.row.avatar} />
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <strong className='h-4'>{params.row.fullName}</strong>
+          <span style={{ fontSize: '12px', color: '#757575' }}>{params.row.email}</span>
+        </div>
+      </div>
+    )
+  },
+  { field: 'proMod', headerName: 'PRO & MOD', flex: 1 },
+  {
+    field: 'startDate',
+    headerName: 'Start Date',
+    flex: 0.75
+  },
+  {
+    field: 'endDate',
+    headerName: 'End Date',
+    flex: 0.75
+  },
+  {
+    field: 'status',
+    headerName: 'Status',
+    flex: 0.75,
+    renderCell: (params: GridRenderCellParams) => (
+      <Chip
+        label={params.value}
+        size='small'
+        sx={{
+          color: params.value === 'ACTIVE' ? '#4CAF50' : '#F44336',
+          backgroundColor: params.value === 'ACTIVE' ? '#E8F5E9' : '#FFEBEE',
+          fontWeight: 'bold'
+        }}
+      />
+    )
+  },
+  {
+    field: 'totalUnit',
+    headerName: 'Total Unit',
+    flex: 0.75
+  }
+]
+
 const ScheduleListTable = () => {
   const { lang: locale } = useParams()
   // State
@@ -152,7 +204,8 @@ const ScheduleListTable = () => {
         }
       />
       <div style={{ overflowX: 'auto', padding: '0px' }}>
-        <table
+        <DataTableWithSearchBarAndFilters data={data} columns={newCols} />
+        {/* <table
           className={styles.table}
           style={{
             width: '100%',
@@ -164,7 +217,7 @@ const ScheduleListTable = () => {
               <tr
                 key={headerGroup.id}
                 style={{
-                  //   backgroundColor: '#f5f5f5', // Explicitly set gray background
+                  backgroundColor: '#f5f5f5', // Explicitly set gray background
                   borderBottom: '1px solid #E0E0E0'
                 }}
               >
@@ -191,7 +244,7 @@ const ScheduleListTable = () => {
                 key={row.id}
                 style={{
                   borderBottom: '1px solid #E0E0E0',
-                  //   backgroundColor: 'black',
+                  backgroundColor: '#fff',
                   textAlign: 'left',
                   cursor: 'pointer'
                 }}
@@ -204,7 +257,7 @@ const ScheduleListTable = () => {
               </tr>
             ))}
           </tbody>
-        </table>
+        </table> */}
       </div>
     </Card>
   )

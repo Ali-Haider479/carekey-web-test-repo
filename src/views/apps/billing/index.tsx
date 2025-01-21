@@ -55,14 +55,14 @@ const BillingTabsView = ({ tabContentList }: { tabContentList: { [key: string]: 
               label='SUBMITTED BATCH STATUS'
               // icon={<i className='bx-cart' />}
               iconPosition='start'
-              value='submitted-batche'
+              value='submitted-batch'
               className='flex-row justify-start'
             />
             <Tab
               label='SAVED BATCHES'
               // icon={<i className='bx-package' />}
               iconPosition='start'
-              value='saved-batche'
+              value='saved-batch'
               className='flex-row justify-start'
             />
           </CustomTabList>

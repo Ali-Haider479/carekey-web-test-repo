@@ -20,7 +20,6 @@ const tabContentList = (): { [key: string]: ReactElement } => ({
   'submitted-batch': <SubmittedBatch />,
   'saved-batch': <SavedBatch />
 })
-
 const BillingView = () => {
   return <BillingTabsView tabContentList={tabContentList()} />
 }

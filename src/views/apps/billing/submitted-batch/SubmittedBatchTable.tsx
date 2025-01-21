@@ -178,6 +178,7 @@ const SubmittedBatchTable = () => {
     ],
     []
   )
+  
   const table = useReactTable({
     data: filteredData,
     columns,
