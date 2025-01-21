@@ -1,33 +1,16 @@
-// React Imports
 import { useState, useEffect, forwardRef, useCallback } from 'react'
-
-// MUI Imports
 import Box from '@mui/material/Box'
-import Drawer from '@mui/material/Drawer'
-import Switch from '@mui/material/Switch'
 import Button from '@mui/material/Button'
 import MenuItem from '@mui/material/MenuItem'
 import IconButton from '@mui/material/IconButton'
 import Typography from '@mui/material/Typography'
-import FormControl from '@mui/material/FormControl'
-import FormControlLabel from '@mui/material/FormControlLabel'
-import type { SelectChangeEvent } from '@mui/material/Select'
-
-// Third-party Imports
 import { useForm, Controller } from 'react-hook-form'
-
-// Type Imports
-import type { AddEventSidebarType, AddEventType } from '@/types/apps/calendarTypes'
-
-// Component Imports
 import CustomTextField from '@core/components/mui/TextField'
-
-// Styled Component Imports
 import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
 import { addEvent, deleteEvent, filterEvents, selectedEvent, updateEvent } from '@/redux-store/slices/calendar'
 import axios from 'axios'
-
-// Slice Imports
+import FormModal from '@/@core/components/mui/Modal'
+import { AddEventSidebarType, AddEventType } from '@/types/apps/calendarTypes'
 
 interface PickerProps {
   label?: string
@@ -46,12 +29,10 @@ interface DefaultStateType {
   client: string
   service: string
   assignedHours: number
+  notes: string
+  location: string
 }
 
-// Vars
-const capitalize = (string: string) => string && string[0].toUpperCase() + string.slice(1)
-
-// Vars
 const defaultState: DefaultStateType = {
   title: '',
   caregiver: '',
@@ -60,17 +41,14 @@ const defaultState: DefaultStateType = {
   endDate: new Date(),
   status: 'pending',
   startDate: new Date(),
-  assignedHours: 0
+  assignedHours: 0,
+  notes: '',
+  location: ''
 }
 
-const AddEventSidebar = (props: AddEventSidebarType) => {
-  // Props
+const AddEventModal = (props: AddEventSidebarType) => {
   const { calendarStore, dispatch, addEventSidebarOpen, handleAddEventSidebarToggle } = props
-
-  // States
   const [values, setValues] = useState<DefaultStateType>(defaultState)
-
-  // Refs
   const PickersComponent = forwardRef(({ ...props }: PickerProps, ref) => {
     return (
       <CustomTextField
@@ -85,7 +63,6 @@ const AddEventSidebar = (props: AddEventSidebarType) => {
     )
   })
 
-  // Hooks
   const {
     control,
     setValue,
@@ -106,7 +83,9 @@ const AddEventSidebar = (props: AddEventSidebarType) => {
         caregiver: event?.extendedProps?.caregiver?.id || event?.extendedProps?.caregiver,
         client: event?.extendedProps?.client?.id || event?.extendedProps?.client,
         service: event?.extendedProps?.service?.id || event?.extendedProps?.service,
-        assignedHours: event?.extendedProps?.assignedHours
+        assignedHours: event?.extendedProps?.assignedHours,
+        notes: event?.extendedProps?.notes,
+        location: event?.extendedProps?.location
       })
     }
   }, [setValue, calendarStore.selectedEvent])
@@ -116,7 +95,7 @@ const AddEventSidebar = (props: AddEventSidebarType) => {
     setValues(defaultState)
   }, [setValue])
 
-  const handleSidebarClose = () => {
+  const handleModalClose = () => {
     setValues(defaultState)
     clearErrors()
     dispatch(selectedEvent(null))
@@ -133,27 +112,23 @@ const AddEventSidebar = (props: AddEventSidebarType) => {
       caregiverId: values.caregiver,
       clientId: values.client,
       serviceId: values.service,
-      assignedHours: values.assignedHours
+      assignedHours: values.assignedHours,
+      notes: values.notes,
+      location: values.location
     }
-    if (
-      calendarStore.selectedEvent === null ||
-      (calendarStore.selectedEvent !== null && !calendarStore.selectedEvent.title.length)
-    ) {
+    if (calendarStore.selectedEvent === null || !calendarStore.selectedEvent.title.length) {
       const createSchedule = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/schedule`, modifiedEvent)
-      const response = createSchedule.data
-      dispatch(addEvent(response))
+      dispatch(addEvent(createSchedule.data))
     } else {
       const updateSchedule = await axios.patch(
         `${process.env.NEXT_PUBLIC_API_URL}/schedule/${calendarStore.selectedEvent.id}`,
         modifiedEvent
       )
-      const response = updateSchedule.data
-      dispatch(updateEvent({ ...response, id: calendarStore.selectedEvent.id }))
+      dispatch(updateEvent({ ...updateSchedule.data, id: calendarStore.selectedEvent.id }))
     }
 
     dispatch(filterEvents())
-
-    handleSidebarClose()
+    handleModalClose()
   }
 
   const handleDeleteButtonClick = () => {
@@ -161,43 +136,12 @@ const AddEventSidebar = (props: AddEventSidebarType) => {
       dispatch(deleteEvent(calendarStore.selectedEvent.id))
       dispatch(filterEvents())
     }
-
-    // calendarApi.getEventById(calendarStore.selectedEvent.id).remove()
-    handleSidebarClose()
+    handleModalClose()
   }
 
   const handleStartDate = (date: Date | null) => {
     if (date && date > values.endDate) {
       setValues({ ...values, startDate: new Date(date), endDate: new Date(date) })
-    }
-  }
-
-  const RenderSidebarFooter = () => {
-    if (
-      calendarStore.selectedEvent === null ||
-      (calendarStore.selectedEvent && !calendarStore.selectedEvent.title.length)
-    ) {
-      return (
-        <div className='flex gap-4'>
-          <Button type='submit' variant='contained'>
-            Add
-          </Button>
-          <Button variant='tonal' color='secondary' onClick={resetToEmptyValues}>
-            Reset
-          </Button>
-        </div>
-      )
-    } else {
-      return (
-        <div className='flex gap-4'>
-          <Button type='submit' variant='contained'>
-            Update
-          </Button>
-          <Button variant='tonal' color='secondary' onClick={resetToStoredValues}>
-            Reset
-          </Button>
-        </div>
-      )
     }
   }
 
@@ -210,33 +154,16 @@ const AddEventSidebar = (props: AddEventSidebarType) => {
   }, [addEventSidebarOpen, resetToStoredValues, resetToEmptyValues, calendarStore.selectedEvent])
 
   return (
-    <Drawer
-      anchor='right'
-      open={addEventSidebarOpen}
-      onClose={handleSidebarClose}
-      ModalProps={{ keepMounted: true }}
-      sx={{ '& .MuiDrawer-paper': { width: ['100%', 400] } }}
+    <FormModal
+      isModalOpen={addEventSidebarOpen}
+      setIsModalOpen={handleAddEventSidebarToggle}
+      title={
+        calendarStore.selectedEvent && calendarStore.selectedEvent.title.length ? 'Update Event' : 'Create an Event'
+      }
+      handleCancel={handleModalClose}
+      bodyStyle={{ padding: 0 }}
     >
-      <Box className='flex items-center justify-between sidebar-header plb-5 pli-6 border-be'>
-        <Typography variant='h5'>
-          {calendarStore.selectedEvent && calendarStore.selectedEvent.title.length ? 'Update Event' : 'Add Event'}
-        </Typography>
-        {calendarStore.selectedEvent && calendarStore.selectedEvent.title.length ? (
-          <Box className='flex items-center' sx={{ gap: calendarStore.selectedEvent !== null ? 1 : 0 }}>
-            <IconButton size='small' onClick={handleDeleteButtonClick}>
-              <i className='bx-trash-alt text-2xl' />
-            </IconButton>
-            <IconButton size='small' onClick={handleSidebarClose}>
-              <i className='bx-x text-2xl' />
-            </IconButton>
-          </Box>
-        ) : (
-          <IconButton size='small' onClick={handleSidebarClose}>
-            <i className='bx-x text-2xl' />
-          </IconButton>
-        )}
-      </Box>
-      <Box className='sidebar-body p-6'>
+      <div className='flex items-center justify-center pt-[20px] pb-[20px] w-full px-5'>
         <form onSubmit={handleSubmit(onSubmit)} autoComplete='off'>
           <Controller
             name='title'
@@ -244,35 +171,37 @@ const AddEventSidebar = (props: AddEventSidebarType) => {
             rules={{ required: true }}
             render={({ field: { value, onChange } }) => (
               <CustomTextField
-                label='Title'
+                label='Event title'
                 value={value}
                 onChange={onChange}
                 fullWidth
-                className='mbe-6'
+                className='mbe-3'
                 id='event-title'
                 {...(errors.title && { error: true, helperText: 'This field is required' })}
               />
             )}
           />
+
           <CustomTextField
             select
             fullWidth
-            className='mbe-6'
-            label='Caregiver'
-            value={values?.caregiver}
-            id='caregiver-schedule'
-            onChange={e => setValues({ ...values, caregiver: e.target.value })}
+            className='mbe-3'
+            label='Event type'
+            value={values?.service}
+            id='service-schedule'
+            onChange={e => setValues({ ...values, service: e.target.value })}
           >
-            {props?.caregiverList.map((caregiver: any) => (
-              <MenuItem key={caregiver.id} value={caregiver.id}>
-                {`${caregiver.firstName} ${caregiver.lastName}`}
+            {props?.serviceList.map((service: any) => (
+              <MenuItem key={service.id} value={service.id}>
+                {service.name}
               </MenuItem>
             ))}
           </CustomTextField>
+
           <CustomTextField
             select
             fullWidth
-            className='mbe-6'
+            className='mbe-3'
             label='Client'
             value={values?.client}
             id='client-schedule'
@@ -284,21 +213,23 @@ const AddEventSidebar = (props: AddEventSidebarType) => {
               </MenuItem>
             ))}
           </CustomTextField>
+
           <CustomTextField
             select
             fullWidth
-            className='mbe-6'
-            label='Service'
-            value={values?.service}
-            id='service-schedule'
-            onChange={e => setValues({ ...values, service: e.target.value })}
+            className='mbe-3'
+            label='Caregiver'
+            value={values?.caregiver}
+            id='caregiver-schedule'
+            onChange={e => setValues({ ...values, caregiver: e.target.value })}
           >
-            {props?.serviceList.map((service: any) => (
-              <MenuItem key={service.id} value={service.id}>
-                {service.name}
+            {props?.caregiverList.map((caregiver: any) => (
+              <MenuItem key={caregiver.id} value={caregiver.id}>
+                {`${caregiver.firstName} ${caregiver.lastName}`}
               </MenuItem>
             ))}
           </CustomTextField>
+
           <AppReactDatepicker
             selectsStart
             id='event-start-date'
@@ -308,7 +239,7 @@ const AddEventSidebar = (props: AddEventSidebarType) => {
             showTimeSelect={!values.startDate}
             dateFormat={!values.startDate ? 'yyyy-MM-dd hh:mm' : 'yyyy-MM-dd'}
             customInput={
-              <PickersComponent label='Start Date' registername='startDate' className='mbe-6' id='event-start-date' />
+              <PickersComponent label='Start Date' registername='startDate' className='mbe-3' id='event-start-date' />
             }
             onChange={(date: Date | null) => date !== null && setValues({ ...values, startDate: new Date(date) })}
             onSelect={handleStartDate}
@@ -323,14 +254,15 @@ const AddEventSidebar = (props: AddEventSidebarType) => {
             showTimeSelect={!values.endDate}
             dateFormat={!values.endDate ? 'yyyy-MM-dd hh:mm' : 'yyyy-MM-dd'}
             customInput={
-              <PickersComponent label='End Date' registername='endDate' className='mbe-6' id='event-end-date' />
+              <PickersComponent label='End Date' registername='endDate' className='mbe-3' id='event-end-date' />
             }
             onChange={(date: Date | null) => date !== null && setValues({ ...values, endDate: new Date(date) })}
           />
-          <CustomTextField
+
+          {/* <CustomTextField
             select
             fullWidth
-            className='mbe-6'
+           className='mbe-3'
             label='Status'
             value={values.status}
             id='event-status'
@@ -338,22 +270,63 @@ const AddEventSidebar = (props: AddEventSidebarType) => {
           >
             <MenuItem value='pending'>Pending</MenuItem>
             <MenuItem value='waiting'>Waiting</MenuItem>
-          </CustomTextField>
+          </CustomTextField> */}
           <CustomTextField
             fullWidth
-            className='mbe-6'
+            className='mbe-3'
             label='Assigned Hours'
             value={values.assignedHours}
             id='event-assignedHours'
             onChange={e => setValues({ ...values, assignedHours: Number(e.target.value) })}
           />
-          <div className='flex items-center'>
-            <RenderSidebarFooter />
+          <CustomTextField
+            fullWidth
+            className='mbe-3'
+            label='Location'
+            value={values.location}
+            id='event-location'
+            onChange={e => setValues({ ...values, location: String(e.target.value) })}
+          />
+          <CustomTextField
+            label='Notes or instructions'
+            multiline={true}
+            value={values.notes}
+            onChange={e => setValues({ ...values, notes: e.target.value })}
+            fullWidth
+            className='mbe-3'
+            id='event-notes'
+          />
+          <div className='flex gap-4 justify-end'>
+            {calendarStore.selectedEvent && calendarStore.selectedEvent.title.length ? (
+              <>
+                <Button variant='outlined' color='secondary' onClick={handleModalClose}>
+                  CANCEL
+                </Button>
+                <Button type='submit' variant='contained' className='bg-[#4B0082]'>
+                  Update
+                </Button>
+                {/* <Button variant='outlined' color='secondary' onClick={resetToStoredValues}>
+                  Reset
+                </Button> */}
+                {/* <Button variant='outlined' color='error' onClick={handleDeleteButtonClick}>
+                  Delete
+                </Button> */}
+              </>
+            ) : (
+              <>
+                <Button variant='outlined' color='secondary' onClick={handleModalClose}>
+                  CANCEL
+                </Button>
+                <Button type='submit' variant='contained' className='bg-[#4B0082]'>
+                  ADD EVENT
+                </Button>
+              </>
+            )}
           </div>
         </form>
-      </Box>
-    </Drawer>
+      </div>
+    </FormModal>
   )
 }
 
-export default AddEventSidebar
+export default AddEventModal
