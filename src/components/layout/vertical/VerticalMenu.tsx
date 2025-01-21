@@ -47,7 +47,7 @@ const RenderExpandIcon = ({ open, transitionDuration }: RenderExpandIconProps) =
 )
 
 const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
-  console.log("Dic", dictionary)
+  console.log('Dic', dictionary)
   // Hooks
   const theme = useTheme()
   const params = useParams()
@@ -65,13 +65,13 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
     <ScrollWrapper
       {...(isBreakpointReached
         ? {
-          className: 'bs-full overflow-y-auto overflow-x-hidden',
-          onScroll: container => scrollMenu(container, false)
-        }
+            className: 'bs-full overflow-y-auto overflow-x-hidden',
+            onScroll: container => scrollMenu(container, false)
+          }
         : {
-          options: { wheelPropagation: false, suppressScrollX: true },
-          onScrollY: container => scrollMenu(container, true)
-        })}
+            options: { wheelPropagation: false, suppressScrollX: true },
+            onScrollY: container => scrollMenu(container, true)
+          })}
     >
       {/* Incase you also want to scroll NavHeader to scroll with Vertical Menu, remove NavHeader from above and paste it below this comment */}
       {/* Vertical Menu */}
@@ -99,10 +99,10 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
           {dictionary['navigation'].rcm}
         </MenuItem>
         <MenuItem
-          href={`/${locale}/apps/email`}
+          href={`/${locale}/apps/billing`}
           icon={<i className='bx-dollar' />}
           exactMatch={false}
-          activeUrl='/apps/email'
+          activeUrl='/apps/billing'
         >
           {dictionary['navigation'].billing}
         </MenuItem>

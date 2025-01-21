@@ -15,9 +15,9 @@ import Typography from '@mui/material/Typography'
 // Component Imports
 import CustomTabList from '@core/components/mui/TabList'
 
-const TimesheetView = ({ tabContentList }: { tabContentList: { [key: string]: ReactElement } }) => {
+const BillingTabsView = ({ tabContentList }: { tabContentList: { [key: string]: ReactElement } }) => {
   // States
-  const [activeTab, setActiveTab] = useState('received-timesheet')
+  const [activeTab, setActiveTab] = useState('billing-details')
 
   const handleChange = (event: SyntheticEvent, value: string) => {
     setActiveTab(value)
@@ -28,7 +28,7 @@ const TimesheetView = ({ tabContentList }: { tabContentList: { [key: string]: Re
       <Grid container spacing={6}>
         <Grid size={{ xs: 12, md: 12 }}>
           <Typography variant='h3' className='mbe-4'>
-            Timesheet / Timelogs Approval
+            Billing Overview
           </Typography>
           <CustomTabList
             orientation='horizontal'
@@ -38,31 +38,31 @@ const TimesheetView = ({ tabContentList }: { tabContentList: { [key: string]: Re
             overRideColor='#4B0082'
           >
             <Tab
-              label='RECEIVED TIMESHEET'
+              label='BILLING DETAILS'
               // icon={<i className='bx-store-alt' />}
               iconPosition='start'
-              value='received-timesheet'
+              value='billing-details'
               className='flex-row justify-start'
             />
             <Tab
-              label='SIGNATURE STATUS'
+              label='BILLING OVERVIEW BY PAY DATES'
               // icon={<i className='bx-credit-card' />}
               iconPosition='start'
-              value='signature-status'
+              value='billing-overview'
               className='flex-row justify-start'
             />
             <Tab
-              label='WAITING ADMIN APPROVAL'
+              label='SUBMITTED BATCH STATUS'
               // icon={<i className='bx-cart' />}
               iconPosition='start'
-              value='waiting-admin-approval'
+              value='submitted-batche'
               className='flex-row justify-start'
             />
             <Tab
-              label='WAITING LOGS APPROVAL'
+              label='SAVED BATCHES'
               // icon={<i className='bx-package' />}
               iconPosition='start'
-              value='waiting-logs-approval'
+              value='saved-batche'
               className='flex-row justify-start'
             />
           </CustomTabList>
@@ -89,4 +89,4 @@ const TimesheetView = ({ tabContentList }: { tabContentList: { [key: string]: Re
   )
 }
 
-export default TimesheetView
+export default BillingTabsView
