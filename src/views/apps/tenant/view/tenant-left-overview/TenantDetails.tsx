@@ -58,7 +58,6 @@ const TenantDetails = () => {
         fetchTenantData();
     }, [id]); // Re-run the effect if `id` changes
 
-    console.log('CURRENT TENANT VIEW', tenantData)
     return (
         <>
             <Card>

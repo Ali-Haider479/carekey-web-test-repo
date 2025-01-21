@@ -68,7 +68,6 @@ const AppCalendar = () => {
     })()
   }, [])
 
-  console.log('PARENT SCHEDULE', calendarStore.events)
   return (
     <>
       <ScheduleSidebarLeft

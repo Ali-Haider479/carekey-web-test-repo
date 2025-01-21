@@ -226,7 +226,6 @@ const ReceivedTimesheetTable = () => {
     )
   }
 
-  console.log('FILTRED DATA', filteredData)
   return (
     <Card>
       <CardHeader title='Signatures Status' className='pb-4' />

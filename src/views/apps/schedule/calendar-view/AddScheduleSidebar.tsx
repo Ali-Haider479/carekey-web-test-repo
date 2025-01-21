@@ -97,7 +97,6 @@ const AddEventSidebar = (props: AddEventSidebarType) => {
   const resetToStoredValues = useCallback(() => {
     if (calendarStore.selectedEvent !== null) {
       const event = calendarStore.selectedEvent
-      console.log('MASLA----------->', event)
       setValue('title', event.title || '')
       setValues({
         title: event.title || '',
@@ -140,21 +139,15 @@ const AddEventSidebar = (props: AddEventSidebarType) => {
       calendarStore.selectedEvent === null ||
       (calendarStore.selectedEvent !== null && !calendarStore.selectedEvent.title.length)
     ) {
-      console.log('MODIFIED EVENT', modifiedEvent)
       const createSchedule = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/schedule`, modifiedEvent)
       const response = createSchedule.data
-      console.log('RESPONSE CREATE SCHEDULE', response)
-      console.log('CONDITION', calendarStore.selectedEvent)
-      console.log('DISPTACH IF RUNNING')
       dispatch(addEvent(response))
     } else {
-      console.log('DISPTACH ELSE RUNNING', calendarStore.selectedEvent)
       const updateSchedule = await axios.patch(
         `${process.env.NEXT_PUBLIC_API_URL}/schedule/${calendarStore.selectedEvent.id}`,
         modifiedEvent
       )
       const response = updateSchedule.data
-      console.log('UPDATE RESPONSE One', response)
       dispatch(updateEvent({ ...response, id: calendarStore.selectedEvent.id }))
     }
 
@@ -215,7 +208,7 @@ const AddEventSidebar = (props: AddEventSidebarType) => {
       resetToEmptyValues()
     }
   }, [addEventSidebarOpen, resetToStoredValues, resetToEmptyValues, calendarStore.selectedEvent])
-  console.log('DATA PROPS', props)
+
   return (
     <Drawer
       anchor='right'

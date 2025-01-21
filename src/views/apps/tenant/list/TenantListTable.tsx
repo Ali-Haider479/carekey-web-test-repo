@@ -343,9 +343,6 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
         // router.push(localizedUrl) // Use router.push for navigation
     }
 
-    console.log('TENANT REDUX DATA', tenantStore.tenants)
-    console.log('LOCAL DATA STATE', data) // Add this to debug
-
     return (
         <>
             {isLoading ? (

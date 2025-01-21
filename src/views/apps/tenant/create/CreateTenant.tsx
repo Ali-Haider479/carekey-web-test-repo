@@ -88,7 +88,6 @@ const CreateTenant = (props: Props) => {
     })
 
     const onSubmit = async (data: FormValidateType) => {
-        console.log('DATA FORM VALUES', data)
         // try {
         //     const newTenant: TenantType = {
         //         // id: (userData?.length && userData?.length + 1) || 1,

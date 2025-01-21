@@ -31,7 +31,6 @@ const TenantListApp = async () => {
     //   ;(async () => {
     //     const tenantData = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/tenant`)
     //     const data = tenantData.data
-    //     console.log('TENANT DATA', data)
     //     setData(data)
     //   })()
     // }, [])
