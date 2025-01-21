@@ -41,5 +41,5 @@ export type AddEventSidebarType = {
   dispatch: Dispatch
   addEventSidebarOpen: boolean
   handleAddEventSidebarToggle: () => void
-  caregiverList?: any
+  caregiverList?: any[]
 }
