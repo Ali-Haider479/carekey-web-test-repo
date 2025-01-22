@@ -1,9 +1,6 @@
-'use client'
 import * as React from 'react'
 import { DataGrid, GridColDef } from '@mui/x-data-grid'
 import Paper from '@mui/material/Paper'
-import { Button, Card, Grid, TextField } from '@mui/material'
-import { useState } from 'react'
 
 type paginationConfigType = {
   pages: number
@@ -11,8 +8,8 @@ type paginationConfigType = {
 }
 
 type Props = {
-  columns?: GridColDef[]
-  data?: any[]
+  columns: GridColDef[]
+  data: any[]
   paginationConfig?: paginationConfigType
 }
 
@@ -51,9 +48,9 @@ const rows = [
 
 const defaultPaginationModel = { page: 0, pageSize: 5 }
 
-const DataTableWithSearchBarAndFilters = ({ columns, data, paginationConfig }: Props) => {
-  const [search, setSearch] = useState('')
+const DataTable = ({ columns, data, paginationConfig }: Props) => {
   const paginationModel = paginationConfig ? { page: 0, pageSize: paginationConfig.pageSize } : defaultPaginationModel
+
   return (
     <Paper sx={{ height: 400, width: '100%' }}>
       <DataGrid
@@ -68,4 +65,4 @@ const DataTableWithSearchBarAndFilters = ({ columns, data, paginationConfig }: P
   )
 }
 
-export default DataTableWithSearchBarAndFilters
+export default DataTable
