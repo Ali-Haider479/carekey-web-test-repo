@@ -1,10 +1,11 @@
 import React from 'react'
 import { EditOutlined, PlusOutlined } from '@ant-design/icons'
+import { Card } from '@mui/material'
 
 function CaregiverAboutCard() {
   return (
     <div>
-      <div className='w-full ml-2 bg-white shadow-md rounded-lg p-6'>
+      <Card className='w-full ml-2 shadow-md rounded-lg p-6'>
         {/* About Header */}
         <div className='flex justify-between items-center mb-6'>
           <h2 className='text-2xl font-semibold text-gray-700'>About</h2>
@@ -183,10 +184,10 @@ function CaregiverAboutCard() {
             onClick={() => {}}
           /> */}
         </div>
-      </div>
+      </Card>
 
       {/* Section: Service Information */}
-      <div className='mt-5 w-full ml-2 bg-white shadow-md rounded-lg p-6'>
+      <Card className='mt-5 w-full ml-2 shadow-md rounded-lg p-6'>
         <h2 className='text-lg font-semibold text-gray-600 mb-4'>PCA UMPI Information</h2>
         <div className='grid grid-cols-2 gap-x-8 gap-y-4'>
           <p className='text-sm text-gray-500'>
@@ -212,10 +213,10 @@ function CaregiverAboutCard() {
             Recieved Date: <span className='text-gray-900'>NA</span>
           </p>
         </div>
-      </div>
+      </Card>
 
       {/* Section: Service Plan Details */}
-      <div className='mt-5 w-full ml-2 bg-white shadow-md rounded-lg p-6'>
+      <Card className='mt-5 w-full ml-2 shadow-md rounded-lg p-6'>
         <h2 className='text-xl font-semibold text-gray-600 mb-4'>Caregiver Notes</h2>
         <label className='text-lg text-gray-500'>Allergies</label>
         <div className='space-y-4'>
@@ -258,7 +259,7 @@ function CaregiverAboutCard() {
             </p>
           </div>
         </div>
-      </div>
+      </Card>
     </div>
   )
 }

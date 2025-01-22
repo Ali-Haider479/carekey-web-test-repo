@@ -1,4 +1,5 @@
 import React from 'react'
+import { Card } from '@mui/material'
 
 const InfoCard = () => {
   const clients = [
@@ -21,7 +22,7 @@ const InfoCard = () => {
   ]
 
   return (
-    <div className='max-w-md ml-0 mr-4 bg-white shadow-md rounded-lg p-6'>
+    <Card className='max-w-md ml-0 mr-4 shadow-md rounded-lg p-6'>
       <div className='mb-4'>
         <div className='flex justify-between text-sm text-gray-400 mb-2'>
           <span>Role:</span>
@@ -55,7 +56,7 @@ const InfoCard = () => {
           ))}
         </ul>
       </div>
-    </div>
+    </Card>
   )
 }
 

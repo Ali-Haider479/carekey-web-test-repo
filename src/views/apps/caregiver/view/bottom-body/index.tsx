@@ -13,12 +13,18 @@ import Grid from '@mui/material/Grid2'
 // Component Imports
 import CustomTabList from '@core/components/mui/TabList'
 
-const BottomBody = ({ tabContentList }: { tabContentList: { [key: string]: ReactElement } }) => {
+interface BottomBodyProps {
+  tabContentList: Record<string, ReactElement>
+  onTabChange: (activeTab: string) => void
+}
+
+const BottomBody = ({ tabContentList, onTabChange }: BottomBodyProps) => {
   // States
   const [activeTab, setActiveTab] = useState('profile')
 
   const handleChange = (event: SyntheticEvent, value: string) => {
     setActiveTab(value)
+    onTabChange(value)
   }
 
   return (
