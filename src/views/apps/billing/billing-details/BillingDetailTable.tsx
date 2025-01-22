@@ -121,7 +121,7 @@ const BillingDetailTable = () => {
     () => [
       {
         field: 'clientName',
-        headerName: 'Client Name',
+        headerName: 'SERVICE DATE RANGE',
         flex: 1.5,
         renderCell: (params: GridRenderCellParams) => (
           <div style={{ height: '50px', display: 'flex', alignItems: 'center', gap: '8px', margin: 0, padding: 0 }}>
@@ -137,7 +137,7 @@ const BillingDetailTable = () => {
       },
       {
         field: 'caregiverName',
-        headerName: 'Caregiver Assigned',
+        headerName: 'CLIENT NAME',
         flex: 1.5,
         renderCell: (params: GridRenderCellParams) => (
           <div style={{ height: '50px', display: 'flex', alignItems: 'center', gap: '8px', margin: 0, padding: 0 }}>
@@ -153,7 +153,7 @@ const BillingDetailTable = () => {
       },
       {
         field: 'service',
-        headerName: 'Service',
+        headerName: 'CAREGIVER NAME',
         flex: 1.5,
         renderCell: (params: GridRenderCellParams) => {
           const services = params.row.client.clientServices
@@ -166,7 +166,7 @@ const BillingDetailTable = () => {
       },
       {
         field: 'payPeriod',
-        headerName: 'PayPeriod',
+        headerName: 'CLAIM AMMOUNT',
         flex: 1.5,
         renderCell: (params: GridRenderCellParams) => {
           const tenant = params.row.tenant
@@ -197,7 +197,21 @@ const BillingDetailTable = () => {
       },
       {
         field: 'tsApprovalStatus',
-        headerName: 'TS Submitted',
+        headerName: 'BILLED STATUS',
+        flex: 1,
+        renderCell: (params: GridRenderCellParams) => (
+          <span
+            className={`px-2 py-1 rounded-full text-xs ${
+              params.value === 'Pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'
+            }`}
+          >
+            {params.value}
+          </span>
+        )
+      },
+      {
+        field: 'tsApprovalStatus',
+        headerName: 'SCHEDULED HOURS',
         flex: 1,
         renderCell: (params: GridRenderCellParams) => (
           <span
