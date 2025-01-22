@@ -31,6 +31,7 @@ import StyledMenuLabel from '../../styles/StyledMenuLabel'
 import StyledMenuPrefix from '../../styles/StyledMenuPrefix'
 import StyledMenuSuffix from '../../styles/StyledMenuSuffix'
 import StyledVerticalMenuItem from '../../styles/vertical/StyledVerticalMenuItem'
+import { dark } from '@mui/material/styles/createPalette'
 
 export type MenuItemProps = Omit<AnchorHTMLAttributes<HTMLAnchorElement>, 'prefix'> &
   RootStylesType &
@@ -143,6 +144,15 @@ const MenuItem: ForwardRefRenderFunction<HTMLLIElement, MenuItemProps> = (props,
     >
       <MenuButton
         className={classnames(menuClasses.button, { [menuClasses.active]: active })}
+        style={{
+          border: active
+            ? `${dark ? '2px solid #7112B7' : '2px solid #4B0082'}`
+            : dark
+              ? '1px solid  #50657A'
+              : '1px solid #32475C38',
+          borderRadius: '8px',
+          marginBottom: '8px'
+        }}
         component={component}
         tabIndex={disabled ? -1 : 0}
         {...rest}

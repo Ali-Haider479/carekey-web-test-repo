@@ -37,8 +37,8 @@ const menuItemStyles = (verticalNavOptions: VerticalNavState, theme: Theme): Men
       ...(level == 0
         ? {
             [`& > .${menuClasses.button}.${menuClasses.active}`]: {
-              backgroundColor: 'var(--mui-palette-primary-lightOpacity) !important',
-              color: 'var(--mui-palette-primary-main) !important',
+              // backgroundColor: 'var(--mui-palette-primary) !important',
+              // color: 'var(--mui-palette-primary-main) !important',
               '&::after': {
                 content: '""',
                 position: 'absolute',

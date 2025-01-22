@@ -14,6 +14,7 @@ import { RouterLink } from '../RouterLink'
 
 // Util Imports
 import { menuClasses } from '../../utils/menuClasses'
+import { dark } from '@mui/material/styles/createPalette'
 
 type MenuButtonStylesProps = Partial<ChildrenType> & {
   level: number
@@ -56,7 +57,7 @@ export const menuButtonStyles = (props: MenuButtonStylesProps) => {
     // All the active styles are applied to the button including menu items or submenu
     [`&.${menuClasses.active}`]: {
       ...(!children && { color: 'white' }),
-      backgroundColor: children ? '#f3f3f3' : '#765feb'
+      backgroundColor: children ? '#f3f3f3' : `${dark ? ' #7112B7' : '#4B0082'}`
     }
   })
 }

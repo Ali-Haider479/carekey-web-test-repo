@@ -88,7 +88,7 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
           exactMatch={false}
           activeUrl='/apps/email'
         >
-          {dictionary['navigation'].dashboards2}
+          {dictionary['navigation'].dashboard}
         </MenuItem>
         <MenuItem
           href={`/${locale}/apps/email`}
