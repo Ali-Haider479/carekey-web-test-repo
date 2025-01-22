@@ -14,17 +14,35 @@ import SalesInfoCard from '@views/apps/ecommerce/dashboard/SalesInfoCard'
 import BarExpensesChart from '@views/apps/ecommerce/dashboard/BarExpensesChart'
 import TotalBalance from '@views/apps/ecommerce/dashboard/TotalBalance'
 import CustomersTable from '@views/apps/ecommerce/dashboard/CustomersTable'
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth'
+import CloudIcon from '@mui/icons-material/Cloud'
+import RestartAltIcon from '@mui/icons-material/RestartAlt'
+import BarChartRevenueGrowth from '@/views/dashboards/crm/DonutChartGeneratedLeads'
+import PopularInstructors from '@/views/apps/academy/dashboard/PopularInstructors'
+import LogisticsStatisticsCard from '@/views/apps/logistics/dashboard/LogisticsStatisticsCard'
+import HorizontalWithBorder from '@/components/card-statistics/HorizontalWithBorder'
 
 const EcommerceDashboard = () => {
+  // const { title, stats, trendNumber, avatarIcon, color } = props
+
   return (
     <Grid container spacing={6}>
-      <Grid size={{ xs: 12, md: 4 }}>
-        <Award />
+      <Grid size={{ xs: 12, md: 3 }}>
+        <HorizontalWithBorder title='Caregivers' stats='11' />
       </Grid>
-      <Grid size={{ xs: 12, md: 8 }}>
+      <Grid size={{ xs: 12, md: 3 }}>
+        <HorizontalWithBorder title='Caregivers' stats='11' />
+      </Grid>
+      <Grid size={{ xs: 12, md: 3 }}>
+        <HorizontalWithBorder title='Active app users' stats='11' />
+      </Grid>
+      <Grid size={{ xs: 12, md: 3 }}>
+        <HorizontalWithBorder title='Missed Clients' stats='11' />
+      </Grid>
+      {/* <Grid size={{ xs: 12, md: 8 }}>
         <NewVisitorsAndActivityCharts />
-      </Grid>
-      <Grid size={{ xs: 12, lg: 4 }}>
+      </Grid> */}
+      {/* <Grid size={{ xs: 12, lg: 4 }}>
         <Grid container spacing={6}>
           <Grid size={{ xs: 12, sm: 6, md: 3, lg: 6 }}>
             <Vertical
@@ -51,19 +69,16 @@ const EcommerceDashboard = () => {
             />
           </Grid>
         </Grid>
-      </Grid>
+      </Grid> */}
       <Grid size={{ xs: 12, lg: 8 }}>
         <TotalIncome />
       </Grid>
       <Grid size={{ xs: 12, md: 6, lg: 4 }}>
         <Performance />
       </Grid>
-      <Grid size={{ xs: 12, md: 6, lg: 4 }}>
-        <ConversionRate />
-      </Grid>
-      <Grid size={{ xs: 12, lg: 4 }}>
+      <Grid size={{ xs: 12, lg: 8 }}>
         <Grid container spacing={6}>
-          <Grid size={{ xs: 12, sm: 6, md: 3, lg: 6 }}>
+          {/* <Grid size={{ xs: 12, sm: 6, md: 3, lg: 6 }}>
             <Vertical
               title='Revenue'
               imageSrc='/images/cards/mac-warning-bg.png'
@@ -71,20 +86,33 @@ const EcommerceDashboard = () => {
               trendNumber={52.18}
               trend='positive'
             />
+          </Grid> */}
+          <Grid size={{ xs: 12, sm: 6, md: 3, lg: 4 }}>
+            <SalesInfoCard title='Waiting for SA' value='3' icon={<CalendarMonthIcon />} />
           </Grid>
-          <Grid size={{ xs: 12, sm: 6, md: 3, lg: 6 }}>
-            <SalesInfoCard />
+          <Grid size={{ xs: 12, sm: 6, md: 3, lg: 4 }}>
+            <SalesInfoCard title='Product updates' value='11' icon={<CloudIcon />} />
           </Grid>
-          <Grid size={{ xs: 12, md: 6, lg: 12 }}>
+          <Grid size={{ xs: 12, sm: 6, md: 3, lg: 4 }}>
+            <SalesInfoCard title='Cloud forms' value='7' icon={<RestartAltIcon />} />
+          </Grid>
+          <Grid size={{ xs: 12, md: 6, lg: 6 }}>
+            <BarChartRevenueGrowth />
+          </Grid>
+          <Grid size={{ xs: 12, md: 6, lg: 6 }}>
             <BarExpensesChart />
           </Grid>
         </Grid>
       </Grid>
-      <Grid size={{ xs: 12, lg: 8 }}>
+      {/* <Grid size={{ xs: 12, md: 6, lg: 4 }}>
+        <ConversionRate />
+      </Grid> */}
+
+      {/* <Grid size={{ xs: 12, lg: 8 }}>
         <CustomersTable />
-      </Grid>
+      </Grid> */}
       <Grid size={{ xs: 12, lg: 4 }}>
-        <TotalBalance />
+        <PopularInstructors />
       </Grid>
     </Grid>
   )
