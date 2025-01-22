@@ -1,78 +1,88 @@
-import React, { useState } from 'react'
-import {
-  Card,
-  CardHeader,
-  CardContent,
-  Grid,
-  TextField,
-  MenuItem,
-  Select,
-  InputLabel,
-  FormControl
-} from '@mui/material'
+'use client'
 
+import { useState } from 'react'
+import { Card, CardHeader, TextField, Grid, IconButton } from '@mui/material'
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
+import { DatePicker } from '@mui/x-date-pickers/DatePicker'
+import DataTableWithSearchBarAndFilters from '@/@core/components/mui/DataTableWithSearchBarAndFilters'
+import { GridColDef } from '@mui/x-data-grid'
+import { Calendar, Search } from 'lucide-react'
+
+// Filter Component
 const BillingDetailFilters = () => {
-  const [week, setWeek] = useState('')
-  const [billingPeriod, setBillingPeriod] = useState('')
-
-  const handleWeekChange = (event: React.ChangeEvent<{ value: unknown }>) => {
-    setWeek(event.target.value as string)
-  }
-
-  const handleBillingPeriodChange = (event: React.ChangeEvent<{ value: unknown }>) => {
-    setBillingPeriod(event.target.value as string)
-  }
-
   return (
-    <Card className='w-full' sx={{ p: 2, borderRadius: 1, boxShadow: 2 }}>
-      {/* Card Header */}
-      <CardHeader title='Filters' titleTypographyProps={{ variant: 'h6', sx: { fontWeight: 500 } }} />
-
-      {/* Card Content */}
-      <CardContent>
-        <Grid container spacing={4}>
-          {/* Search Client Name */}
-          <Grid item xs={12} md={6} sx={{ pb: 2 }}>
-            <TextField fullWidth label='Client Name' placeholder='Enter client name' variant='outlined' size='small' />
-          </Grid>
-
-          {/* Search Caregiver Name */}
-          <Grid item xs={12} md={6} sx={{ pb: 2 }}>
-            <TextField
-              fullWidth
-              label='Caregiver Name'
-              placeholder='Enter caregiver name'
-              variant='outlined'
-              size='small'
-            />
-          </Grid>
-
-          {/* Week Dropdown */}
-          <Grid item xs={12} md={6} sx={{ pb: 2 }}>
-            <FormControl fullWidth size='small' variant='outlined'>
-              <InputLabel id='week-select-label'>Week</InputLabel>
-              <Select labelId='week-select-label' value={week} label='Week'>
-                <MenuItem value='Week 1'>Week 1</MenuItem>
-                <MenuItem value='Week 2'>Week 2</MenuItem>
-                <MenuItem value='Week 3'>Week 3</MenuItem>
-                <MenuItem value='Week 4'>Week 4</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
-
-          {/* Billing Period Dropdown */}
-          <Grid item xs={12} md={6} sx={{ pb: 2 }}>
-            <FormControl fullWidth size='small' variant='outlined'>
-              <InputLabel id='billing-period-select-label'>Billing Period</InputLabel>
-              <Select labelId='billing-period-select-label' value={billingPeriod} label='Billing Period'>
-                <MenuItem value='Monthly'>Monthly</MenuItem>
-                <MenuItem value='Quarterly'>Quarterly</MenuItem>
-                <MenuItem value='Yearly'>Yearly</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
+    <Card sx={{ p: 4, mb: 4, borderRadius: 1, boxShadow: 2 }}>
+      <CardHeader title='Filters' className='px-0 pt-0' />
+      <Grid container spacing={3}>
+        <Grid item xs={12} sm={6} md={4} lg={3}>
+          <TextField fullWidth size='small' label='Client name' placeholder='Enter client name' />
         </Grid>
-      </CardContent>
+        <Grid item xs={12} sm={6} md={4} lg={3}>
+          <TextField fullWidth size='small' label='Caregiver name' placeholder='Enter caregiver name' />
+        </Grid>
+        <Grid item xs={12} sm={6} md={4} lg={3}>
+          <TextField fullWidth size='small' label='Claim number' placeholder='Enter claim number' />
+        </Grid>
+        <Grid item xs={12} sm={6} md={4} lg={3}>
+          <TextField
+            fullWidth
+            size='small'
+            label='Payer'
+            placeholder='Enter payer'
+            InputProps={{
+              endAdornment: (
+                <IconButton size='small'>
+                  <Search size={20} />
+                </IconButton>
+              )
+            }}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={4} lg={3}>
+          <TextField fullWidth size='small' label='Procedure code' placeholder='Enter procedure code' />
+        </Grid>
+        {/* <Grid item xs={12} sm={6} md={4} lg={3}>
+          <LocalizationProvider dateAdapter={AdapterDateFns}>
+            <DatePicker
+              label='DOS'
+              slotProps={{
+                textField: {
+                  size: 'small',
+                  fullWidth: true
+                }
+              }}
+            />
+          </LocalizationProvider>
+        </Grid> */}
+        <Grid item xs={12} sm={6} md={4} lg={3}>
+          <TextField fullWidth size='small' label='Billed amount' placeholder='Enter billed amount' />
+        </Grid>
+        <Grid item xs={12} sm={6} md={4} lg={3}>
+          <TextField fullWidth size='small' label='Received amount' placeholder='Enter received amount' />
+        </Grid>
+        {/* <Grid item xs={12} sm={6} md={4} lg={3}>
+          <LocalizationProvider dateAdapter={AdapterDateFns}>
+            <DatePicker
+              label='Claim date'
+              slotProps={{
+                textField: {
+                  size: 'small',
+                  fullWidth: true
+                }
+              }}
+            />
+          </LocalizationProvider>
+        </Grid> */}
+        <Grid item xs={12} sm={6} md={4} lg={3}>
+          <TextField select fullWidth size='small' label='Claim status' defaultValue=''>
+            <option value=''>Select status</option>
+            <option value='pending'>Pending</option>
+            <option value='approved'>Approved</option>
+            <option value='rejected'>Rejected</option>
+          </TextField>
+        </Grid>
+      </Grid>
     </Card>
   )
 }

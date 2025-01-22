@@ -147,6 +147,9 @@ importers:
       keen-slider:
         specifier: 6.8.6
         version: 6.8.6
+      lucide-react:
+        specifier: ^0.473.0
+        version: 0.473.0(react@18.3.1)
       mapbox-gl:
         specifier: 3.9.0
         version: 3.9.0
@@ -3035,6 +3038,11 @@ packages:
   lru-cache@6.0.0:
     resolution: {integrity: sha512-Jo6dJ04CmSjuznwJSS3pUeWmd/H0ffTlkXXgwZi+eq1UCmqQwCh+eLsYOYCwY991i2Fah4h1BEMCx4qThGbsiA==}
     engines: {node: '>=10'}
+
+  lucide-react@0.473.0:
+    resolution: {integrity: sha512-KW6u5AKeIjkvrxXZ6WuCu9zHE/gEYSXCay+Gre2ZoInD0Je/e3RBtP4OHpJVJ40nDklSvjVKjgH7VU8/e2dzRw==}
+    peerDependencies:
+      react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
   mapbox-gl@3.9.0:
     resolution: {integrity: sha512-QKAxLHcbdoqobXuhu2PP6HJDSy0/GhfZuO5O8BrmwfR0ihZbA5ihYD/u0wGqu2QTDWi/DbgCWJIlV2mXh2Sekg==}
@@ -7212,6 +7220,10 @@ snapshots:
   lru-cache@6.0.0:
     dependencies:
       yallist: 4.0.0
+
+  lucide-react@0.473.0(react@18.3.1):
+    dependencies:
+      react: 18.3.1
 
   mapbox-gl@3.9.0:
     dependencies:

@@ -10,7 +10,7 @@ import BillingTabsView from '@/views/apps/billing'
 
 const BillingDetails = dynamic(() => import('@/views/apps/billing/billing-details'))
 const BillingOverview = dynamic(() => import('@/views/apps/billing/billing-overview'))
-const SubmittedBatch = dynamic(() => import('@/views/apps/billing/saved-batch'))
+const SubmittedBatch = dynamic(() => import('@/views/apps/billing/submitted-batch'))
 const SavedBatch = dynamic(() => import('@/views/apps/billing/saved-batch'))
 
 // Vars
