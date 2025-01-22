@@ -4,7 +4,7 @@ import type { ProfileHeaderType } from '@/types/pages/profileTypes'
 
 const ProfileBanner = ({ props }: { props: ProfileHeaderType }) => {
   return (
-    <Card>
+    <Card className='mb-5'>
       <CardMedia image={props.coverImg} className='bs-[250px]' />
       <CardContent className='flex gap-6 justify-center flex-col items-center md:items-end md:flex-row !pt-0 md:justify-start'>
         <div className='flex rounded-bs-md mbs-[-40px] border-[5px] mis-[-5px] border-be-0  border-backgroundPaper bg-backgroundPaper'>
