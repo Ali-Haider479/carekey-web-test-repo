@@ -87,7 +87,7 @@ const BarExpensesChart = () => {
     <Card className='overflow-visible'>
       <CardContent className='flex justify-between gap-4 max-sm:flex-wrap'>
         <div className='flex flex-col justify-between items-start gap-y-4 is-[30%] max-sm:items-center max-sm:is-full'>
-          <Typography variant='h5'>Expenses</Typography>
+          <Typography variant='h5'>Overused Unit Information</Typography>
           <div className='flex flex-col items-start'>
             <Typography variant='h4'>4,234</Typography>
             <div className='flex gap-x-1'>

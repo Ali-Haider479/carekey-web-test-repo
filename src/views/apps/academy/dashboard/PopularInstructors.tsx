@@ -27,12 +27,13 @@ const data: DataType[] = [
 const PopularInstructors = () => {
   return (
     <Card className='bs-full'>
-      <CardHeader title='Popular Instructors' action={<OptionMenu options={['Refresh', 'Update', 'Share']} />} />
-      <Divider />
+      {/* <CardHeader title='Waiting for SA' action={<OptionMenu options={['Refresh', 'Update', 'Share']} />} /> */}
+      <CardHeader title='Waiting for SA' />
+      {/* <Divider />
       <div className='flex justify-between plb-4 pli-6'>
         <Typography className='uppercase'>instructors</Typography>
         <Typography className='uppercase'>courses</Typography>
-      </div>
+      </div> */}
       <Divider />
       <CardContent className='flex flex-col gap-4'>
         {data.map((item, i) => (
