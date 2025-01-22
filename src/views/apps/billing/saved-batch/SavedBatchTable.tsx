@@ -20,7 +20,7 @@ import { createColumnHelper } from '@tanstack/react-table'
 import type { ColumnDef, FilterFn, Table } from '@tanstack/react-table'
 import TablePaginationComponent from '@components/TablePaginationComponent'
 import { RankingInfo, rankItem } from '@tanstack/match-sorter-utils'
-import DataTableWithSearchBarAndFilters from '@/@core/components/mui/DataTableWithSearchBarAndFilters'
+import DataTable from '@/@core/components/mui/DataTable'
 import { GridRenderCellParams } from '@mui/x-data-grid'
 
 // Interfaces remain the same...
@@ -235,7 +235,7 @@ const SavedBatchTable = () => {
     <Card sx={{ borderRadius: 1, boxShadow: 3 }}>
       <CardHeader title='Signatures Status' className='pb-4' />
       <div style={{ overflowX: 'auto', padding: '0px' }}>
-        <DataTableWithSearchBarAndFilters data={filteredData} columns={columns} />
+        <DataTable data={filteredData} columns={columns} />
       </div>
     </Card>
   )

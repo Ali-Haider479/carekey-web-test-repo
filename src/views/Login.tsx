@@ -87,7 +87,7 @@ const Login = () => {
   } = useForm<FormData>({
     resolver: valibotResolver(schema),
     defaultValues: {
-      email: 'admin@sneat.com',
+      email: 'admin@test.com',
       password: 'admin'
     }
   })

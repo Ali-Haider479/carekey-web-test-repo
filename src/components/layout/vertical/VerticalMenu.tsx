@@ -107,18 +107,18 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
           {dictionary['navigation'].billing}
         </MenuItem>
         <MenuItem
-          href={`/${locale}/apps/email`}
+          href={`/${locale}/apps/caregiver/list`}
           icon={<i className='bx-bxs-heart-circle' />}
           exactMatch={false}
-          activeUrl='/apps/email'
+          activeUrl='/apps/caregiver/list'
         >
           {dictionary['navigation'].caregivers}
         </MenuItem>
         <MenuItem
-          href={`/${locale}/apps/email`}
+          href={`/${locale}/apps/client/list`}
           icon={<i className='bx-user' />}
           exactMatch={false}
-          activeUrl='/apps/email'
+          activeUrl='/apps/client/list'
         >
           {dictionary['navigation'].clients}
         </MenuItem>

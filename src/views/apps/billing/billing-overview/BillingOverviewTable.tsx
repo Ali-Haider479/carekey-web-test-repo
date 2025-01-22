@@ -22,7 +22,7 @@ import {
 import TablePaginationComponent from '@components/TablePaginationComponent'
 import TableFilters from '@/views/apps/user/list/TableFilters'
 import { RankingInfo, rankItem } from '@tanstack/match-sorter-utils'
-import DataTableWithSearchBarAndFilters from '@/@core/components/mui/DataTableWithSearchBarAndFilters'
+import DataTable from '@/@core/components/mui/DataTable'
 import { GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
 
 // Updated interfaces to match your data structure
@@ -217,7 +217,7 @@ const BillingOverviewTable = () => {
       <CardHeader title='Signatures Status' className='pb-4' />
       {/* <TableFilters setData={setFilteredData} tableData={data} /> */}
       <div style={{ overflowX: 'auto', padding: '0px' }}>
-        <DataTableWithSearchBarAndFilters data={filteredData} columns={columns} />
+        <DataTable data={filteredData} columns={columns} />
       </div>
     </Card>
   )

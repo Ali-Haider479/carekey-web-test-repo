@@ -54,9 +54,9 @@ export type Config = {
 }
 
 const themeConfig: Config = {
-  templateName: 'sneat',
+  templateName: 'CareKey',
   homePageUrl: '/dashboard',
-  settingsCookieName: 'sneat-mui-next-demo-1',
+  settingsCookieName: 'carekey-mui-next-demo',
   mode: 'system', // 'system', 'light', 'dark'
   skin: 'default', // 'default', 'bordered'
   semiDark: false, // true, false
