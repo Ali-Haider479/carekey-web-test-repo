@@ -42,4 +42,6 @@ export type AddEventSidebarType = {
   addEventSidebarOpen: boolean
   handleAddEventSidebarToggle: () => void
   caregiverList?: any
+  clientList?: any
+  serviceList?: any
 }

@@ -50,7 +50,6 @@ const BillingAddress = () => {
     fetchTenantData();
   }, [id]); // Re-run the effect if `id` changes
 
-  console.log('TENANT DATA BILLING', tenantData)
   return (
     <>
       <Card>

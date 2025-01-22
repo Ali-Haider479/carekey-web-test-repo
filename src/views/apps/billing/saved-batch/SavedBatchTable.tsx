@@ -3,9 +3,6 @@
 import { useEffect, useState, useMemo } from 'react'
 import Card from '@mui/material/Card'
 import CardHeader from '@mui/material/CardHeader'
-import Typography from '@mui/material/Typography'
-import { createColumnHelper } from '@tanstack/react-table'
-import type { ColumnDef, FilterFn, Table } from '@tanstack/react-table'
 import TablePagination from '@mui/material/TablePagination'
 import { Avatar, CircularProgress } from '@mui/material'
 import axios from 'axios'
@@ -19,35 +16,14 @@ import {
   getPaginationRowModel,
   flexRender
 } from '@tanstack/react-table'
+import { createColumnHelper } from '@tanstack/react-table'
+import type { ColumnDef, FilterFn, Table } from '@tanstack/react-table'
 import TablePaginationComponent from '@components/TablePaginationComponent'
-import TableFilters from '@/views/apps/user/list/TableFilters'
 import { RankingInfo, rankItem } from '@tanstack/match-sorter-utils'
-import { GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
 import DataTableWithSearchBarAndFilters from '@/@core/components/mui/DataTableWithSearchBarAndFilters'
+import { GridRenderCellParams } from '@mui/x-data-grid'
 
-// Updated interfaces to match your data structure
-interface Caregiver {
-  id: number
-  firstName: string
-  lastName: string
-  middleName: string
-  gender: string
-  dateOfBirth: string
-  caregiverUMPI: string
-  payRate: number
-  additionalPayRate: number
-  caregiverLevel: string
-}
-
-declare module '@tanstack/table-core' {
-  interface FilterFns {
-    fuzzy: FilterFn<unknown>
-  }
-  interface FilterMeta {
-    itemRank: RankingInfo
-  }
-}
-
+// Interfaces remain the same...
 interface Client {
   id: number
   firstName: string
@@ -60,20 +36,67 @@ interface Client {
   clientServices: any
 }
 
+interface Caregiver {
+  id: number
+  firstName: string
+  lastName: string
+  middleName: string
+  gender: string
+  dateOfBirth: string
+  caregiverUMPI: string
+  payRate: number
+  additionalPayRate: number
+  caregiverLevel: string
+}
+interface TimeLog {
+  id: number
+  dateOfService?: Date
+  clockIn?: string
+  clockOut?: string
+  notes?: string
+  serviceName?: string
+}
+
 interface Signature {
   id: number
   clientSignStatus: string
   tsApprovalStatus: string
-  duration: string
-  caregiverSignature: string
-  clientSignature: string
   caregiver: Caregiver
   client: Client
-  timeLog: any[]
+  timeLog?: TimeLog
 }
 
-type SignatureWithAction = Signature & {
-  action?: string
+// Helper function to calculate duration with fallback
+const calculateDuration = (clockIn?: string, clockOut?: string): string => {
+  if (!clockIn || !clockOut) return 'N/A'
+
+  try {
+    const start = new Date(`1970/01/01 ${clockIn}`)
+    const end = new Date(`1970/01/01 ${clockOut}`)
+
+    const diffMs = end.getTime() - start.getTime()
+    const hours = Math.floor(diffMs / (1000 * 60 * 60))
+    const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60))
+
+    return `${hours}h ${minutes}m`
+  } catch (error) {
+    return 'N/A'
+  }
+}
+
+// Format date helper with fallback
+const formatDate = (date?: Date): string => {
+  if (!date) return 'N/A'
+
+  try {
+    return new Date(date).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    })
+  } catch (error) {
+    return 'N/A'
+  }
 }
 
 const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
@@ -93,14 +116,13 @@ const CustomTablePagination = <T,>({ table }: CustomTablePaginationProps<T>) => 
   return <TablePaginationComponent table={table as unknown as Table<unknown>} />
 }
 
-const WaitingAdminApprovalTable = () => {
+const SavedBatchTable = () => {
   const [data, setData] = useState<Signature[]>([])
   const [filteredData, setFilteredData] = useState<Signature[]>([])
   const [globalFilter, setGlobalFilter] = useState('')
   const [rowSelection, setRowSelection] = useState({})
   const [isLoading, setIsLoading] = useState(true)
 
-  // Fetch signatures data
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -116,7 +138,7 @@ const WaitingAdminApprovalTable = () => {
     fetchData()
   }, [])
 
-  const columns = useMemo<GridColDef[]>(
+  const columns = useMemo(
     () => [
       {
         field: 'clientName',
@@ -146,58 +168,29 @@ const WaitingAdminApprovalTable = () => {
         )
       },
       {
-        field: 'service',
-        headerName: 'Service',
-        flex: 1.5,
-        renderCell: (params: GridRenderCellParams) => {
-          const services = params.row.client.clientServices
-          if (services && services.length > 0) {
-            const serviceNames = services.map((service: any) => service?.service?.name).join(', ')
-            return <span>{serviceNames}</span>
-          }
-          return <span>No services available</span>
-        }
+        field: 'timeLogDate',
+        headerName: 'TimeLog Date',
+        flex: 1,
+        renderCell: (params: GridRenderCellParams) => <>{formatDate(params.row.timeLog?.dateOfService)}</>
       },
       {
-        field: 'logsRecorded',
-        headerName: 'Logs Recorded',
+        field: 'startTime',
+        headerName: 'Start Time',
         flex: 1,
-        renderCell: (params: GridRenderCellParams) => (
-          <span
-            className={`px-2 py-1 rounded-full text-xs ${
-              params.value === 'Taken' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-            }`}
-          >
-            Yes
-          </span>
-        )
+        renderCell: (params: GridRenderCellParams) => <>{params.row.timeLog?.clockIn || 'N/A'}</>
       },
       {
-        field: 'clientSignStatus',
-        headerName: 'Sign Status',
+        field: 'endTime',
+        headerName: 'End Time',
         flex: 1,
-        renderCell: (params: GridRenderCellParams) => (
-          <span
-            className={`px-2 py-1 rounded-full text-xs ${
-              params.value === 'Pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'
-            }`}
-          >
-            {params.value}
-          </span>
-        )
+        renderCell: (params: GridRenderCellParams) => <>{params.row.timeLog?.clockOut || 'N/A'}</>
       },
       {
-        field: 'timesheetApproved',
-        headerName: 'Timesheet Approved',
+        field: 'duration',
+        headerName: 'Duration',
         flex: 1,
         renderCell: (params: GridRenderCellParams) => (
-          <span
-            className={`px-2 py-1 rounded-full text-xs ${
-              params.value === 'Pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'
-            }`}
-          >
-            Pending
-          </span>
+          <>{calculateDuration(params.row.timeLog?.clockIn, params.row.timeLog?.clockOut)}</>
         )
       }
     ],
@@ -248,4 +241,4 @@ const WaitingAdminApprovalTable = () => {
   )
 }
 
-export default WaitingAdminApprovalTable
+export default SavedBatchTable

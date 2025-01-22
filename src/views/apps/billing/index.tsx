@@ -15,9 +15,9 @@ import Typography from '@mui/material/Typography'
 // Component Imports
 import CustomTabList from '@core/components/mui/TabList'
 
-const ReportsView = ({ tabContentList }: { tabContentList: { [key: string]: ReactElement } }) => {
+const BillingTabsView = ({ tabContentList }: { tabContentList: { [key: string]: ReactElement } }) => {
   // States
-  const [activeTab, setActiveTab] = useState('caregiver-list')
+  const [activeTab, setActiveTab] = useState('billing-details')
 
   const handleChange = (event: SyntheticEvent, value: string) => {
     setActiveTab(value)
@@ -28,7 +28,7 @@ const ReportsView = ({ tabContentList }: { tabContentList: { [key: string]: Reac
       <Grid container spacing={6}>
         <Grid size={{ xs: 12, md: 12 }}>
           <Typography variant='h3' className='mbe-4'>
-            Reports
+            Billing Overview
           </Typography>
           <CustomTabList
             orientation='horizontal'
@@ -38,17 +38,31 @@ const ReportsView = ({ tabContentList }: { tabContentList: { [key: string]: Reac
             overRideColor='#4B0082'
           >
             <Tab
-              label='Careviger List'
+              label='BILLING DETAILS'
               // icon={<i className='bx-store-alt' />}
               iconPosition='start'
-              value='caregiver-list'
+              value='billing-details'
               className='flex-row justify-start'
             />
             <Tab
-              label='Client List'
+              label='BILLING OVERVIEW BY PAY DATES'
               // icon={<i className='bx-credit-card' />}
               iconPosition='start'
-              value='client-list'
+              value='billing-overview'
+              className='flex-row justify-start'
+            />
+            <Tab
+              label='SUBMITTED BATCH STATUS'
+              // icon={<i className='bx-cart' />}
+              iconPosition='start'
+              value='submitted-batch'
+              className='flex-row justify-start'
+            />
+            <Tab
+              label='SAVED BATCHES'
+              // icon={<i className='bx-package' />}
+              iconPosition='start'
+              value='saved-batch'
               className='flex-row justify-start'
             />
           </CustomTabList>
@@ -60,6 +74,14 @@ const ReportsView = ({ tabContentList }: { tabContentList: { [key: string]: Reac
                 {tabContentList[activeTab]}
               </TabPanel>
             </Grid>
+            {/* <Grid size={{ xs: 12 }}>
+              <div className='flex justify-end gap-4'>
+                <Button variant='tonal' color='secondary'>
+                  Discard
+                </Button>
+                <Button variant='contained'>Save Changes</Button>
+              </div>
+            </Grid> */}
           </Grid>
         </Grid>
       </Grid>
@@ -67,4 +89,4 @@ const ReportsView = ({ tabContentList }: { tabContentList: { [key: string]: Reac
   )
 }
 
-export default ReportsView
+export default BillingTabsView

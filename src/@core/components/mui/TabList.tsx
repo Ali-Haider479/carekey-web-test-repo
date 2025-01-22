@@ -8,7 +8,7 @@ import type { ThemeColor } from '@core/types'
 
 export type CustomTabListProps = TabListProps & {
   color?: ThemeColor
-  pill?: 'true' | 'false',
+  pill?: 'true' | 'false'
   overRideColor?: string
 }
 
@@ -17,12 +17,12 @@ const TabList = styled(MuiTabList)<CustomTabListProps>(({ color, theme, pill, or
     minHeight: 38,
     ...(orientation === 'vertical'
       ? {
-        minWidth: 130,
-        borderInlineEnd: 0
-      }
+          minWidth: 130,
+          borderInlineEnd: 0
+        }
       : {
-        borderBlockEnd: 0
-      }),
+          borderBlockEnd: 0
+        }),
     '&, & .MuiTabs-scroller': {
       ...(orientation === 'vertical' && {
         boxSizing: 'content-box'
@@ -42,8 +42,8 @@ const TabList = styled(MuiTabList)<CustomTabListProps>(({ color, theme, pill, or
       boxShadow: overRideColor ? `0px 3px 5px rgba(0, 0, 0, 0.2)` : `var(--mui-customShadows-${color}-sm)`,
       // Prevent hover effect on active tab
       '&:hover': {
-        backgroundColor: overRideColor || `var(--mui-palette-${color}-main)`,
-      },
+        backgroundColor: overRideColor || `var(--mui-palette-${color}-main)`
+      }
     },
     '& .MuiTab-root': {
       minHeight: 38,
@@ -57,11 +57,11 @@ const TabList = styled(MuiTabList)<CustomTabListProps>(({ color, theme, pill, or
         color: overRideColor || `var(--mui-palette-${color}-main)`,
         ...(orientation === 'vertical'
           ? {
-            paddingInlineEnd: theme.spacing(5)
-          }
+              paddingInlineEnd: theme.spacing(5)
+            }
           : {
-            paddingBlockEnd: theme.spacing(2)
-          })
+              paddingBlockEnd: theme.spacing(2)
+            })
       }
     }
   })

@@ -48,28 +48,26 @@ const Layout = async (props: ChildrenType & { params: Promise<{ lang: Locale }> 
           <VerticalLayout
             navigation={<Navigation dictionary={dictionary} mode={mode} />}
             navbar={<Navbar />}
-          // footer={<VerticalFooter />}
+            // footer={<VerticalFooter />}
           >
             {children}
           </VerticalLayout>
         }
         horizontalLayout={
-          <HorizontalLayout header={<Header dictionary={dictionary} />}
-          // footer={<HorizontalFooter />}
+          <HorizontalLayout
+            header={<Header dictionary={dictionary} />}
+            // footer={<HorizontalFooter />}
           >
             {children}
           </HorizontalLayout>
         }
       />
       <ScrollToTop className='mui-fixed'>
-        <Button
-          variant='contained'
-          className='is-10 bs-10 rounded-full p-0 min-is-0 flex items-center justify-center'
-        >
+        <Button variant='contained' className='is-10 bs-10 rounded-full p-0 min-is-0 flex items-center justify-center'>
           <i className='bx-up-arrow-alt' />
         </Button>
       </ScrollToTop>
-      <Customizer dir={direction} />
+      {/* <Customizer dir={direction} /> */}
       {/* </AuthGuard> */}
     </Providers>
   )

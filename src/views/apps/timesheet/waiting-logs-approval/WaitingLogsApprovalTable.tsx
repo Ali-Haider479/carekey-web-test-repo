@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo } from 'react'
 import Card from '@mui/material/Card'
 import CardHeader from '@mui/material/CardHeader'
 import TablePagination from '@mui/material/TablePagination'
-import { CircularProgress } from '@mui/material'
+import { Avatar, CircularProgress } from '@mui/material'
 import axios from 'axios'
 import tableStyles from '@core/styles/table.module.css'
 import classnames from 'classnames'
@@ -20,6 +20,8 @@ import { createColumnHelper } from '@tanstack/react-table'
 import type { ColumnDef, FilterFn, Table } from '@tanstack/react-table'
 import TablePaginationComponent from '@components/TablePaginationComponent'
 import { RankingInfo, rankItem } from '@tanstack/match-sorter-utils'
+import DataTableWithSearchBarAndFilters from '@/@core/components/mui/DataTableWithSearchBarAndFilters'
+import { GridRenderCellParams } from '@mui/x-data-grid'
 
 // Interfaces remain the same...
 interface Client {
@@ -136,65 +138,88 @@ const WaitingLogsApprovalTable = () => {
     fetchData()
   }, [])
 
-  const columns = useMemo<ColumnDef<Signature, any>[]>(
+  const columns = useMemo(
     () => [
-      columnHelper.accessor(row => `${row.client.firstName} ${row.client.lastName}`, {
-        id: 'clientName',
-        header: 'Client Name',
-        cell: info => info.getValue()
-      }),
-      columnHelper.accessor(row => `${row.caregiver.firstName} ${row.caregiver.lastName}`, {
-        id: 'caregiverName',
-        header: 'Caregiver Assigned',
-        cell: info => info.getValue()
-      }),
-      columnHelper.accessor(row => row.timeLog?.dateOfService, {
-        id: 'timeLogDate',
-        header: 'TimeLog Date',
-        cell: info => formatDate(info.getValue())
-      }),
-      columnHelper.accessor(row => row.timeLog?.clockIn, {
-        id: 'startTime',
-        header: 'Start Time',
-        cell: info => info.getValue() || 'N/A'
-      }),
-      columnHelper.accessor(row => row.timeLog?.clockOut, {
-        id: 'endTime',
-        header: 'End Time',
-        cell: info => info.getValue() || 'N/A'
-      }),
-      columnHelper.accessor(row => calculateDuration(row.timeLog?.clockIn, row.timeLog?.clockOut), {
-        id: 'duration',
-        header: 'Duration',
-        cell: info => info.getValue()
-      })
+      {
+        field: 'clientName',
+        headerName: 'Client Name',
+        flex: 1.5,
+        renderCell: (params: GridRenderCellParams) => (
+          <div style={{ height: '50px', display: 'flex', alignItems: 'center', gap: '8px', margin: 0, padding: 0 }}>
+            <Avatar alt={params.row.clientName} src={params.row.client.avatar} />
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <strong className='h-4'>{params.row.clientName}</strong>
+              <span style={{ fontSize: '12px', color: '#757575' }}>{params.row.client.email}</span>
+            </div>
+          </div>
+        )
+      },
+      {
+        field: 'caregiverName',
+        headerName: 'Caregiver Assigned',
+        flex: 1.5,
+        renderCell: (params: GridRenderCellParams) => (
+          <div style={{ height: '50px', display: 'flex', alignItems: 'center', gap: '8px', margin: 0, padding: 0 }}>
+            <Avatar alt={params.row.caregiverName} src={params.row.caregiver.avatar} />
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <strong className='h-4'>{params.row.caregiverName}</strong>
+            </div>
+          </div>
+        )
+      },
+      {
+        field: 'timeLogDate',
+        headerName: 'TimeLog Date',
+        flex: 1,
+        renderCell: (params: GridRenderCellParams) => <>{formatDate(params.row.timeLog?.dateOfService)}</>
+      },
+      {
+        field: 'startTime',
+        headerName: 'Start Time',
+        flex: 1,
+        renderCell: (params: GridRenderCellParams) => <>{params.row.timeLog?.clockIn || 'N/A'}</>
+      },
+      {
+        field: 'endTime',
+        headerName: 'End Time',
+        flex: 1,
+        renderCell: (params: GridRenderCellParams) => <>{params.row.timeLog?.clockOut || 'N/A'}</>
+      },
+      {
+        field: 'duration',
+        headerName: 'Duration',
+        flex: 1,
+        renderCell: (params: GridRenderCellParams) => (
+          <>{calculateDuration(params.row.timeLog?.clockIn, params.row.timeLog?.clockOut)}</>
+        )
+      }
     ],
     []
   )
 
-  const table = useReactTable({
-    data: filteredData,
-    columns,
-    filterFns: {
-      fuzzy: fuzzyFilter
-    },
-    state: {
-      rowSelection,
-      globalFilter
-    },
-    initialState: {
-      pagination: {
-        pageSize: 10
-      }
-    },
-    enableRowSelection: true,
-    onRowSelectionChange: setRowSelection,
-    getCoreRowModel: getCoreRowModel(),
-    onGlobalFilterChange: setGlobalFilter,
-    getFilteredRowModel: getFilteredRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getPaginationRowModel: getPaginationRowModel()
-  })
+  // const table = useReactTable({
+  //   data: filteredData,
+  //   columns,
+  //   filterFns: {
+  //     fuzzy: fuzzyFilter
+  //   },
+  //   state: {
+  //     rowSelection,
+  //     globalFilter
+  //   },
+  //   initialState: {
+  //     pagination: {
+  //       pageSize: 10
+  //     }
+  //   },
+  //   enableRowSelection: true,
+  //   onRowSelectionChange: setRowSelection,
+  //   getCoreRowModel: getCoreRowModel(),
+  //   onGlobalFilterChange: setGlobalFilter,
+  //   getFilteredRowModel: getFilteredRowModel(),
+  //   getSortedRowModel: getSortedRowModel(),
+  //   getPaginationRowModel: getPaginationRowModel()
+  // })
 
   if (isLoading) {
     return (
@@ -207,69 +232,11 @@ const WaitingLogsApprovalTable = () => {
   }
 
   return (
-    <Card>
-      <CardHeader title='TimeLogs Status' className='pb-4' />
-      <div className='overflow-x-auto'>
-        <table className={tableStyles.table}>
-          <thead>
-            {table.getHeaderGroups().map(headerGroup => (
-              <tr key={headerGroup.id} style={{
-                backgroundColor: '#f5f5f5', // Explicitly set gray background
-                borderBottom: '1px solid #E0E0E0'
-              }}>
-                {headerGroup.headers.map(header => (
-                  <th key={header.id}>
-                    {header.isPlaceholder ? null : (
-                      <div
-                        className={classnames({
-                          'flex items-center': header.column.getIsSorted(),
-                          'cursor-pointer select-none': header.column.getCanSort()
-                        })}
-                        onClick={header.column.getToggleSortingHandler()}
-                      >
-                        {flexRender(header.column.columnDef.header, header.getContext())}
-                        {{
-                          asc: <i className='bx-chevron-up text-xl' />,
-                          desc: <i className='bx-chevron-down text-xl' />
-                        }[header.column.getIsSorted() as 'asc' | 'desc'] ?? null}
-                      </div>
-                    )}
-                  </th>
-                ))}
-              </tr>
-            ))}
-          </thead>
-          <tbody>
-            {table.getRowModel().rows.length === 0 ? (
-              <tr>
-                <td colSpan={columns.length} className='text-center p-4'>
-                  No time logs found
-                </td>
-              </tr>
-            ) : (
-              table
-                .getRowModel()
-                .rows.slice(0, table.getState().pagination.pageSize)
-                .map(row => (
-                  <tr key={row.id} className={classnames({ selected: row.getIsSelected() })}>
-                    {row.getVisibleCells().map(cell => (
-                      <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
-                    ))}
-                  </tr>
-                ))
-            )}
-          </tbody>
-        </table>
+    <Card sx={{ borderRadius: 1, boxShadow: 3 }}>
+      <CardHeader title='Signatures Status' className='pb-4' />
+      <div style={{ overflowX: 'auto', padding: '0px' }}>
+        <DataTableWithSearchBarAndFilters data={filteredData} columns={columns} />
       </div>
-      <TablePagination
-        component={() => <CustomTablePagination table={table} />}
-        count={table.getFilteredRowModel().rows.length}
-        rowsPerPage={table.getState().pagination.pageSize}
-        page={table.getState().pagination.pageIndex}
-        onPageChange={(_, page) => {
-          table.setPageIndex(page)
-        }}
-      />
     </Card>
   )
 }

@@ -4,8 +4,8 @@ import { useEffect, useState, useMemo } from 'react'
 import Card from '@mui/material/Card'
 import CardHeader from '@mui/material/CardHeader'
 import Typography from '@mui/material/Typography'
-import { createColumnHelper } from '@tanstack/react-table'
-import type { ColumnDef, FilterFn, Table } from '@tanstack/react-table'
+import { createColumnHelper, Table } from '@tanstack/react-table'
+import type { ColumnDef, FilterFn } from '@tanstack/react-table'
 import TablePagination from '@mui/material/TablePagination'
 import { Avatar, CircularProgress } from '@mui/material'
 import axios from 'axios'
@@ -22,8 +22,8 @@ import {
 import TablePaginationComponent from '@components/TablePaginationComponent'
 import TableFilters from '@/views/apps/user/list/TableFilters'
 import { RankingInfo, rankItem } from '@tanstack/match-sorter-utils'
-import { GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
 import DataTableWithSearchBarAndFilters from '@/@core/components/mui/DataTableWithSearchBarAndFilters'
+import { GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
 
 // Updated interfaces to match your data structure
 interface Caregiver {
@@ -70,6 +70,7 @@ interface Signature {
   caregiver: Caregiver
   client: Client
   timeLog: any[]
+  tenant: any
 }
 
 type SignatureWithAction = Signature & {
@@ -93,7 +94,7 @@ const CustomTablePagination = <T,>({ table }: CustomTablePaginationProps<T>) => 
   return <TablePaginationComponent table={table as unknown as Table<unknown>} />
 }
 
-const WaitingAdminApprovalTable = () => {
+const BillingDetailTable = () => {
   const [data, setData] = useState<Signature[]>([])
   const [filteredData, setFilteredData] = useState<Signature[]>([])
   const [globalFilter, setGlobalFilter] = useState('')
@@ -124,10 +125,12 @@ const WaitingAdminApprovalTable = () => {
         flex: 1.5,
         renderCell: (params: GridRenderCellParams) => (
           <div style={{ height: '50px', display: 'flex', alignItems: 'center', gap: '8px', margin: 0, padding: 0 }}>
-            <Avatar alt={params.row.clientName} src={params.row.client.avatar} />
+            <Avatar
+              alt={`${params.row.client.firstName} ${params.row.client.lastName}`}
+              src={params.row.client.avatar}
+            />
             <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <strong className='h-4'>{params.row.clientName}</strong>
-              <span style={{ fontSize: '12px', color: '#757575' }}>{params.row.client.email}</span>
+              <strong className='h-4'>{`${params.row.client.firstName} ${params.row.client.lastName}`}</strong>
             </div>
           </div>
         )
@@ -138,9 +141,12 @@ const WaitingAdminApprovalTable = () => {
         flex: 1.5,
         renderCell: (params: GridRenderCellParams) => (
           <div style={{ height: '50px', display: 'flex', alignItems: 'center', gap: '8px', margin: 0, padding: 0 }}>
-            <Avatar alt={params.row.caregiverName} src={params.row.caregiver.avatar} />
+            <Avatar
+              alt={`${params.row.caregiver.firstName} ${params.row.caregiver.lastName}`}
+              src={params.row.caregiver.avatar}
+            />
             <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <strong className='h-4'>{params.row.caregiverName}</strong>
+              <strong className='h-4'>{`${params.row.caregiver.firstName} ${params.row.caregiver.lastName}`}</strong>
             </div>
           </div>
         )
@@ -159,22 +165,39 @@ const WaitingAdminApprovalTable = () => {
         }
       },
       {
-        field: 'logsRecorded',
-        headerName: 'Logs Recorded',
-        flex: 1,
-        renderCell: (params: GridRenderCellParams) => (
-          <span
-            className={`px-2 py-1 rounded-full text-xs ${
-              params.value === 'Taken' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-            }`}
-          >
-            Yes
-          </span>
-        )
+        field: 'payPeriod',
+        headerName: 'PayPeriod',
+        flex: 1.5,
+        renderCell: (params: GridRenderCellParams) => {
+          const tenant = params.row.tenant
+          if (tenant && tenant.payPeriodHistory) {
+            const payPeriods = tenant.payPeriodHistory.filter((period: any) => period.endDate === null)
+
+            const payPeriodNames = payPeriods
+              .map((period: any) => {
+                const startDate = new Date(period.startDate)
+                const formattedStartDate = `${startDate.getMonth() + 1}/${startDate.getDate()}/${startDate.getFullYear().toString().slice(-2)}`
+
+                if (period.numberOfWeeks === 1) {
+                  return formattedStartDate
+                }
+
+                const endDate = new Date(startDate)
+                endDate.setDate(startDate.getDate() + period.numberOfWeeks * 7)
+                const formattedEndDate = `${endDate.getMonth() + 1}/${endDate.getDate()}/${endDate.getFullYear().toString().slice(-2)}`
+
+                return `${formattedStartDate} to ${formattedEndDate}`
+              })
+              .join(', ')
+
+            return <span>{payPeriodNames}</span>
+          }
+          return <span></span>
+        }
       },
       {
-        field: 'clientSignStatus',
-        headerName: 'Sign Status',
+        field: 'tsApprovalStatus',
+        headerName: 'TS Submitted',
         flex: 1,
         renderCell: (params: GridRenderCellParams) => (
           <span
@@ -185,48 +208,10 @@ const WaitingAdminApprovalTable = () => {
             {params.value}
           </span>
         )
-      },
-      {
-        field: 'timesheetApproved',
-        headerName: 'Timesheet Approved',
-        flex: 1,
-        renderCell: (params: GridRenderCellParams) => (
-          <span
-            className={`px-2 py-1 rounded-full text-xs ${
-              params.value === 'Pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'
-            }`}
-          >
-            Pending
-          </span>
-        )
       }
     ],
     []
   )
-
-  // const table = useReactTable({
-  //   data: filteredData,
-  //   columns,
-  //   filterFns: {
-  //     fuzzy: fuzzyFilter
-  //   },
-  //   state: {
-  //     rowSelection,
-  //     globalFilter
-  //   },
-  //   initialState: {
-  //     pagination: {
-  //       pageSize: 10
-  //     }
-  //   },
-  //   enableRowSelection: true,
-  //   onRowSelectionChange: setRowSelection,
-  //   getCoreRowModel: getCoreRowModel(),
-  //   onGlobalFilterChange: setGlobalFilter,
-  //   getFilteredRowModel: getFilteredRowModel(),
-  //   getSortedRowModel: getSortedRowModel(),
-  //   getPaginationRowModel: getPaginationRowModel()
-  // })
 
   if (isLoading) {
     return (
@@ -248,4 +233,4 @@ const WaitingAdminApprovalTable = () => {
   )
 }
 
-export default WaitingAdminApprovalTable
+export default BillingDetailTable
