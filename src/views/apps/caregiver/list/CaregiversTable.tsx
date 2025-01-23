@@ -131,7 +131,7 @@ const CaregiverTable = () => {
         </Grid>
         <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
           <Button
-            onClick={() => router.push('apps/caregiver/add-employee')}
+            onClick={() => router.push('/apps/caregiver/add-employee')}
             variant='contained'
             sx={{ backgroundColor: '#4B0082', color: '#fff', fontWeight: 'bold' }}
           >

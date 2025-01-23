@@ -22,8 +22,8 @@ import {
 import TablePaginationComponent from '@components/TablePaginationComponent'
 import TableFilters from '@/views/apps/user/list/TableFilters'
 import { RankingInfo, rankItem } from '@tanstack/match-sorter-utils'
-import DataTableWithSearchBarAndFilters from '@/@core/components/mui/DataTableWithSearchBarAndFilters'
 import { GridColDef } from '@mui/x-data-grid'
+import DataTable from '@/@core/components/mui/DataTable'
 
 // Updated interfaces to match your data structure
 interface Caregiver {
@@ -185,7 +185,7 @@ const SubmittedBatchTable = () => {
   return (
     <Card sx={{ borderRadius: 1, boxShadow: 3 }}>
       <CardHeader title='Submitted Batch' className='pb-4' />
-      <DataTableWithSearchBarAndFilters data={filteredData} columns={columns} />
+      <DataTable data={filteredData} columns={columns} />
     </Card>
   )
 }
