@@ -2,8 +2,6 @@
 import * as React from 'react'
 import { DataGrid, GridColDef } from '@mui/x-data-grid'
 import Paper from '@mui/material/Paper'
-import { Button, Card, Grid, TextField } from '@mui/material'
-import { useState } from 'react'
 
 type paginationConfigType = {
   pages: number
@@ -11,9 +9,10 @@ type paginationConfigType = {
 }
 
 type Props = {
-  columns?: GridColDef[]
-  data?: any[]
+  columns: GridColDef[]
+  data: any[]
   paginationConfig?: paginationConfigType
+  checkboxSelection?: boolean
 }
 
 const Samplecolumns: GridColDef[] = [
@@ -51,21 +50,21 @@ const rows = [
 
 const defaultPaginationModel = { page: 0, pageSize: 5 }
 
-const DataTableWithSearchBarAndFilters = ({ columns, data, paginationConfig }: Props) => {
-  const [search, setSearch] = useState('')
+const DataTable = ({ columns, data, paginationConfig, checkboxSelection }: Props) => {
   const paginationModel = paginationConfig ? { page: 0, pageSize: paginationConfig.pageSize } : defaultPaginationModel
+
   return (
-    <Paper sx={{ height: 400, width: '100%' }}>
+    <Paper sx={{ height: 'auto', width: '100%' }}>
       <DataGrid
         rows={data ? data : rows}
         columns={columns ? columns : Samplecolumns}
         initialState={{ pagination: { paginationModel } }}
         pageSizeOptions={[5, 10]}
-        checkboxSelection
+        checkboxSelection={checkboxSelection ? checkboxSelection : false}
         sx={{ border: 0 }}
       />
     </Paper>
   )
 }
 
-export default DataTableWithSearchBarAndFilters
+export default DataTable

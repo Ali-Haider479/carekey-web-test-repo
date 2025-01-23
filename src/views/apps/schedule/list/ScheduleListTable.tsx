@@ -17,7 +17,7 @@ import { Button } from '@mui/material'
 import { getLocalizedUrl } from '@/utils/i18n'
 import { Locale } from '@/configs/i18n'
 import { useParams } from 'next/navigation'
-import DataTableWithSearchBarAndFilters from '@/@core/components/mui/DataTableWithSearchBarAndFilters'
+import DataTable from '@/@core/components/mui/DataTable'
 import { GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
 
 // Type Definitions
@@ -204,7 +204,7 @@ const ScheduleListTable = () => {
         }
       />
       <div style={{ overflowX: 'auto', padding: '0px' }}>
-        <DataTableWithSearchBarAndFilters data={data} columns={newCols} />
+        <DataTable data={data} columns={newCols} />
         {/* <table
           className={styles.table}
           style={{

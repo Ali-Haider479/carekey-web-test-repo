@@ -1,3 +1,4 @@
+'use client'
 // MUI Imports
 import MuiTabList from '@mui/lab/TabList'
 import { styled } from '@mui/material/styles'

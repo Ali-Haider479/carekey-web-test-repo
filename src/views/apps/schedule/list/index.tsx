@@ -4,7 +4,6 @@ import Grid from '@mui/material/Grid2'
 
 import ScheduleTableFiltersCard from './ScheduleTableFiltersCard'
 import ScheduleListTable from './ScheduleListTable'
-import DataTable from '@/@core/components/mui/DataTableWithSearchBarAndFilters'
 
 const ScheduleList = () => {
   return (

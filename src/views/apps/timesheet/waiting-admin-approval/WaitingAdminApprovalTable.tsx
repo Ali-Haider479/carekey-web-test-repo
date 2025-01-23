@@ -23,7 +23,7 @@ import TablePaginationComponent from '@components/TablePaginationComponent'
 import TableFilters from '@/views/apps/user/list/TableFilters'
 import { RankingInfo, rankItem } from '@tanstack/match-sorter-utils'
 import { GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
-import DataTableWithSearchBarAndFilters from '@/@core/components/mui/DataTableWithSearchBarAndFilters'
+import DataTable from '@/@core/components/mui/DataTable'
 
 // Updated interfaces to match your data structure
 interface Caregiver {
@@ -242,7 +242,7 @@ const WaitingAdminApprovalTable = () => {
     <Card sx={{ borderRadius: 1, boxShadow: 3 }}>
       <CardHeader title='Signatures Status' className='pb-4' />
       <div style={{ overflowX: 'auto', padding: '0px' }}>
-        <DataTableWithSearchBarAndFilters data={filteredData} columns={columns} />
+        <DataTable data={filteredData} columns={columns} />
       </div>
     </Card>
   )

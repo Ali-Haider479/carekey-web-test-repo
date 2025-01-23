@@ -16,8 +16,9 @@ export type ProfileHeaderType = {
   coverImg: string
   location: string
   profileImg: string
-  joiningDate: string
-  designation: string
+  status: string
+  joiningDate?: string
+  designation?: string
   designationIcon?: string
 }
 export type ProfileAvatarGroupType = {

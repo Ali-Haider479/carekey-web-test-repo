@@ -22,7 +22,7 @@ import {
 import TablePaginationComponent from '@components/TablePaginationComponent'
 import TableFilters from '@/views/apps/user/list/TableFilters'
 import { RankingInfo, rankItem } from '@tanstack/match-sorter-utils'
-import DataTableWithSearchBarAndFilters from '@/@core/components/mui/DataTableWithSearchBarAndFilters'
+import DataTable from '@/@core/components/mui/DataTable'
 import { GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
 import BillingDetailFilters from './BillingDetailFilters'
 
@@ -221,7 +221,7 @@ const BillingDetailTable = () => {
   return (
     <Card sx={{ borderRadius: 1, boxShadow: 3 }}>
       <CardHeader title='Billing Details' className='pb-4' />
-      <DataTableWithSearchBarAndFilters data={filteredData} columns={columns} />
+      <DataTable data={filteredData} columns={columns} />
     </Card>
   )
 }
