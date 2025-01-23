@@ -40,7 +40,7 @@ const CustomCheckList = (props: Props) => {
     <div>
       {props?.listTitle && (
         <div className='h-16 py-5 flex justify-between'>
-          <Typography variant='h5' className='text-gray-500 font-medium'>
+          <Typography variant='h5' className=' font-medium'>
             {props.listTitle}
           </Typography>
           <MoreVert />

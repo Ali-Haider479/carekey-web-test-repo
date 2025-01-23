@@ -1,3 +1,4 @@
+'use client'
 import * as React from 'react'
 import { DataGrid, GridColDef } from '@mui/x-data-grid'
 import Paper from '@mui/material/Paper'
@@ -11,6 +12,7 @@ type Props = {
   columns: GridColDef[]
   data: any[]
   paginationConfig?: paginationConfigType
+  checkboxSelection?: boolean
 }
 
 const Samplecolumns: GridColDef[] = [
@@ -48,17 +50,17 @@ const rows = [
 
 const defaultPaginationModel = { page: 0, pageSize: 5 }
 
-const DataTable = ({ columns, data, paginationConfig }: Props) => {
+const DataTable = ({ columns, data, paginationConfig, checkboxSelection }: Props) => {
   const paginationModel = paginationConfig ? { page: 0, pageSize: paginationConfig.pageSize } : defaultPaginationModel
 
   return (
-    <Paper sx={{ height: 400, width: '100%' }}>
+    <Paper sx={{ height: 'auto', width: '100%' }}>
       <DataGrid
         rows={data ? data : rows}
         columns={columns ? columns : Samplecolumns}
         initialState={{ pagination: { paginationModel } }}
         pageSizeOptions={[5, 10]}
-        checkboxSelection
+        checkboxSelection={checkboxSelection ? checkboxSelection : false}
         sx={{ border: 0 }}
       />
     </Paper>
