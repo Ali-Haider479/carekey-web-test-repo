@@ -1,5 +1,5 @@
 import React from 'react'
-import { Card } from '@mui/material'
+import { Card, Typography } from '@mui/material'
 
 const InfoCard = () => {
   const clients = [
@@ -25,26 +25,28 @@ const InfoCard = () => {
     <Card className='max-w-md ml-0 mr-4 shadow-md rounded-lg p-6'>
       <div className='mb-4'>
         <div className='flex justify-between text-sm text-gray-400 mb-2'>
-          <span>Role:</span>
-          <span className='text-gray-400'>Caregiver, Office Admin</span>
+          <Typography>Role:</Typography>
+          <Typography className='text-gray-400'>Caregiver, Office Admin</Typography>
         </div>
         <div className='flex justify-between text-sm text-gray-400 mb-2'>
-          <span>Caregiver ID:</span>
-          <span className='text-gray-400'>190860</span>
+          <Typography>Caregiver ID:</Typography>
+          <Typography className='text-gray-400'>190860</Typography>
         </div>
       </div>
 
       {/* Assigned Caregivers */}
       <div className='border-t pt-4'>
-        <h3 className='text-xl font-semibold text-gray-500 mb-2'>Assigned Clients ({clients.length})</h3>
+        <Typography variant='h3' className='text-xl font-semibold text-gray-500 mb-2'>
+          Assigned Clients ({clients.length})
+        </Typography>
         <ul className=''>
           {clients.map((client, index) => (
             <li key={index} className='flex items-center justify-between mb-4 last:mb-0'>
               <div className='flex items-center space-x-3'>
                 <img src={client.image} alt={client.name} className='w-10 h-10 rounded-full' />
                 <div>
-                  <p className='text-sm font-medium text-gray-400'>{client.name}</p>
-                  <p className='text-sm text-green-600'>{client.service}</p>
+                  <Typography className='text-sm font-medium text-gray-400'>{client.name}</Typography>
+                  <Typography className='text-sm text-green-600'>{client.service}</Typography>
                 </div>
               </div>
               <img
