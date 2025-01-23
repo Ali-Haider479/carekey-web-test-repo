@@ -1,6 +1,6 @@
 'use client'
 import PageNavigationButtons from '@layouts/components/horizontal/PageNavigationButtons'
-import PCAUMPITable from '@views/apps/caregiver/add-employee/PCAUMPITable'
+import PCAUMPITable from '@/views/apps/caregiver/add-employee/PcaUmpi/PCAUMPITable'
 import { useRouter } from 'next/navigation'
 import { FormProvider, useForm } from 'react-hook-form'
 

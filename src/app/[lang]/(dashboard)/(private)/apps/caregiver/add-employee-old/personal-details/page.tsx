@@ -1,9 +1,9 @@
 'use client'
 import PageNavigationButtons from '@layouts/components/horizontal/PageNavigationButtons'
-import PersonalDetailsForm2 from '@/views/apps/caregiver/add-employee/PersonalDetailsForm2'
+import PersonalDetailsForm from '@/views/apps/caregiver/add-employee/PersonalDetailsAndNotes/PersonalDetailsForm'
 import { useForm, FormProvider } from 'react-hook-form'
 import { useRouter } from 'next/navigation'
-import CaregiverNotes2 from '@/views/apps/caregiver/add-employee/CaregiverNotes2'
+import CaregiverNotes from '@/views/apps/caregiver/add-employee/PersonalDetailsAndNotes/CaregiverNotes'
 
 const PersonalDetails = () => {
   const router = useRouter()
@@ -29,10 +29,10 @@ const PersonalDetails = () => {
     <FormProvider {...form}>
       <form onSubmit={form.handleSubmit(onFinish)}>
         <div>
-          <PersonalDetailsForm2 onFinish={onFinish} />
+          <PersonalDetailsForm onFinish={onFinish} />
         </div>
         <div>
-          <CaregiverNotes2 onFinish={onFinish} />
+          <CaregiverNotes onFinish={onFinish} />
         </div>
         <div className='mt-5'>
           <PageNavigationButtons form={form} onClickBack={handleBack} />

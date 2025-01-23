@@ -26,9 +26,9 @@ import CustomTextField from '@core/components/mui/TextField'
 // Styled Component Imports
 import StepperWrapper from '@core/styles/stepper'
 import StepperCustomDot from '@components/stepper-dot'
-import PersonalDetailsForm2 from './PersonalDetailsForm2'
-import LoginInfoComponent from './LoginInfoComponent'
-import PCAUMPITable from './PCAUMPITable'
+import PersonalDetailsForm from './PersonalDetailsAndNotes/PersonalDetailsForm'
+import LoginInfoComponent from './LoginInfoAndMailingAddress/LoginInfoComponent'
+import PCAUMPITable from './PcaUmpi/PCAUMPITable'
 import { FormDataType } from '../../invoice/add/AddCustomerDrawer'
 
 // type FormDataType = {
@@ -68,46 +68,9 @@ const EmployeeStepper = () => {
   // States
   const [activeStep, setActiveStep] = useState(0)
 
-  //   const [formData, setFormData] = useState<FormDataType>({
-  //     username: '',
-  //     email: '',
-  //     password: '',
-  //     isPasswordShown: false,
-  //     confirmPassword: '',
-  //     isConfirmPasswordShown: false,
-  //     firstName: '',
-  //     lastName: '',
-  //     country: '',
-  //     language: [],
-  //     twitter: '',
-  //     facebook: '',
-  //     instagram: '',
-  //     github: ''
-  //   })
-
-  //   const handleClickShowPassword = () => setFormData(show => ({ ...show, isPasswordShown: !show.isPasswordShown }))
-
-  //   const handleClickShowConfirmPassword = () =>
-  //     setFormData(show => ({ ...show, isConfirmPasswordShown: !show.isConfirmPasswordShown }))
   const personalDetailsFormRef = useRef<any>(null)
   const handleReset = () => {
     setActiveStep(0)
-    //   setFormData({
-    //     username: '',
-    //     email: '',
-    //     password: '',
-    //     isPasswordShown: false,
-    //     confirmPassword: '',
-    //     isConfirmPasswordShown: false,
-    //     firstName: '',
-    //     lastName: '',
-    //     country: '',
-    //     language: [],
-    //     twitter: '',
-    //     facebook: '',
-    //     instagram: '',
-    //     github: ''
-    //   })
   }
 
   const handleNext = () => {
@@ -150,7 +113,7 @@ const EmployeeStepper = () => {
   const renderStepContent = (activeStep: number) => {
     switch (activeStep) {
       case 0:
-        return <PersonalDetailsForm2 ref={personalDetailsFormRef} onFinish={onPersonalDetailsSubmit} />
+        return <PersonalDetailsForm ref={personalDetailsFormRef} onFinish={onPersonalDetailsSubmit} />
       case 1:
         return <LoginInfoComponent onFinish={onLoginInfoSubmit} />
       case 2:
@@ -197,39 +160,39 @@ const EmployeeStepper = () => {
             </>
           ) : (
             <>
-              <form onSubmit={e => e.preventDefault()}>
-                <Grid container spacing={6}>
-                  <Grid size={{ xs: 12 }}>
-                    <Typography variant='h6'>{steps[activeStep].title}</Typography>
-                    <Typography variant='body2'>{steps[activeStep].subtitle}</Typography>
-                  </Grid>
-                  {renderStepContent(activeStep)}
-                  <Grid size={{ xs: 12 }} className='flex justify-between'>
-                    <Button
-                      variant='tonal'
-                      disabled={activeStep === 0}
-                      onClick={handleBack}
-                      color='secondary'
-                      startIcon={<DirectionalIcon ltrIconClass='bx-left-arrow-alt' rtlIconClass='bx-right-arrow-alt' />}
-                    >
-                      Back
-                    </Button>
-                    <Button
-                      variant='contained'
-                      onClick={handleNext}
-                      endIcon={
-                        activeStep === steps.length - 1 ? (
-                          <i className='bx-check' />
-                        ) : (
-                          <DirectionalIcon ltrIconClass='bx-right-arrow-alt' rtlIconClass='bx-left-arrow-alt' />
-                        )
-                      }
-                    >
-                      {activeStep === steps.length - 1 ? 'Submit' : 'Next'}
-                    </Button>
-                  </Grid>
+              {/* <form onSubmit={e => e.preventDefault()}> */}
+              <Grid container spacing={6}>
+                <Grid size={{ xs: 12 }}>
+                  <Typography variant='h6'>{steps[activeStep].title}</Typography>
+                  <Typography variant='body2'>{steps[activeStep].subtitle}</Typography>
                 </Grid>
-              </form>
+                {renderStepContent(activeStep)}
+                <Grid size={{ xs: 12 }} className='flex justify-between'>
+                  <Button
+                    variant='tonal'
+                    disabled={activeStep === 0}
+                    onClick={handleBack}
+                    color='secondary'
+                    startIcon={<DirectionalIcon ltrIconClass='bx-left-arrow-alt' rtlIconClass='bx-right-arrow-alt' />}
+                  >
+                    Back
+                  </Button>
+                  <Button
+                    variant='contained'
+                    onClick={handleNext}
+                    endIcon={
+                      activeStep === steps.length - 1 ? (
+                        <i className='bx-check' />
+                      ) : (
+                        <DirectionalIcon ltrIconClass='bx-right-arrow-alt' rtlIconClass='bx-left-arrow-alt' />
+                      )
+                    }
+                  >
+                    {activeStep === steps.length - 1 ? 'Submit' : 'Next'}
+                  </Button>
+                </Grid>
+              </Grid>
+              {/* </form> */}
             </>
           )}
         </CardContent>

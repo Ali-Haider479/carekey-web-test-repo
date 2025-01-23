@@ -17,7 +17,7 @@ interface FormDataType {
   comments?: string
 }
 
-const CaregiverNotes2 = ({ form, onFinish }: Props) => {
+const CaregiverNotes = ({ form, onFinish }: Props) => {
   const [formData, setFormData] = useState<FormDataType>({
     allergies: '',
     specialRequests: '',
@@ -80,4 +80,4 @@ const CaregiverNotes2 = ({ form, onFinish }: Props) => {
   )
 }
 
-export default CaregiverNotes2
+export default CaregiverNotes

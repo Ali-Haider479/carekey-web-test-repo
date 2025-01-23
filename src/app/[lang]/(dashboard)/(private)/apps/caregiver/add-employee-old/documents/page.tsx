@@ -1,5 +1,5 @@
 'use client'
-import DocumentsSection from '@/views/apps/caregiver/add-employee/DocumentsSection'
+import DocumentsSection from '@/views/apps/caregiver/add-employee/Certificates/DocumentsSection'
 import api from '@/utils/api'
 import { message } from 'antd'
 import PageNavigationButtons from '@layouts/components/horizontal/PageNavigationButtons'

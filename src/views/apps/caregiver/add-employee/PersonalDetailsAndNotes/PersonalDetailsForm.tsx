@@ -65,39 +65,10 @@ type Props = {
   onFinish: any
 }
 
-const PersonalDetailsForm2 = forwardRef<{ handleSubmit: any }, Props>(({ onFinish }, ref) => {
+const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish }, ref) => {
   const methods = useForm<FormDataType>({
     mode: 'onSubmit',
     reValidateMode: 'onChange'
-  })
-
-  // States
-  const [formData, setFormData] = useState<FormDataType>({
-    firstName: '',
-    middleName: '',
-    lastName: '',
-    role: '',
-    caregiverUMPI: null,
-    dateOfBirth: null,
-    caregiverLevel: '',
-    address: '',
-    city: '',
-    state: '',
-    zip: null,
-    SSN: '',
-    payRate: null,
-    dateOfHire: null,
-    terminationDate: null,
-    gender: '',
-    phoneNumber: '',
-    secondaryPhoneNumber: '',
-    emergencyContactNumber: '',
-    emergencyEmail: '',
-    caregiverOvertimeAgreement: '',
-    caregiverLicense: '',
-    allergies: '',
-    specialRequests: '',
-    comments: ''
   })
 
   // Expose handleSubmit to parent via ref
@@ -463,4 +434,4 @@ const PersonalDetailsForm2 = forwardRef<{ handleSubmit: any }, Props>(({ onFinis
   )
 })
 
-export default PersonalDetailsForm2
+export default PersonalDetailsForm

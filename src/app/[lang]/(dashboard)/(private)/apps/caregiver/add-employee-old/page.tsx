@@ -1,8 +1,8 @@
 'use client'
-import AddEmployeeStepper from '@views/apps/caregiver/add-employee/AddEmployeeStepper'
 import { usePathname } from 'next/navigation'
 import React, { useEffect } from 'react'
 import { useState } from 'react'
+import AddEmployeeStepper from '../add-employee/page'
 
 const AddEmployeeLayout = ({ children }: { children: React.ReactNode }) => {
   const [activeIndex, setActiveIndex] = useState(0)
@@ -29,7 +29,7 @@ const AddEmployeeLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <div className='w-full h-full'>
       <div>
-        <AddEmployeeStepper activeStep={activeIndex} />
+        <AddEmployeeStepper />
         {/* <AddEmployeeProgressSteps
           currentStep={activeIndex}
           pageTitle={"Adding a Employee"}
