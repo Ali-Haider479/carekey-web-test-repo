@@ -4,7 +4,8 @@ import React, { useState } from 'react'
 import CustomTextField from '@core/components/custom-inputs/CustomTextField'
 import { FormProvider, useForm, useFormContext } from 'react-hook-form'
 import CustomDropDown from '@core/components/custom-inputs/CustomDropDown'
-import { Button } from '@mui/material'
+import { Button, Card, CardContent } from '@mui/material'
+import Grid from '@mui/material/Grid2'
 
 type Props = {
   onFinish: any
@@ -58,149 +59,175 @@ const LoginInfoComponent = ({ onFinish }: Props) => {
 
   return (
     <FormProvider {...methods}>
-      <div className='bg-white p-6 rounded-lg shadow-md'>
-        <form onSubmit={handleSubmit(onSubmit)}>
-          {/* Account Login Information */}
-          <h2 className='text-xl font-semibold mb-6'>Account Login Information</h2>
-          <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
-            {/* Username */}
-            <CustomTextField
-              label={'Username'}
-              placeHolder={'JohnDoe'}
-              name={'userName'}
-              defaultValue={''}
-              type={'text'}
-              error={errors.userName}
-              control={control}
-            />
+      <Card className='mt-5'>
+        <CardContent>
+          <form onSubmit={handleSubmit(onSubmit)}>
+            {/* Account Login Information */}
+            <h2 className='text-xl font-semibold mb-6'>Account Login Information</h2>
+            <Grid container spacing={4}>
+              <Grid size={{ xs: 12, sm: 4 }}>
+                {/* Username */}
+                <CustomTextField
+                  label={'Username'}
+                  placeHolder={'JohnDoe'}
+                  name={'userName'}
+                  defaultValue={''}
+                  type={'text'}
+                  error={errors.userName}
+                  control={control}
+                />
+              </Grid>
 
-            {/* Email Address */}
-            <CustomTextField
-              label={'Email Address'}
-              placeHolder={'john.doe@example.com'}
-              name={'emailAddress'}
-              defaultValue={''}
-              type={'email'}
-              error={errors.emailAddress}
-              control={control}
-            />
+              <Grid size={{ xs: 12, sm: 4 }}>
+                {/* Email Address */}
+                <CustomTextField
+                  label={'Email Address'}
+                  placeHolder={'john.doe@example.com'}
+                  name={'emailAddress'}
+                  defaultValue={''}
+                  type={'email'}
+                  error={errors.emailAddress}
+                  control={control}
+                />
+              </Grid>
 
-            {/* Password */}
-            <CustomTextField
-              label={'Password'}
-              placeHolder={'.....'}
-              name={'password'}
-              defaultValue={''}
-              type={'text'}
-              error={errors.password}
-              control={control}
-            />
+              <Grid size={{ xs: 12, sm: 4 }}>
+                {/* Password */}
+                <CustomTextField
+                  label={'Password'}
+                  placeHolder={'.....'}
+                  name={'password'}
+                  defaultValue={''}
+                  type={'text'}
+                  error={errors.password}
+                  control={control}
+                />
+              </Grid>
 
-            {/* Confirm Password */}
-            <CustomTextField
-              label={'Confirm Password'}
-              placeHolder={'.....'}
-              name={'confirmPassword'}
-              defaultValue={''}
-              type={'text'}
-              error={errors.confirmPassword}
-              control={control}
-            />
+              <Grid size={{ xs: 12, sm: 4 }}>
+                {/* Confirm Password */}
+                <CustomTextField
+                  label={'Confirm Password'}
+                  placeHolder={'.....'}
+                  name={'confirmPassword'}
+                  defaultValue={''}
+                  type={'text'}
+                  error={errors.confirmPassword}
+                  control={control}
+                />
+              </Grid>
 
-            {/* Additional Email */}
-            <CustomTextField
-              label={'Additional Email Address'}
-              placeHolder={'Enter Additional Email Address'}
-              name={'additionalEmail'}
-              defaultValue={''}
-              type={'email'}
-              error={errors.additionalEmail}
-              control={control}
-            />
+              <Grid size={{ xs: 12, sm: 4 }}>
+                {/* Additional Email */}
+                <CustomTextField
+                  label={'Additional Email Address'}
+                  placeHolder={'Enter Additional Email Address'}
+                  name={'additionalEmail'}
+                  defaultValue={''}
+                  type={'email'}
+                  error={errors.additionalEmail}
+                  control={control}
+                />
+              </Grid>
 
-            {/* Account Status */}
-            <CustomDropDown
-              name={'accountStatus'}
-              control={control}
-              error={errors.accountStatus}
-              label={'Account Status'}
-              optionList={[
-                { key: 1, value: 'active', optionString: 'Active' },
-                { key: 2, value: 'inActive', optionString: 'Inactive' }
-              ]}
-              defaultValue={''}
-            />
-          </div>
+              <Grid size={{ xs: 12, sm: 4 }}>
+                {/* Account Status */}
+                <CustomDropDown
+                  name={'accountStatus'}
+                  control={control}
+                  error={errors.accountStatus}
+                  label={'Account Status'}
+                  optionList={[
+                    { key: 1, value: 'active', optionString: 'Active' },
+                    { key: 2, value: 'inActive', optionString: 'Inactive' }
+                  ]}
+                  defaultValue={''}
+                />
+              </Grid>
+            </Grid>
 
-          {/* Assign Client */}
-          <h2 className='text-xl font-semibold mt-10 mb-6'>Assign Client</h2>
-          <div className='grid grid-cols-1 gap-4'>
-            <div className='flex items-center gap-4'>
-              {/* Custom Input */}
-              <CustomTextField
-                label={'Client Name'}
-                placeHolder={'Enter Client Name'}
-                name={'clientName'}
-                defaultValue={''}
-                type={'text'}
-                error={errors.clientName}
-                control={control}
-              />
+            {/* Assign Client */}
+            <h2 className='text-xl font-semibold mt-10 mb-6'>Assign Client</h2>
+            <Grid container spacing={4}>
+              <div className='flex items-center gap-4'>
+                <Grid size={{ xs: 12, sm: 4 }}>
+                  {/* Custom Input */}
+                  <CustomTextField
+                    label={'Client Name'}
+                    placeHolder={'Enter Client Name'}
+                    name={'clientName'}
+                    defaultValue={''}
+                    type={'text'}
+                    error={errors.clientName}
+                    control={control}
+                  />
+                </Grid>
 
-              {/* Add Button */}
-              <Button className='!bg-[#4B0082] !text-white hover:!bg-[#4B0082]'>+ ADD</Button>
-            </div>
-          </div>
+                {/* Add Button */}
+                <Grid size={{ xs: 12, sm: 4 }}>
+                  <Button className='!bg-[#4B0082] !text-white hover:!bg-[#4B0082]'>+ ADD</Button>
+                </Grid>
+              </div>
+            </Grid>
 
-          {/* Mailing Address */}
-          <h2 className='text-xl font-semibold mt-10 mb-6'>Mailing Address</h2>
-          <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
-            {/* Address */}
-            <CustomTextField
-              label={'Address'}
-              placeHolder={'Enter Address'}
-              name={'address'}
-              defaultValue={''}
-              type={'text'}
-              error={errors.address}
-              control={control}
-            />
+            {/* Mailing Address */}
+            <h2 className='text-xl font-semibold mt-10 mb-6'>Mailing Address</h2>
+            <Grid container spacing={4}>
+              <Grid size={{ xs: 12, sm: 4 }}>
+                {/* Address */}
+                <CustomTextField
+                  label={'Address'}
+                  placeHolder={'Enter Address'}
+                  name={'address'}
+                  defaultValue={''}
+                  type={'text'}
+                  error={errors.address}
+                  control={control}
+                />
+              </Grid>
 
-            {/* City */}
-            <CustomTextField
-              label={'City'}
-              placeHolder={'Enter City'}
-              name={'city'}
-              defaultValue={''}
-              type={'text'}
-              error={errors.city}
-              control={control}
-            />
+              <Grid size={{ xs: 12, sm: 4 }}>
+                {/* City */}
+                <CustomTextField
+                  label={'City'}
+                  placeHolder={'Enter City'}
+                  name={'city'}
+                  defaultValue={''}
+                  type={'text'}
+                  error={errors.city}
+                  control={control}
+                />
+              </Grid>
 
-            {/* State */}
-            <CustomTextField
-              label={'State'}
-              placeHolder={'Enter State'}
-              name={'clientName'}
-              defaultValue={''}
-              type={'text'}
-              error={errors.state}
-              control={control}
-            />
+              <Grid size={{ xs: 12, sm: 4 }}>
+                {/* State */}
+                <CustomTextField
+                  label={'State'}
+                  placeHolder={'Enter State'}
+                  name={'clientName'}
+                  defaultValue={''}
+                  type={'text'}
+                  error={errors.state}
+                  control={control}
+                />
+              </Grid>
 
-            {/* ZIP Code */}
-            <CustomTextField
-              label={'Zip Code'}
-              placeHolder={'Enter Zip Code'}
-              name={'zipCode'}
-              defaultValue={''}
-              type={'text'}
-              error={errors.zipCode}
-              control={control}
-            />
-          </div>
-        </form>
-      </div>
+              <Grid size={{ xs: 12, sm: 4 }}>
+                {/* ZIP Code */}
+                <CustomTextField
+                  label={'Zip Code'}
+                  placeHolder={'Enter Zip Code'}
+                  name={'zipCode'}
+                  defaultValue={''}
+                  type={'text'}
+                  error={errors.zipCode}
+                  control={control}
+                />
+              </Grid>
+            </Grid>
+          </form>
+        </CardContent>
+      </Card>
     </FormProvider>
   )
 }

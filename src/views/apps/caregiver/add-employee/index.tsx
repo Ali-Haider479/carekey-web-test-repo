@@ -51,16 +51,24 @@ import { FormDataType } from '../../invoice/add/AddCustomerDrawer'
 // Vars
 const steps = [
   {
-    title: 'Account Details',
-    subtitle: 'Enter your account details'
+    title: '01',
+    subtitle: 'Personal Details & Caregiver Notes'
   },
   {
-    title: 'Personal Info',
-    subtitle: 'Setup Information'
+    title: '02',
+    subtitle: 'Login Info & Mailing Address'
   },
   {
-    title: 'Social Links',
-    subtitle: 'Add Social Links'
+    title: '03',
+    subtitle: 'PCA UMPI Information'
+  },
+  {
+    title: '04',
+    subtitle: 'Training Certificate & Driving License'
+  },
+  {
+    title: '05',
+    subtitle: 'Documents'
   }
 ]
 
@@ -125,78 +133,75 @@ const EmployeeStepper = () => {
 
   return (
     <>
-      <StepperWrapper>
-        <Stepper activeStep={activeStep} alternativeLabel>
-          {steps.map(label => {
-            return (
-              <Step key={label.title}>
-                <StepLabel
-                  slots={{
-                    stepIcon: StepperCustomDot
-                  }}
-                >
-                  <div className='step-label'>
-                    <div>
-                      <Typography className='step-title'>{label.title}</Typography>
-                      <Typography className='step-subtitle'>{label.subtitle}</Typography>
+      <Card>
+        <Typography variant='h4' className='p-4'>
+          Adding a Employee / Details and Caregiver Notes
+        </Typography>
+        <StepperWrapper>
+          <Stepper activeStep={activeStep} alternativeLabel>
+            {steps.map(label => {
+              return (
+                <Step key={label.title}>
+                  <StepLabel
+                    slots={{
+                      stepIcon: StepperCustomDot
+                    }}
+                  >
+                    <div className='step-label'>
+                      <div>
+                        <Typography className='step-title'>{label.title}</Typography>
+                        <Typography className='step-subtitle'>{label.subtitle}</Typography>
+                      </div>
                     </div>
-                  </div>
-                </StepLabel>
-              </Step>
-            )
-          })}
-        </Stepper>
-      </StepperWrapper>
-      <Card className='mt-4'>
-        <CardContent>
-          {activeStep === steps.length ? (
-            <>
-              <Typography className='mlb-2 mli-1'>All steps are completed!</Typography>
-              <div className='flex justify-end mt-4'>
-                <Button variant='contained' onClick={handleReset}>
-                  Reset
-                </Button>
-              </div>
-            </>
-          ) : (
-            <>
-              {/* <form onSubmit={e => e.preventDefault()}> */}
-              <Grid container spacing={6}>
-                <Grid size={{ xs: 12 }}>
-                  <Typography variant='h6'>{steps[activeStep].title}</Typography>
-                  <Typography variant='body2'>{steps[activeStep].subtitle}</Typography>
-                </Grid>
-                {renderStepContent(activeStep)}
-                <Grid size={{ xs: 12 }} className='flex justify-between'>
-                  <Button
-                    variant='tonal'
-                    disabled={activeStep === 0}
-                    onClick={handleBack}
-                    color='secondary'
-                    startIcon={<DirectionalIcon ltrIconClass='bx-left-arrow-alt' rtlIconClass='bx-right-arrow-alt' />}
-                  >
-                    Back
-                  </Button>
-                  <Button
-                    variant='contained'
-                    onClick={handleNext}
-                    endIcon={
-                      activeStep === steps.length - 1 ? (
-                        <i className='bx-check' />
-                      ) : (
-                        <DirectionalIcon ltrIconClass='bx-right-arrow-alt' rtlIconClass='bx-left-arrow-alt' />
-                      )
-                    }
-                  >
-                    {activeStep === steps.length - 1 ? 'Submit' : 'Next'}
-                  </Button>
-                </Grid>
-              </Grid>
-              {/* </form> */}
-            </>
-          )}
-        </CardContent>
+                  </StepLabel>
+                </Step>
+              )
+            })}
+          </Stepper>
+        </StepperWrapper>
       </Card>
+      {activeStep === steps.length ? (
+        <>
+          <Typography className='mlb-2 mli-1'>All steps are completed!</Typography>
+          <div className='flex justify-end mt-4'>
+            <Button variant='contained' onClick={handleReset}>
+              Reset
+            </Button>
+          </div>
+        </>
+      ) : (
+        <>
+          {/* <form onSubmit={e => e.preventDefault()}> */}
+          <Grid container spacing={6}>
+            {renderStepContent(activeStep)}
+            <Grid size={{ xs: 12 }} className='flex justify-between'>
+              <Button
+                variant='tonal'
+                disabled={activeStep === 0}
+                onClick={handleBack}
+                color='secondary'
+                startIcon={<DirectionalIcon ltrIconClass='bx-left-arrow-alt' rtlIconClass='bx-right-arrow-alt' />}
+              >
+                Back
+              </Button>
+              <Button
+                variant='contained'
+                onClick={handleNext}
+                endIcon={
+                  activeStep === steps.length - 1 ? (
+                    <i className='bx-check' />
+                  ) : (
+                    <DirectionalIcon ltrIconClass='bx-right-arrow-alt' rtlIconClass='bx-left-arrow-alt' />
+                  )
+                }
+              >
+                {activeStep === steps.length - 1 ? 'Submit' : 'Next'}
+              </Button>
+            </Grid>
+          </Grid>
+          {/* </form> */}
+        </>
+      )}
     </>
   )
 }

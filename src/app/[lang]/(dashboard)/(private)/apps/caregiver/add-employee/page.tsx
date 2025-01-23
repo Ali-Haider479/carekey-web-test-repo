@@ -7,9 +7,6 @@ const AddEmployeeStepper = () => {
   return (
     <Grid container spacing={6}>
       <Grid size={{ xs: 12 }}>
-        <Typography variant='h5'>Adding a Employee/Details and caregiver notes</Typography>
-      </Grid>
-      <Grid size={{ xs: 12 }}>
         <EmployeeStepper />
       </Grid>
     </Grid>
