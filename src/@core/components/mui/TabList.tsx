@@ -35,10 +35,10 @@ const TabList = styled(MuiTabList)<CustomTabListProps>(({ color, theme, pill, or
       display: 'none'
     },
     '& .MuiTabs-flexContainer': {
-      gap: theme.spacing(1)
+      gap: theme.spacing(3)
     },
     '& .Mui-selected': {
-      backgroundColor: overRideColor || `var(--mui-palette-${color}-main) !important`,
+      backgroundColor: overRideColor || `#4B0082 !important`,
       color: `var(--mui-palette-${color}-contrastText) !important`,
       boxShadow: overRideColor ? `0px 3px 5px rgba(0, 0, 0, 0.2)` : `var(--mui-customShadows-${color}-sm)`,
       // Prevent hover effect on active tab
@@ -50,6 +50,10 @@ const TabList = styled(MuiTabList)<CustomTabListProps>(({ color, theme, pill, or
       minHeight: 38,
       padding: theme.spacing(2, 5),
       borderRadius: 'var(--mui-shape-borderRadius)',
+      backgroundColor: overRideColor
+        ? `${overRideColor}33` // Default background color for inactive tabs
+        : `${'#666CFF'}20`, // Use light opacity of the theme color
+      color: overRideColor || `var(--mui-palette-${color}-main)`,
       '&:hover': {
         border: 0,
         backgroundColor: overRideColor

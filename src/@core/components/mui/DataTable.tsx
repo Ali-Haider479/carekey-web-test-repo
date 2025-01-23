@@ -52,7 +52,7 @@ const DataTable = ({ columns, data, paginationConfig }: Props) => {
   const paginationModel = paginationConfig ? { page: 0, pageSize: paginationConfig.pageSize } : defaultPaginationModel
 
   return (
-    <Paper sx={{ height: 400, width: '100%' }}>
+    <Paper sx={{ height: 'auto', width: '100%' }}>
       <DataGrid
         rows={data ? data : rows}
         columns={columns ? columns : Samplecolumns}

@@ -1,6 +1,6 @@
 import React from 'react'
 import { EditOutlined, PlusOutlined } from '@ant-design/icons'
-import { Card } from '@mui/material'
+import { Button, Card, Typography } from '@mui/material'
 
 function CaregiverAboutCard() {
   return (
@@ -8,54 +8,65 @@ function CaregiverAboutCard() {
       <Card className='w-full ml-2 shadow-md rounded-lg p-6'>
         {/* About Header */}
         <div className='flex justify-between items-center mb-6'>
-          <h2 className='text-2xl font-semibold text-gray-700'>About</h2>
-          {/* <Button
-            label="Edit"
-            icon={<EditOutlined />}
-            className={"bg-[#4B0082] text-white"}
-            onClick={undefined}
-          /> */}
+          <Typography variant='h2' className='text-2xl font-semibold text-gray-700'>
+            About
+          </Typography>
+          <Button
+            variant='contained'
+            startIcon={<EditOutlined />}
+            sx={{
+              backgroundColor: '#4B0082',
+              color: 'white',
+              '&:hover': {
+                backgroundColor: '#6A0DAD'
+              }
+            }}
+          >
+            Edit
+          </Button>
         </div>
 
         {/* Personal Details Section */}
         <div className='mb-6'>
-          <h3 className='text-lg font-semibold text-gray-600 mb-4'>Personal Details</h3>
+          <Typography variant='h3' className='text-lg font-semibold mb-4'>
+            Personal Details
+          </Typography>
           <div className='grid grid-cols-2 gap-y-4 gap-x-8'>
             <div className='flex justify-between text-sm text-gray-500'>
-              <span>First Name:</span>
-              <span className='text-gray-900'>Sameer</span>
+              <Typography>First Name:</Typography>
+              <Typography className=''>Sameer</Typography>
             </div>
             <div className='flex justify-between text-sm text-gray-500'>
-              <span>User Name:</span>
-              <span className='text-gray-900'>094382632</span>
+              <Typography>User Name:</Typography>
+              <Typography className=''>094382632</Typography>
             </div>
             <div className='flex justify-between text-sm text-gray-500'>
-              <span>Middle Name:</span>
-              <span className='text-gray-900'>K</span>
+              <Typography>Middle Name:</Typography>
+              <Typography className=''>K</Typography>
             </div>
             <div className='flex justify-between text-sm text-gray-500'>
-              <span>Title:</span>
-              <span className='text-gray-900'>2714</span>
+              <Typography>Title:</Typography>
+              <Typography className=''>2714</Typography>
             </div>
             <div className='flex justify-between text-sm text-gray-500'>
-              <span>Last Name:</span>
-              <span className='text-gray-900'>Khan</span>
+              <Typography>Last Name:</Typography>
+              <Typography className=''>Khan</Typography>
             </div>
             <div className='flex justify-between text-sm text-gray-500'>
-              <span>Phone Number:</span>
-              <span className='text-gray-900'>+123-412-4214-4</span>
+              <Typography>Phone Number:</Typography>
+              <Typography className=''>+123-412-4214-4</Typography>
             </div>
             <div className='flex justify-between text-sm text-gray-500'>
-              <span>Date of Birth:</span>
-              <span className='text-gray-900'>05/05/2000</span>
+              <Typography>Date of Birth:</Typography>
+              <Typography className=''>05/05/2000</Typography>
             </div>
             <div className='flex justify-between text-sm text-gray-500'>
-              <span>Email Address:</span>
-              <span className='text-gray-900'>sameer@gmail.com</span>
+              <Typography>Email Address:</Typography>
+              <Typography className=''>sameer@gmail.com</Typography>
             </div>
             <div className='flex justify-between text-sm text-gray-500'>
-              <span>Cell Phone Number:</span>
-              <span className='text-gray-900'>+238146</span>
+              <Typography>Cell Phone Number:</Typography>
+              <Typography className=''>+238146</Typography>
             </div>
           </div>
         </div>
@@ -64,71 +75,71 @@ function CaregiverAboutCard() {
         <div className=' mb-6 border-t pt-6'>
           <div className='grid grid-cols-2 gap-y-4 gap-x-8'>
             <div className='flex justify-between text-sm text-gray-500'>
-              <span>EMERGENCY NUMBER:</span>
-              <span className='text-gray-900'>---</span>
+              <Typography>EMERGENCY NUMBER:</Typography>
+              <Typography className=''>---</Typography>
             </div>
             <div className='flex justify-between text-sm text-gray-500'>
-              <span>EMERGENCY C.NUMBER:</span>
-              <span className='text-gray-900'>---</span>
+              <Typography>EMERGENCY C.NUMBER:</Typography>
+              <Typography className=''>---</Typography>
             </div>
           </div>
           <div className='mt-6 border-t pt-6'>
             <div className='grid grid-cols-2 gap-y-4 gap-x-8'>
               <div className='flex justify-between text-sm text-gray-500'>
-                <span>Emergency Email ID:</span>
-                <span className='text-gray-900'>sameerkhan@gmail</span>
+                <Typography>Emergency Email ID:</Typography>
+                <Typography className=''>sameerkhan@gmail</Typography>
               </div>
               <div className='flex justify-between text-sm text-gray-500'>
-                <span>Employee Number:</span>
-                <span className='text-gray-900'>---</span>
+                <Typography>Employee Number:</Typography>
+                <Typography className=''>---</Typography>
               </div>
               <div className='flex justify-between text-sm text-gray-500'>
-                <span>Address:</span>
-                <span className='text-gray-900'>5th Street</span>
+                <Typography>Address:</Typography>
+                <Typography className=''>5th Street</Typography>
               </div>
               <div className='flex justify-between text-sm text-gray-500'>
-                <span>City:</span>
-                <span className='text-gray-900'>CALIFORNIA</span>
+                <Typography>City:</Typography>
+                <Typography className=''>CALIFORNIA</Typography>
               </div>
               <div className='flex justify-between text-sm text-gray-500'>
-                <span>State:</span>
-                <span className='text-gray-900'>United States</span>
+                <Typography>State:</Typography>
+                <Typography className=''>United States</Typography>
               </div>
               <div className='flex justify-between text-sm text-gray-500'>
-                <span>Zip:</span>
-                <span className='text-gray-900'>124512</span>
+                <Typography>Zip:</Typography>
+                <Typography className=''>124512</Typography>
               </div>
               <div className='flex justify-between text-sm text-gray-500'>
-                <span>Date of Hire:</span>
-                <span className='text-gray-900'>---</span>
+                <Typography>Date of Hire:</Typography>
+                <Typography className=''>---</Typography>
               </div>
               <div className='flex justify-between text-sm text-gray-500'>
-                <span>Caregiver Level:</span>
-                <span className='text-gray-900'>---</span>
+                <Typography>Caregiver Level:</Typography>
+                <Typography className=''>---</Typography>
               </div>
               <div className='flex justify-between text-sm text-gray-500'>
-                <span>NPI/UMPI Number:</span>
-                <span className='text-gray-900'>---</span>
+                <Typography>NPI/UMPI Number:</Typography>
+                <Typography className=''>---</Typography>
               </div>
               <div className='flex justify-between text-sm text-gray-500'>
-                <span>Training Completed:</span>
-                <span className='text-gray-900'>Aug 22,2022</span>
+                <Typography>Training Completed:</Typography>
+                <Typography className=''>Aug 22,2022</Typography>
               </div>
               <div className='flex justify-between text-sm text-gray-500'>
-                <span>Is 245D licensed:</span>
-                <span className='text-gray-900'>Yes</span>
+                <Typography>Is 245D licensed:</Typography>
+                <Typography className=''>Yes</Typography>
               </div>
               <div className='flex justify-between text-sm text-gray-500'>
-                <span>DL Expiration Date:</span>
-                <span className='text-gray-900'>---</span>
+                <Typography>DL Expiration Date:</Typography>
+                <Typography className=''>---</Typography>
               </div>
               <div className='flex justify-between text-sm text-gray-500'>
-                <span>Driver Liscensed:</span>
-                <span className='text-gray-900'>---</span>
+                <Typography>Driver Liscensed:</Typography>
+                <Typography className=''>---</Typography>
               </div>
               <div className='flex justify-between text-sm text-gray-500'>
-                <span>Addional Pay Rate:</span>
-                <span className='text-gray-900'>---</span>
+                <Typography>Addional Pay Rate:</Typography>
+                <Typography className=''>---</Typography>
               </div>
             </div>
           </div>
@@ -138,24 +149,24 @@ function CaregiverAboutCard() {
         <div className='mb-6 border-t pt-6'>
           <div className='grid grid-cols-2 gap-y-4 gap-x-8'>
             <div className='flex justify-between text-sm text-gray-500'>
-              <span>Case Manager Name:</span>
-              <span className='text-gray-900'>---</span>
+              <Typography>Case Manager Name:</Typography>
+              <Typography className=''>---</Typography>
             </div>
             <div className='flex justify-between text-sm text-gray-500'>
-              <span>Case Manager's Extension:</span>
-              <span className='text-gray-900'>---</span>
+              <Typography>Case Manager's Extension:</Typography>
+              <Typography className=''>---</Typography>
             </div>
             <div className='flex justify-between text-sm text-gray-500'>
-              <span>Case Manager's Phone Number:</span>
-              <span className='text-gray-900'>---</span>
+              <Typography>Case Manager's Phone Number:</Typography>
+              <Typography className=''>---</Typography>
             </div>
             <div className='flex justify-between text-sm text-gray-500'>
-              <span>Case Manager's Email Details:</span>
-              <span className='text-gray-900'>---</span>
+              <Typography>Case Manager's Email Details:</Typography>
+              <Typography className=''>---</Typography>
             </div>
             <div className='flex justify-between text-sm text-gray-500'>
-              <span>Case Manager's FAX Number:</span>
-              <span className='text-gray-900'>---</span>
+              <Typography>Case Manager's FAX Number:</Typography>
+              <Typography className=''>---</Typography>
             </div>
           </div>
         </div>
@@ -163,26 +174,38 @@ function CaregiverAboutCard() {
         <div>
           <h2 className='text-lg font-semibold text-gray-600 mb-4'>Mailing Address</h2>
           <div className='grid grid-cols-2 gap-x-8 gap-y-4'>
-            <p className='text-sm text-gray-500'>
-              Address: <span className='text-gray-900'>3132 5th Ave</span>
-            </p>
-            <p className='text-sm text-gray-500'>
-              City: <span className='text-gray-900'>ABC</span>
-            </p>
-            <p className='text-sm text-gray-500'>
-              State: <span className='text-gray-900'>MN</span>
-            </p>
-            <p className='text-sm text-gray-500'>
-              Zip: <span className='text-gray-900'>55408</span>
-            </p>
-            <span className='text-base text-gray-500'>Pay Rate</span>
+            <Typography className='text-sm text-gray-500'>
+              Address: <br />
+              3132 5th Ave
+            </Typography>
+            <Typography className='text-sm text-gray-500'>
+              City: <br />
+              ABC
+            </Typography>
+            <Typography className='text-sm text-gray-500'>
+              State: <br />
+              MN
+            </Typography>
+            <Typography className='text-sm text-gray-500'>
+              Zip: <br />
+              55408
+            </Typography>
+            <Typography className='text-base text-gray-500'>Pay Rate</Typography>
           </div>
-          {/* <CustomButton
-            className={"bg-[#4B0082] text-white mt-3 mb-3 w-44"}
-            label="Add Pay Rate"
-            icon={<PlusOutlined />}
-            onClick={() => {}}
-          /> */}
+          <Button
+            variant='contained'
+            startIcon={<PlusOutlined />}
+            sx={{
+              marginTop: '10px',
+              backgroundColor: '#4B0082',
+              color: 'white',
+              '&:hover': {
+                backgroundColor: '#6A0DAD'
+              }
+            }}
+          >
+            Add Pay Rate
+          </Button>
         </div>
       </Card>
 
@@ -190,28 +213,34 @@ function CaregiverAboutCard() {
       <Card className='mt-5 w-full ml-2 shadow-md rounded-lg p-6'>
         <h2 className='text-lg font-semibold text-gray-600 mb-4'>PCA UMPI Information</h2>
         <div className='grid grid-cols-2 gap-x-8 gap-y-4'>
-          <p className='text-sm text-gray-500'>
-            Payor: <span className='text-gray-900'>No</span>
-          </p>
-          <p className='text-sm text-gray-500'>
-            UMPI: <span className='text-gray-900'>NA</span>
-          </p>
+          <Typography className='text-sm text-gray-500'>
+            Payor: <br />
+            No
+          </Typography>
+          <Typography className='text-sm text-gray-500'>
+            UMPI: <br />
+            NA
+          </Typography>
         </div>
         <div className='grid grid-cols-2 gap-x-8 gap-y-4'>
-          <p className='text-sm text-gray-500'>
-            Activation Date: <span className='text-gray-900'>No</span>
-          </p>
-          <p className='text-sm text-gray-500'>
-            Expiry Date: <span className='text-gray-900'>NA</span>
-          </p>
+          <Typography className='text-sm text-gray-500'>
+            Activation Date: <br />
+            No
+          </Typography>
+          <Typography className='text-sm text-gray-500'>
+            Expiry Date: <br />
+            NA
+          </Typography>
         </div>
         <div className='grid grid-cols-2 gap-x-8 gap-y-4'>
-          <p className='text-sm text-gray-500'>
-            Fax Date: <span className='text-gray-900'>No</span>
-          </p>
-          <p className='text-sm text-gray-500'>
-            Recieved Date: <span className='text-gray-900'>NA</span>
-          </p>
+          <Typography className='text-sm text-gray-500'>
+            Fax Date: <br />
+            No
+          </Typography>
+          <Typography className='text-sm text-gray-500'>
+            Recieved Date: <br />
+            NA
+          </Typography>
         </div>
       </Card>
 
@@ -221,42 +250,47 @@ function CaregiverAboutCard() {
         <label className='text-lg text-gray-500'>Allergies</label>
         <div className='space-y-4'>
           <div>
-            <p className='text-sm text-gray-500'>
-              <span className='text-gray-900'>IHS (with training) (H2014 UC U3)</span> (Aug 1, 2023 - Nov 27, 2024)
-              Approved Units: 1040 - <span className='text-gray-900'> 0.5 Hrs/Day - 3.75 Hrs/Week</span>
-            </p>
+            <div className='text-sm text-gray-500'>
+              <Typography className=''>IHS (with training) (H2014 UC U3)</Typography>
+              <Typography> (Aug 1, 2023 - Nov 27, 2024) Approved Units: 1040 - </Typography>
+              <Typography className=''> 0.5 Hrs/Day - 3.75 Hrs/Week</Typography>
+            </div>
           </div>
           <div>
-            <p className='text-sm text-gray-500'>
+            <Typography className='text-sm text-gray-500'>
               Community Integration & Socialization: Assist with Community Participation, Entertainments, Activities,
               Health, Safety & Wellness, and completing Paperwork
-            </p>
+            </Typography>
           </div>
           <div>
-            <p className='text-sm text-gray-500'>
-              <span className='text-gray-900'>Integrated Community Supports Daily (T1020 UC):</span> (Nov 28, 2023 - Jul
-              31, 2024) Approved Units: <span className='text-gray-900'>248 - 0.25 Hrs/Day - 1.75 Hrs/Week </span>
-            </p>
+            <div className='text-sm text-gray-500'>
+              <Typography className=''>Integrated Community Supports Daily (T1020 UC):</Typography>
+              <Typography>(Nov 28, 2023 - Jul 31, 2024) Approved Units: </Typography>
+              <Typography className=''>248 - 0.25 Hrs/Day - 1.75 Hrs/Week </Typography>
+            </div>
           </div>
           <div>
-            <p className='text-sm text-gray-500'>
+            <Typography className='text-sm text-gray-500'>
               Going to store, Home Organization, Community Activity, Budgeting, Assist with scheduling ride to attend
               medical appointments, Client will work towards improving his health by being physically active/gym.,
               Assist with reading and organizing mails
-            </p>
+            </Typography>
           </div>
         </div>
         <div className='mb-6 border-t pt-6'>
           <div className='grid grid-cols-2 gap-x-8 gap-y-4'>
-            <p className='text-sm text-gray-500'>
-              Available Services: <span className='text-gray-900'>---</span>
-            </p>
-            <p className='text-sm text-gray-500'>
-              Place of Services: <span className='text-gray-900'>---</span>
-            </p>
-            <p className='text-sm text-gray-500'>
-              Client Location: <span className='text-gray-900'>---</span>
-            </p>
+            <div className='flex justify-between text-sm text-gray-500'>
+              <Typography>Available Services: </Typography>
+              <Typography>---</Typography>
+            </div>
+            <div className='flex justify-between text-sm text-gray-500'>
+              <Typography>Place of Services: </Typography>
+              <Typography>---</Typography>
+            </div>
+            <div className='flex justify-between text-sm text-gray-500'>
+              <Typography>Client Location: </Typography>
+              <Typography>---</Typography>
+            </div>
           </div>
         </div>
       </Card>
