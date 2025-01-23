@@ -21,7 +21,7 @@ import type { ColumnDef, FilterFn, Table } from '@tanstack/react-table'
 import TablePaginationComponent from '@components/TablePaginationComponent'
 import { RankingInfo, rankItem } from '@tanstack/match-sorter-utils'
 import DataTable from '@/@core/components/mui/DataTable'
-import { GridRenderCellParams } from '@mui/x-data-grid'
+import { GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
 
 // Interfaces remain the same...
 interface Client {
@@ -116,110 +116,84 @@ const CustomTablePagination = <T,>({ table }: CustomTablePaginationProps<T>) => 
   return <TablePaginationComponent table={table as unknown as Table<unknown>} />
 }
 
+const rows = [
+  {
+    id: 1,
+    batchName: 'Exercise',
+    dateOfSubmission: '2025-01-10',
+    submissionDate: '2025-01-12',
+    remitanceStatus: 'Pending',
+    finalStatus: 'In Progress'
+  },
+  {
+    id: 2,
+    batchName: 'Running',
+    dateOfSubmission: '2025-01-08',
+    submissionDate: '2025-01-09',
+    remitanceStatus: 'Completed',
+    finalStatus: 'Completed'
+  },
+  {
+    id: 3,
+    batchName: 'Gym',
+    dateOfSubmission: '2025-01-15',
+    submissionDate: '2025-01-16',
+    remitanceStatus: 'Pending',
+    finalStatus: 'In Progress'
+  },
+  {
+    id: 4,
+    batchName: 'Swimming',
+    dateOfSubmission: '2025-01-05',
+    submissionDate: '2025-01-06',
+    remitanceStatus: 'Completed',
+    finalStatus: 'Completed'
+  }
+]
+
 const SavedBatchTable = () => {
   const [data, setData] = useState<Signature[]>([])
-  const [filteredData, setFilteredData] = useState<Signature[]>([])
+  const [filteredData, setFilteredData] = useState(rows)
   const [globalFilter, setGlobalFilter] = useState('')
   const [rowSelection, setRowSelection] = useState({})
-  const [isLoading, setIsLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(false)
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/signatures`)
-        setData(response.data)
-        setFilteredData(response.data)
-        setIsLoading(false)
-      } catch (error) {
-        console.error('Error fetching signatures:', error)
-        setIsLoading(false)
-      }
+  const columns: GridColDef[] = [
+    {
+      field: 'batchName',
+      headerName: 'BATCH NAME',
+      flex: 1.5
+    },
+    {
+      field: 'dateOfSubmission',
+      headerName: 'DATE OF SUBMISSION',
+      flex: 1
+    },
+    {
+      field: 'submissionDate',
+      headerName: 'SUBMISSION DATE',
+      flex: 1
+    },
+    {
+      field: 'remitanceStatus',
+      headerName: 'REMITANCE STATUS',
+      flex: 1
+    },
+    {
+      field: 'finalStatus',
+      headerName: 'FINAL STATUS',
+      flex: 1,
+      renderCell: params => (
+        <span
+          className={`px-3 py-1 rounded-full text-xs ${
+            params.value === 'Completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+          }`}
+        >
+          {params.value}
+        </span>
+      )
     }
-    fetchData()
-  }, [])
-
-  const columns = useMemo(
-    () => [
-      {
-        field: 'clientName',
-        headerName: 'Client Name',
-        flex: 1.5,
-        renderCell: (params: GridRenderCellParams) => (
-          <div style={{ height: '50px', display: 'flex', alignItems: 'center', gap: '8px', margin: 0, padding: 0 }}>
-            <Avatar alt={params.row.clientName} src={params.row.client.avatar} />
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <strong className='h-4'>{params.row.clientName}</strong>
-              <span style={{ fontSize: '12px', color: '#757575' }}>{params.row.client.email}</span>
-            </div>
-          </div>
-        )
-      },
-      {
-        field: 'caregiverName',
-        headerName: 'Caregiver Assigned',
-        flex: 1.5,
-        renderCell: (params: GridRenderCellParams) => (
-          <div style={{ height: '50px', display: 'flex', alignItems: 'center', gap: '8px', margin: 0, padding: 0 }}>
-            <Avatar alt={params.row.caregiverName} src={params.row.caregiver.avatar} />
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <strong className='h-4'>{params.row.caregiverName}</strong>
-            </div>
-          </div>
-        )
-      },
-      {
-        field: 'timeLogDate',
-        headerName: 'TimeLog Date',
-        flex: 1,
-        renderCell: (params: GridRenderCellParams) => <>{formatDate(params.row.timeLog?.dateOfService)}</>
-      },
-      {
-        field: 'startTime',
-        headerName: 'Start Time',
-        flex: 1,
-        renderCell: (params: GridRenderCellParams) => <>{params.row.timeLog?.clockIn || 'N/A'}</>
-      },
-      {
-        field: 'endTime',
-        headerName: 'End Time',
-        flex: 1,
-        renderCell: (params: GridRenderCellParams) => <>{params.row.timeLog?.clockOut || 'N/A'}</>
-      },
-      {
-        field: 'duration',
-        headerName: 'Duration',
-        flex: 1,
-        renderCell: (params: GridRenderCellParams) => (
-          <>{calculateDuration(params.row.timeLog?.clockIn, params.row.timeLog?.clockOut)}</>
-        )
-      }
-    ],
-    []
-  )
-
-  // const table = useReactTable({
-  //   data: filteredData,
-  //   columns,
-  //   filterFns: {
-  //     fuzzy: fuzzyFilter
-  //   },
-  //   state: {
-  //     rowSelection,
-  //     globalFilter
-  //   },
-  //   initialState: {
-  //     pagination: {
-  //       pageSize: 10
-  //     }
-  //   },
-  //   enableRowSelection: true,
-  //   onRowSelectionChange: setRowSelection,
-  //   getCoreRowModel: getCoreRowModel(),
-  //   onGlobalFilterChange: setGlobalFilter,
-  //   getFilteredRowModel: getFilteredRowModel(),
-  //   getSortedRowModel: getSortedRowModel(),
-  //   getPaginationRowModel: getPaginationRowModel()
-  // })
+  ]
 
   if (isLoading) {
     return (
@@ -233,10 +207,8 @@ const SavedBatchTable = () => {
 
   return (
     <Card sx={{ borderRadius: 1, boxShadow: 3 }}>
-      <CardHeader title='Signatures Status' className='pb-4' />
-      <div style={{ overflowX: 'auto', padding: '0px' }}>
-        <DataTable data={filteredData} columns={columns} />
-      </div>
+      <CardHeader title='Saved Batch' className='pb-4' />
+      <DataTable data={filteredData} columns={columns} />
     </Card>
   )
 }

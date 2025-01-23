@@ -83,10 +83,10 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
         menuSectionStyles={menuSectionStyles(verticalNavOptions, theme)}
       >
         <MenuItem
-          href={`/${locale}/apps/email`}
+          href={`/${locale}/apps/dashboard`}
           icon={<i className='bx-home-smile' />}
           exactMatch={false}
-          activeUrl='/apps/email'
+          activeUrl='/apps/dashboard'
         >
           {dictionary['navigation'].dashboard}
         </MenuItem>

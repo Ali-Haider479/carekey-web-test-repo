@@ -6,6 +6,7 @@ import CardContent from '@mui/material/CardContent'
 import Typography from '@mui/material/Typography'
 import { styled } from '@mui/material/styles'
 import type { CardProps } from '@mui/material/Card'
+import PeopleAltIcon from '@mui/icons-material/PeopleAlt'
 
 // Types Imports
 import type { ThemeColor } from '@core/types'
@@ -33,26 +34,28 @@ const Card = styled(MuiCard)<Props>(({ color }) => ({
   }
 }))
 
-const HorizontalWithBorder = (props: CardStatsHorizontalWithBorderProps) => {
+const HorizontalWithBorder = (props: any) => {
   // Props
   const { title, stats, trendNumber, avatarIcon, color } = props
 
   return (
     <Card color={color || 'primary'}>
-      <CardContent className='flex flex-col gap-2'>
-        <div className='flex items-center gap-4'>
+      <CardContent className='flex flex-row gap-2 justify-between'>
+        {/* <div className='flex items-center gap-4'>
           <CustomAvatar color={color} skin='light' variant='rounded' size={40}>
             <i className={avatarIcon} />
           </CustomAvatar>
           <Typography variant='h4'>{stats}</Typography>
-        </div>
+        </div> */}
         <div className='flex flex-col gap-2'>
           <Typography>{title}</Typography>
-          <div className='flex items-center gap-2'>
+          <Typography>{stats}</Typography>
+          {/* <div className='flex items-center gap-2'>
             <Typography variant='h6'>{`${trendNumber > 0 ? '+' : ''}${trendNumber}%`}</Typography>
             <Typography color='text.disabled'>than last week</Typography>
-          </div>
+          </div> */}
         </div>
+        <PeopleAltIcon />
       </CardContent>
     </Card>
   )

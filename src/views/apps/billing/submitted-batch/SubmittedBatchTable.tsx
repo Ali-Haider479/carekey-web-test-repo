@@ -22,6 +22,8 @@ import {
 import TablePaginationComponent from '@components/TablePaginationComponent'
 import TableFilters from '@/views/apps/user/list/TableFilters'
 import { RankingInfo, rankItem } from '@tanstack/match-sorter-utils'
+import DataTableWithSearchBarAndFilters from '@/@core/components/mui/DataTableWithSearchBarAndFilters'
+import { GridColDef } from '@mui/x-data-grid'
 
 // Updated interfaces to match your data structure
 interface Caregiver {
@@ -91,117 +93,84 @@ const CustomTablePagination = <T,>({ table }: CustomTablePaginationProps<T>) => 
   return <TablePaginationComponent table={table as unknown as Table<unknown>} />
 }
 
+const rows = [
+  {
+    id: 1,
+    batchName: 'Exercise',
+    dateOfSubmission: '2025-01-10',
+    submissionDate: '2025-01-12',
+    remitanceStatus: 'Pending',
+    finalStatus: 'In Progress'
+  },
+  {
+    id: 2,
+    batchName: 'Running',
+    dateOfSubmission: '2025-01-08',
+    submissionDate: '2025-01-09',
+    remitanceStatus: 'Completed',
+    finalStatus: 'Completed'
+  },
+  {
+    id: 3,
+    batchName: 'Gym',
+    dateOfSubmission: '2025-01-15',
+    submissionDate: '2025-01-16',
+    remitanceStatus: 'Pending',
+    finalStatus: 'In Progress'
+  },
+  {
+    id: 4,
+    batchName: 'Swimming',
+    dateOfSubmission: '2025-01-05',
+    submissionDate: '2025-01-06',
+    remitanceStatus: 'Completed',
+    finalStatus: 'Completed'
+  }
+]
+
 const SubmittedBatchTable = () => {
   const [data, setData] = useState<Signature[]>([])
-  const [filteredData, setFilteredData] = useState<Signature[]>([])
+  const [filteredData, setFilteredData] = useState(rows)
   const [globalFilter, setGlobalFilter] = useState('')
   const [rowSelection, setRowSelection] = useState({})
-  const [isLoading, setIsLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(false)
 
-  // Fetch signatures data
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/signatures`)
-        setData(response.data)
-        setFilteredData(response.data)
-        setIsLoading(false)
-      } catch (error) {
-        console.error('Error fetching signatures:', error)
-        setIsLoading(false)
-      }
+  const columns: GridColDef[] = [
+    {
+      field: 'batchName',
+      headerName: 'BATCH NAME',
+      flex: 1.5
+    },
+    {
+      field: 'dateOfSubmission',
+      headerName: 'DATE OF SUBMISSION',
+      flex: 1
+    },
+    {
+      field: 'submissionDate',
+      headerName: 'SUBMISSION DATE',
+      flex: 1
+    },
+    {
+      field: 'remitanceStatus',
+      headerName: 'REMITANCE STATUS',
+      flex: 1
+    },
+    {
+      field: 'finalStatus',
+      headerName: 'FINAL STATUS',
+      flex: 1,
+      renderCell: params => (
+        <span
+          className={`px-3 py-1 rounded-full text-xs ${
+            params.value === 'Completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+          }`}
+        >
+          {params.value}
+        </span>
+      )
     }
-    fetchData()
-  }, [])
-
-  const columns = useMemo<ColumnDef<SignatureWithAction, any>[]>(
-    () => [
-      columnHelper.accessor(row => `${row.client.firstName} ${row.client.lastName}`, {
-        id: 'clientName',
-        header: 'Client Name',
-        cell: info => info.getValue()
-      }),
-      columnHelper.accessor(row => `${row.caregiver.firstName} ${row.caregiver.lastName}`, {
-        id: 'caregiverName',
-        header: 'Caregiver Assigned',
-        cell: info => info.getValue()
-      }),
-      columnHelper.accessor('client.clientServices', {
-        id: 'service',
-        header: 'Service',
-        cell: ({ row }) => {
-          const services = row?.original?.client?.clientServices
-          if (services && services?.length > 0) {
-            // Extract service names and join them with commas
-            const serviceNames = services.map((service: any) => service?.service?.name).join(', ')
-            return serviceNames
-          }
-          return row?.original?.client?.clientServices[0]?.service?.name // Return an empty string if no services are found
-        }
-      }),
-      columnHelper.accessor('tsApprovalStatus', {
-        header: 'Logs Recorded',
-        cell: info => (
-          <span
-            className={`px-2 py-1 rounded-full text-xs ${
-              info.getValue() === 'Taken' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-            }`}
-          >
-            Yes
-          </span>
-        )
-      }),
-      columnHelper.accessor('clientSignStatus', {
-        header: 'Sign Status',
-        cell: info => (
-          <span
-            className={`px-2 py-1 rounded-full text-xs ${
-              info.getValue() === 'Pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'
-            }`}
-          >
-            {info.getValue()}
-          </span>
-        )
-      }),
-      columnHelper.accessor('clientSignStatus', {
-        header: 'Timsesheet Approved',
-        cell: info => (
-          <span
-            className={`px-2 py-1 rounded-full text-xs ${
-              info.getValue() === 'Pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'
-            }`}
-          >
-            Pending
-          </span>
-        )
-      })
-    ],
-    []
-  )
-  
-  const table = useReactTable({
-    data: filteredData,
-    columns,
-    filterFns: {
-      fuzzy: fuzzyFilter
-    },
-    state: {
-      rowSelection,
-      globalFilter
-    },
-    initialState: {
-      pagination: {
-        pageSize: 10
-      }
-    },
-    enableRowSelection: true,
-    onRowSelectionChange: setRowSelection,
-    getCoreRowModel: getCoreRowModel(),
-    onGlobalFilterChange: setGlobalFilter,
-    getFilteredRowModel: getFilteredRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getPaginationRowModel: getPaginationRowModel()
-  })
+  ]
 
   if (isLoading) {
     return (
@@ -214,73 +183,9 @@ const SubmittedBatchTable = () => {
   }
 
   return (
-    <Card>
-      <CardHeader title='Signatures Status' className='pb-4' />
-      {/* <TableFilters setData={setFilteredData} tableData={data} /> */}
-      <div className='overflow-x-auto'>
-        <table className={tableStyles.table}>
-          <thead>
-            {table.getHeaderGroups().map(headerGroup => (
-              <tr
-                key={headerGroup.id}
-                style={{
-                  backgroundColor: '#f5f5f5', // Explicitly set gray background
-                  borderBottom: '1px solid #E0E0E0'
-                }}
-              >
-                {headerGroup.headers.map(header => (
-                  <th key={header.id}>
-                    {header.isPlaceholder ? null : (
-                      <div
-                        className={classnames({
-                          'flex items-center': header.column.getIsSorted(),
-                          'cursor-pointer select-none': header.column.getCanSort()
-                        })}
-                        onClick={header.column.getToggleSortingHandler()}
-                      >
-                        {flexRender(header.column.columnDef.header, header.getContext())}
-                        {{
-                          asc: <i className='bx-chevron-up text-xl' />,
-                          desc: <i className='bx-chevron-down text-xl' />
-                        }[header.column.getIsSorted() as 'asc' | 'desc'] ?? null}
-                      </div>
-                    )}
-                  </th>
-                ))}
-              </tr>
-            ))}
-          </thead>
-          <tbody>
-            {table.getRowModel().rows.length === 0 ? (
-              <tr>
-                <td colSpan={columns.length} className='text-center p-4'>
-                  No signatures found
-                </td>
-              </tr>
-            ) : (
-              table
-                .getRowModel()
-                .rows.slice(0, table.getState().pagination.pageSize)
-                .map(row => (
-                  <tr key={row.id} className={classnames({ selected: row.getIsSelected() })}>
-                    {row.getVisibleCells().map(cell => (
-                      <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
-                    ))}
-                  </tr>
-                ))
-            )}
-          </tbody>
-        </table>
-      </div>
-      <TablePagination
-        component={() => <CustomTablePagination table={table} />}
-        count={table.getFilteredRowModel().rows.length}
-        rowsPerPage={table.getState().pagination.pageSize}
-        page={table.getState().pagination.pageIndex}
-        onPageChange={(_, page) => {
-          table.setPageIndex(page)
-        }}
-      />
+    <Card sx={{ borderRadius: 1, boxShadow: 3 }}>
+      <CardHeader title='Submitted Batch' className='pb-4' />
+      <DataTableWithSearchBarAndFilters data={filteredData} columns={columns} />
     </Card>
   )
 }

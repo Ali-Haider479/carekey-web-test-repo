@@ -130,34 +130,34 @@ const TotalIncome = () => {
           fontFamily: 'Public Sans'
         }
       }
-    },
-    yaxis: {
-      tickAmount: 6,
-      labels: {
-        formatter: value => `${value / 1000}k`,
-        style: {
-          fontSize: '13px',
-          colors: 'var(--mui-palette-text-disabled)',
-          fontFamily: 'Public Sans'
-        }
-      }
     }
+    // yaxis: {
+    //   tickAmount: 6,
+    //   labels: {
+    //     formatter: value => `${value / 1000}k`,
+    //     style: {
+    //       fontSize: '13px',
+    //       colors: 'var(--mui-palette-text-disabled)',
+    //       fontFamily: 'Public Sans'
+    //     }
+    //   }
+    // }
   }
 
   return (
     <Card>
-      <Grid container spacing={6}>
-        <Grid size={{ xs: 12, lg: 7, xl: 8 }} className='max-md:border-be md:border-ie'>
-          <CardHeader
-            title='Total Income'
-            subheader='Yearly report overview'
-            action={<OptionMenu options={['Share', 'Refresh', 'Delete']} />}
-          />
-          <CardContent className='flex flex-col gap-y-6'>
-            <AppReactApexCharts type='area' height={315} width='100%' series={series} options={options} />
-          </CardContent>
-        </Grid>
-        <Grid size={{ xs: 12, lg: 5, xl: 4 }}>
+      {/* <Grid container spacing={6}> */}
+      {/* <Grid size={{ xs: 12, lg: 7, xl: 8 }} className='max-md:border-be md:border-ie'> */}
+      <CardHeader
+        title='Total hours worked'
+        subheader='Weekly report overview'
+        // action={<OptionMenu options={['Share', 'Refresh', 'Delete']} />}
+      />
+      <CardContent className='flex flex-col gap-y-6'>
+        <AppReactApexCharts type='area' height={315} width='100%' series={series} options={options} />
+      </CardContent>
+      {/* </Grid> */}
+      {/* <Grid size={{ xs: 12, lg: 5, xl: 4 }}>
           <CardHeader
             title='Report'
             subheader='Monthly Avg. $45.57k'
@@ -180,8 +180,8 @@ const TotalIncome = () => {
               </div>
             ))}
           </CardContent>
-        </Grid>
-      </Grid>
+        </Grid> */}
+      {/* </Grid> */}
     </Card>
   )
 }

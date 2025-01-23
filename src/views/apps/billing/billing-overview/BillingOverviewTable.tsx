@@ -93,114 +93,92 @@ const CustomTablePagination = <T,>({ table }: CustomTablePaginationProps<T>) => 
   return <TablePaginationComponent table={table as unknown as Table<unknown>} />
 }
 
+const dummyData = [
+  {
+    id: 1,
+    clientName: 'Cody Fisher',
+    caregiverName: 'Kathryn Murphy',
+    claimAmount: '$214.31',
+    payer: 'MA',
+    proCode: 'T1020',
+    serviceDateRange: '04/15/2024 - 04/15/2024',
+    claimStatus: 'Completed'
+  },
+  {
+    id: 2,
+    clientName: 'Robert Fox',
+    caregiverName: 'Leslie Alexander',
+    claimAmount: '$214.31',
+    payer: 'MA',
+    proCode: 'T1020',
+    serviceDateRange: '04/15/2024 - 04/15/2024',
+    claimStatus: 'Pending'
+  },
+  {
+    id: 3,
+    clientName: 'Esther Howard',
+    caregiverName: 'Courtney Henry',
+    claimAmount: '$214.31',
+    payer: 'MA',
+    proCode: 'T1020',
+    serviceDateRange: '04/15/2024 - 04/15/2024',
+    claimStatus: 'Completed'
+  },
+  {
+    id: 4,
+    clientName: 'Jenny Wilson',
+    caregiverName: 'Kristin Watson',
+    claimAmount: '$214.31',
+    payer: 'MA',
+    proCode: 'T1020',
+    serviceDateRange: '04/15/2024 - 04/15/2024',
+    claimStatus: 'Pending'
+  }
+]
+
 const BillingOverviewTable = () => {
   const [data, setData] = useState<Signature[]>([])
-  const [filteredData, setFilteredData] = useState<Signature[]>([])
+  const [filteredData, setFilteredData] = useState(dummyData)
   const [globalFilter, setGlobalFilter] = useState('')
   const [rowSelection, setRowSelection] = useState({})
-  const [isLoading, setIsLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(false)
 
-  // Fetch signatures data
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/signatures`)
-        setData(response.data)
-        setFilteredData(response.data)
-        setIsLoading(false)
-      } catch (error) {
-        console.error('Error fetching signatures:', error)
-        setIsLoading(false)
-      }
+  const columns: GridColDef[] = [
+    {
+      field: 'serviceDateRange',
+      headerName: 'SERVICE DATE RANGE',
+      flex: 1.5
+    },
+    {
+      field: 'clientName',
+      headerName: 'CLIENT NAME',
+      flex: 1
+    },
+    {
+      field: 'caregiverName',
+      headerName: 'CAREGIVER NAME',
+      flex: 1
+    },
+    {
+      field: 'claimAmount',
+      headerName: 'CLAIM AMOUNT',
+      flex: 1
+    },
+    {
+      field: 'claimStatus',
+      headerName: 'BILLED STATUS',
+      flex: 1,
+      renderCell: params => (
+        <span
+          className={`px-3 py-1 rounded-full text-xs ${
+            params.value === 'Completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+          }`}
+        >
+          {params.value}
+        </span>
+      )
     }
-    fetchData()
-  }, [])
-
-  const columns = useMemo<GridColDef[]>(
-    () => [
-      {
-        field: 'clientName',
-        headerName: 'Client Name',
-        flex: 1.5,
-        renderCell: (params: GridRenderCellParams) => (
-          <div style={{ height: '50px', display: 'flex', alignItems: 'center', gap: '8px', margin: 0, padding: 0 }}>
-            <Avatar alt={params.row.client.firstName} src={params.row.client.avatar} />
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <strong className='h-4'>{`${params.row.client.firstName} ${params.row.client.lastName}`}</strong>
-              <span style={{ fontSize: '12px', color: '#757575' }}>{params.row.client.email}</span>
-            </div>
-          </div>
-        )
-      },
-      {
-        field: 'caregiverName',
-        headerName: 'Caregiver Assigned',
-        flex: 1.5,
-        renderCell: (params: GridRenderCellParams) => (
-          <div style={{ height: '50px', display: 'flex', alignItems: 'center', gap: '8px', margin: 0, padding: 0 }}>
-            <Avatar alt={params.row.caregiver.firstName} src={params.row.caregiver.avatar} />
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <strong className='h-4'>{`${params.row.caregiver.firstName} ${params.row.caregiver.lastName}`}</strong>
-            </div>
-          </div>
-        )
-      },
-      {
-        field: 'service',
-        headerName: 'Service',
-        flex: 1.5,
-        renderCell: (params: GridRenderCellParams) => {
-          const services = params.row.client.clientServices
-          if (services && services.length > 0) {
-            const serviceNames = services.map((service: any) => service?.service?.name).join(', ')
-            return <span>{serviceNames}</span>
-          }
-          return <span>No services available</span>
-        }
-      },
-      {
-        field: 'serviceStatus',
-        headerName: 'Service Status',
-        flex: 1,
-        renderCell: (params: GridRenderCellParams) => (
-          <span
-            className={`px-2 py-1 rounded-full text-xs ${
-              params.value === 'Taken' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-            }`}
-          >
-            {params.value}
-          </span>
-        )
-      },
-      {
-        field: 'hoursWorked',
-        headerName: 'Hours Worked',
-        flex: 1,
-        renderCell: (params: GridRenderCellParams) => <span>{params.value}</span>
-      },
-      {
-        field: 'logsRecorded',
-        headerName: 'Logs Recorded',
-        flex: 1,
-        renderCell: (params: GridRenderCellParams) => <span>{params.value?.length || 0}</span>
-      },
-      {
-        field: 'signStatus',
-        headerName: 'Sign Status',
-        flex: 1,
-        renderCell: (params: GridRenderCellParams) => (
-          <span
-            className={`px-2 py-1 rounded-full text-xs ${
-              params.value === 'Pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'
-            }`}
-          >
-            {params.value}
-          </span>
-        )
-      }
-    ],
-    []
-  )
+  ]
 
   if (isLoading) {
     return (
@@ -213,12 +191,9 @@ const BillingOverviewTable = () => {
   }
 
   return (
-    <Card>
-      <CardHeader title='Signatures Status' className='pb-4' />
-      {/* <TableFilters setData={setFilteredData} tableData={data} /> */}
-      <div style={{ overflowX: 'auto', padding: '0px' }}>
-        <DataTable data={filteredData} columns={columns} />
-      </div>
+    <Card sx={{ borderRadius: 1, boxShadow: 3 }}>
+      <CardHeader title='Billing Overview' className='pb-4' />
+      <DataTable data={filteredData} columns={columns} />
     </Card>
   )
 }

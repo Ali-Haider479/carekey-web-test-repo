@@ -14,7 +14,7 @@ export type CardStatsHorizontalWithAvatarProps = {
 
 export type CardStatsHorizontalWithBorderProps = {
   title: string
-  stats: number
+  stats: string
   trendNumber: number
   avatarIcon: string
   color?: ThemeColor
