@@ -54,7 +54,7 @@ const ClientListApps = () => {
 
   const fetchData = async () => {
     try {
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}client`)
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/client`)
       console.log('RESPONSE CLIENT DATA', response)
       setData(response.data)
     } catch (error) {
