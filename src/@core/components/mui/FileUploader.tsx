@@ -6,40 +6,54 @@ import ListItem from '@mui/material/ListItem'
 import IconButton from '@mui/material/IconButton'
 import Typography from '@mui/material/Typography'
 import FileCopyIcon from '@mui/icons-material/FileCopy'
-// Third-party Imports
 import { toast } from 'react-toastify'
 import { useDropzone } from 'react-dropzone'
 import { Card, CardContent } from '@mui/material'
 
-type FileProp = {
-  name: string
-  type: string
-  size: number
-}
-
 type FileUploaderProps = {
   onFilesSelected: (files: File[]) => void
+  title?: string
+  fileCount?: number
+  fileSize?: number
+  mimeType?: string | string[]
 }
 
-const FileUploaderRestrictions: React.FC<FileUploaderProps> = ({ onFilesSelected }) => {
-  // States
+const FileUploaderRestrictions: React.FC<FileUploaderProps> = ({
+  onFilesSelected,
+  title = 'Choose File',
+  fileCount = 2,
+  fileSize = 50 * 1024 * 1024, // 50MB
+  mimeType = 'image/*'
+}) => {
   const [files, setFiles] = useState<File[]>([])
 
-  // Hooks
   const { getRootProps, getInputProps } = useDropzone({
-    maxFiles: 4,
-    maxSize: 2000000,
-    accept: {
-      'image/*': ['.png', '.jpg', '.jpeg', '.gif']
-    },
+    maxFiles: fileCount,
+    maxSize: fileSize,
+    accept:
+      typeof mimeType === 'string'
+        ? { [mimeType]: [] }
+        : mimeType.reduce((acc: any, type: any) => {
+            acc[type] = []
+            return acc
+          }, {}),
     onDrop: (acceptedFiles: File[]) => {
       const newFiles = acceptedFiles.map((file: File) => Object.assign(file))
       setFiles(newFiles)
-      onFilesSelected(newFiles) // Pass files to parent component
+      onFilesSelected(newFiles)
       console.log('FILES SELECTED', newFiles)
     },
-    onDropRejected: () => {
-      toast.error('You can only upload 2 files & maximum size of 2 MB.', {
+    onDropRejected: fileRejections => {
+      const errorMessages = fileRejections.map(rejection => {
+        const sizeError = rejection.errors.find(err => err.code === 'file-too-large')
+        const typeError = rejection.errors.find(err => err.code === 'file-invalid-type')
+
+        if (sizeError) return 'File size exceeds the maximum limit.'
+        if (typeError) return 'Invalid file type.'
+        return 'File upload failed.'
+      })
+
+      toast.error(errorMessages.join('\n'), {
         autoClose: 3000
       })
     }
@@ -91,15 +105,12 @@ const FileUploaderRestrictions: React.FC<FileUploaderProps> = ({ onFilesSelected
           <Avatar variant='rounded' className='bs-12 is-12 mbe-3'>
             <FileCopyIcon />
           </Avatar>
-          {/* <Typography variant='h4' className='mbe-2.5'>
-            Drop files here or click to upload.
-          </Typography> */}
-          <Button variant='contained'>CHOOSE FILE</Button>
+          <Button variant='contained'>{title}</Button>
           <Typography color='text.secondary' className='text-xs'>
-            File must be less than 50mb
+            File must be less than {fileSize / (1024 * 1024)}mb
           </Typography>
           <Typography color='text.secondary' className='text-xs'>
-            Allowed file types: pdf,jpeg,png,doc
+            Allowed file types: {typeof mimeType === 'string' ? mimeType : mimeType.join(', ')}
           </Typography>
         </div>
       </CardContent>
