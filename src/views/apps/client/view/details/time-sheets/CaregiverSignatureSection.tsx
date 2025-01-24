@@ -1,9 +1,9 @@
 import React from 'react'
-import { TextField, Divider, Box } from '@mui/material'
+import { TextField, Divider, Box, Card } from '@mui/material'
 
 const AcknowledgeSignatureCaregiver = () => {
   return (
-    <Box className='shadow-md rounded-lg p-6 w-[99%] mt-3 ml-2 border-solid border-2'>
+    <Card className='shadow-md rounded-lg p-6 w-[99%] mt-3 ml-2 border-solid border-2'>
       <h2 className='text-xl font-semibold  mb-6'>Acknowledge and Required Signature for Client</h2>
       <div className='grid grid-cols-2 gap-6'>
         <div>
@@ -29,7 +29,7 @@ const AcknowledgeSignatureCaregiver = () => {
           />
         </div>
       </div>
-    </Box>
+    </Card>
   )
 }
 

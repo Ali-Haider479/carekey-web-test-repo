@@ -94,7 +94,7 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
           <CardContent>
             <Typography className='text-xl font-semibold mb-4'>Personal Details</Typography>
             <div>
-              <Grid container spacing={4}>
+              <Grid>
                 <Grid size={{ xs: 12, sm: 4 }}>
                   <CustomTextField
                     label={'First Name'}
