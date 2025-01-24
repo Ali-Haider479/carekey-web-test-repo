@@ -1,10 +1,12 @@
 'use client'
 import React, { useState, useEffect, useImperativeHandle, forwardRef } from 'react'
-import CustomTextField from '@/@core/components/mui/TextField'
-import { Button, Card, CardContent, LinearProgress, Typography } from '@mui/material'
-import { FormProvider, useForm } from 'react-hook-form'
+import { Button, Card, CardContent, LinearProgress, TextField, Typography } from '@mui/material'
+import { Controller, FormProvider, useForm } from 'react-hook-form'
 import FileUploaderRestrictions from '@/@core/components/mui/FileUploader'
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf'
+import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
+import CustomDropDown from '@/@core/components/custom-inputs/CustomDropDown'
+import CustomTextField from '@/@core/components/custom-inputs/CustomTextField'
 
 // interface DisplayFile {
 //   id: number
@@ -39,7 +41,6 @@ const TrainingCertificatesComponent = forwardRef<{ handleSubmit: any }, Props>((
       // drivingCertificateNames: ['', ''],
       trainingCertificateName: '',
       trainingCertificateExpiryDate: new Date(),
-      drivingCertificateNames: '',
       drivingLicenseNumber: '',
       dlState: '',
       drivingLicenseExpiryDate: new Date()
@@ -73,15 +74,15 @@ const TrainingCertificatesComponent = forwardRef<{ handleSubmit: any }, Props>((
     const formData = {
       trainingCertificates: {
         files: data.trainingCertificateFiles || [],
-        certificateNames: data.trainingCertificateName,
-        expiryDate: data.trainingCertificateExpiryDate
+        trainingCertificateName: data.trainingCertificateName,
+        trainingCertificateExpiryDate: data.trainingCertificateExpiryDate
       },
       drivingCertificates: {
         files: data.drivingCertificateFiles || [],
-        certificateNames: data.drivingCertificateNames,
-        expiryDate: data.drivingLicenseExpiryDate,
-        licenseNumber: data.drivingLicenseNumber,
-        state: data.dlState
+        // drivingCertificateNumber: data.drivingCertificateNumber,
+        drivingLicenseExpiryDate: data.drivingLicenseExpiryDate,
+        drivingLicenseNumber: data.drivingLicenseNumber,
+        dlState: data.dlState
       }
     }
 
@@ -129,15 +130,47 @@ const TrainingCertificatesComponent = forwardRef<{ handleSubmit: any }, Props>((
 
             {/* Certificate Details */}
             <div className='grid grid-cols-1 md:grid-cols-2 gap-6 mt-6'>
-              <CustomTextField
-                {...register(`trainingCertificateName`)}
-                placeholder='Enter Certificate Name'
-                label='Certificate Name'
+              <Controller
+                name='trainingCertificateName'
+                control={control}
+                render={({ field }) => (
+                  <CustomTextField
+                    {...register(`trainingCertificateName`)}
+                    label={'Driving Licensed Number'}
+                    placeHolder={'123ABC'}
+                    name={'trainingCertificateName'}
+                    defaultValue={'123ABC'}
+                    type={'text'}
+                    error={!!errors?.trainingCertificateName}
+                    control={control} // Pass the control property from the Controller component
+                  />
+                )}
               />
-              <CustomTextField
-                {...register(`trainingCertificateExpiryDate`)}
-                placeholder='Expiry Date'
-                label='Expiry Date'
+              <Controller
+                name='trainingCertificateExpiryDate'
+                control={control}
+                // defaultValue={null} // Set the default value
+                rules={{ required: 'Date of birth is required' }} // Validation rules
+                render={({ field }) => (
+                  <AppReactDatepicker
+                    selected={field.value} // Bind value from react-hook-form
+                    onChange={(date: Date | null) => field.onChange(date)} // Update react-hook-form on change
+                    showYearDropdown
+                    showMonthDropdown
+                    placeholderText='MM/DD/YYYY'
+                    customInput={
+                      <TextField
+                        {...register(`trainingCertificateExpiryDate`)}
+                        fullWidth
+                        // error={!!errors.dateOfBirth}
+                        // helperText={errors.dateOfBirth && 'please select a date'}
+                        size='small'
+                        placeholder='Expiry Date'
+                        label='Expiry Date'
+                      />
+                    }
+                  />
+                )}
               />
             </div>
           </CardContent>
@@ -178,15 +211,56 @@ const TrainingCertificatesComponent = forwardRef<{ handleSubmit: any }, Props>((
             </div>
 
             <div className='grid grid-cols-1 md:grid-cols-2 gap-6 mt-6'>
-              <CustomTextField
-                {...register(`drivingCertificateNames`)}
-                placeholder='Enter Certificate Name'
-                label='Certificate Name'
+              <Controller
+                name='drivingLicenseNumber'
+                control={control}
+                render={({ field }) => (
+                  <CustomTextField
+                    {...register(`drivingLicenseNumber`)}
+                    label={'Driving Licensed Number'}
+                    placeHolder={'123ABC'}
+                    name={'drivingLicenseNumber'}
+                    defaultValue={'123ABC'}
+                    type={'text'}
+                    error={!!errors?.drivingLicenseNumber}
+                    control={control} // Pass the control property from the Controller component
+                  />
+                )}
               />
-              <CustomTextField
-                {...register(`drivingLicenseExpiryDate`)}
-                placeholder='Expiry Date'
-                label='Expiry Date'
+              <CustomDropDown
+                {...register(`dlState`)}
+                name='dlState'
+                control={control}
+                error={errors.dlState}
+                label='DL State'
+                optionList={[{ key: 1, value: 'caregiver', optionString: 'Caregiver' }]}
+                defaultValue={''}
+              />
+              <Controller
+                name='drivingLicenseExpiryDate'
+                control={control}
+                // defaultValue={null} // Set the default value
+                rules={{ required: 'Date of birth is required' }} // Validation rules
+                render={({ field }) => (
+                  <AppReactDatepicker
+                    selected={field.value} // Bind value from react-hook-form
+                    onChange={(date: Date | null) => field.onChange(date)} // Update react-hook-form on change
+                    showYearDropdown
+                    showMonthDropdown
+                    placeholderText='MM/DD/YYYY'
+                    customInput={
+                      <TextField
+                        {...register(`drivingLicenseExpiryDate`)}
+                        fullWidth
+                        // error={!!errors.dateOfBirth}
+                        // helperText={errors.dateOfBirth && 'please select a date'}
+                        size='small'
+                        placeholder='Expiry Date'
+                        label='Expiry Date'
+                      />
+                    }
+                  />
+                )}
               />
             </div>
           </CardContent>
