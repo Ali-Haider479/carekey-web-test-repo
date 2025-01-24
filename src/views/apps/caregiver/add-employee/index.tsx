@@ -30,6 +30,7 @@ import PersonalDetailsForm from './PersonalDetailsAndNotes/PersonalDetailsForm'
 import LoginInfoComponent from './LoginInfoAndMailingAddress/LoginInfoComponent'
 import PCAUMPITable from './PcaUmpi/PCAUMPITable'
 import { FormDataType } from '../../invoice/add/AddCustomerDrawer'
+import TrainingCertificatesComponent from './Certificates/TrainingCertificatesComponent'
 
 // type FormDataType = {
 //   username: string
@@ -126,6 +127,8 @@ const EmployeeStepper = () => {
         return <LoginInfoComponent onFinish={onLoginInfoSubmit} />
       case 2:
         return <PCAUMPITable />
+      // case 3:
+      //   return <TrainingCertificatesComponent />
       default:
         return 'Unknown step'
     }
