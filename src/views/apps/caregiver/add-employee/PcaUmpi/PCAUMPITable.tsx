@@ -17,6 +17,8 @@ import {
 } from '@mui/material'
 
 import Grid from '@mui/material/Grid2'
+import { GridColDef } from '@mui/x-data-grid'
+import DataTable from '@/@core/components/mui/DataTable'
 
 interface DisplayFile {
   id: number
@@ -66,20 +68,59 @@ const PCAUMPITable = ({ form }: Props) => {
     }
   }
 
-  const tableData = [
-    { key: '1', payor: 'MA' },
-    { key: '2', payor: 'MEDICA' },
-    { key: '3', payor: 'MHP' },
-    { key: '4', payor: 'BCBS' },
-    { key: '5', payor: 'UCARE' },
-    { key: '6', payor: 'HEALTH PARTNER' },
-    { key: '7', payor: 'BCBS BP' },
-    { key: '8', payor: 'BRIDGE VIEW' },
-    { key: '9', payor: 'PRIME WEST' }
+  const rowData = [
+    { id: '1', payor: 'MA' },
+    { id: '2', payor: 'MEDICA' },
+    { id: '3', payor: 'MHP' },
+    { id: '4', payor: 'BCBS' },
+    { id: '5', payor: 'UCARE' },
+    { id: '6', payor: 'HEALTH PARTNER' },
+    { id: '7', payor: 'BCBS BP' },
+    { id: '8', payor: 'BRIDGE VIEW' },
+    { id: '9', payor: 'PRIME WEST' }
+  ]
+
+  const newColumns: GridColDef[] = [
+    // {
+    //   field: 'itemNumber',
+    //   headerName: '#',
+    //   flex: 0.5,
+    //   renderCell: (params: GridRenderCellParams) => <span>{params.row.index + 1}</span>
+    // },
+    {
+      field: 'payor',
+      headerName: 'PAYOR',
+      flex: 0.3
+    },
+    {
+      field: 'umpi',
+      headerName: 'UMPI',
+      flex: 0.3
+    },
+    {
+      field: 'activationDate',
+      headerName: 'ACTIVATION DATE',
+      flex: 0.3
+    },
+    {
+      field: 'expiryDate',
+      headerName: 'EXPIRY DATE',
+      flex: 0.3
+    },
+    {
+      field: 'faxDate',
+      headerName: 'FAX DATE',
+      flex: 0.3
+    },
+    {
+      field: 'recievedDate',
+      headerName: 'RECIEVED DATE',
+      flex: 0.3
+    }
   ]
 
   return (
-    <Card className='mt-5'>
+    <Card className='mt-5 w-full'>
       <CardContent>
         <Grid container spacing={4}>
           <div className='flex flex-row justify-between items-center w-full mb-2'>
@@ -96,48 +137,7 @@ const PCAUMPITable = ({ form }: Props) => {
               <input type='file' hidden onChange={handleFileUpload} />
             </Button>
           </div>
-          <TableContainer>
-            <Table>
-              <TableHead className='bg-gray-100'>
-                <TableRow>
-                  <TableCell className='relative'>
-                    <span className='border-r border-gray-300 h-[60%] absolute top-[20%] right-0'></span>
-                    PAYOR
-                  </TableCell>
-                  <TableCell className='relative'>
-                    <span className='border-r border-gray-300 h-[60%] absolute top-[20%] right-0'></span>
-                    UMPI
-                  </TableCell>
-                  <TableCell className='relative'>
-                    <span className='border-r border-gray-300 h-[60%] absolute top-[20%] right-0'></span>
-                    ACTIVATION DATE
-                  </TableCell>
-                  <TableCell className='relative'>
-                    <span className='border-r border-gray-300 h-[60%] absolute top-[20%] right-0'></span>
-                    EXPIRY DATE
-                  </TableCell>
-                  <TableCell className='relative'>
-                    <span className='border-r border-gray-300 h-[60%] absolute top-[20%] right-0'></span>
-                    FAX DATE
-                  </TableCell>
-                  <TableCell className='relative'>RECEIVED DATE</TableCell>
-                </TableRow>
-              </TableHead>
-
-              <TableBody>
-                {tableData.map(row => (
-                  <TableRow key={row.key}>
-                    <TableCell>{row.payor}</TableCell>
-                    <TableCell></TableCell>
-                    <TableCell></TableCell>
-                    <TableCell></TableCell>
-                    <TableCell></TableCell>
-                    <TableCell></TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
+          <DataTable columns={newColumns} data={rowData} />
           <div className='mt-5 w-full'>
             <Grid>
               <TextField

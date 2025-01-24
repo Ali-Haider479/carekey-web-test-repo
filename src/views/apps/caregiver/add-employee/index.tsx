@@ -12,16 +12,10 @@ import Step from '@mui/material/Step'
 import StepLabel from '@mui/material/StepLabel'
 import Typography from '@mui/material/Typography'
 import Button from '@mui/material/Button'
-import MenuItem from '@mui/material/MenuItem'
-import InputAdornment from '@mui/material/InputAdornment'
-import IconButton from '@mui/material/IconButton'
 
 // Third-party Imports
-import { toast } from 'react-toastify'
 
 // Component Imports
-import DirectionalIcon from '@components/DirectionalIcon'
-import CustomTextField from '@core/components/mui/TextField'
 
 // Styled Component Imports
 import StepperWrapper from '@core/styles/stepper'
@@ -30,6 +24,7 @@ import PersonalDetailsForm from './PersonalDetailsAndNotes/PersonalDetailsForm'
 import LoginInfoComponent from './LoginInfoAndMailingAddress/LoginInfoComponent'
 import PCAUMPITable from './PcaUmpi/PCAUMPITable'
 import { FormDataType } from '../../invoice/add/AddCustomerDrawer'
+import { useRouter } from 'next/navigation'
 import TrainingCertificatesComponent from './Certificates/TrainingCertificatesComponent'
 
 // type FormDataType = {
@@ -77,8 +72,11 @@ const EmployeeStepper = () => {
   // States
   const [activeStep, setActiveStep] = useState(3)
 
+  const router = useRouter()
+
   const personalDetailsFormRef = useRef<any>(null)
   const certificatesFormRef = useRef<any>(null)
+  const loginInfoFormRef = useRef<any>(null)
 
   const handleReset = () => {
     setActiveStep(0)
@@ -101,9 +99,9 @@ const EmployeeStepper = () => {
         setActiveStep(prevActiveStep => prevActiveStep + 1)
       })()
     } else if (activeStep === 2) {
-      // Manually trigger form submission for the first step
-      personalDetailsFormRef.current?.handleSubmit((data: FormDataType) => {
-        console.log('Personal Details in Parent:', data)
+      loginInfoFormRef.current?.handleSubmit((data: FormDataType) => {
+        console.log('Login Info in parent: ', data)
+        // Manually trigger form submission for the first step
         // Move to next step after successful validation
         setActiveStep(prevActiveStep => prevActiveStep + 1)
       })()
@@ -125,6 +123,10 @@ const EmployeeStepper = () => {
     setActiveStep(prevActiveStep => prevActiveStep - 1)
   }
 
+  const handleCancel = () => {
+    router.replace('/apps/caregiver/list')
+  }
+
   const onPersonalDetailsSubmit = (values: FormDataType) => {
     console.log('Personal Details in Parent:', values)
     // Optionally store values or perform next step logic
@@ -132,7 +134,8 @@ const EmployeeStepper = () => {
   }
 
   const onLoginInfoSubmit = (values: any) => {
-    console.log('Personal Detail', values)
+    console.log('Login Info in Parent: ', values)
+    handleNext()
   }
 
   const onPCAUMPISubmit = (values: any) => {
@@ -149,7 +152,7 @@ const EmployeeStepper = () => {
       case 0:
         return <PersonalDetailsForm ref={personalDetailsFormRef} onFinish={onPersonalDetailsSubmit} />
       case 1:
-        return <LoginInfoComponent onFinish={onLoginInfoSubmit} />
+        return <LoginInfoComponent ref={loginInfoFormRef} onFinish={onLoginInfoSubmit} />
       case 2:
         return <PCAUMPITable />
       case 3:
@@ -163,7 +166,7 @@ const EmployeeStepper = () => {
     <>
       <Card>
         <Typography variant='h4' className='p-4'>
-          Adding a Employee / Details and Caregiver Notes
+          Adding a Employee / {steps[activeStep]?.subtitle}
         </Typography>
         <StepperWrapper>
           <Stepper activeStep={activeStep} alternativeLabel>
@@ -202,30 +205,31 @@ const EmployeeStepper = () => {
           {/* <form onSubmit={e => e.preventDefault()}> */}
           <Grid container spacing={6}>
             {renderStepContent(activeStep)}
-            <Grid size={{ xs: 12 }} className='flex justify-between'>
-              <Button
-                variant='tonal'
-                disabled={activeStep === 0}
-                onClick={handleBack}
-                color='secondary'
-                startIcon={<DirectionalIcon ltrIconClass='bx-left-arrow-alt' rtlIconClass='bx-right-arrow-alt' />}
-              >
-                Back
-              </Button>
-              <Button
-                variant='contained'
-                onClick={handleNext}
-                endIcon={
-                  activeStep === steps.length - 1 ? (
-                    <i className='bx-check' />
-                  ) : (
-                    <DirectionalIcon ltrIconClass='bx-right-arrow-alt' rtlIconClass='bx-left-arrow-alt' />
-                  )
-                }
-              >
-                {activeStep === steps.length - 1 ? 'Submit' : 'Next'}
-              </Button>
-            </Grid>
+            <Card className='w-full'>
+              <CardContent>
+                <Grid size={{ xs: 12, md: 12 }} className='flex justify-between'>
+                  <div>
+                    <Button variant='outlined' onClick={handleCancel} color='secondary'>
+                      Cancel
+                    </Button>
+                  </div>
+                  <div>
+                    <Button
+                      variant='outlined'
+                      disabled={activeStep === 0}
+                      onClick={handleBack}
+                      color='secondary'
+                      className='mr-5'
+                    >
+                      Back
+                    </Button>
+                    <Button variant='contained' onClick={handleNext}>
+                      {activeStep === steps.length - 1 ? 'Submit' : 'Next'}
+                    </Button>
+                  </div>
+                </Grid>
+              </CardContent>
+            </Card>
           </Grid>
           {/* </form> */}
         </>
