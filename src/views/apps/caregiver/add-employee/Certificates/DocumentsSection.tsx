@@ -1,19 +1,20 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
-import { Button, Progress, Upload, message } from 'antd'
-import { UploadOutlined, FilePdfOutlined } from '@ant-design/icons'
-import type { UploadFile } from 'antd/es/upload/interface'
-import type { RcFile } from 'antd/es/upload'
+import React, { forwardRef, useEffect, useImperativeHandle, useState } from 'react'
 import {
   type UseFormRegister,
   type FieldErrorsImpl,
   type UseFormSetValue,
   type UseFormWatch,
-  useFormContext
+  useFormContext,
+  FormProvider,
+  useForm
 } from 'react-hook-form'
 import CustomDropDown from '@core/components/custom-inputs/CustomDropDown'
 import CustomTextField from '@core/components/custom-inputs/CustomTextField'
+import { Button, Card, CardContent } from '@mui/material'
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf'
+import FileUploaderRestrictions from '@/@core/components/mui/FileUploader'
 
 interface DisplayFile {
   id: number
@@ -22,208 +23,231 @@ interface DisplayFile {
   progress: number
 }
 
-// Example form data interface
 interface DocumentsFormData {
   employeeNumber: string
   additionalPayRate: string
   serviceType: string
-  trainingFiles?: UploadFile[]
+  trainingFiles?: any
 }
 
-interface Props {
-  register: any
-  watch: any
-  setValue: any
+type Props = {
+  onFinish: any
 }
 
-const DocumentsSection = ({ register, watch, setValue }: Props) => {
-  const [s3Files, setS3Files] = useState<UploadFile[]>([])
-  const [displayFiles, setDisplayFiles] = useState<DisplayFile[]>([])
+const DocumentsSection = forwardRef<{ handleSubmit: any }, Props>(({ onFinish }, ref) => {
+  const [ssnFile, setSsnFile] = useState<any>([])
+  const [adultFile, setAdultFile] = useState<any>([])
+  const [umpiFile, setUmpiFile] = useState<any>([])
+  const [clearanceFile, setClearanceFile] = useState<any>([])
+
+  const methods = useForm({
+    mode: 'onSubmit',
+    reValidateMode: 'onChange',
+    defaultValues: {
+      ssnFileObject: [],
+      adultFileObject: [],
+      umpiFileObject: [],
+      clearanceFileObject: [],
+      employeeNumber: '',
+      additionalPayRate: '',
+      serviceType: ''
+    }
+  })
+
+  // Expose handleSubmit to parent via ref
+  useImperativeHandle(ref, () => ({
+    handleSubmit: (onValid: (data: any) => void) => handleSubmit(onValid)
+  }))
 
   const {
     control,
-    formState: { errors }
-  } = useFormContext()
+    formState: { errors },
+    handleSubmit,
+    register,
+    setValue
+  } = methods
+
+  // Update form values when files are selected
+  useEffect(() => {
+    setValue('ssnFileObject', ssnFile)
+  }, [ssnFile, setValue])
 
   useEffect(() => {
-    // Sync local file state with form state
-    setValue('trainingFiles', s3Files)
-  }, [s3Files, setValue])
+    setValue('adultFileObject', adultFile)
+  }, [adultFile, setValue])
 
-  const handleRemoveFile = (fileId: number) => {
-    setDisplayFiles(prev => prev.filter(file => file.id !== fileId))
-    const removedFile = displayFiles.find(f => f.id === fileId)
-    if (removedFile) {
-      const newS3Files = s3Files.filter(f => f.name !== removedFile.name)
-      setS3Files(newS3Files)
-      setValue('trainingFiles', newS3Files)
-    }
-  }
+  useEffect(() => {
+    setValue('umpiFileObject', umpiFile)
+  }, [umpiFile, setValue])
 
-  const uploadProps = {
-    beforeUpload: (file: File) => {
-      const isAllowed = file.size / 1024 / 1024 < 50
-      const timestamp = Date.now()
-      const uid = `document-${timestamp}-${s3Files.length + 1}`
+  useEffect(() => {
+    setValue('clearanceFileObject', clearanceFile)
+  }, [clearanceFile, setValue])
 
-      if (!isAllowed) {
-        setDisplayFiles(prev => [...prev, { id: timestamp, name: file.name, status: 'error', progress: 100 }])
-        message.error('File size must be less than 50MB')
-      } else {
-        const s3File: UploadFile = {
-          uid,
-          lastModified: file.lastModified,
-          lastModifiedDate: new Date(file.lastModified),
-          name: file.name,
-          size: file.size,
-          type: file.type,
-          percent: 0,
-          originFileObj: file as RcFile
-        }
-
-        const newS3Files = [...s3Files, s3File]
-        setS3Files(newS3Files)
-        setValue('trainingFiles', newS3Files)
-
-        setDisplayFiles(prev => [...prev, { id: timestamp, name: file.name, status: 'success', progress: 100 }])
+  const onSubmit = (data: any) => {
+    const formData = {
+      trainingCertificates: {
+        files: data.trainingCertificateFiles || [],
+        trainingCertificateName: data.trainingCertificateName,
+        trainingCertificateExpiryDate: data.trainingCertificateExpiryDate
+      },
+      drivingCertificates: {
+        files: data.drivingCertificateFiles || [],
+        drivingLicenseExpiryDate: data.drivingLicenseExpiryDate,
+        drivingLicenseNumber: data.drivingLicenseNumber,
+        dlState: data.dlState
       }
-      return false
-    },
-    onRemove: (file: UploadFile) => {
-      const newS3Files = s3Files.filter(f => f.uid !== file.uid)
-      setS3Files(newS3Files)
-      setValue('trainingFiles', newS3Files)
-      setDisplayFiles(prev => prev.filter(f => f.name !== file.name))
-    },
-    fileList: s3Files
+    }
+
+    console.log('Submitted Training Certificates Data:', formData)
+    onFinish(formData)
   }
 
-  return (
-    <div className='p-6 bg-white rounded-lg shadow-md'>
-      {/* Employee Details */}
-      <div className='grid grid-cols-1 md:grid-cols-2 gap-6 mb-6'>
-        {/* Employee Number */}
-        <div>
-          <CustomTextField
-            label={'Employee Number'}
-            placeHolder={'Employee Number'}
-            name={'employeeNumber'}
-            defaultValue={''}
-            type={'number'}
-            error={errors.employeeNumber}
-            control={control}
-          />
-        </div>
-
-        {/* Additional Pay Rate */}
-        <div>
-          <CustomTextField
-            label={'Additional Pay Rate'}
-            placeHolder={'Additional Pay Rate'}
-            name={'additionalPayRate'}
-            defaultValue={''}
-            type={'number'}
-            error={errors.additionalPayRate}
-            control={control}
-          />
-        </div>
-      </div>
-
-      {/* Documents Section */}
-      <h2 className='text-xl font-semibold mb-6'>Documents</h2>
-      <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6'>
-        {['Upload SSN', 'Vulnerable Adult Mandated Certificate', 'UMPI Letter', 'Background Check Clearance'].map(
-          (doc, idx) => (
-            <div key={idx} className='bg-gray-100 p-4 rounded-lg flex flex-col items-center'>
-              <div className='text-purple-500 mb-4'>
-                <FilePdfOutlined style={{ fontSize: '2rem' }} />
-              </div>
-              <span className='text-gray-600 mb-2'>{doc}</span>
-              <Upload {...uploadProps} showUploadList={false}>
-                <Button
-                  icon={<UploadOutlined />}
-                  className='!text-gray-500 !border-gray-300 hover:!text-gray-700 hover:!border-gray-400'
-                >
-                  CHOOSE FILE
-                </Button>
-              </Upload>
-              <p className='mt-4 text-sm text-gray-600'>
-                File must be less than <span className='font-semibold'>50mb</span>
-              </p>
-              <p className='text-sm text-gray-600'>
-                Allowed file types: <span className='font-semibold'>pdf, jpeg, jpg, png, doc</span>
-              </p>
-            </div>
-          )
-        )}
-      </div>
-
-      {/* Uploading Files Section */}
-      <h2 className='text-xl font-semibold mb-6'>Uploading Files</h2>
-      <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-        {displayFiles.map(file => (
-          <div
-            key={file.id}
-            className={`p-4 rounded-lg border ${
-              file.status === 'success' ? 'border-green-400 bg-green-50' : 'border-red-400 bg-red-50'
-            }`}
-          >
-            <div className='flex justify-between items-center mb-2'>
-              <div className='flex items-center gap-2'>
-                <FilePdfOutlined className='text-xl text-gray-600' />
-                <span className={`font-semibold ${file.status === 'success' ? 'text-green-600' : 'text-red-600'}`}>
-                  {file.name} (100%)
-                </span>
-              </div>
-              {file.status === 'error' ? (
-                <Button
-                  type='link'
-                  onClick={() => handleRemoveFile(file.id)}
-                  className='text-red-500 hover:text-red-700'
-                >
-                  Cancel
-                </Button>
-              ) : (
-                <span className='text-green-600 font-semibold'>Completed</span>
-              )}
-            </div>
-            <Progress
-              percent={file.progress}
-              size='small'
-              status={file.status === 'success' ? 'active' : 'exception'}
-              strokeColor={file.status === 'success' ? '#52c41a' : '#ff4d4f'}
-            />
+  // Helper function to render file list
+  const renderFileList = (files: File[], title: string) =>
+    files.length > 0 && (
+      <div className='p-4 rounded-lg border border-[#32475C] border-opacity-[22%]'>
+        <h3 className='text-md font-semibold mb-2'>{title}</h3>
+        {files.map((file, index) => (
+          <div key={index} className='flex items-center gap-2 mb-2'>
+            <PictureAsPdfIcon />
+            <span className='font-semibold text-green-600'>{file.name}</span>
           </div>
         ))}
       </div>
+    )
 
-      {/* Service Type & Submit Button */}
-      <div className='mt-5'>
-        <h2 className='text-xl font-semibold mb-4'>Service Type</h2>
-        <div className='flex flex-col gap-0'>
-          {/* Service Type */}
-          <div className='w-[30%] mb-4'>
-            <CustomDropDown
-              label='Service Type'
-              optionList={[
-                { key: 1, value: 'All', optionString: 'All' },
-                { key: 2, value: 'Type 1', optionString: 'Type 1' },
-                { key: 3, value: 'Type 2', optionString: 'Type 2' }
-              ]}
-              name={'serviceType'}
-              control={control}
-              error={errors.serviceType}
-              defaultValue={''} // wire up with register
-            />
-          </div>
+  return (
+    <FormProvider {...methods}>
+      <form onSubmit={handleSubmit(onSubmit)} className='w-full'>
+        <Card className='mt-5'>
+          <CardContent>
+            <div className='p-6 text-white'>
+              {/* Employee Details */}
+              <div className='grid grid-cols-1 md:grid-cols-2 gap-6 mb-6'>
+                {/* Employee Number */}
+                <div>
+                  <CustomTextField
+                    label={'Employee Number'}
+                    placeHolder={'Employee Number'}
+                    name={'employeeNumber'}
+                    defaultValue={''}
+                    type={'number'}
+                    error={!!errors?.employeeNumber}
+                    control={control}
+                  />
+                </div>
 
-          <Button type='primary' className='!bg-[#4B0082] !text-white hover:!bg-[#4B0082] w-[20%]'>
-            CREATE NEW ACCOUNT
-          </Button>
-        </div>
-      </div>
-    </div>
+                {/* Additional Pay Rate */}
+                <div>
+                  <CustomTextField
+                    label={'Additional Pay Rate'}
+                    placeHolder={'Additional Pay Rate'}
+                    name={'additionalPayRate'}
+                    defaultValue={''}
+                    type={'number'}
+                    error={errors.additionalPayRate}
+                    control={control}
+                  />
+                </div>
+              </div>
+
+              {/* Documents Section */}
+              <h2 className='text-xl font-semibold mb-6'>Documents</h2>
+              <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6'>
+                <div className='p-4 rounded-lg'>
+                  <FileUploaderRestrictions
+                    onFilesSelected={selectedFiles => {
+                      setSsnFile(selectedFiles)
+                    }}
+                    mimeType={['application/pdf', 'image/jpeg', 'image/png']}
+                    fileCount={1}
+                    fileSize={25 * 1024 * 1024}
+                    title='Upload SSN'
+                  />
+                </div>
+                <div className='p-4 rounded-lg'>
+                  <FileUploaderRestrictions
+                    onFilesSelected={selectedFiles => {
+                      setAdultFile(selectedFiles)
+                    }}
+                    mimeType={['application/pdf', 'image/jpeg', 'image/png']}
+                    fileCount={1}
+                    fileSize={25 * 1024 * 1024}
+                    title='Vulnerable Adult Mandated Certificate'
+                  />
+                </div>
+                <div className='p-4 rounded-lg'>
+                  <FileUploaderRestrictions
+                    onFilesSelected={selectedFiles => {
+                      setUmpiFile(selectedFiles)
+                    }}
+                    mimeType={['application/pdf', 'image/jpeg', 'image/png']}
+                    fileCount={1}
+                    fileSize={25 * 1024 * 1024}
+                    title='UMPI Letter'
+                  />
+                </div>
+                <div className='p-4 rounded-lg'>
+                  <FileUploaderRestrictions
+                    onFilesSelected={selectedFiles => {
+                      setClearanceFile(selectedFiles)
+                    }}
+                    mimeType={['application/pdf', 'image/jpeg', 'image/png']}
+                    fileCount={1}
+                    fileSize={25 * 1024 * 1024}
+                    title='Background Check Clearance'
+                  />
+                </div>
+                <div className='col-span-2'>
+                  <h2 className='text-base font-semibold mb-3'>Uploading Files</h2>
+                  <div className='grid grid-cols-2 gap-6 mb-6'>
+                    {renderFileList(ssnFile, 'SSN Document')}
+                    {renderFileList(adultFile, 'Vulnerable Adult Certificate')}
+                    {renderFileList(umpiFile, 'UMPI Letter')}
+                    {renderFileList(clearanceFile, 'Background Check Clearance')}
+                  </div>
+                </div>
+              </div>
+
+              {/* Uploaded Files Section */}
+              <h2 className='text-xl font-semibold mb-6'>Uploaded Files</h2>
+              {/* <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
+                {renderFileList(ssnFile, 'SSN Document')}
+                {renderFileList(adultFile, 'Vulnerable Adult Certificate')}
+                {renderFileList(umpiFile, 'UMPI Letter')}
+                {renderFileList(clearanceFile, 'Background Check Clearance')}
+              </div> */}
+
+              {/* Service Type & Submit Button */}
+              <div className='mt-5'>
+                <h2 className='text-xl font-semibold mb-4'>Service Type</h2>
+                <div className='flex flex-col gap-0'>
+                  {/* Service Type */}
+                  <div className='w-[30%] mb-4'>
+                    <CustomDropDown
+                      label='Service Type'
+                      optionList={[
+                        { key: 1, value: 'All', optionString: 'All' },
+                        { key: 2, value: 'Type 1', optionString: 'Type 1' },
+                        { key: 3, value: 'Type 2', optionString: 'Type 2' }
+                      ]}
+                      name={'serviceType'}
+                      control={control}
+                      error={errors.serviceType}
+                      defaultValue={''}
+                    />
+                  </div>
+
+                  <Button className='!bg-[#4B0082] !text-white hover:!bg-[#4B0082] w-[20%]'>CREATE NEW ACCOUNT</Button>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </form>
+    </FormProvider>
   )
-}
+})
 
 export default DocumentsSection

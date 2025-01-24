@@ -26,6 +26,7 @@ import PCAUMPITable from './PcaUmpi/PCAUMPITable'
 import { FormDataType } from '../../invoice/add/AddCustomerDrawer'
 import { useRouter } from 'next/navigation'
 import TrainingCertificatesComponent from './Certificates/TrainingCertificatesComponent'
+import DocumentsSection from './Certificates/DocumentsSection'
 
 // type FormDataType = {
 //   username: string
@@ -70,13 +71,14 @@ const steps = [
 
 const EmployeeStepper = () => {
   // States
-  const [activeStep, setActiveStep] = useState(3)
+  const [activeStep, setActiveStep] = useState(4)
 
   const router = useRouter()
 
   const personalDetailsFormRef = useRef<any>(null)
   const certificatesFormRef = useRef<any>(null)
   const loginInfoFormRef = useRef<any>(null)
+  const documentsFormRef = useRef<any>(null)
 
   const handleReset = () => {
     setActiveStep(0)
@@ -109,6 +111,13 @@ const EmployeeStepper = () => {
       // Manually trigger form submission for the first step
       certificatesFormRef.current?.handleSubmit((data: any) => {
         console.log('Certificates data:', data)
+        // Move to next step after successful validation
+        setActiveStep(prevActiveStep => prevActiveStep + 1)
+      })()
+    } else if (activeStep === 4) {
+      // Manually trigger form submission for the first step
+      documentsFormRef.current?.handleSubmit((data: any) => {
+        console.log('Documents data:', data)
         // Move to next step after successful validation
         setActiveStep(prevActiveStep => prevActiveStep + 1)
       })()
@@ -146,6 +155,10 @@ const EmployeeStepper = () => {
     console.log('Personal Detail', values)
   }
 
+  const onDocumentsSubmit = (values: any) => {
+    console.log('Personal Detail', values)
+  }
+
   console.log('ACTIVE STREP', activeStep)
   const renderStepContent = (activeStep: number) => {
     switch (activeStep) {
@@ -157,6 +170,8 @@ const EmployeeStepper = () => {
         return <PCAUMPITable />
       case 3:
         return <TrainingCertificatesComponent ref={certificatesFormRef} onFinish={onTrainingCertificatesSubmit} />
+      case 4:
+        return <DocumentsSection ref={documentsFormRef} onFinish={onDocumentsSubmit} />
       default:
         return 'Unknown step'
     }

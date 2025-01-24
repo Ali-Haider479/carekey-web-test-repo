@@ -36,9 +36,7 @@ const TrainingCertificatesComponent = forwardRef<{ handleSubmit: any }, Props>((
     reValidateMode: 'onChange',
     defaultValues: {
       trainingCertificateFiles: [],
-      // trainingCertificateNames: ['', ''],
       drivingCertificateFiles: [],
-      // drivingCertificateNames: ['', ''],
       trainingCertificateName: '',
       trainingCertificateExpiryDate: new Date(),
       drivingLicenseNumber: '',
@@ -79,7 +77,6 @@ const TrainingCertificatesComponent = forwardRef<{ handleSubmit: any }, Props>((
       },
       drivingCertificates: {
         files: data.drivingCertificateFiles || [],
-        // drivingCertificateNumber: data.drivingCertificateNumber,
         drivingLicenseExpiryDate: data.drivingLicenseExpiryDate,
         drivingLicenseNumber: data.drivingLicenseNumber,
         dlState: data.dlState
