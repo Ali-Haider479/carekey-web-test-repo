@@ -75,14 +75,17 @@ const steps = [
 
 const EmployeeStepper = () => {
   // States
-  const [activeStep, setActiveStep] = useState(0)
+  const [activeStep, setActiveStep] = useState(3)
 
   const personalDetailsFormRef = useRef<any>(null)
+  const certificatesFormRef = useRef<any>(null)
+
   const handleReset = () => {
     setActiveStep(0)
   }
 
   const handleNext = () => {
+    console.log('Active steps', activeStep)
     if (activeStep === 0) {
       // Manually trigger form submission for the first step
       personalDetailsFormRef.current?.handleSubmit((data: FormDataType) => {
@@ -90,7 +93,29 @@ const EmployeeStepper = () => {
         // Move to next step after successful validation
         setActiveStep(prevActiveStep => prevActiveStep + 1)
       })()
+    } else if (activeStep === 1) {
+      // Manually trigger form submission for the first step
+      personalDetailsFormRef.current?.handleSubmit((data: FormDataType) => {
+        console.log('Personal Details in Parent:', data)
+        // Move to next step after successful validation
+        setActiveStep(prevActiveStep => prevActiveStep + 1)
+      })()
+    } else if (activeStep === 2) {
+      // Manually trigger form submission for the first step
+      personalDetailsFormRef.current?.handleSubmit((data: FormDataType) => {
+        console.log('Personal Details in Parent:', data)
+        // Move to next step after successful validation
+        setActiveStep(prevActiveStep => prevActiveStep + 1)
+      })()
+    } else if (activeStep === 3) {
+      // Manually trigger form submission for the first step
+      certificatesFormRef.current?.handleSubmit((data: any) => {
+        console.log('Certificates data:', data)
+        // Move to next step after successful validation
+        setActiveStep(prevActiveStep => prevActiveStep + 1)
+      })()
     } else {
+      console.log('INSIDE ELSEE----------------')
       // For other steps, use existing logic
       setActiveStep(prevActiveStep => prevActiveStep + 1)
     }
@@ -127,8 +152,8 @@ const EmployeeStepper = () => {
         return <LoginInfoComponent onFinish={onLoginInfoSubmit} />
       case 2:
         return <PCAUMPITable />
-      // case 3:
-      //   return <TrainingCertificatesComponent />
+      case 3:
+        return <TrainingCertificatesComponent ref={certificatesFormRef} onFinish={onTrainingCertificatesSubmit} />
       default:
         return 'Unknown step'
     }

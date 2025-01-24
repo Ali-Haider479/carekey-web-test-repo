@@ -1,175 +1,192 @@
 'use client'
-import React, { useState, useEffect } from 'react'
-import { Button, Progress, Upload, Form, DatePicker, message, FormInstance } from 'antd'
-import { UploadOutlined, FilePdfOutlined } from '@ant-design/icons'
-import type { RcFile, UploadFile } from 'antd/es/upload/interface'
+import React, { useState, useEffect, useImperativeHandle, forwardRef } from 'react'
 import CustomTextField from '@/@core/components/mui/TextField'
+import { Button, Card, CardContent, LinearProgress, Typography } from '@mui/material'
+import { FormProvider, useForm } from 'react-hook-form'
+import FileUploaderRestrictions from '@/@core/components/mui/FileUploader'
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf'
 
-interface DisplayFile {
-  id: number
-  name: string
-  status: 'success' | 'error' | 'uploading'
-  progress: number
+// interface DisplayFile {
+//   id: number
+//   status: 'success' | 'error' | 'uploading'
+//   path: string // The full path of the file
+//   relativePath: string // The relative path of the file
+//   lastModified: number // The timestamp of the last modification
+//   lastModifiedDate: Date // The date object representing the last modification time
+//   name: string // The name of the file
+//   size: number // The size of the file in bytes
+//   type: string // The MIME type of the file
+//   webkitRelativePath: string // The webkit-specific relative path of the file
+// }
+
+type Props = {
+  // form?: any
+  onFinish: any
 }
 
-interface Props {
-  form: FormInstance
-}
+// const TrainingCertificatesComponent = () => {
+const TrainingCertificatesComponent = forwardRef<{ handleSubmit: any }, Props>(({ onFinish }, ref) => {
+  const [trainingCertificates, setTrainingCertificates] = useState<any>([])
+  const [drivingCertificates, setDrivingCertificates] = useState<any>([])
 
-const TrainingCertificatesComponent = ({ form }: Props) => {
-  const [s3Files, setS3Files] = useState<UploadFile[]>([])
-  const [displayFiles, setDisplayFiles] = useState<DisplayFile[]>([])
+  const methods = useForm({
+    mode: 'onSubmit',
+    reValidateMode: 'onChange',
+    defaultValues: {
+      trainingCertificateFiles: [],
+      // trainingCertificateNames: ['', ''],
+      drivingCertificateFiles: [],
+      // drivingCertificateNames: ['', ''],
+      trainingCertificateName: '',
+      trainingCertificateExpiryDate: new Date(),
+      drivingCertificateNames: '',
+      drivingLicenseNumber: '',
+      dlState: '',
+      drivingLicenseExpiryDate: new Date()
+    }
+  })
+
+  // Expose handleSubmit to parent via ref
+  useImperativeHandle(ref, () => ({
+    handleSubmit: (onValid: (data: any) => void) => handleSubmit(onValid)
+  }))
+
+  const {
+    control,
+    formState: { errors },
+    handleSubmit,
+    register,
+    setValue
+  } = methods
+
+  // Update form values when files are selected
+  useEffect(() => {
+    setValue('trainingCertificateFiles', trainingCertificates)
+  }, [trainingCertificates, setValue])
 
   useEffect(() => {
-    // Update form with training files specifically
-    form.setFieldsValue({
-      trainingFiles: s3Files
-    })
-  }, [s3Files, form])
+    setValue('drivingCertificateFiles', drivingCertificates)
+  }, [drivingCertificates, setValue])
 
-  const handleRemoveFile = (fileId: number) => {
-    setDisplayFiles(displayFiles.filter(file => file.id !== fileId))
-    const displayFile = displayFiles.find(file => file.id === fileId)
-    if (displayFile) {
-      const newS3Files = s3Files.filter(file => file.name !== displayFile.name)
-      setS3Files(newS3Files)
-      form.setFieldsValue({
-        trainingFiles: newS3Files
-      })
-    }
-  }
-
-  const uploadProps = {
-    beforeUpload: (file: File) => {
-      const isAllowed = file.size / 1024 / 1024 < 50
-      const timestamp = Date.now()
-      const uid = `training-${timestamp}-${s3Files.length + 1}`
-
-      if (!isAllowed) {
-        setDisplayFiles(prev => [...prev, { id: timestamp, name: file.name, status: 'error', progress: 100 }])
-        message.error('File size must be less than 50MB')
-      } else {
-        const s3File: UploadFile = {
-          uid,
-          lastModified: file.lastModified,
-          lastModifiedDate: new Date(file.lastModified),
-          name: file.name,
-          size: file.size,
-          type: file.type,
-          percent: 0,
-          originFileObj: {
-            lastModified: file.lastModified,
-            lastModifiedDate: new Date(file.lastModified),
-            name: file.name,
-            size: file.size,
-            type: file.type,
-            uid
-          } as RcFile
-        }
-
-        const newS3Files = [...s3Files, s3File]
-        setS3Files(newS3Files)
-        setDisplayFiles(prev => [...prev, { id: timestamp, name: file.name, status: 'success', progress: 100 }])
-
-        form.setFieldsValue({
-          trainingFiles: newS3Files
-        })
+  const onSubmit = (data: any) => {
+    // Combine files and form data
+    const formData = {
+      trainingCertificates: {
+        files: data.trainingCertificateFiles || [],
+        certificateNames: data.trainingCertificateName,
+        expiryDate: data.trainingCertificateExpiryDate
+      },
+      drivingCertificates: {
+        files: data.drivingCertificateFiles || [],
+        certificateNames: data.drivingCertificateNames,
+        expiryDate: data.drivingLicenseExpiryDate,
+        licenseNumber: data.drivingLicenseNumber,
+        state: data.dlState
       }
-      return false
-    },
-    onRemove: (file: UploadFile) => {
-      const newS3Files = s3Files.filter(f => f.uid !== file.uid)
-      setS3Files(newS3Files)
-      setDisplayFiles(prev => prev.filter(f => f.name !== file.name))
-      form.setFieldsValue({
-        trainingFiles: newS3Files
-      })
-    },
-    fileList: s3Files
+    }
+
+    console.log('Submitted Training Certificates Data:', formData)
+    onFinish(formData) // Pass comprehensive form data to parent
   }
 
   return (
-    <Form layout='vertical' form={form} autoComplete='off' className='p-6 bg-white rounded-lg shadow-md'>
-      <h2 className='text-xl font-semibold mb-6'>Training Certificates</h2>
-      <Form.Item name='trainingFiles' hidden>
-        <input type='hidden' />
-      </Form.Item>
-      <div className='grid grid-cols-1 md:grid-cols-3 gap-6'>
-        {/* File Upload Section */}
-        <div className='col-span-1 bg-gray-100 p-6 rounded-lg flex flex-col items-center justify-center'>
-          <div className='text-purple-500 mb-4'>
-            <FilePdfOutlined style={{ fontSize: '2rem' }} />
-          </div>
-          <span className='text-gray-500 mb-2'>No File Chosen</span>
-          <Upload {...uploadProps} showUploadList={false}>
-            <Button
-              icon={<UploadOutlined />}
-              className='!text-gray-500 !border-gray-300 hover:!text-gray-700 hover:!border-gray-400'
-            >
-              CHOOSE FILE
-            </Button>
-          </Upload>
-          <p className='mt-4 text-sm text-gray-600'>
-            File must be less than <span className='font-semibold'>50mb</span>
-          </p>
-          <p className='text-sm text-gray-600'>
-            Allowed file types: <span className='font-semibold'>pdf, jpeg, jpg, png, doc</span>
-          </p>
-        </div>
-
-        {/* Uploading Files Section */}
-        <div className='col-span-2'>
-          <h3 className='text-lg font-semibold mb-4'>Uploading Files</h3>
-          <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-            {displayFiles.map(file => (
-              <div
-                key={file.id}
-                className={`p-4 rounded-lg border ${
-                  file.status === 'success'
-                    ? 'border-[#32475C] border-opacity-[22%] bg-white'
-                    : 'border-[#32475C] border-opacity-[22%] bg-white'
-                }`}
-              >
-                <div className='flex justify-between items-center mb-2'>
-                  <div className='flex items-center gap-2'>
-                    <FilePdfOutlined className='text-xl text-gray-600' />
-                    <span className={`font-semibold ${file.status === 'success' ? 'text-green-600' : 'text-red-600'}`}>
-                      {file.name} (100%)
-                    </span>
-                  </div>
-                  <Button
-                    type='link'
-                    onClick={() => handleRemoveFile(file.id)}
-                    className={`${
-                      file.status === 'error' ? 'text-red-500 hover:text-red-700' : 'text-gray-500 hover:text-gray-700'
-                    }`}
-                  >
-                    {file.status === 'error' ? 'Cancel' : 'Remove'}
-                  </Button>
-                </div>
-                <Progress
-                  percent={file.progress}
-                  size='small'
-                  status={file.status === 'success' ? 'active' : 'exception'}
-                  strokeColor={file.status === 'success' ? '#52c41a' : '#ff4d4f'}
+    <FormProvider {...methods}>
+      <form onSubmit={handleSubmit(onSubmit)} className='w-full'>
+        <Card className='mt-5'>
+          <CardContent>
+            <Typography className='text-xl font-semibold mb-4'>Training Certificates</Typography>
+            <div className='grid grid-cols-1 md:grid-cols-3 gap-6'>
+              {/* File Upload Section */}
+              <div className='col-span-1 p-3 rounded-lg'>
+                <FileUploaderRestrictions
+                  onFilesSelected={selectedFiles => {
+                    setTrainingCertificates(selectedFiles)
+                  }}
                 />
               </div>
-            ))}
-          </div>
-        </div>
-      </div>
 
-      {/* Certificate Details */}
-      <div className='grid grid-cols-1 md:grid-cols-2 gap-6 mt-6'>
-        <Form.Item name='certificateName' rules={[{ required: true, message: 'Please enter the certificate name' }]}>
-          <CustomTextField placeholder='Enter Certificate Name' label='Certificate Name' />
-        </Form.Item>
-        <Form.Item name='expiryDate' rules={[{ required: true, message: 'Please select the expiry date' }]}>
-          <DatePicker className='w-full' placeholder='Expiry Date' size='large' />
-        </Form.Item>
-      </div>
-    </Form>
+              {/* Uploading Files Section */}
+              <div className='col-span-2'>
+                <h3 className='text-lg font-semibold mb-4'>Uploading Files</h3>
+                <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                  {trainingCertificates.map((file: File, index: number) => (
+                    <div key={index} className='p-4 rounded-lg border border-[#32475C] border-opacity-[22%]'>
+                      <div className='flex justify-between items-center mb-2'>
+                        <div className='flex items-center gap-2'>
+                          <PictureAsPdfIcon />
+                          <span className='font-semibold text-green-600'>{file.name} (100%)</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Certificate Details */}
+            <div className='grid grid-cols-1 md:grid-cols-2 gap-6 mt-6'>
+              <CustomTextField
+                {...register(`trainingCertificateName`)}
+                placeholder='Enter Certificate Name'
+                label='Certificate Name'
+              />
+              <CustomTextField
+                {...register(`trainingCertificateExpiryDate`)}
+                placeholder='Expiry Date'
+                label='Expiry Date'
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className='mt-5'>
+          <CardContent>
+            <Typography className='text-xl font-semibold mb-4'>Caregiver Notes</Typography>
+            <div className='grid grid-cols-1 md:grid-cols-3 gap-6'>
+              {/* File Upload Section */}
+              <div className='col-span-1 p-3 rounded-lg'>
+                <FileUploaderRestrictions
+                  onFilesSelected={selectedFiles => {
+                    setDrivingCertificates(selectedFiles)
+                  }}
+                />
+              </div>
+
+              {/* Uploading Files Section */}
+              <div className='col-span-2'>
+                <h3 className='text-lg font-semibold mb-4'>Uploading Files</h3>
+                <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                  {drivingCertificates.map((file: File, index: number) => (
+                    <div key={index} className='p-4 rounded-lg border border-[#32475C] border-opacity-[22%]'>
+                      <div className='flex justify-between items-center mb-2'>
+                        <div className='flex items-center gap-2'>
+                          <PictureAsPdfIcon />
+                          <span className='font-semibold text-green-600'>{file.name} (100%)</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className='grid grid-cols-1 md:grid-cols-2 gap-6 mt-6'>
+              <CustomTextField
+                {...register(`drivingCertificateNames`)}
+                placeholder='Enter Certificate Name'
+                label='Certificate Name'
+              />
+              <CustomTextField
+                {...register(`drivingLicenseExpiryDate`)}
+                placeholder='Expiry Date'
+                label='Expiry Date'
+              />
+            </div>
+          </CardContent>
+        </Card>
+      </form>
+    </FormProvider>
   )
-}
+})
 
 export default TrainingCertificatesComponent
