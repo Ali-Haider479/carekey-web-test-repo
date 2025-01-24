@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { forwardRef, useImperativeHandle, useState } from 'react'
 import CustomTextField from '@core/components/custom-inputs/CustomTextField'
 import { FormProvider, useForm, useFormContext } from 'react-hook-form'
 import CustomDropDown from '@core/components/custom-inputs/CustomDropDown'
@@ -11,31 +11,34 @@ type Props = {
   onFinish: any
 }
 
-const LoginInfoComponent = ({ onFinish }: Props) => {
-  interface FormDataType {
-    // Account Login Information
-    userName?: string
-    emailAddress?: string
-    password?: string
-    confirmPassword?: string
-    additionalEmail?: string
-    accountStatus?: string
+interface FormDataType {
+  // Account Login Information
+  userName?: string
+  emailAddress?: string
+  password?: string
+  confirmPassword?: string
+  additionalEmail?: string
+  accountStatus?: string
 
-    // Assign Client
-    clientName?: string
+  // Assign Client
+  clientName?: string
 
-    // Mailing Address
-    address?: string
-    city?: string
-    state?: string
-    zipCode?: string
-  }
-
+  // Mailing Address
+  address?: string
+  city?: string
+  state?: string
+  zipCode?: string
+}
+const LoginInfoComponent = forwardRef<{ handleSubmit: any }, Props>(({ onFinish }, ref) => {
   const methods = useForm<FormDataType>({
     // Optional: Add default validation settings
     mode: 'onSubmit',
     reValidateMode: 'onChange'
   })
+
+  useImperativeHandle(ref, () => ({
+    handleSubmit: (onValid: (data: FormDataType) => void) => handleSubmit(onValid)
+  }))
 
   const {
     control,
@@ -43,23 +46,14 @@ const LoginInfoComponent = ({ onFinish }: Props) => {
     handleSubmit // Add this if you want to use form submission
   } = methods // Use methods instead of useFormContext
 
-  const accountStatusOptions = [
-    { key: 0, value: 'Active' },
-    { key: 1, value: 'Inactive' }
-  ]
-
   const onSubmit = (data: FormDataType) => {
     console.log('Submitted Data:', data)
     onFinish(data)
   }
 
-  const handleFinishFailed = (errorInfo: any) => {
-    console.error('Form Errors:', errorInfo)
-  }
-
   return (
     <FormProvider {...methods}>
-      <Card className='mt-5'>
+      <Card className='mt-5 w-full'>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)}>
             {/* Account Login Information */}
@@ -230,6 +224,6 @@ const LoginInfoComponent = ({ onFinish }: Props) => {
       </Card>
     </FormProvider>
   )
-}
+})
 
 export default LoginInfoComponent

@@ -1,23 +1,17 @@
 'use client'
 
 // React Imports
-import { forwardRef, useImperativeHandle, useState } from 'react'
+import { forwardRef, useImperativeHandle } from 'react'
 
 // MUI Imports
 import Card from '@mui/material/Card'
 import Grid from '@mui/material/Grid2'
-import Button from '@mui/material/Button'
 import Select from '@mui/material/Select'
-import Divider from '@mui/material/Divider'
 import MenuItem from '@mui/material/MenuItem'
 import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
-import CardHeader from '@mui/material/CardHeader'
 import CardContent from '@mui/material/CardContent'
-import CardActions from '@mui/material/CardActions'
 import InputLabel from '@mui/material/InputLabel'
-import InputAdornment from '@mui/material/InputAdornment'
-import IconButton from '@mui/material/IconButton'
 
 // Styled Component Imports
 import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
@@ -25,10 +19,8 @@ import Radio from '@mui/material/Radio'
 import RadioGroup from '@mui/material/RadioGroup'
 import FormControl from '@mui/material/FormControl'
 import FormControlLabel from '@mui/material/FormControlLabel'
-import DatePicker from 'react-datepicker'
-import { parseDate } from 'react-datepicker/dist/date_utils'
 import { FormHelperText } from '@mui/material'
-import { Controller, FormProvider, useForm, useFormContext } from 'react-hook-form'
+import { Controller, FormProvider, useForm } from 'react-hook-form'
 import CustomTextField from '@core/components/custom-inputs/CustomTextField'
 import CustomDropDown from '@core/components/custom-inputs/CustomDropDown'
 
@@ -90,7 +82,7 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
   return (
     <FormProvider {...methods}>
       <form onSubmit={handleSubmit(onSubmit)}>
-        <Card className='mt-5'>
+        <Card className='mt-5 w-full'>
           <CardContent>
             <Typography className='text-xl font-semibold mb-4'>Personal Details</Typography>
             <div>
@@ -109,7 +101,7 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                 <Grid size={{ xs: 12, sm: 4 }}>
                   <CustomTextField
                     label={'Middle Name'}
-                    placeHolder={'Doe'}
+                    placeHolder={'D'}
                     name={'middleName'}
                     defaultValue={''}
                     type={'text'}
@@ -120,7 +112,7 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                 <Grid size={{ xs: 12, sm: 4 }}>
                   <CustomTextField
                     label={'Last Name'}
-                    placeHolder={'John'}
+                    placeHolder={'Doe'}
                     name={'LastName'}
                     defaultValue={''}
                     type={'text'}
@@ -431,7 +423,7 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
             </div>
           </CardContent>
         </Card>
-        <Card className='mt-5'>
+        <Card className='mt-5 w-full'>
           <CardContent>
             <Typography className='text-xl font-semibold mb-4'>Caregiver Notes</Typography>
             <div>
