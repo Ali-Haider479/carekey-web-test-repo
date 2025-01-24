@@ -98,7 +98,7 @@ const TrainingCertificatesComponent = forwardRef<{ handleSubmit: any }, Props>((
             <Typography className='text-xl font-semibold mb-4'>Training Certificates</Typography>
             <div className='grid grid-cols-1 md:grid-cols-3 gap-6'>
               {/* File Upload Section */}
-              <div className='col-span-1 p-3 rounded-lg'>
+              <div className='col-span-1 p-3 rounded-lg border'>
                 <FileUploaderRestrictions
                   onFilesSelected={selectedFiles => {
                     setTrainingCertificates(selectedFiles)
@@ -115,12 +115,20 @@ const TrainingCertificatesComponent = forwardRef<{ handleSubmit: any }, Props>((
                 <h3 className='text-lg font-semibold mb-4'>Uploading Files</h3>
                 <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                   {trainingCertificates.map((file: File, index: number) => (
-                    <div key={index} className='p-4 rounded-lg border border-[#32475C] border-opacity-[22%]'>
+                    <div key={index} className='p-3 rounded-lg border border-[#32475C] border-opacity-[22%]'>
                       <div className='flex justify-between items-center mb-2'>
-                        <div className='flex items-center gap-2'>
-                          <PictureAsPdfIcon />
-                          <span className='font-semibold text-green-600'>{file.name} (100%)</span>
+                        <div className='flex items-center gap-10'>
+                          <div className='flex items-center gap-2'>
+                            <PictureAsPdfIcon />
+                            <Typography className='font-semibold text-green-600 text-sm'>{file.name} (100%)</Typography>
+                          </div>
+                          <div>
+                            <Typography className='font-semibold text-green-600 text-sm'>Completed</Typography>
+                          </div>
                         </div>
+                      </div>
+                      <div>
+                        <LinearProgress variant='determinate' value={100} color={'success'} />
                       </div>
                     </div>
                   ))}
@@ -178,10 +186,10 @@ const TrainingCertificatesComponent = forwardRef<{ handleSubmit: any }, Props>((
 
         <Card className='mt-5'>
           <CardContent>
-            <Typography className='text-xl font-semibold mb-4'>Caregiver Notes</Typography>
+            <Typography className='text-xl font-semibold mb-4'>Driving License</Typography>
             <div className='grid grid-cols-1 md:grid-cols-3 gap-6'>
               {/* File Upload Section */}
-              <div className='col-span-1 p-3 rounded-lg'>
+              <div className='col-span-1 p-3 border rounded-lg'>
                 <FileUploaderRestrictions
                   onFilesSelected={selectedFiles => {
                     setDrivingCertificates(selectedFiles)
@@ -197,12 +205,20 @@ const TrainingCertificatesComponent = forwardRef<{ handleSubmit: any }, Props>((
                 <h3 className='text-lg font-semibold mb-4'>Uploading Files</h3>
                 <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                   {drivingCertificates.map((file: File, index: number) => (
-                    <div key={index} className='p-4 rounded-lg border border-[#32475C] border-opacity-[22%]'>
+                    <div key={index} className='p-3 rounded-lg border border-[#32475C] border-opacity-[22%]'>
                       <div className='flex justify-between items-center mb-2'>
-                        <div className='flex items-center gap-2'>
-                          <PictureAsPdfIcon />
-                          <span className='font-semibold text-green-600'>{file.name} (100%)</span>
+                        <div className='flex items-center gap-10'>
+                          <div className='flex items-center gap-2'>
+                            <PictureAsPdfIcon />
+                            <Typography className='font-semibold text-green-600 text-sm'>{file.name} (100%)</Typography>
+                          </div>
+                          <div>
+                            <Typography className='font-semibold text-green-600 text-sm'>Completed</Typography>
+                          </div>
                         </div>
+                      </div>
+                      <div>
+                        <LinearProgress variant='determinate' value={100} color={'success'} />
                       </div>
                     </div>
                   ))}

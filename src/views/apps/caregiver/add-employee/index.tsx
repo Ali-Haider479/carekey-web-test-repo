@@ -13,10 +13,6 @@ import StepLabel from '@mui/material/StepLabel'
 import Typography from '@mui/material/Typography'
 import Button from '@mui/material/Button'
 
-// Third-party Imports
-
-// Component Imports
-
 // Styled Component Imports
 import StepperWrapper from '@core/styles/stepper'
 import StepperCustomDot from '@components/stepper-dot'
@@ -26,23 +22,6 @@ import PCAUMPITable from './PcaUmpi/PCAUMPITable'
 import { FormDataType } from '../../invoice/add/AddCustomerDrawer'
 import { useRouter } from 'next/navigation'
 import TrainingCertificatesComponent from './Certificates/TrainingCertificatesComponent'
-
-// type FormDataType = {
-//   username: string
-//   email: string
-//   password: string
-//   isPasswordShown: boolean
-//   confirmPassword: string
-//   isConfirmPasswordShown: boolean
-//   firstName: string
-//   lastName: string
-//   country: string
-//   language: string[]
-//   twitter: string
-//   facebook: string
-//   instagram: string
-//   github: string
-// }
 
 // Vars
 const steps = [
@@ -92,19 +71,13 @@ const EmployeeStepper = () => {
         setActiveStep(prevActiveStep => prevActiveStep + 1)
       })()
     } else if (activeStep === 1) {
-      // Manually trigger form submission for the first step
-      personalDetailsFormRef.current?.handleSubmit((data: FormDataType) => {
-        console.log('Personal Details in Parent:', data)
+      loginInfoFormRef.current?.handleSubmit((data: FormDataType) => {
+        console.log('Login Info in parent: ', data)
         // Move to next step after successful validation
         setActiveStep(prevActiveStep => prevActiveStep + 1)
       })()
     } else if (activeStep === 2) {
-      loginInfoFormRef.current?.handleSubmit((data: FormDataType) => {
-        console.log('Login Info in parent: ', data)
-        // Manually trigger form submission for the first step
-        // Move to next step after successful validation
-        setActiveStep(prevActiveStep => prevActiveStep + 1)
-      })()
+      setActiveStep(prevActiveStep => prevActiveStep + 1)
     } else if (activeStep === 3) {
       // Manually trigger form submission for the first step
       certificatesFormRef.current?.handleSubmit((data: any) => {

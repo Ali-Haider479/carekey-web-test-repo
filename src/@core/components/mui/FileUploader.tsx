@@ -98,7 +98,7 @@ const FileUploaderRestrictions: React.FC<FileUploaderProps> = ({
   //   }
 
   return (
-    <Card {...getRootProps({ className: 'dropzone, w-full' })}>
+    <Card {...getRootProps({ className: 'dropzone, w-full shadow-none' })}>
       <CardContent className='w-full'>
         <input {...getInputProps()} />
         <div className='flex items-center flex-col justify-center gap-3'>
