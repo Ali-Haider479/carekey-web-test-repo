@@ -156,25 +156,16 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                   />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 4 }}>
-                  <Controller
-                    name='caregiverLevel'
+                  <CustomDropDown
+                    name={'caregiverLevel'}
                     control={control}
-                    defaultValue='' // Set default value
-                    rules={{ required: 'Caregiver Level is required' }} // Validation rules
-                    render={({ field }) => (
-                      <FormControl fullWidth error={!!errors.caregiverLevel}>
-                        <InputLabel>Caregiver Level</InputLabel>
-                        <Select
-                          {...field} // Spread field props to bind value and onChange
-                          label='Caregiver Level'
-                          size='small'
-                        >
-                          <MenuItem value='caregiver'>Caregiver</MenuItem>
-                          <MenuItem value='senior caregiver'>Senior Caregiver</MenuItem>
-                        </Select>
-                        {errors.caregiverLevel && <FormHelperText>please select a caregiver level</FormHelperText>}
-                      </FormControl>
-                    )}
+                    error={errors.caregiverLevel}
+                    label={'Caregiver Level'}
+                    optionList={[
+                      { key: 1, value: 'caregiver', optionString: 'Caregiver' },
+                      { key: 2, value: 'serniorCaregiver', optionString: 'Sernior Caregiver' }
+                    ]}
+                    defaultValue={''}
                   />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 4 }}>
@@ -363,49 +354,29 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                   />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 4 }}>
-                  <Controller
-                    name='caregiverOvertimeAgreement'
+                  <CustomDropDown
+                    name={'caregiverOvertimeAgreement'}
                     control={control}
-                    defaultValue='' // Set the default value
-                    rules={{ required: 'Caregiver Overtime Agreement is required' }} // Validation rules
-                    render={({ field }) => (
-                      <FormControl fullWidth error={!!errors.caregiverOvertimeAgreement}>
-                        <InputLabel>Caregiver Overtime Agreement</InputLabel>
-                        <Select
-                          {...field} // Spread field properties to bind value and onChange
-                          label='Caregiver Overtime Agreement'
-                          size='small'
-                          name={'caregiverOvertimeAgreement'}
-                        >
-                          <MenuItem value='yes'>Yes</MenuItem>
-                          <MenuItem value='no'>No</MenuItem>
-                        </Select>
-                        {errors.caregiverOvertimeAgreement && <FormHelperText>please select an option</FormHelperText>}
-                      </FormControl>
-                    )}
+                    error={errors.caregiverOvertimeAgreement}
+                    label={'Caregiver Overtime Agreement'}
+                    optionList={[
+                      { key: 1, value: 'yes', optionString: 'Yes' },
+                      { key: 2, value: 'no', optionString: 'No' }
+                    ]}
+                    defaultValue={''}
                   />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 4 }}>
-                  <Controller
-                    name='caregiverLicense'
+                  <CustomDropDown
+                    name={'caregiverLicense'}
                     control={control}
-                    defaultValue='' // Set the default value
-                    rules={{ required: 'Caregiver License is required' }} // Validation rules
-                    render={({ field }) => (
-                      <FormControl fullWidth error={!!errors.caregiverLicense}>
-                        <InputLabel>Is the Caregiver 245D Licensed</InputLabel>
-                        <Select
-                          {...field} // Spread field properties to bind value and onChange
-                          label='Is the Caregiver 245D Licensed'
-                          size='small'
-                          name={'caregiverLicense'}
-                        >
-                          <MenuItem value='yes'>Yes</MenuItem>
-                          <MenuItem value='no'>No</MenuItem>
-                        </Select>
-                        {errors.caregiverLicense && <FormHelperText>please select an option</FormHelperText>}
-                      </FormControl>
-                    )}
+                    error={errors.caregiverLicense}
+                    label={'Is the Caregiver 245D Licensed'}
+                    optionList={[
+                      { key: 1, value: 'yes', optionString: 'Yes' },
+                      { key: 2, value: 'no', optionString: 'No' }
+                    ]}
+                    defaultValue={''}
                   />
                 </Grid>
               </Grid>

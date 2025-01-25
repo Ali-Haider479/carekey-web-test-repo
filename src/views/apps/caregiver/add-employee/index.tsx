@@ -76,7 +76,7 @@ const EmployeeStepper = () => {
           caregiverOvertimeAgreement: data.caregiverOvertimeAgreement === 'yes' ? true : false,
           caregiverLicense: data.caregiverLicense === 'yes' ? true : false
         }
-        console.log('Data after transforing into boolean ---> ', transformedData)
+        console.log('Data after transforming into boolean ---> ', transformedData)
         setActiveStep(prevActiveStep => prevActiveStep + 1)
       })()
     } else if (activeStep === 1) {
