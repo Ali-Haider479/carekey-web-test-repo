@@ -27,6 +27,7 @@ import { FormDataType } from '../../invoice/add/AddCustomerDrawer'
 import { useRouter } from 'next/navigation'
 import TrainingCertificatesComponent from './Certificates/TrainingCertificatesComponent'
 import DocumentsSection from './Certificates/DocumentsSection'
+import axios from 'axios'
 
 // type FormDataType = {
 //   username: string
@@ -48,30 +49,34 @@ import DocumentsSection from './Certificates/DocumentsSection'
 // Vars
 const steps = [
   {
-    title: '01',
+    title: '0',
     subtitle: 'Personal Details & Caregiver Notes'
   },
   {
-    title: '02',
+    title: '1',
     subtitle: 'Login Info & Mailing Address'
   },
   {
-    title: '03',
+    title: '2',
     subtitle: 'PCA UMPI Information'
   },
   {
-    title: '04',
+    title: '3',
     subtitle: 'Training Certificate & Driving License'
   },
   {
-    title: '05',
+    title: '4',
     subtitle: 'Documents'
   }
 ]
 
 const EmployeeStepper = () => {
   // States
-  const [activeStep, setActiveStep] = useState(4)
+  const [activeStep, setActiveStep] = useState(3)
+  const [caregiverData, setCaregiverData] = useState<any>([])
+  const [loginInfo, setLoginInfo] = useState<any>([])
+  const [certificatesData, setCertificatesData] = useState<any>([])
+  const [documentsData, setDocumentsData] = useState<any>([])
 
   const router = useRouter()
 
@@ -84,40 +89,156 @@ const EmployeeStepper = () => {
     setActiveStep(0)
   }
 
+  // const handleImageChange = async (file: File) => {
+  //   try {
+  //     setLoading(true)
+  //     const formData = new FormData()
+  //     formData.append('image', file)
+
+  //     const response = await axios.post(
+  //       `${process.env.NEXT_PUBLIC_API_URL}/user/${tenantData?.users[0]?.id}/profile-image`,
+  //       formData,
+  //       {
+  //         headers: {
+  //           'Content-Type': 'multipart/form-data'
+  //         }
+  //       }
+  //     )
+  //     console.log('UPDATE RESPONSE', response.data)
+  //     // Update the fileUrl state with the new image URL after successful upload
+  //     if (response.data?.profileImageUrl) {
+  //       setFileUrl(response.data.profileImageUrl)
+  //     }
+  //     setLoading(false)
+  //   } catch (error) {
+  //     console.error('Update image error:', error)
+  //     setLoading(false)
+  //   }
+  // }
+
+  // const handleSave = async () => {
+  //   handleNext()
+  //   console.log('Inside on save', certificatesData)
+  //   try {
+  //     // Create a FormData object
+  //     const formData = new FormData()
+
+  //     // Append each file in the trainingCertificateFiles array
+  //     certificatesData?.trainingCertificateFiles.forEach((file: { path: string }) => {
+  //       const fileBlob = new Blob([file.path], { type: 'application/pdf' }) // Adjust MIME type if needed
+  //       console.log('FILES BLOB', fileBlob)
+  //       formData.append('file', fileBlob, file.path) // Add file to the form
+  //     })
+
+  //     // Append other fields to the form
+  //     formData.append('trainingCertificateExpiryDate', certificatesData.trainingCertificateExpiryDate)
+  //     formData.append('trainingCertificateName', certificatesData.trainingCertificateName)
+  //     console.log('FORMDATA OF TRAINING CERTIFICATES', formData)
+  //     // Make the API call
+  //     const response = axios.post(`${process.env.NEXT_PUBLIC_API_URL}/caregivers/document`, formData, {
+  //       headers: {
+  //         'Content-Type': 'multipart/form-data'
+  //       }
+  //     })
+
+  //     // Handle the response
+  //     console.log('Response:AFTER UPLOAD------------', response)
+  //   } catch (error) {
+  //     console.error('Error uploading files:', error)
+  //   }
+  // }
+
+  const handleSave = async () => {
+    handleNext()
+    try {
+      // Create a FormData object
+      const formData = new FormData()
+      console.log('INSIDE HANDLE SAVE', certificatesData)
+      // Append files
+      certificatesData?.trainingCertificateFiles.forEach((file: { path: string }) => {
+        const fileBlob = new Blob([file.path], { type: 'application/pdf' })
+        formData.append('file', fileBlob, file.path)
+      })
+
+      // Append additional parameters
+      formData.append('documentType', 'trainingCertificate')
+      formData.append('expiryDays', '365') // Or calculate from expiry date
+      formData.append('caregiverId', '1') // Your caregiver ID
+
+      // Additional metadata can be appended as well
+      formData.append('trainingCertificateExpiryDate', certificatesData.trainingCertificateExpiryDate)
+      formData.append('trainingCertificateName', certificatesData.trainingCertificateName)
+      console.log('FORM DATA', formData)
+      // Make the API call
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/caregivers/document`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      })
+
+      console.log('Response after upload:', response)
+    } catch (error) {
+      console.error('Error uploading files:', error)
+    }
+  }
+
+  // const handleSave = () => {
+  //   try {
+  //     const formData = new FormData()
+  //     formData.append('image', file)
+  //     const payLoad = {}
+  //     const uploadDocs = axios.post(`${process.env.NEXT_PUBLIC_API_URL}/caregivers/document`, certificatesData)
+  //     // const createUser = axios.post(`${process.env.NEXT_PUBLIC_API_URL}/users`, loginInfo)
+  //     // const saveCaregiver = axios.post(`${process.env.NEXT_PUBLIC_API_URL}/caregivers`, {
+  //     //   ...caregiverData,
+  //     //   userId: createUser?.data?.id,
+  //     //   tenantId: 1
+  //     // })
+  //     // const createDocuments = axios.post(`${process.env.NEXT_PUBLIC_API_URL}/documents`, documentsData)
+  //     // const createCertificates = axios.post(`${process.env.NEXT_PUBLIC_API_URL}/certificates`, certificatesData)
+
+  //     // Promise.all([createUser, saveCaregiver]).then(() => {
+  //     //   router.replace('/apps/caregiver/list')
+  //     // })
+  //   } catch (error) {
+  //     console.log('Error', error)
+  //   }
+  // }
+
   const handleNext = () => {
     console.log('Active steps', activeStep)
     if (activeStep === 0) {
       // Manually trigger form submission for the first step
       personalDetailsFormRef.current?.handleSubmit((data: FormDataType) => {
         console.log('Personal Details in Parent:', data)
+        setCaregiverData(data)
         // Move to next step after successful validation
         setActiveStep(prevActiveStep => prevActiveStep + 1)
       })()
     } else if (activeStep === 1) {
-      // Manually trigger form submission for the first step
-      personalDetailsFormRef.current?.handleSubmit((data: FormDataType) => {
-        console.log('Personal Details in Parent:', data)
-        // Move to next step after successful validation
-        setActiveStep(prevActiveStep => prevActiveStep + 1)
-      })()
-    } else if (activeStep === 2) {
       loginInfoFormRef.current?.handleSubmit((data: FormDataType) => {
         console.log('Login Info in parent: ', data)
+        setLoginInfo(data)
         // Manually trigger form submission for the first step
         // Move to next step after successful validation
         setActiveStep(prevActiveStep => prevActiveStep + 1)
       })()
+    } else if (activeStep === 2) {
+      // Manually trigger form submission for the first step
+      setActiveStep(prevActiveStep => prevActiveStep + 1)
     } else if (activeStep === 3) {
       // Manually trigger form submission for the first step
       certificatesFormRef.current?.handleSubmit((data: any) => {
         console.log('Certificates data:', data)
+        setCertificatesData(data)
         // Move to next step after successful validation
-        setActiveStep(prevActiveStep => prevActiveStep + 1)
+        // setActiveStep(prevActiveStep => prevActiveStep + 1)
       })()
     } else if (activeStep === 4) {
       // Manually trigger form submission for the first step
       documentsFormRef.current?.handleSubmit((data: any) => {
         console.log('Documents data:', data)
+        setDocumentsData(data)
         // Move to next step after successful validation
         setActiveStep(prevActiveStep => prevActiveStep + 1)
       })()
@@ -158,8 +279,8 @@ const EmployeeStepper = () => {
   const onDocumentsSubmit = (values: any) => {
     console.log('Personal Detail', values)
   }
-
-  console.log('ACTIVE STREP', activeStep)
+  console.log('Certificares data', certificatesData)
+  console.log('ACTIVE STREP', caregiverData, loginInfo)
   const renderStepContent = (activeStep: number) => {
     switch (activeStep) {
       case 0:
@@ -232,11 +353,12 @@ const EmployeeStepper = () => {
                     <Button
                       variant='outlined'
                       disabled={activeStep === 0}
-                      onClick={handleBack}
+                      // onClick={handleBack}
+                      onClick={handleSave}
                       color='secondary'
                       className='mr-5'
                     >
-                      Back
+                      Save File
                     </Button>
                     <Button variant='contained' onClick={handleNext}>
                       {activeStep === steps.length - 1 ? 'Submit' : 'Next'}

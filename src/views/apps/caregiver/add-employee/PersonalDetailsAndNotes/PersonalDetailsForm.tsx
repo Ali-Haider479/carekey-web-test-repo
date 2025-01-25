@@ -113,7 +113,7 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                   <CustomTextField
                     label={'Last Name'}
                     placeHolder={'Doe'}
-                    name={'LastName'}
+                    name={'lastName'}
                     defaultValue={''}
                     type={'text'}
                     error={errors.lastName}
@@ -239,9 +239,9 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                 </Grid>
                 <Grid size={{ xs: 12, sm: 4 }}>
                   <CustomTextField
-                    label={'Zip'}
-                    placeHolder={'Zip'}
-                    name={'zip'}
+                    label={'Zip Code'}
+                    placeHolder={'Zip Code'}
+                    name={'zipCode'}
                     defaultValue={''}
                     type={'text'}
                     error={errors.zip}
@@ -252,7 +252,7 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                   <CustomTextField
                     label={'SSN'}
                     placeHolder={'SSN'}
-                    name={'SSN'}
+                    name={'ssn'}
                     defaultValue={''}
                     type={'text'}
                     error={errors.SSN}

@@ -100,7 +100,8 @@ const TrainingCertificatesComponent = forwardRef<{ handleSubmit: any }, Props>((
                   onFilesSelected={selectedFiles => {
                     setTrainingCertificates(selectedFiles)
                   }}
-                  mimeType={['application/pdf', 'image/jpeg', 'image/png']}
+                  // mimeType={['application/pdf', 'image/jpeg', 'image/png']}
+                  mimeType={['application/pdf']}
                   fileCount={3}
                   fileSize={25 * 1024 * 1024} // 25MB
                   title='Choose Files'
