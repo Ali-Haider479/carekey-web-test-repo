@@ -130,87 +130,69 @@ const EmployeeStepper = () => {
 
   const handleSave = async () => {
     handleNext()
-    const userPayload = {
-      userName: loginInfo.userName,
-      emailAddress: loginInfo.emailAddress,
-      password: loginInfo.password,
-      additionalEmailAddress: loginInfo.additionalEmailAddress,
-      accountStatus: loginInfo.accountStatus,
-      joinDate: new Date()
+
+    try {
+      // CREATE USER AND CAREGIVER
+      const userPayload = {
+        userName: loginInfo.userName,
+        emailAddress: loginInfo.emailAddress,
+        password: loginInfo.password,
+        additionalEmailAddress: loginInfo.additionalEmailAddress,
+        accountStatus: loginInfo.accountStatus,
+        joinDate: new Date()
+      }
+
+      // const mailingAddress = {
+      //   city: loginInfo.city,
+      //   state: loginInfo.state,
+      //   zipCode: loginInfo.zipCode,
+      //   address: loginInfo.address,
+      //   addressType: loginInfo.addressType
+      // }
+
+      const userResponse = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/user`, userPayload)
+      // const caregiverMailingAddress = await axios.post(
+      //   `${process.env.NEXT_PUBLIC_API_URL}/caregiver/addresses`,
+      //   mailingAddress
+      // )
+
+      const caregiverPayload = {
+        ...caregiverData,
+        userId: userResponse.data.id,
+        tenantId: 1
+      }
+
+      const caregiverResponse = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/caregivers`, caregiverPayload)
+
+      // Create a FormData object
+      const formData = new FormData()
+      console.log('INSIDE HANDLE SAVE', certificatesData)
+      // Append files
+      certificatesData?.trainingCertificateFiles.forEach((file: { path: string }) => {
+        const fileBlob = new Blob([file.path], { type: 'application/pdf' })
+        formData.append('file', fileBlob, file.path)
+      })
+
+      // Append additional parameters
+      formData.append('documentType', 'trainingCertificate')
+      formData.append('expiryDays', '365') // Or calculate from expiry date
+      formData.append('caregiverId', '1') // Your caregiver ID
+
+      // Additional metadata can be appended as well
+      formData.append('trainingCertificateExpiryDate', certificatesData.trainingCertificateExpiryDate)
+      formData.append('trainingCertificateName', certificatesData.trainingCertificateName)
+      console.log('FORM DATA', formData)
+      // Make the API call
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/caregivers/document`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      })
+
+      console.log('Response after upload:', response)
+    } catch (error) {
+      console.error('Error uploading files:', error)
     }
-    console.log('IUSER PAYLOAD', userPayload)
-    const mailingAddress = {
-      city: loginInfo.city,
-      state: loginInfo.state,
-      zipCode: loginInfo.zipCode,
-      address: loginInfo.address,
-      addressType: loginInfo.addressType
-    }
-
-    // const residentialAddress = {
-    //   city: caregiverData.city,
-    //   state: caregiverData.state,
-    //   zipCode: caregiverData.zipCode,
-    //   address: caregiverData.address,
-    //   addressType: caregiverData.addressType
-    // }
-
-    // const caregiverNotes = {
-    //   allergies: caregiverData.allergies,
-    //   specialRequests: caregiverData.specialRequests,
-    //   comments: caregiverData.comments
-    // }
-
-    const userResponse = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/user`, userPayload)
-    // const caregiverMailingAddress = await axios.post(
-    //   `${process.env.NEXT_PUBLIC_API_URL}/caregiver/addresses`,
-    //   mailingAddress
-    // )
-
-    const caregiverPayload = {
-      ...caregiverData,
-      userId: userResponse.data.id,
-      tenantId: 1
-    }
-
-    console.log('caregiverPayload', caregiverPayload)
-    const caregiverResponse = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/caregivers`, caregiverPayload)
-
-    console.log('userResponse', userResponse)
-    console.log('caregiverResponse', caregiverResponse)
-    // console.log('Residential Address', residentialAddress)
-    // console.log('Caregiver Notes', caregiverNotes)
-    // console.log('Caregiver Payload', caregiverPayload)
-    // try {
-    //   // Create a FormData object
-    //   const formData = new FormData()
-    //   console.log('INSIDE HANDLE SAVE', certificatesData)
-    //   // Append files
-    //   certificatesData?.trainingCertificateFiles.forEach((file: { path: string }) => {
-    //     const fileBlob = new Blob([file.path], { type: 'application/pdf' })
-    //     formData.append('file', fileBlob, file.path)
-    //   })
-
-    //   // Append additional parameters
-    //   formData.append('documentType', 'trainingCertificate')
-    //   formData.append('expiryDays', '365') // Or calculate from expiry date
-    //   formData.append('caregiverId', '1') // Your caregiver ID
-
-    //   // Additional metadata can be appended as well
-    //   formData.append('trainingCertificateExpiryDate', certificatesData.trainingCertificateExpiryDate)
-    //   formData.append('trainingCertificateName', certificatesData.trainingCertificateName)
-    //   console.log('FORM DATA', formData)
-    //   // Make the API call
-    //   const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/caregivers/document`, formData, {
-    //     headers: {
-    //       'Content-Type': 'multipart/form-data'
-    //     }
-    //   })
-
-    //   console.log('Response after upload:', response)
-    // } catch (error) {
-    //   console.error('Error uploading files:', error)
-    // }
   }
 
   // const handleSave = () => {
