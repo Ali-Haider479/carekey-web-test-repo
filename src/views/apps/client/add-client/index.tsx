@@ -6,59 +6,57 @@ import { useRef, useState } from 'react'
 // MUI Imports
 import Card from '@mui/material/Card'
 import Grid from '@mui/material/Grid2'
-import CardContent from '@mui/material/CardContent'
 import Stepper from '@mui/material/Stepper'
 import Step from '@mui/material/Step'
 import StepLabel from '@mui/material/StepLabel'
 import Typography from '@mui/material/Typography'
 import Button from '@mui/material/Button'
+import { dark } from '@mui/material/styles/createPalette'
+
+// Component Imports
+import DirectionalIcon from '@components/DirectionalIcon'
 
 // Styled Component Imports
 import StepperWrapper from '@core/styles/stepper'
 import StepperCustomDot from '@components/stepper-dot'
-import PersonalDetailsForm from './PersonalDetailsAndNotes/PersonalDetailsForm'
-import LoginInfoComponent from './LoginInfoAndMailingAddress/LoginInfoComponent'
-import PCAUMPITable from './PcaUmpi/PCAUMPITable'
-import { FormDataType } from '../../invoice/add/AddCustomerDrawer'
-import { useRouter } from 'next/navigation'
-import TrainingCertificatesComponent from './Certificates/TrainingCertificatesComponent'
-import DocumentsSection from './Certificates/DocumentsSection'
-import { PersonalDetailsFormDataType } from './types'
-import { dark } from '@mui/material/styles/createPalette'
+
+import PersonalDetailsForm from './add-client-forms/PersonalDetailsForm'
+import PhysicianAndCaseMangerForm from './add-client-forms/PhysicianAndCaseMangerForm'
+import ServiceActivitiesForm from './add-client-forms/ServiceActivitiesForm'
+import {
+  PersonalDetailsFormDataType,
+  PhysicianAndCaseMangerFormDataType,
+  clientServiceFormDataType
+} from './add-client-forms/formTypes'
+import DocumentsForm from './add-client-forms/DocumentsForm'
 
 // Vars
 const steps = [
   {
     title: '01',
-    subtitle: 'Personal Details & Caregiver Notes'
+    subtitle: 'Personal Details & Security Login'
   },
   {
     title: '02',
-    subtitle: 'Login Info & Mailing Address'
+    subtitle: 'Physician & Case Manager'
   },
   {
     title: '03',
-    subtitle: 'PCA UMPI Information'
+    subtitle: 'Client Services'
   },
   {
     title: '04',
-    subtitle: 'Training Certificate & Driving License'
-  },
-  {
-    title: '05',
     subtitle: 'Documents'
   }
 ]
 
-const EmployeeStepper = () => {
+const AddClientStepper = () => {
   // States
   const [activeStep, setActiveStep] = useState(0)
 
-  const router = useRouter()
-
   const personalDetailsFormRef = useRef<any>(null)
-  const certificatesFormRef = useRef<any>(null)
-  const loginInfoFormRef = useRef<any>(null)
+  const physicianAndCaseMangerFormRef = useRef<any>(null)
+  const serviceActivitiesFormRef = useRef<any>(null)
   const documentsFormRef = useRef<any>(null)
 
   const handleReset = () => {
@@ -66,36 +64,27 @@ const EmployeeStepper = () => {
   }
 
   const handleNext = () => {
-    console.log('Active steps', activeStep)
+    console.log('in next', activeStep)
     if (activeStep === 0) {
       // Manually trigger form submission for the first step
       personalDetailsFormRef.current?.handleSubmit((data: PersonalDetailsFormDataType) => {
-        console.log('Personal Details in Parent before transforming:', data)
+        console.log('Personal Details in Parent:', data)
         // Move to next step after successful validation
-        const transformedData = {
-          ...data,
-          caregiverOvertimeAgreement: data.caregiverOvertimeAgreement === 'yes' ? true : false,
-          caregiverLicense: data.caregiverLicense === 'yes' ? true : false
-        }
-        console.log('Data after transforming into boolean ---> ', transformedData)
         setActiveStep(prevActiveStep => prevActiveStep + 1)
       })()
     } else if (activeStep === 1) {
-      loginInfoFormRef.current?.handleSubmit((data: FormDataType) => {
-        console.log('Login Info in parent: ', data)
+      physicianAndCaseMangerFormRef.current?.handleSubmit((data: PhysicianAndCaseMangerFormDataType) => {
+        console.log('Personal Details in Parent:', data)
         // Move to next step after successful validation
         setActiveStep(prevActiveStep => prevActiveStep + 1)
       })()
     } else if (activeStep === 2) {
-      setActiveStep(prevActiveStep => prevActiveStep + 1)
-    } else if (activeStep === 3) {
-      // Manually trigger form submission for the first step
-      certificatesFormRef.current?.handleSubmit((data: any) => {
-        console.log('Certificates data:', data)
+      serviceActivitiesFormRef.current?.handleSubmit((data: clientServiceFormDataType) => {
+        console.log('Personal Details in Parent:', data)
         // Move to next step after successful validation
         setActiveStep(prevActiveStep => prevActiveStep + 1)
       })()
-    } else if (activeStep === 4) {
+    } else if (activeStep === 3) {
       // Manually trigger form submission for the first step
       documentsFormRef.current?.handleSubmit((data: any) => {
         console.log('Documents data:', data)
@@ -103,7 +92,6 @@ const EmployeeStepper = () => {
         setActiveStep(prevActiveStep => prevActiveStep + 1)
       })()
     } else {
-      console.log('INSIDE ELSEE----------------')
       // For other steps, use existing logic
       setActiveStep(prevActiveStep => prevActiveStep + 1)
     }
@@ -113,30 +101,21 @@ const EmployeeStepper = () => {
     setActiveStep(prevActiveStep => prevActiveStep - 1)
   }
 
-  const handleCancel = () => {
-    router.replace('/apps/caregiver/list')
-  }
-
-  const onPersonalDetailsSubmit = (values: FormDataType) => {
+  const onPersonalDetailsSubmit = (values: PersonalDetailsFormDataType) => {
     console.log('Personal Details in Parent:', values)
     // Optionally store values or perform next step logic
     handleNext() // Move to next step
   }
 
-  const onLoginInfoSubmit = (values: any) => {
-    console.log('Login Info in Parent: ', values)
-    handleNext()
+  const physicianAndCaseMangerFormSubmit = (values: any) => {
+    console.log('physicianAndCaseMangerFormSubmit', values)
   }
 
-  const onPCAUMPISubmit = (values: any) => {
+  const serviceActivitiesFormSubmit = (values: any) => {
     console.log('Personal Detail', values)
   }
 
-  const onTrainingCertificatesSubmit = (values: any) => {
-    console.log('Personal Detail', values)
-  }
-
-  const onDocumentsSubmit = (values: any) => {
+  const onDocumentsFormSubmit = (values: any) => {
     console.log('Personal Detail', values)
   }
 
@@ -146,13 +125,13 @@ const EmployeeStepper = () => {
       case 0:
         return <PersonalDetailsForm ref={personalDetailsFormRef} onFinish={onPersonalDetailsSubmit} />
       case 1:
-        return <LoginInfoComponent ref={loginInfoFormRef} onFinish={onLoginInfoSubmit} />
+        return (
+          <PhysicianAndCaseMangerForm ref={physicianAndCaseMangerFormRef} onFinish={physicianAndCaseMangerFormSubmit} />
+        )
       case 2:
-        return <PCAUMPITable />
+        return <ServiceActivitiesForm ref={serviceActivitiesFormRef} onFinish={serviceActivitiesFormSubmit} />
       case 3:
-        return <TrainingCertificatesComponent ref={certificatesFormRef} onFinish={onTrainingCertificatesSubmit} />
-      case 4:
-        return <DocumentsSection ref={documentsFormRef} onFinish={onDocumentsSubmit} />
+        return <DocumentsForm ref={documentsFormRef} onFinish={onDocumentsFormSubmit} />
       default:
         return 'Unknown step'
     }
@@ -160,12 +139,12 @@ const EmployeeStepper = () => {
 
   return (
     <>
-      <Card>
+      <Card className='p-2'>
         <Typography variant='h4' className='p-4'>
-          Adding a Employee / {steps[activeStep]?.subtitle}
+          Adding a Client / Assign Caregiver
         </Typography>
         <StepperWrapper>
-          <Stepper activeStep={activeStep} alternativeLabel>
+          <Stepper activeStep={activeStep} alternativeLabel className='mt-14'>
             {steps.map(label => {
               return (
                 <Step key={label.title}>
@@ -174,7 +153,7 @@ const EmployeeStepper = () => {
                       stepIcon: StepperCustomDot
                     }}
                   >
-                    <div className='step-label'>
+                    <div className='step-label -mt-[90px]'>
                       <div>
                         <Typography
                           className={`step-title text-base ${activeStep === steps.indexOf(label) ? (dark ? 'text-[#7112B7]' : 'text-[#4B0082]') : ''}`}
@@ -207,39 +186,37 @@ const EmployeeStepper = () => {
       ) : (
         <>
           {/* <form onSubmit={e => e.preventDefault()}> */}
-          <Grid container spacing={6}>
+          <Grid container spacing={6} sx={{ marginTop: 3 }}>
             {renderStepContent(activeStep)}
-            <Card className='w-full'>
-              <CardContent>
-                <Grid size={{ xs: 12, md: 12 }} className='flex justify-between'>
-                  <div>
-                    <Button variant='outlined' onClick={handleCancel} color='secondary'>
-                      Cancel
-                    </Button>
-                  </div>
-                  <div>
-                    <Button
-                      variant='outlined'
-                      disabled={activeStep === 0}
-                      onClick={handleBack}
-                      color='secondary'
-                      className='mr-5'
-                    >
-                      Back
-                    </Button>
-                    <Button variant='contained' onClick={handleNext}>
-                      {activeStep === steps.length - 1 ? 'Submit' : 'Next'}
-                    </Button>
-                  </div>
-                </Grid>
-              </CardContent>
-            </Card>
+            <Grid size={{ xs: 12 }} className='flex justify-between'>
+              <Button
+                variant='tonal'
+                disabled={activeStep === 0}
+                onClick={handleBack}
+                color='secondary'
+                startIcon={<DirectionalIcon ltrIconClass='bx-left-arrow-alt' rtlIconClass='bx-right-arrow-alt' />}
+              >
+                Back
+              </Button>
+              <Button
+                variant='contained'
+                onClick={handleNext}
+                endIcon={
+                  activeStep === steps.length - 1 ? (
+                    <i className='bx-check' />
+                  ) : (
+                    <DirectionalIcon ltrIconClass='bx-right-arrow-alt' rtlIconClass='bx-left-arrow-alt' />
+                  )
+                }
+              >
+                {activeStep === steps.length - 1 ? 'Submit' : 'Next'}
+              </Button>
+            </Grid>
           </Grid>
-          {/* </form> */}
         </>
       )}
     </>
   )
 }
 
-export default EmployeeStepper
+export default AddClientStepper

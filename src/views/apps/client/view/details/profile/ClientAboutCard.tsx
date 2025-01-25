@@ -6,7 +6,7 @@ import ModeEditOutlineOutlinedIcon from '@mui/icons-material/ModeEditOutlineOutl
 
 function ClientAboutCard() {
   return (
-    <Card className='w-full shadow-md rounded-lg p-6 ml-4'>
+    <Card className='w-full shadow-md rounded-lg p-6'>
       {/* About Header */}
       <CardContent className='flex justify-between items-center mb-6'>
         <Typography className='text-2xl font-semibold'>About</Typography>
@@ -169,21 +169,21 @@ function ClientAboutCard() {
       <CardContent>
         <h2 className='text-lg font-semibold  mb-4'>Responsible Party Details</h2>
         <div className='grid grid-cols-2 gap-x-8 gap-y-4'>
-          <p className='text-sm '>
+          <span className='text-sm '>
             Name: <Typography>---</Typography>
-          </p>
-          <p className='text-sm '>
+          </span>
+          <span className='text-sm '>
             Relationship: <Typography>---</Typography>
-          </p>
-          <p className='text-sm '>
+          </span>
+          <span className='text-sm '>
             Phone: <Typography>---</Typography>
-          </p>
-          <p className='text-sm '>
+          </span>
+          <span className='text-sm '>
             Address: <Typography>---</Typography>
-          </p>
-          <p className='text-sm '>
+          </span>
+          <span className='text-sm '>
             Email: <Typography>---</Typography>
-          </p>
+          </span>
         </div>
       </CardContent>
 
@@ -191,12 +191,12 @@ function ClientAboutCard() {
       <CardContent>
         <h2 className='text-lg font-semibold  mb-4'>Service Information</h2>
         <div className='grid grid-cols-2 gap-x-8 gap-y-4'>
-          <p className='text-sm '>
+          <span className='text-sm '>
             Shared Care: <Typography>No</Typography>
-          </p>
-          <p className='text-sm '>
+          </span>
+          <span className='text-sm '>
             Approved Service Locations: <Typography>NA</Typography>
-          </p>
+          </span>
         </div>
       </CardContent>
 
@@ -205,42 +205,42 @@ function ClientAboutCard() {
         <h2 className='text-lg font-semibold  mb-4'>Service Plan Details</h2>
         <div className='space-y-4'>
           <div>
-            <p className='text-sm '>
+            <span className='text-sm '>
               <Typography>IHS (with training) (H2014 UC U3)</Typography> (Aug 1, 2023 - Nov 27, 2024) Approved Units:
               1040 - <Typography> 0.5 Hrs/Day - 3.75 Hrs/Week</Typography>
-            </p>
+            </span>
           </div>
           <div>
-            <p className='text-sm '>
+            <span className='text-sm '>
               Community Integration & Socialization: Assist with Community Participation, Entertainments, Activities,
               Health, Safety & Wellness, and completing Paperwork
-            </p>
+            </span>
           </div>
           <div>
-            <p className='text-sm '>
+            <span className='text-sm '>
               <Typography>Integrated Community Supports Daily (T1020 UC):</Typography> (Nov 28, 2023 - Jul 31, 2024)
               Approved Units: <Typography>248 - 0.25 Hrs/Day - 1.75 Hrs/Week </Typography>
-            </p>
+            </span>
           </div>
           <div>
-            <p className='text-sm '>
+            <span className='text-sm '>
               Going to store, Home Organization, Community Activity, Budgeting, Assist with scheduling ride to attend
               medical appointments, Client will work towards improving his health by being physically active/gym.,
               Assist with reading and organizing mails
-            </p>
+            </span>
           </div>
         </div>
         <div className='mb-6 border-t pt-6'>
           <div className='grid grid-cols-2 gap-x-8 gap-y-4'>
-            <p className='text-sm '>
+            <span className='text-sm '>
               Available Services: <Typography>---</Typography>
-            </p>
-            <p className='text-sm '>
+            </span>
+            <span className='text-sm '>
               Place of Services: <Typography>---</Typography>
-            </p>
-            <p className='text-sm '>
+            </span>
+            <span className='text-sm '>
               Client Location: <Typography>---</Typography>
-            </p>
+            </span>
           </div>
         </div>
       </CardContent>

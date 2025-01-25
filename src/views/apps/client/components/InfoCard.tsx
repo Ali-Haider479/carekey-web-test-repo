@@ -23,7 +23,7 @@ const InfoCard = () => {
   ]
 
   return (
-    <Card className='max-w-md ml-4 mr-4 shadow-md rounded-lg'>
+    <Card className='max-w-md mr-4 shadow-md rounded-lg'>
       {/* Insurance and Diagnostic Code */}
       <CardContent className='mb-4'>
         <div className='flex justify-between text-sm text-gray-400 mb-2'>

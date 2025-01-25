@@ -40,9 +40,11 @@ const ClientDetails = ({ tabContentList }: BottomBodyProps) => {
       case 'account-history':
         return '/ Account History'
       case 'time-sheets':
-        return '/ Time '
+        return '/ Time Sheets'
       case 'service-authorization':
         return '/ Service Authorization'
+      case 'incidents':
+        return '/ Incidents'
       default:
         return ''
     }
@@ -66,15 +68,16 @@ const ClientDetails = ({ tabContentList }: BottomBodyProps) => {
             }}
           />
         )}
-
         <Grid container spacing={6}>
           <Grid size={{ xs: 12 }}>
-            <CustomTabList onChange={handleChange} variant='scrollable' pill='true' overRideColor='#4B0082'>
+            <CustomTabList onChange={handleChange} variant='scrollable' pill='true'>
               <Tab value='profile' label='PROFILE' />
               <Tab value='e-doc' label='E-DOC' />
               <Tab value='forms' label='FORMS' />
               <Tab value='account-history' label='ACC HISTORY' />
-              <Tab value='time-sheets' label='VIEW TIME SHEETS' />
+              <Tab value='time-sheets' label='TIME SHEETS' />
+              <Tab value='service-authorization' label='Service Authorization' />
+              <Tab value='incidents' label='Incidents' />
             </CustomTabList>
           </Grid>
           <Grid size={{ xs: 12 }}>
