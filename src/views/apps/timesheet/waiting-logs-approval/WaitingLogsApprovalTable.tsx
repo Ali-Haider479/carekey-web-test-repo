@@ -3,39 +3,12 @@
 import { useEffect, useState, useMemo } from 'react'
 import Card from '@mui/material/Card'
 import CardHeader from '@mui/material/CardHeader'
-import TablePagination from '@mui/material/TablePagination'
-import { Avatar, CircularProgress } from '@mui/material'
+import { Avatar, CircularProgress, Typography } from '@mui/material'
 import axios from 'axios'
-import tableStyles from '@core/styles/table.module.css'
-import classnames from 'classnames'
-import {
-  useReactTable,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getSortedRowModel,
-  getPaginationRowModel,
-  flexRender
-} from '@tanstack/react-table'
-import { createColumnHelper } from '@tanstack/react-table'
-import type { ColumnDef, FilterFn, Table } from '@tanstack/react-table'
-import TablePaginationComponent from '@components/TablePaginationComponent'
-import { RankingInfo, rankItem } from '@tanstack/match-sorter-utils'
 import DataTable from '@/@core/components/mui/DataTable'
-import { GridRenderCellParams } from '@mui/x-data-grid'
-
-// Interfaces remain the same...
-interface Client {
-  id: number
-  firstName: string
-  lastName: string
-  middleName: string
-  gender: string
-  dateOfBirth: string
-  pmiNumber: string
-  clientCode: string
-  clientServices: any
-}
-
+import { GridColDef } from '@mui/x-data-grid'
+import AdUnitsIcon from '@mui/icons-material/AdUnits'
+// Updated interfaces to match your data structure
 interface Caregiver {
   id: number
   firstName: string
@@ -48,86 +21,44 @@ interface Caregiver {
   additionalPayRate: number
   caregiverLevel: string
 }
-interface TimeLog {
+
+interface Client {
   id: number
-  dateOfService?: Date
-  clockIn?: string
-  clockOut?: string
-  notes?: string
-  serviceName?: string
+  firstName: string
+  lastName: string
+  middleName: string
+  gender: string
+  dateOfBirth: string
+  pmiNumber: string
+  clientCode: string
+  clientServices: any
 }
 
 interface Signature {
   id: number
   clientSignStatus: string
   tsApprovalStatus: string
+  duration: string
+  caregiverSignature: string
+  clientSignature: string
   caregiver: Caregiver
   client: Client
-  timeLog?: TimeLog
-}
-
-// Helper function to calculate duration with fallback
-const calculateDuration = (clockIn?: string, clockOut?: string): string => {
-  if (!clockIn || !clockOut) return 'N/A'
-
-  try {
-    const start = new Date(`1970/01/01 ${clockIn}`)
-    const end = new Date(`1970/01/01 ${clockOut}`)
-
-    const diffMs = end.getTime() - start.getTime()
-    const hours = Math.floor(diffMs / (1000 * 60 * 60))
-    const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60))
-
-    return `${hours}h ${minutes}m`
-  } catch (error) {
-    return 'N/A'
-  }
-}
-
-// Format date helper with fallback
-const formatDate = (date?: Date): string => {
-  if (!date) return 'N/A'
-
-  try {
-    return new Date(date).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    })
-  } catch (error) {
-    return 'N/A'
-  }
-}
-
-const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
-  const itemRank = rankItem(row.getValue(columnId), value)
-  addMeta({ itemRank })
-  return itemRank.passed
-}
-
-const columnHelper = createColumnHelper<Signature>()
-
-// Create a custom TablePaginationComponent that accepts generic type
-interface CustomTablePaginationProps<T> {
-  table: Table<T>
-}
-
-const CustomTablePagination = <T,>({ table }: CustomTablePaginationProps<T>) => {
-  return <TablePaginationComponent table={table as unknown as Table<unknown>} />
+  timeLog: any[]
 }
 
 const WaitingLogsApprovalTable = () => {
-  const [data, setData] = useState<Signature[]>([])
   const [filteredData, setFilteredData] = useState<Signature[]>([])
   const [globalFilter, setGlobalFilter] = useState('')
   const [rowSelection, setRowSelection] = useState({})
   const [isLoading, setIsLoading] = useState(true)
 
+  // Fetch signatures data
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/signatures`)
-        setData(response.data)
+        // const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/signatures`)
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/time-log`)
+        console.log('DATA RECEIVED TIMSEHEET PAGE', response.data)
         setFilteredData(response.data)
         setIsLoading(false)
       } catch (error) {
@@ -138,88 +69,94 @@ const WaitingLogsApprovalTable = () => {
     fetchData()
   }, [])
 
-  const columns = useMemo(
+  const calculateHoursWorked = (clockIn: string, clockOut: string) => {
+    // Parse the clock-in and clock-out times
+    const clockInTime = new Date(clockIn)
+    const clockOutTime = new Date(clockOut)
+
+    // Calculate the difference in milliseconds
+    const differenceMs = clockOutTime.getTime() - clockInTime.getTime()
+
+    // Convert milliseconds to hours
+    const hours = differenceMs / (1000 * 60 * 60)
+
+    // Round to two decimal places
+    return hours.toFixed(2)
+  }
+
+  const columns = useMemo<GridColDef[]>(
     () => [
       {
         field: 'clientName',
-        headerName: 'Client Name',
+        headerName: 'CLIENT NAME',
         flex: 1.5,
-        renderCell: (params: GridRenderCellParams) => (
-          <div style={{ height: '50px', display: 'flex', alignItems: 'center', gap: '8px', margin: 0, padding: 0 }}>
-            <Avatar alt={params.row.clientName} src={params.row.client.avatar} />
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <strong className='h-4'>{params.row.clientName}</strong>
-              <span style={{ fontSize: '12px', color: '#757575' }}>{params.row.client.email}</span>
-            </div>
-          </div>
+        renderCell: (params: any) => (
+          <Typography className='font-normal text-base my-3'>
+            {params?.row?.client?.firstName} {params?.row?.client?.lastName}
+          </Typography>
         )
       },
       {
         field: 'caregiverName',
-        headerName: 'Caregiver Assigned',
+        headerName: 'CAREGIVER ASSIGNED',
         flex: 1.5,
-        renderCell: (params: GridRenderCellParams) => (
-          <div style={{ height: '50px', display: 'flex', alignItems: 'center', gap: '8px', margin: 0, padding: 0 }}>
-            <Avatar alt={params.row.caregiverName} src={params.row.caregiver.avatar} />
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <strong className='h-4'>{params.row.caregiverName}</strong>
-            </div>
-          </div>
+        renderCell: (params: any) => (
+          <Typography className='font-normal text-base my-3'>
+            {params?.row?.caregiver?.firstName} {params?.row?.caregiver?.lastName}
+          </Typography>
         )
       },
       {
-        field: 'timeLogDate',
-        headerName: 'TimeLog Date',
-        flex: 1,
-        renderCell: (params: GridRenderCellParams) => <>{formatDate(params.row.timeLog?.dateOfService)}</>
+        field: 'payPeriod',
+        headerName: 'DATE',
+        flex: 1.5,
+        renderCell: (params: any) => {
+          const startDate = params?.row?.payPeriodHistory?.startDate
+          if (startDate) {
+            const date = new Date(startDate)
+            return (
+              <Typography className='font-normal text-base my-3'>
+                {`${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear().toString().slice(-2)}`}
+              </Typography>
+            )
+          }
+          return <Typography className='font-normal text-base my-3'>N/A</Typography>
+        }
       },
       {
-        field: 'startTime',
-        headerName: 'Start Time',
+        field: 'hoursWorked',
+        headerName: 'TIME DURATION',
         flex: 1,
-        renderCell: (params: GridRenderCellParams) => <>{params.row.timeLog?.clockIn || 'N/A'}</>
+        renderCell: (params: any) => {
+          try {
+            const hoursWorked = calculateHoursWorked(params.row.clockIn, params.row.clockOut)
+
+            return <Typography className='font-normal text-base my-3'>{hoursWorked} Hrs</Typography>
+          } catch (error) {
+            console.error('Error calculating hours worked:', error)
+            return <span>N/A</span>
+          }
+        }
       },
       {
-        field: 'endTime',
-        headerName: 'End Time',
-        flex: 1,
-        renderCell: (params: GridRenderCellParams) => <>{params.row.timeLog?.clockOut || 'N/A'}</>
+        field: 'logsVia',
+        headerName: 'LOGGED VIA',
+        flex: 1.5,
+        renderCell: (params: any) => <AdUnitsIcon className='my-3' />
       },
       {
-        field: 'duration',
-        headerName: 'Duration',
+        field: 'approvedLoc',
+        headerName: 'CHECK-IN LOCATION',
         flex: 1,
-        renderCell: (params: GridRenderCellParams) => (
-          <>{calculateDuration(params.row.timeLog?.clockIn, params.row.timeLog?.clockOut)}</>
+        renderCell: (params: any) => (
+          <Typography className='font-normal text-base my-3'>183 Chatsworth</Typography>
         )
       }
     ],
     []
   )
 
-  // const table = useReactTable({
-  //   data: filteredData,
-  //   columns,
-  //   filterFns: {
-  //     fuzzy: fuzzyFilter
-  //   },
-  //   state: {
-  //     rowSelection,
-  //     globalFilter
-  //   },
-  //   initialState: {
-  //     pagination: {
-  //       pageSize: 10
-  //     }
-  //   },
-  //   enableRowSelection: true,
-  //   onRowSelectionChange: setRowSelection,
-  //   getCoreRowModel: getCoreRowModel(),
-  //   onGlobalFilterChange: setGlobalFilter,
-  //   getFilteredRowModel: getFilteredRowModel(),
-  //   getSortedRowModel: getSortedRowModel(),
-  //   getPaginationRowModel: getPaginationRowModel()
-  // })
+  console.log('Filtred data', filteredData[0]?.client?.firstName)
 
   if (isLoading) {
     return (
@@ -233,7 +170,7 @@ const WaitingLogsApprovalTable = () => {
 
   return (
     <Card sx={{ borderRadius: 1, boxShadow: 3 }}>
-      <CardHeader title='Signatures Status' className='pb-4' />
+      <CardHeader title='Waiting Logs Approval' className='pb-4' />
       <div style={{ overflowX: 'auto', padding: '0px' }}>
         <DataTable data={filteredData} columns={columns} />
       </div>

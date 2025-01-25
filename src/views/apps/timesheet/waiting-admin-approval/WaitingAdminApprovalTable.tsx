@@ -3,28 +3,11 @@
 import { useEffect, useState, useMemo } from 'react'
 import Card from '@mui/material/Card'
 import CardHeader from '@mui/material/CardHeader'
-import Typography from '@mui/material/Typography'
-import { createColumnHelper } from '@tanstack/react-table'
-import type { ColumnDef, FilterFn, Table } from '@tanstack/react-table'
-import TablePagination from '@mui/material/TablePagination'
-import { Avatar, CircularProgress } from '@mui/material'
+import { Avatar, CircularProgress, Typography } from '@mui/material'
 import axios from 'axios'
-import tableStyles from '@core/styles/table.module.css'
-import classnames from 'classnames'
-import {
-  useReactTable,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getSortedRowModel,
-  getPaginationRowModel,
-  flexRender
-} from '@tanstack/react-table'
-import TablePaginationComponent from '@components/TablePaginationComponent'
-import TableFilters from '@/views/apps/user/list/TableFilters'
-import { RankingInfo, rankItem } from '@tanstack/match-sorter-utils'
-import { GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
 import DataTable from '@/@core/components/mui/DataTable'
-
+import { GridColDef } from '@mui/x-data-grid'
+import AdUnitsIcon from '@mui/icons-material/AdUnits'
 // Updated interfaces to match your data structure
 interface Caregiver {
   id: number
@@ -37,15 +20,6 @@ interface Caregiver {
   payRate: number
   additionalPayRate: number
   caregiverLevel: string
-}
-
-declare module '@tanstack/table-core' {
-  interface FilterFns {
-    fuzzy: FilterFn<unknown>
-  }
-  interface FilterMeta {
-    itemRank: RankingInfo
-  }
 }
 
 interface Client {
@@ -72,29 +46,7 @@ interface Signature {
   timeLog: any[]
 }
 
-type SignatureWithAction = Signature & {
-  action?: string
-}
-
-const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
-  const itemRank = rankItem(row.getValue(columnId), value)
-  addMeta({ itemRank })
-  return itemRank.passed
-}
-
-const columnHelper = createColumnHelper<Signature>()
-
-// Create a custom TablePaginationComponent that accepts generic type
-interface CustomTablePaginationProps<T> {
-  table: Table<T>
-}
-
-const CustomTablePagination = <T,>({ table }: CustomTablePaginationProps<T>) => {
-  return <TablePaginationComponent table={table as unknown as Table<unknown>} />
-}
-
 const WaitingAdminApprovalTable = () => {
-  const [data, setData] = useState<Signature[]>([])
   const [filteredData, setFilteredData] = useState<Signature[]>([])
   const [globalFilter, setGlobalFilter] = useState('')
   const [rowSelection, setRowSelection] = useState({})
@@ -104,8 +56,9 @@ const WaitingAdminApprovalTable = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/signatures`)
-        setData(response.data)
+        // const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/signatures`)
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/time-log`)
+        console.log('DATA RECEIVED TIMSEHEET PAGE', response.data)
         setFilteredData(response.data)
         setIsLoading(false)
       } catch (error) {
@@ -116,117 +69,87 @@ const WaitingAdminApprovalTable = () => {
     fetchData()
   }, [])
 
+  const calculateHoursWorked = (clockIn: string, clockOut: string) => {
+    // Parse the clock-in and clock-out times
+    const clockInTime = new Date(clockIn)
+    const clockOutTime = new Date(clockOut)
+
+    // Calculate the difference in milliseconds
+    const differenceMs = clockOutTime.getTime() - clockInTime.getTime()
+
+    // Convert milliseconds to hours
+    const hours = differenceMs / (1000 * 60 * 60)
+
+    // Round to two decimal places
+    return hours.toFixed(2)
+  }
+
   const columns = useMemo<GridColDef[]>(
     () => [
       {
         field: 'clientName',
-        headerName: 'Client Name',
+        headerName: 'CLIENT NAME',
         flex: 1.5,
-        renderCell: (params: GridRenderCellParams) => (
-          <div style={{ height: '50px', display: 'flex', alignItems: 'center', gap: '8px', margin: 0, padding: 0 }}>
-            <Avatar alt={params.row.clientName} src={params.row.client.avatar} />
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <strong className='h-4'>{params.row.clientName}</strong>
-              <span style={{ fontSize: '12px', color: '#757575' }}>{params.row.client.email}</span>
-            </div>
-          </div>
+        renderCell: (params: any) => (
+          <Typography className='font-normal text-base my-3'>
+            {params?.row?.client?.firstName} {params?.row?.client?.lastName}
+          </Typography>
         )
       },
       {
         field: 'caregiverName',
-        headerName: 'Caregiver Assigned',
+        headerName: 'CAREGIVER ASSIGNED',
         flex: 1.5,
-        renderCell: (params: GridRenderCellParams) => (
-          <div style={{ height: '50px', display: 'flex', alignItems: 'center', gap: '8px', margin: 0, padding: 0 }}>
-            <Avatar alt={params.row.caregiverName} src={params.row.caregiver.avatar} />
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <strong className='h-4'>{params.row.caregiverName}</strong>
-            </div>
-          </div>
+        renderCell: (params: any) => (
+          <Typography className='font-normal text-base my-3'>
+            {params?.row?.caregiver?.firstName} {params?.row?.caregiver?.lastName}
+          </Typography>
         )
       },
       {
-        field: 'service',
-        headerName: 'Service',
+        field: 'serviceName',
+        headerName: 'SERVICE TAKEN',
         flex: 1.5,
-        renderCell: (params: GridRenderCellParams) => {
-          const services = params.row.client.clientServices
-          if (services && services.length > 0) {
-            const serviceNames = services.map((service: any) => service?.service?.name).join(', ')
-            return <span>{serviceNames}</span>
+        renderCell: (params: any) => (
+          <Typography className='font-normal text-base my-3'>{params?.row?.serviceName}</Typography>
+        )
+      },
+      {
+        field: 'payPeriod',
+        headerName: 'DATE',
+        flex: 1.5,
+        renderCell: (params: any) => {
+          const startDate = params?.row?.payPeriodHistory?.startDate
+          if (startDate) {
+            const date = new Date(startDate)
+            return (
+              <Typography className='font-normal text-base my-3'>
+                {`${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear().toString().slice(-2)}`}
+              </Typography>
+            )
           }
-          return <span>No services available</span>
+          return <Typography className='font-normal text-base my-3'>N/A</Typography>
         }
       },
       {
-        field: 'logsRecorded',
-        headerName: 'Logs Recorded',
-        flex: 1,
-        renderCell: (params: GridRenderCellParams) => (
-          <span
-            className={`px-2 py-1 rounded-full text-xs ${
-              params.value === 'Taken' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-            }`}
-          >
-            Yes
-          </span>
-        )
+        field: 'logsVia',
+        headerName: 'LOGS RECORDED',
+        flex: 1.5,
+        renderCell: (params: any) => <Typography className='font-normal text-base my-3'>Yes</Typography>
       },
       {
-        field: 'clientSignStatus',
-        headerName: 'Sign Status',
+        field: 'tsApprovalStatus',
+        headerName: 'SIGNATURE STATUS',
         flex: 1,
-        renderCell: (params: GridRenderCellParams) => (
-          <span
-            className={`px-2 py-1 rounded-full text-xs ${
-              params.value === 'Pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'
-            }`}
-          >
-            {params.value}
-          </span>
-        )
-      },
-      {
-        field: 'timesheetApproved',
-        headerName: 'Timesheet Approved',
-        flex: 1,
-        renderCell: (params: GridRenderCellParams) => (
-          <span
-            className={`px-2 py-1 rounded-full text-xs ${
-              params.value === 'Pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'
-            }`}
-          >
-            Pending
-          </span>
+        renderCell: (params: any) => (
+          <Typography className='font-normal text-base my-3'>{params?.row?.signature?.tsApprovalStatus}</Typography>
         )
       }
     ],
     []
   )
 
-  // const table = useReactTable({
-  //   data: filteredData,
-  //   columns,
-  //   filterFns: {
-  //     fuzzy: fuzzyFilter
-  //   },
-  //   state: {
-  //     rowSelection,
-  //     globalFilter
-  //   },
-  //   initialState: {
-  //     pagination: {
-  //       pageSize: 10
-  //     }
-  //   },
-  //   enableRowSelection: true,
-  //   onRowSelectionChange: setRowSelection,
-  //   getCoreRowModel: getCoreRowModel(),
-  //   onGlobalFilterChange: setGlobalFilter,
-  //   getFilteredRowModel: getFilteredRowModel(),
-  //   getSortedRowModel: getSortedRowModel(),
-  //   getPaginationRowModel: getPaginationRowModel()
-  // })
+  console.log('Filtred data', filteredData[0]?.client?.firstName)
 
   if (isLoading) {
     return (
@@ -240,7 +163,7 @@ const WaitingAdminApprovalTable = () => {
 
   return (
     <Card sx={{ borderRadius: 1, boxShadow: 3 }}>
-      <CardHeader title='Signatures Status' className='pb-4' />
+      <CardHeader title='Waiting Admin Approval' className='pb-4' />
       <div style={{ overflowX: 'auto', padding: '0px' }}>
         <DataTable data={filteredData} columns={columns} />
       </div>
