@@ -23,34 +23,7 @@ import { FormHelperText } from '@mui/material'
 import { Controller, FormProvider, useForm } from 'react-hook-form'
 import CustomTextField from '@core/components/custom-inputs/CustomTextField'
 import CustomDropDown from '@core/components/custom-inputs/CustomDropDown'
-
-type FormDataType = {
-  firstName: string
-  middleName: string
-  lastName: string
-  role: string
-  caregiverUMPI: Date | null
-  dateOfBirth: Date | null
-  caregiverLevel: string
-  address: string
-  city: string
-  state: string
-  zip: number | null
-  SSN: string
-  payRate: number | null
-  dateOfHire: Date | null
-  terminationDate: Date | null
-  gender: string
-  phoneNumber: string
-  secondaryPhoneNumber: string
-  emergencyContactNumber: string
-  emergencyEmail: string
-  caregiverOvertimeAgreement: string
-  caregiverLicense: string
-  allergies: string
-  specialRequests: string
-  comments: string
-}
+import { PersonalDetailsFormDataType } from '../types'
 
 type Props = {
   // form?: any
@@ -58,14 +31,14 @@ type Props = {
 }
 
 const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish }, ref) => {
-  const methods = useForm<FormDataType>({
+  const methods = useForm<PersonalDetailsFormDataType>({
     mode: 'onSubmit',
     reValidateMode: 'onChange'
   })
 
   // Expose handleSubmit to parent via ref
   useImperativeHandle(ref, () => ({
-    handleSubmit: (onValid: (data: FormDataType) => void) => handleSubmit(onValid)
+    handleSubmit: (onValid: (data: PersonalDetailsFormDataType) => void) => handleSubmit(onValid)
   }))
 
   const {
@@ -74,7 +47,7 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
     handleSubmit // Add this if you want to use form submission
   } = methods // Use methods instead of useFormContext
 
-  const onSubmit = (data: FormDataType) => {
+  const onSubmit = (data: PersonalDetailsFormDataType) => {
     console.log('Submitted Data:', data)
     onFinish(data) // Pass form data to parent
   }
@@ -131,6 +104,17 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                   />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 4 }}>
+                  <CustomTextField
+                    label={'Caregiver UMPI'}
+                    placeHolder={'caregiverUmpi'}
+                    name='caregiverUMPI'
+                    defaultValue={''}
+                    type={'text'}
+                    error={errors.caregiverUMPI}
+                    control={control}
+                  />
+                </Grid>
+                {/* <Grid size={{ xs: 12, sm: 4 }}>
                   <Controller
                     name='caregiverUMPI'
                     control={control}
@@ -154,7 +138,7 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                       />
                     )}
                   />
-                </Grid>
+                </Grid> */}
                 <Grid size={{ xs: 12, sm: 4 }}>
                   <Controller
                     name='dateOfBirth'
@@ -183,25 +167,16 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                   />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 4 }}>
-                  <Controller
-                    name='caregiverLevel'
+                  <CustomDropDown
+                    name={'caregiverLevel'}
                     control={control}
-                    defaultValue='' // Set default value
-                    rules={{ required: 'Caregiver Level is required' }} // Validation rules
-                    render={({ field }) => (
-                      <FormControl fullWidth error={!!errors.caregiverLevel}>
-                        <InputLabel>Caregiver Level</InputLabel>
-                        <Select
-                          {...field} // Spread field props to bind value and onChange
-                          label='Caregiver Level'
-                          size='small'
-                        >
-                          <MenuItem value='caregiver'>Caregiver</MenuItem>
-                          <MenuItem value='senior caregiver'>Senior Caregiver</MenuItem>
-                        </Select>
-                        {errors.caregiverLevel && <FormHelperText>please select a caregiver level</FormHelperText>}
-                      </FormControl>
-                    )}
+                    error={errors.caregiverLevel}
+                    label={'Caregiver Level'}
+                    optionList={[
+                      { key: 1, value: 'caregiver', optionString: 'Caregiver' },
+                      { key: 2, value: 'serniorCaregiver', optionString: 'Sernior Caregiver' }
+                    ]}
+                    defaultValue={''}
                   />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 4 }}>
@@ -264,8 +239,8 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                     label={'Pay Rate ($)'}
                     placeHolder={'Pay Rate ($)'}
                     name={'payRate'}
-                    defaultValue={''}
-                    type={'text'}
+                    defaultValue={23}
+                    type={'number'}
                     error={errors.payRate}
                     control={control}
                   />
@@ -324,21 +299,35 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                   />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 4 }}>
-                  <FormControl>
-                    <RadioGroup row aria-label='position' name='horizontal' defaultValue='male' className='mbs-4'>
-                      <FormControlLabel value='male' label='Male' control={<Radio />} />
-                      <FormControlLabel value='female' control={<Radio />} label='Female' />
-                    </RadioGroup>
-                  </FormControl>
+                  <Controller
+                    name='gender'
+                    control={control}
+                    defaultValue='male' // Set a default value if needed
+                    rules={{ required: 'Gender is required' }} // Add validation rules if necessary
+                    render={({ field }) => (
+                      <FormControl component='fieldset' error={!!errors.gender}>
+                        <RadioGroup
+                          row
+                          {...field} // Bind field props to RadioGroup
+                          value={field.value} // Set the value from the field
+                          onChange={e => field.onChange(e.target.value)} // Update form state on change
+                        >
+                          <FormControlLabel value='male' label='Male' control={<Radio />} />
+                          <FormControlLabel value='female' control={<Radio />} label='Female' />
+                        </RadioGroup>
+                        {errors.gender && <FormHelperText>{errors.gender.message}</FormHelperText>}
+                      </FormControl>
+                    )}
+                  />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 4 }}>
                   <CustomTextField
                     label={'Phone Number'}
                     placeHolder={'Phone Number'}
-                    name={'phoneNumber'}
+                    name={'primaryPhoneNumber'}
                     defaultValue={''}
                     type={'text'}
-                    error={errors.phoneNumber}
+                    error={errors.primaryPhoneNumber}
                     control={control}
                   />
                 </Grid>
@@ -368,55 +357,37 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                   <CustomTextField
                     label={'Emergency Email Id'}
                     placeHolder={'Emergency Email Id'}
-                    name={'emergencyEmail Id'}
+                    name={'emergencyEmailId'}
                     defaultValue={''}
                     type={'email'}
-                    error={errors.emergencyEmail}
+                    error={errors.emergencyEmailId}
                     control={control}
                   />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 4 }}>
-                  <Controller
-                    name='caregiverOvertimeAgreement'
+                  <CustomDropDown
+                    name={'overtimeAgreement'}
                     control={control}
-                    defaultValue='' // Set the default value
-                    rules={{ required: 'Caregiver Overtime Agreement is required' }} // Validation rules
-                    render={({ field }) => (
-                      <FormControl fullWidth error={!!errors.caregiverOvertimeAgreement}>
-                        <InputLabel>Caregiver Overtime Agreement</InputLabel>
-                        <Select
-                          {...field} // Spread field properties to bind value and onChange
-                          label='Caregiver Overtime Agreement'
-                          size='small'
-                        >
-                          <MenuItem value='Yes'>Yes</MenuItem>
-                          <MenuItem value='No'>No</MenuItem>
-                        </Select>
-                        {errors.caregiverOvertimeAgreement && <FormHelperText>please select an option</FormHelperText>}
-                      </FormControl>
-                    )}
+                    error={errors.overtimeAgreement}
+                    label={'Caregiver Overtime Agreement'}
+                    optionList={[
+                      { key: true, value: true, optionString: 'Yes' },
+                      { key: false, value: false, optionString: 'No' }
+                    ]}
+                    defaultValue={true}
                   />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 4 }}>
-                  <Controller
-                    name='caregiverLicense'
+                  <CustomDropDown
+                    name={'isLicensed245d'}
                     control={control}
-                    defaultValue='' // Set the default value
-                    rules={{ required: 'Caregiver License is required' }} // Validation rules
-                    render={({ field }) => (
-                      <FormControl fullWidth error={!!errors.caregiverLicense}>
-                        <InputLabel>Is the Caregiver 245D Licensed</InputLabel>
-                        <Select
-                          {...field} // Spread field properties to bind value and onChange
-                          label='Is the Caregiver 245D Licensed'
-                          size='small'
-                        >
-                          <MenuItem value='Yes'>Yes</MenuItem>
-                          <MenuItem value='No'>No</MenuItem>
-                        </Select>
-                        {errors.caregiverLicense && <FormHelperText>please select an option</FormHelperText>}
-                      </FormControl>
-                    )}
+                    error={errors.isLicensed245d}
+                    label={'Is the Caregiver 245D Licensed'}
+                    optionList={[
+                      { key: true, value: true, optionString: 'Yes' },
+                      { key: false, value: false, optionString: 'No' }
+                    ]}
+                    defaultValue={true}
                   />
                 </Grid>
               </Grid>
@@ -454,7 +425,7 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                   <CustomTextField
                     label={'Comments'}
                     placeHolder={'Comments'}
-                    name={'commments'}
+                    name={'comments'}
                     defaultValue={''}
                     type={'text'}
                     error={errors.comments}

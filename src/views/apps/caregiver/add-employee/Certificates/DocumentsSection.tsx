@@ -12,7 +12,7 @@ import {
 } from 'react-hook-form'
 import CustomDropDown from '@core/components/custom-inputs/CustomDropDown'
 import CustomTextField from '@core/components/custom-inputs/CustomTextField'
-import { Button, Card, CardContent } from '@mui/material'
+import { Button, Card, CardContent, Typography } from '@mui/material'
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf'
 import FileUploaderRestrictions from '@/@core/components/mui/FileUploader'
 
@@ -107,7 +107,7 @@ const DocumentsSection = forwardRef<{ handleSubmit: any }, Props>(({ onFinish },
   const renderFileList = (files: File[], title: string) =>
     files.length > 0 && (
       <div className='p-4 rounded-lg border border-[#32475C] border-opacity-[22%]'>
-        <h3 className='text-md font-semibold mb-2'>{title}</h3>
+        <Typography className='text-md font-semibold mb-2'>{title}</Typography>
         {files.map((file, index) => (
           <div key={index} className='flex items-center gap-2 mb-2'>
             <PictureAsPdfIcon />
@@ -153,9 +153,9 @@ const DocumentsSection = forwardRef<{ handleSubmit: any }, Props>(({ onFinish },
               </div>
 
               {/* Documents Section */}
-              <h2 className='text-xl font-semibold mb-6'>Documents</h2>
+              <Typography className='text-xl font-semibold mb-6'>Documents</Typography>
               <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6'>
-                <div className='p-4 rounded-lg'>
+                <div className='p-4 rounded-lg border'>
                   <FileUploaderRestrictions
                     onFilesSelected={selectedFiles => {
                       setSsnFile(selectedFiles)
@@ -166,7 +166,7 @@ const DocumentsSection = forwardRef<{ handleSubmit: any }, Props>(({ onFinish },
                     title='Upload SSN'
                   />
                 </div>
-                <div className='p-4 rounded-lg'>
+                <div className='p-4 rounded-lg border'>
                   <FileUploaderRestrictions
                     onFilesSelected={selectedFiles => {
                       setAdultFile(selectedFiles)
@@ -177,7 +177,7 @@ const DocumentsSection = forwardRef<{ handleSubmit: any }, Props>(({ onFinish },
                     title='Vulnerable Adult Mandated Certificate'
                   />
                 </div>
-                <div className='p-4 rounded-lg'>
+                <div className='p-4 rounded-lg border'>
                   <FileUploaderRestrictions
                     onFilesSelected={selectedFiles => {
                       setUmpiFile(selectedFiles)
@@ -188,7 +188,7 @@ const DocumentsSection = forwardRef<{ handleSubmit: any }, Props>(({ onFinish },
                     title='UMPI Letter'
                   />
                 </div>
-                <div className='p-4 rounded-lg'>
+                <div className='p-4 rounded-lg border'>
                   <FileUploaderRestrictions
                     onFilesSelected={selectedFiles => {
                       setClearanceFile(selectedFiles)
