@@ -105,7 +105,8 @@ const FileUploaderRestrictions: React.FC<FileUploaderProps> = ({
           <Avatar variant='rounded' className='bs-12 is-12 mbe-3'>
             <FileCopyIcon />
           </Avatar>
-          <Button variant='contained'>{title}</Button>
+          <Typography className='text-xs'>{title}</Typography>
+          <Button variant='contained'>CHOOSE FILE</Button>
           <Typography color='text.secondary' className='text-xs'>
             File must be less than {fileSize / (1024 * 1024)}mb
           </Typography>

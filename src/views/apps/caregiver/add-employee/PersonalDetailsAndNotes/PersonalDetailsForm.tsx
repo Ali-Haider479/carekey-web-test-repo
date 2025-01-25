@@ -23,34 +23,7 @@ import { FormHelperText } from '@mui/material'
 import { Controller, FormProvider, useForm } from 'react-hook-form'
 import CustomTextField from '@core/components/custom-inputs/CustomTextField'
 import CustomDropDown from '@core/components/custom-inputs/CustomDropDown'
-
-type FormDataType = {
-  firstName: string
-  middleName: string
-  lastName: string
-  role: string
-  caregiverUMPI: Date | null
-  dateOfBirth: Date | null
-  caregiverLevel: string
-  address: string
-  city: string
-  state: string
-  zip: number | null
-  SSN: string
-  payRate: number | null
-  dateOfHire: Date | null
-  terminationDate: Date | null
-  gender: string
-  phoneNumber: string
-  secondaryPhoneNumber: string
-  emergencyContactNumber: string
-  emergencyEmail: string
-  caregiverOvertimeAgreement: string
-  caregiverLicense: string
-  allergies: string
-  specialRequests: string
-  comments: string
-}
+import { PersonalDetailsFormDataType } from '../types'
 
 type Props = {
   // form?: any
@@ -58,14 +31,14 @@ type Props = {
 }
 
 const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish }, ref) => {
-  const methods = useForm<FormDataType>({
+  const methods = useForm<PersonalDetailsFormDataType>({
     mode: 'onSubmit',
     reValidateMode: 'onChange'
   })
 
   // Expose handleSubmit to parent via ref
   useImperativeHandle(ref, () => ({
-    handleSubmit: (onValid: (data: FormDataType) => void) => handleSubmit(onValid)
+    handleSubmit: (onValid: (data: PersonalDetailsFormDataType) => void) => handleSubmit(onValid)
   }))
 
   const {
@@ -74,7 +47,7 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
     handleSubmit // Add this if you want to use form submission
   } = methods // Use methods instead of useFormContext
 
-  const onSubmit = (data: FormDataType) => {
+  const onSubmit = (data: PersonalDetailsFormDataType) => {
     console.log('Submitted Data:', data)
     onFinish(data) // Pass form data to parent
   }
@@ -324,12 +297,26 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                   />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 4 }}>
-                  <FormControl>
-                    <RadioGroup row aria-label='position' name='horizontal' defaultValue='male' className='mbs-4'>
-                      <FormControlLabel value='male' label='Male' control={<Radio />} />
-                      <FormControlLabel value='female' control={<Radio />} label='Female' />
-                    </RadioGroup>
-                  </FormControl>
+                  <Controller
+                    name='gender'
+                    control={control}
+                    defaultValue='male' // Set a default value if needed
+                    rules={{ required: 'Gender is required' }} // Add validation rules if necessary
+                    render={({ field }) => (
+                      <FormControl component='fieldset' error={!!errors.gender}>
+                        <RadioGroup
+                          row
+                          {...field} // Bind field props to RadioGroup
+                          value={field.value} // Set the value from the field
+                          onChange={e => field.onChange(e.target.value)} // Update form state on change
+                        >
+                          <FormControlLabel value='male' label='Male' control={<Radio />} />
+                          <FormControlLabel value='female' control={<Radio />} label='Female' />
+                        </RadioGroup>
+                        {errors.gender && <FormHelperText>{errors.gender.message}</FormHelperText>}
+                      </FormControl>
+                    )}
+                  />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 4 }}>
                   <CustomTextField
@@ -368,10 +355,10 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                   <CustomTextField
                     label={'Emergency Email Id'}
                     placeHolder={'Emergency Email Id'}
-                    name={'emergencyEmail Id'}
+                    name={'emergencyEmailId'}
                     defaultValue={''}
                     type={'email'}
-                    error={errors.emergencyEmail}
+                    error={errors.emergencyEmailId}
                     control={control}
                   />
                 </Grid>
@@ -388,9 +375,10 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                           {...field} // Spread field properties to bind value and onChange
                           label='Caregiver Overtime Agreement'
                           size='small'
+                          name={'caregiverOvertimeAgreement'}
                         >
-                          <MenuItem value='Yes'>Yes</MenuItem>
-                          <MenuItem value='No'>No</MenuItem>
+                          <MenuItem value='yes'>Yes</MenuItem>
+                          <MenuItem value='no'>No</MenuItem>
                         </Select>
                         {errors.caregiverOvertimeAgreement && <FormHelperText>please select an option</FormHelperText>}
                       </FormControl>
@@ -410,9 +398,10 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                           {...field} // Spread field properties to bind value and onChange
                           label='Is the Caregiver 245D Licensed'
                           size='small'
+                          name={'caregiverLicense'}
                         >
-                          <MenuItem value='Yes'>Yes</MenuItem>
-                          <MenuItem value='No'>No</MenuItem>
+                          <MenuItem value='yes'>Yes</MenuItem>
+                          <MenuItem value='no'>No</MenuItem>
                         </Select>
                         {errors.caregiverLicense && <FormHelperText>please select an option</FormHelperText>}
                       </FormControl>
