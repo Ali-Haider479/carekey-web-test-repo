@@ -1,16 +1,17 @@
-import TextField from "@mui/material/TextField";
-import React from "react";
-import { Controller } from "react-hook-form";
+'use client'
+import TextField from '@mui/material/TextField'
+import React from 'react'
+import { Controller } from 'react-hook-form'
 
 type Props = {
-  label: string;
-  placeHolder: string;
-  name: string;
-  defaultValue: any;
-  type: any;
-  error: any;
-  control: any;
-};
+  label: string
+  placeHolder: string
+  name: string
+  defaultValue: any
+  type: any
+  error: any
+  control: any
+}
 
 const CustomTextField = (props: Props) => {
   return (
@@ -26,7 +27,7 @@ const CustomTextField = (props: Props) => {
             error={!!props.error}
             helperText={props.error && `please provide ${props.label}`}
             fullWidth
-            size="small"
+            size='small'
             label={props.label}
             placeholder={props.placeHolder}
             type={props.type}
@@ -34,7 +35,7 @@ const CustomTextField = (props: Props) => {
         )}
       />
     </div>
-  );
-};
+  )
+}
 
-export default CustomTextField;
+export default CustomTextField

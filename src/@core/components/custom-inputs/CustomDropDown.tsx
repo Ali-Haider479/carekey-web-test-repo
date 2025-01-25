@@ -1,3 +1,4 @@
+'use client'
 import React, { useState } from 'react'
 import { Controller } from 'react-hook-form'
 import MenuItem from '@mui/material/MenuItem'

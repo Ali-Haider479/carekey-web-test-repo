@@ -1,9 +1,9 @@
 import React from 'react'
-import { TextField, Divider, Box } from '@mui/material'
+import { TextField, Divider, Card } from '@mui/material'
 
 const AcknowledgeSignature = () => {
   return (
-    <Box className='shadow-md rounded-lg p-6 w-[99%] mt-3 ml-2 border-solid border-2'>
+    <Card className='shadow-md rounded-lg p-6 w-[99%] mt-3 ml-2 border-solid border-2'>
       <h2 className='text-xl font-semibold  mb-6'>Acknowledge and Required Signature for Client</h2>
       <div className='grid grid-cols-2 gap-6'>
         <div>
@@ -46,7 +46,7 @@ const AcknowledgeSignature = () => {
           <span className='text-lg font-bold '>79 HOURS 15 MINUTES</span>
         </div>
       </div>
-    </Box>
+    </Card>
   )
 }
 

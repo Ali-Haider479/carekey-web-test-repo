@@ -24,6 +24,7 @@ import { useRouter } from 'next/navigation'
 import TrainingCertificatesComponent from './Certificates/TrainingCertificatesComponent'
 import DocumentsSection from './Certificates/DocumentsSection'
 import { PersonalDetailsFormDataType } from './types'
+import { dark } from '@mui/material/styles/createPalette'
 import axios from 'axios'
 
 // Vars
@@ -333,8 +334,16 @@ const EmployeeStepper = () => {
                   >
                     <div className='step-label'>
                       <div>
-                        <Typography className='step-title'>{label.title}</Typography>
-                        <Typography className='step-subtitle'>{label.subtitle}</Typography>
+                        <Typography
+                          className={`step-title text-base ${activeStep === steps.indexOf(label) ? (dark ? 'text-[#7112B7]' : 'text-[#4B0082]') : ''}`}
+                        >
+                          {label.title}
+                        </Typography>
+                        <Typography
+                          className={`step-subtitle ${activeStep === steps.indexOf(label) ? (dark ? 'text-[#7112B7]' : 'text-[#4B0082]') : ''}`}
+                        >
+                          {label.subtitle}
+                        </Typography>
                       </div>
                     </div>
                   </StepLabel>

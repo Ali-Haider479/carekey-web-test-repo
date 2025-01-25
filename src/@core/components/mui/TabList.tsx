@@ -6,6 +6,7 @@ import type { TabListProps } from '@mui/lab/TabList'
 
 // Type Imports
 import type { ThemeColor } from '@core/types'
+import { dark } from '@mui/material/styles/createPalette'
 
 export type CustomTabListProps = TabListProps & {
   color?: ThemeColor
@@ -38,7 +39,7 @@ const TabList = styled(MuiTabList)<CustomTabListProps>(({ color, theme, pill, or
       gap: theme.spacing(3)
     },
     '& .Mui-selected': {
-      backgroundColor: overRideColor || `#4B0082 !important`,
+      backgroundColor: overRideColor || `${dark ? '#7112B7 !important' : '#4B0082 !important'}`,
       color: `var(--mui-palette-${color}-contrastText) !important`,
       boxShadow: overRideColor ? `0px 3px 5px rgba(0, 0, 0, 0.2)` : `var(--mui-customShadows-${color}-sm)`,
       // Prevent hover effect on active tab
