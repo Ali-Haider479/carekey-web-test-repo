@@ -47,6 +47,10 @@ const steps = [
   {
     title: '4',
     subtitle: 'Documents'
+  },
+  {
+    title: '5',
+    subtitle: 'Submit'
   }
 ]
 
@@ -69,70 +73,8 @@ const EmployeeStepper = () => {
     setActiveStep(0)
   }
 
-  // const handleImageChange = async (file: File) => {
-  //   try {
-  //     setLoading(true)
-  //     const formData = new FormData()
-  //     formData.append('image', file)
-
-  //     const response = await axios.post(
-  //       `${process.env.NEXT_PUBLIC_API_URL}/user/${tenantData?.users[0]?.id}/profile-image`,
-  //       formData,
-  //       {
-  //         headers: {
-  //           'Content-Type': 'multipart/form-data'
-  //         }
-  //       }
-  //     )
-  //     console.log('UPDATE RESPONSE', response.data)
-  //     // Update the fileUrl state with the new image URL after successful upload
-  //     if (response.data?.profileImageUrl) {
-  //       setFileUrl(response.data.profileImageUrl)
-  //     }
-  //     setLoading(false)
-  //   } catch (error) {
-  //     console.error('Update image error:', error)
-  //     setLoading(false)
-  //   }
-  // }
-
-  // const handleSave = async () => {
-  //   handleNext()
-  //   console.log('Inside on save', certificatesData)
-  //   try {
-  //     // Create a FormData object
-  //     const formData = new FormData()
-
-  //     // Append each file in the trainingCertificateFiles array
-  //     certificatesData?.trainingCertificateFiles.forEach((file: { path: string }) => {
-  //       const fileBlob = new Blob([file.path], { type: 'application/pdf' }) // Adjust MIME type if needed
-  //       console.log('FILES BLOB', fileBlob)
-  //       formData.append('file', fileBlob, file.path) // Add file to the form
-  //     })
-
-  //     // Append other fields to the form
-  //     formData.append('trainingCertificateExpiryDate', certificatesData.trainingCertificateExpiryDate)
-  //     formData.append('trainingCertificateName', certificatesData.trainingCertificateName)
-  //     console.log('FORMDATA OF TRAINING CERTIFICATES', formData)
-  //     // Make the API call
-  //     const response = axios.post(`${process.env.NEXT_PUBLIC_API_URL}/caregivers/document`, formData, {
-  //       headers: {
-  //         'Content-Type': 'multipart/form-data'
-  //       }
-  //     })
-
-  //     // Handle the response
-  //     console.log('Response:AFTER UPLOAD------------', response)
-  //   } catch (error) {
-  //     console.error('Error uploading files:', error)
-  //   }
-  // }
-
   const handleSave = async () => {
-    handleNext()
-
     try {
-      // CREATE USER AND CAREGIVER
       const userPayload = {
         userName: loginInfo.userName,
         emailAddress: loginInfo.emailAddress,
@@ -141,109 +83,174 @@ const EmployeeStepper = () => {
         accountStatus: loginInfo.accountStatus,
         joinDate: new Date()
       }
-
-      // const mailingAddress = {
-      //   city: loginInfo.city,
-      //   state: loginInfo.state,
-      //   zipCode: loginInfo.zipCode,
-      //   address: loginInfo.address,
-      //   addressType: loginInfo.addressType
-      // }
-
+      // Create User and Caregiver (as you've already done)
       const userResponse = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/user`, userPayload)
-      // const caregiverMailingAddress = await axios.post(
-      //   `${process.env.NEXT_PUBLIC_API_URL}/caregiver/addresses`,
-      //   mailingAddress
-      // )
-
-      const caregiverPayload = {
+      const caregiverResponse = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/caregivers`, {
         ...caregiverData,
         userId: userResponse.data.id,
         tenantId: 1
+      })
+
+      const caregiverId = caregiverResponse.data.id
+
+      // Function to upload documents with improved handling
+      const uploadDocuments = async (
+        files: { path: string }[],
+        documentType: string,
+        expiryDate?: string,
+        additionalMetadata?: Record<string, any>
+      ) => {
+        // Skip upload if no files exist
+        if (!files || files.length === 0) {
+          console.log(`No files found for ${documentType}. Skipping upload.`)
+          return null
+        }
+
+        // Create a FormData object
+        const formData = new FormData()
+
+        // Append files
+        files.forEach((file: { path: string }) => {
+          // Use File object instead of Blob for better compatibility
+          const fileObject = new File([file.path], file.path, {
+            type: file.path.endsWith('.pdf')
+              ? 'application/pdf'
+              : file.path.endsWith('.jpg') || file.path.endsWith('.png')
+                ? 'image/jpeg'
+                : 'application/octet-stream'
+          })
+          formData.append('file', fileObject, file.path)
+        })
+
+        // Append common parameters
+        formData.append('documentType', documentType)
+        formData.append('caregiverId', caregiverId.toString())
+
+        // Handle expiry date
+        const finalExpiryDate =
+          expiryDate || new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString()
+
+        formData.append('expiryDays', '365')
+        formData.append('expiryDate', finalExpiryDate)
+
+        // Append additional metadata if exists
+        if (additionalMetadata) {
+          Object.entries(additionalMetadata).forEach(([key, value]) => {
+            formData.append(key, value as string)
+          })
+        }
+
+        // Make the API call
+        try {
+          return await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/caregivers/document`, formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data'
+            }
+          })
+        } catch (error) {
+          console.error(`Error uploading ${documentType} documents:`, error)
+          return null
+        }
       }
 
-      const caregiverResponse = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/caregivers`, caregiverPayload)
+      // Prepare document uploads with explicit expiry dates or default
+      const documentUploads = [
+        // Training Certificates
+        uploadDocuments(
+          certificatesData.trainingCertificateFiles,
+          'trainingCertificate',
+          certificatesData.trainingCertificateExpiryDate,
+          {
+            trainingCertificateName: certificatesData.trainingCertificateName
+          }
+        ),
 
-      // Create a FormData object
-      const formData = new FormData()
-      console.log('INSIDE HANDLE SAVE', certificatesData)
-      // Append files
-      certificatesData?.trainingCertificateFiles.forEach((file: { path: string }) => {
-        const fileBlob = new Blob([file.path], { type: 'application/pdf' })
-        formData.append('file', fileBlob, file.path)
-      })
+        // Driving License
+        uploadDocuments(
+          certificatesData.drivingCertificateFiles,
+          'drivingLicense',
+          certificatesData.drivingLicenseExpiryDate,
+          {
+            drivingLicenseNumber: certificatesData.drivingLicenseNumber,
+            dlState: certificatesData.dlState
+          }
+        ),
 
-      // Append additional parameters
-      formData.append('documentType', 'trainingCertificate')
-      formData.append('expiryDays', '365') // Or calculate from expiry date
-      formData.append('caregiverId', '1') // Your caregiver ID
+        // SSN File
+        uploadDocuments(
+          documentsData.ssnFileObject,
+          'other',
+          new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString()
+        ),
 
-      // Additional metadata can be appended as well
-      formData.append('trainingCertificateExpiryDate', certificatesData.trainingCertificateExpiryDate)
-      formData.append('trainingCertificateName', certificatesData.trainingCertificateName)
-      console.log('FORM DATA', formData)
-      // Make the API call
-      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/caregivers/document`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      })
+        // Adult File
+        uploadDocuments(
+          documentsData.adultFileObject,
+          'other',
+          new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString()
+        ),
 
-      console.log('Response after upload:', response)
+        // UMPI File
+        uploadDocuments(
+          documentsData.umpiFileObject,
+          'other',
+          new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString()
+        ),
+
+        // Clearance File
+        uploadDocuments(
+          documentsData.clearanceFileObject,
+          'other',
+          new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString()
+        )
+      ]
+
+      // Wait for all document uploads
+      const uploadResponses = await Promise.all(documentUploads)
+
+      // Filter out null responses
+      const successfulUploads = uploadResponses.filter(response => response !== null)
+
+      console.log('Successful document uploads:', successfulUploads)
+
+      router.replace('/apps/caregiver/list')
     } catch (error) {
-      console.error('Error uploading files:', error)
+      console.error('Error in document upload process:', error)
     }
   }
 
-  // const handleSave = () => {
-  //   try {
-  //     const formData = new FormData()
-  //     formData.append('image', file)
-  //     const payLoad = {}
-  //     const uploadDocs = axios.post(`${process.env.NEXT_PUBLIC_API_URL}/caregivers/document`, certificatesData)
-  //     // const createUser = axios.post(`${process.env.NEXT_PUBLIC_API_URL}/users`, loginInfo)
-  //     // const saveCaregiver = axios.post(`${process.env.NEXT_PUBLIC_API_URL}/caregivers`, {
-  //     //   ...caregiverData,
-  //     //   userId: createUser?.data?.id,
-  //     //   tenantId: 1
-  //     // })
-  //     // const createDocuments = axios.post(`${process.env.NEXT_PUBLIC_API_URL}/documents`, documentsData)
-  //     // const createCertificates = axios.post(`${process.env.NEXT_PUBLIC_API_URL}/certificates`, certificatesData)
-
-  //     // Promise.all([createUser, saveCaregiver]).then(() => {
-  //     //   router.replace('/apps/caregiver/list')
-  //     // })
-  //   } catch (error) {
-  //     console.log('Error', error)
-  //   }
-  // }
-
   const handleNext = () => {
-    if (activeStep === 0) {
-      personalDetailsFormRef.current?.handleSubmit((data: PersonalDetailsFormDataType) => {
-        setCaregiverData({ ...data, addressType: 'Residential' })
+    switch (activeStep) {
+      case 0:
+        personalDetailsFormRef.current?.handleSubmit((data: PersonalDetailsFormDataType) => {
+          setCaregiverData({ ...data, addressType: 'Residential' })
+          setActiveStep(prevActiveStep => prevActiveStep + 1)
+        })()
+        break
+      case 1:
+        loginInfoFormRef.current?.handleSubmit((data: FormDataType) => {
+          setLoginInfo({ ...data, addressType: 'Mailing' })
+          setActiveStep(prevActiveStep => prevActiveStep + 1)
+        })()
+        break
+      case 2:
         setActiveStep(prevActiveStep => prevActiveStep + 1)
-      })()
-    } else if (activeStep === 1) {
-      loginInfoFormRef.current?.handleSubmit((data: FormDataType) => {
-        setLoginInfo({ ...data, addressType: 'Mailing' })
-        setActiveStep(prevActiveStep => prevActiveStep + 1)
-      })()
-    } else if (activeStep === 2) {
-      setActiveStep(prevActiveStep => prevActiveStep + 1)
-    } else if (activeStep === 3) {
-      certificatesFormRef.current?.handleSubmit((data: any) => {
-        setCertificatesData(data)
-        setActiveStep(prevActiveStep => prevActiveStep + 1)
-      })()
-    } else if (activeStep === 4) {
-      documentsFormRef.current?.handleSubmit((data: any) => {
-        setDocumentsData(data)
-        setActiveStep(prevActiveStep => prevActiveStep + 1)
-      })()
-    } else {
-      setActiveStep(prevActiveStep => prevActiveStep + 1)
-      // handleSave()
+        break
+      case 3:
+        certificatesFormRef.current?.handleSubmit((data: any) => {
+          setCertificatesData(data)
+          setActiveStep(prevActiveStep => prevActiveStep + 1)
+        })()
+        break
+      case 4:
+        documentsFormRef.current?.handleSubmit((data: any) => {
+          setDocumentsData(data)
+          setActiveStep(prevActiveStep => prevActiveStep + 1)
+        })()
+        break
+      case 5: // New case for the final submit
+        handleSave()
+        break
     }
   }
 
@@ -294,6 +301,15 @@ const EmployeeStepper = () => {
         return <TrainingCertificatesComponent ref={certificatesFormRef} onFinish={onTrainingCertificatesSubmit} />
       case 4:
         return <DocumentsSection ref={documentsFormRef} onFinish={onDocumentsSubmit} />
+      case 5:
+        return (
+          <div className='text-center p-6'>
+            <Typography variant='h5'>Ready to Submit</Typography>
+            <Typography className='mt-2'>
+              Please review your information and click Submit to complete the registration.
+            </Typography>
+          </div>
+        )
       default:
         return 'Unknown step'
     }
@@ -328,12 +344,12 @@ const EmployeeStepper = () => {
           </Stepper>
         </StepperWrapper>
       </Card>
-      {activeStep === steps.length ? (
+      {activeStep === steps.length - 1 ? (
         <>
           <Typography className='mlb-2 mli-1'>All steps are completed!</Typography>
           <div className='flex justify-end mt-4'>
-            <Button variant='contained' onClick={handleReset}>
-              Reset
+            <Button variant='contained' onClick={handleNext}>
+              Submit
             </Button>
           </div>
         </>
@@ -355,11 +371,10 @@ const EmployeeStepper = () => {
                       variant='outlined'
                       disabled={activeStep === 0}
                       onClick={handleBack}
-                      // onClick={handleSave}
                       color='secondary'
                       className='mr-5'
                     >
-                      Save File
+                      Back
                     </Button>
                     <Button variant='contained' onClick={handleNext}>
                       {activeStep === steps.length - 1 ? 'Submit' : 'Next'}
@@ -369,7 +384,6 @@ const EmployeeStepper = () => {
               </CardContent>
             </Card>
           </Grid>
-          {/* </form> */}
         </>
       )}
     </>
