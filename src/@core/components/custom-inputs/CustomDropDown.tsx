@@ -6,8 +6,8 @@ import FormControl from '@mui/material/FormControl'
 import { FormHelperText, InputLabel, Select } from '@mui/material'
 
 type Option = {
-  key: number
-  value: string
+  key: any
+  value: any
   optionString: string
 }
 

@@ -25,34 +25,43 @@ import TrainingCertificatesComponent from './Certificates/TrainingCertificatesCo
 import DocumentsSection from './Certificates/DocumentsSection'
 import { PersonalDetailsFormDataType } from './types'
 import { dark } from '@mui/material/styles/createPalette'
+import axios from 'axios'
 
 // Vars
 const steps = [
   {
-    title: '01',
+    title: '0',
     subtitle: 'Personal Details & Caregiver Notes'
   },
   {
-    title: '02',
+    title: '1',
     subtitle: 'Login Info & Mailing Address'
   },
   {
-    title: '03',
+    title: '2',
     subtitle: 'PCA UMPI Information'
   },
   {
-    title: '04',
+    title: '3',
     subtitle: 'Training Certificate & Driving License'
   },
   {
-    title: '05',
+    title: '4',
     subtitle: 'Documents'
+  },
+  {
+    title: '5',
+    subtitle: 'Submit'
   }
 ]
 
 const EmployeeStepper = () => {
   // States
   const [activeStep, setActiveStep] = useState(0)
+  const [caregiverData, setCaregiverData] = useState<any>([])
+  const [loginInfo, setLoginInfo] = useState<any>([])
+  const [certificatesData, setCertificatesData] = useState<any>([])
+  const [documentsData, setDocumentsData] = useState<any>([])
 
   const router = useRouter()
 
@@ -65,47 +74,184 @@ const EmployeeStepper = () => {
     setActiveStep(0)
   }
 
-  const handleNext = () => {
-    console.log('Active steps', activeStep)
-    if (activeStep === 0) {
-      // Manually trigger form submission for the first step
-      personalDetailsFormRef.current?.handleSubmit((data: PersonalDetailsFormDataType) => {
-        console.log('Personal Details in Parent before transforming:', data)
-        // Move to next step after successful validation
-        const transformedData = {
-          ...data,
-          caregiverOvertimeAgreement: data.caregiverOvertimeAgreement === 'yes' ? true : false,
-          caregiverLicense: data.caregiverLicense === 'yes' ? true : false
+  const handleSave = async () => {
+    try {
+      const userPayload = {
+        userName: loginInfo.userName,
+        emailAddress: loginInfo.emailAddress,
+        password: loginInfo.password,
+        additionalEmailAddress: loginInfo.additionalEmailAddress,
+        accountStatus: loginInfo.accountStatus,
+        joinDate: new Date()
+      }
+      // Create User and Caregiver (as you've already done)
+      const userResponse = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/user`, userPayload)
+      const caregiverResponse = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/caregivers`, {
+        ...caregiverData,
+        userId: userResponse.data.id,
+        tenantId: 1
+      })
+
+      const caregiverId = caregiverResponse.data.id
+
+      // Function to upload documents with improved handling
+      const uploadDocuments = async (
+        files: { path: string }[],
+        documentType: string,
+        expiryDate?: string,
+        additionalMetadata?: Record<string, any>
+      ) => {
+        // Skip upload if no files exist
+        if (!files || files.length === 0) {
+          console.log(`No files found for ${documentType}. Skipping upload.`)
+          return null
         }
-        console.log('Data after transforming into boolean ---> ', transformedData)
+
+        // Create a FormData object
+        const formData = new FormData()
+
+        // Append files
+        files.forEach((file: { path: string }) => {
+          // Use File object instead of Blob for better compatibility
+          const fileObject = new File([file.path], file.path, {
+            type: file.path.endsWith('.pdf')
+              ? 'application/pdf'
+              : file.path.endsWith('.jpg') || file.path.endsWith('.png')
+                ? 'image/jpeg'
+                : 'application/octet-stream'
+          })
+          formData.append('file', fileObject, file.path)
+        })
+
+        // Append common parameters
+        formData.append('documentType', documentType)
+        formData.append('caregiverId', caregiverId.toString())
+
+        // Handle expiry date
+        const finalExpiryDate =
+          expiryDate || new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString()
+
+        formData.append('expiryDays', '365')
+        formData.append('expiryDate', finalExpiryDate)
+
+        // Append additional metadata if exists
+        if (additionalMetadata) {
+          Object.entries(additionalMetadata).forEach(([key, value]) => {
+            formData.append(key, value as string)
+          })
+        }
+
+        // Make the API call
+        try {
+          return await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/caregivers/document`, formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data'
+            }
+          })
+        } catch (error) {
+          console.error(`Error uploading ${documentType} documents:`, error)
+          return null
+        }
+      }
+
+      // Prepare document uploads with explicit expiry dates or default
+      const documentUploads = [
+        // Training Certificates
+        uploadDocuments(
+          certificatesData.trainingCertificateFiles,
+          'trainingCertificate',
+          certificatesData.trainingCertificateExpiryDate,
+          {
+            trainingCertificateName: certificatesData.trainingCertificateName
+          }
+        ),
+
+        // Driving License
+        uploadDocuments(
+          certificatesData.drivingCertificateFiles,
+          'drivingLicense',
+          certificatesData.drivingLicenseExpiryDate,
+          {
+            drivingLicenseNumber: certificatesData.drivingLicenseNumber,
+            dlState: certificatesData.dlState
+          }
+        ),
+
+        // SSN File
+        uploadDocuments(
+          documentsData.ssnFileObject,
+          'other',
+          new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString()
+        ),
+
+        // Adult File
+        uploadDocuments(
+          documentsData.adultFileObject,
+          'other',
+          new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString()
+        ),
+
+        // UMPI File
+        uploadDocuments(
+          documentsData.umpiFileObject,
+          'other',
+          new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString()
+        ),
+
+        // Clearance File
+        uploadDocuments(
+          documentsData.clearanceFileObject,
+          'other',
+          new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString()
+        )
+      ]
+
+      // Wait for all document uploads
+      const uploadResponses = await Promise.all(documentUploads)
+
+      // Filter out null responses
+      const successfulUploads = uploadResponses.filter(response => response !== null)
+
+      console.log('Successful document uploads:', successfulUploads)
+
+      router.replace('/apps/caregiver/list')
+    } catch (error) {
+      console.error('Error in document upload process:', error)
+    }
+  }
+
+  const handleNext = () => {
+    switch (activeStep) {
+      case 0:
+        personalDetailsFormRef.current?.handleSubmit((data: PersonalDetailsFormDataType) => {
+          setCaregiverData({ ...data, addressType: 'Residential' })
+          setActiveStep(prevActiveStep => prevActiveStep + 1)
+        })()
+        break
+      case 1:
+        loginInfoFormRef.current?.handleSubmit((data: FormDataType) => {
+          setLoginInfo({ ...data, addressType: 'Mailing' })
+          setActiveStep(prevActiveStep => prevActiveStep + 1)
+        })()
+        break
+      case 2:
         setActiveStep(prevActiveStep => prevActiveStep + 1)
-      })()
-    } else if (activeStep === 1) {
-      loginInfoFormRef.current?.handleSubmit((data: FormDataType) => {
-        console.log('Login Info in parent: ', data)
-        // Move to next step after successful validation
-        setActiveStep(prevActiveStep => prevActiveStep + 1)
-      })()
-    } else if (activeStep === 2) {
-      setActiveStep(prevActiveStep => prevActiveStep + 1)
-    } else if (activeStep === 3) {
-      // Manually trigger form submission for the first step
-      certificatesFormRef.current?.handleSubmit((data: any) => {
-        console.log('Certificates data:', data)
-        // Move to next step after successful validation
-        setActiveStep(prevActiveStep => prevActiveStep + 1)
-      })()
-    } else if (activeStep === 4) {
-      // Manually trigger form submission for the first step
-      documentsFormRef.current?.handleSubmit((data: any) => {
-        console.log('Documents data:', data)
-        // Move to next step after successful validation
-        setActiveStep(prevActiveStep => prevActiveStep + 1)
-      })()
-    } else {
-      console.log('INSIDE ELSEE----------------')
-      // For other steps, use existing logic
-      setActiveStep(prevActiveStep => prevActiveStep + 1)
+        break
+      case 3:
+        certificatesFormRef.current?.handleSubmit((data: any) => {
+          setCertificatesData(data)
+          setActiveStep(prevActiveStep => prevActiveStep + 1)
+        })()
+        break
+      case 4:
+        documentsFormRef.current?.handleSubmit((data: any) => {
+          setDocumentsData(data)
+          setActiveStep(prevActiveStep => prevActiveStep + 1)
+        })()
+        break
+      case 5: // New case for the final submit
+        handleSave()
+        break
     }
   }
 
@@ -139,8 +285,11 @@ const EmployeeStepper = () => {
   const onDocumentsSubmit = (values: any) => {
     console.log('Personal Detail', values)
   }
+  console.log('Certificares data', certificatesData)
+  console.log('Caregiver data', caregiverData)
+  console.log('Lofin data', loginInfo)
+  console.log('Documents data', documentsData)
 
-  console.log('ACTIVE STREP', activeStep)
   const renderStepContent = (activeStep: number) => {
     switch (activeStep) {
       case 0:
@@ -153,6 +302,15 @@ const EmployeeStepper = () => {
         return <TrainingCertificatesComponent ref={certificatesFormRef} onFinish={onTrainingCertificatesSubmit} />
       case 4:
         return <DocumentsSection ref={documentsFormRef} onFinish={onDocumentsSubmit} />
+      case 5:
+        return (
+          <div className='text-center p-6'>
+            <Typography variant='h5'>Ready to Submit</Typography>
+            <Typography className='mt-2'>
+              Please review your information and click Submit to complete the registration.
+            </Typography>
+          </div>
+        )
       default:
         return 'Unknown step'
     }
@@ -195,12 +353,12 @@ const EmployeeStepper = () => {
           </Stepper>
         </StepperWrapper>
       </Card>
-      {activeStep === steps.length ? (
+      {activeStep === steps.length - 1 ? (
         <>
           <Typography className='mlb-2 mli-1'>All steps are completed!</Typography>
           <div className='flex justify-end mt-4'>
-            <Button variant='contained' onClick={handleReset}>
-              Reset
+            <Button variant='contained' onClick={handleNext}>
+              Submit
             </Button>
           </div>
         </>
@@ -213,7 +371,7 @@ const EmployeeStepper = () => {
               <CardContent>
                 <Grid size={{ xs: 12, md: 12 }} className='flex justify-between'>
                   <div>
-                    <Button variant='outlined' onClick={handleCancel} color='secondary'>
+                    <Button variant='outlined' onClick={handleSave} color='secondary'>
                       Cancel
                     </Button>
                   </div>
@@ -235,7 +393,6 @@ const EmployeeStepper = () => {
               </CardContent>
             </Card>
           </Grid>
-          {/* </form> */}
         </>
       )}
     </>

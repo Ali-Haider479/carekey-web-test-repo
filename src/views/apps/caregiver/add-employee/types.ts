@@ -3,7 +3,7 @@ export type PersonalDetailsFormDataType = {
   middleName: string
   lastName: string
   role: string
-  caregiverUMPI: Date | null
+  caregiverUMPI: string | null
   dateOfBirth: Date | null
   caregiverLevel: string
   address: string
@@ -15,12 +15,12 @@ export type PersonalDetailsFormDataType = {
   dateOfHire: Date | null
   terminationDate: Date | null
   gender: string
-  phoneNumber: string
+  primaryPhoneNumber: string
   secondaryPhoneNumber: string
   emergencyContactNumber: string
   emergencyEmailId: string
-  caregiverOvertimeAgreement: string
-  caregiverLicense: string
+  overtimeAgreement: boolean
+  isLicensed245d: boolean
   allergies: string
   specialRequests: string
   comments: string

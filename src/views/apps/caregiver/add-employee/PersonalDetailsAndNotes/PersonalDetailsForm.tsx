@@ -86,7 +86,7 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                   <CustomTextField
                     label={'Last Name'}
                     placeHolder={'Doe'}
-                    name={'LastName'}
+                    name={'lastName'}
                     defaultValue={''}
                     type={'text'}
                     error={errors.lastName}
@@ -104,6 +104,17 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                   />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 4 }}>
+                  <CustomTextField
+                    label={'Caregiver UMPI'}
+                    placeHolder={'caregiverUmpi'}
+                    name='caregiverUMPI'
+                    defaultValue={''}
+                    type={'text'}
+                    error={errors.caregiverUMPI}
+                    control={control}
+                  />
+                </Grid>
+                {/* <Grid size={{ xs: 12, sm: 4 }}>
                   <Controller
                     name='caregiverUMPI'
                     control={control}
@@ -127,7 +138,7 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                       />
                     )}
                   />
-                </Grid>
+                </Grid> */}
                 <Grid size={{ xs: 12, sm: 4 }}>
                   <Controller
                     name='dateOfBirth'
@@ -203,9 +214,9 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                 </Grid>
                 <Grid size={{ xs: 12, sm: 4 }}>
                   <CustomTextField
-                    label={'Zip'}
-                    placeHolder={'Zip'}
-                    name={'zip'}
+                    label={'Zip Code'}
+                    placeHolder={'Zip Code'}
+                    name={'zipCode'}
                     defaultValue={''}
                     type={'text'}
                     error={errors.zip}
@@ -216,7 +227,7 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                   <CustomTextField
                     label={'SSN'}
                     placeHolder={'SSN'}
-                    name={'SSN'}
+                    name={'ssn'}
                     defaultValue={''}
                     type={'text'}
                     error={errors.SSN}
@@ -228,8 +239,8 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                     label={'Pay Rate ($)'}
                     placeHolder={'Pay Rate ($)'}
                     name={'payRate'}
-                    defaultValue={''}
-                    type={'text'}
+                    defaultValue={23}
+                    type={'number'}
                     error={errors.payRate}
                     control={control}
                   />
@@ -313,10 +324,10 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                   <CustomTextField
                     label={'Phone Number'}
                     placeHolder={'Phone Number'}
-                    name={'phoneNumber'}
+                    name={'primaryPhoneNumber'}
                     defaultValue={''}
                     type={'text'}
-                    error={errors.phoneNumber}
+                    error={errors.primaryPhoneNumber}
                     control={control}
                   />
                 </Grid>
@@ -355,28 +366,28 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                 </Grid>
                 <Grid size={{ xs: 12, sm: 4 }}>
                   <CustomDropDown
-                    name={'caregiverOvertimeAgreement'}
+                    name={'overtimeAgreement'}
                     control={control}
-                    error={errors.caregiverOvertimeAgreement}
+                    error={errors.overtimeAgreement}
                     label={'Caregiver Overtime Agreement'}
                     optionList={[
-                      { key: 1, value: 'yes', optionString: 'Yes' },
-                      { key: 2, value: 'no', optionString: 'No' }
+                      { key: true, value: true, optionString: 'Yes' },
+                      { key: false, value: false, optionString: 'No' }
                     ]}
-                    defaultValue={''}
+                    defaultValue={true}
                   />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 4 }}>
                   <CustomDropDown
-                    name={'caregiverLicense'}
+                    name={'isLicensed245d'}
                     control={control}
-                    error={errors.caregiverLicense}
+                    error={errors.isLicensed245d}
                     label={'Is the Caregiver 245D Licensed'}
                     optionList={[
-                      { key: 1, value: 'yes', optionString: 'Yes' },
-                      { key: 2, value: 'no', optionString: 'No' }
+                      { key: true, value: true, optionString: 'Yes' },
+                      { key: false, value: false, optionString: 'No' }
                     ]}
-                    defaultValue={''}
+                    defaultValue={true}
                   />
                 </Grid>
               </Grid>
@@ -414,7 +425,7 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                   <CustomTextField
                     label={'Comments'}
                     placeHolder={'Comments'}
-                    name={'commments'}
+                    name={'comments'}
                     defaultValue={''}
                     type={'text'}
                     error={errors.comments}

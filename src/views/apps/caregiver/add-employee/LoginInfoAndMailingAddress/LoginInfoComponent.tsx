@@ -17,7 +17,7 @@ interface FormDataType {
   emailAddress?: string
   password?: string
   confirmPassword?: string
-  additionalEmail?: string
+  additionalEmailAddress?: string
   accountStatus?: string
 
   // Assign Client
@@ -116,10 +116,10 @@ const LoginInfoComponent = forwardRef<{ handleSubmit: any }, Props>(({ onFinish 
                 <CustomTextField
                   label={'Additional Email Address'}
                   placeHolder={'Enter Additional Email Address'}
-                  name={'additionalEmail'}
+                  name={'additionalEmailAddress'}
                   defaultValue={''}
                   type={'email'}
-                  error={errors.additionalEmail}
+                  error={errors.additionalEmailAddress}
                   control={control}
                 />
               </Grid>
@@ -132,8 +132,8 @@ const LoginInfoComponent = forwardRef<{ handleSubmit: any }, Props>(({ onFinish 
                   error={errors.accountStatus}
                   label={'Account Status'}
                   optionList={[
-                    { key: 1, value: 'active', optionString: 'Active' },
-                    { key: 2, value: 'inActive', optionString: 'Inactive' }
+                    { key: 1, value: 'Active', optionString: 'Active' },
+                    { key: 2, value: 'Inactive', optionString: 'Inactive' }
                   ]}
                   defaultValue={''}
                 />
@@ -198,7 +198,7 @@ const LoginInfoComponent = forwardRef<{ handleSubmit: any }, Props>(({ onFinish 
                 <CustomTextField
                   label={'State'}
                   placeHolder={'Enter State'}
-                  name={'clientName'}
+                  name={'state'}
                   defaultValue={''}
                   type={'text'}
                   error={errors.state}
