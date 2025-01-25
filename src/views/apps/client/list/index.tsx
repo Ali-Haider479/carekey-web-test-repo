@@ -146,7 +146,14 @@ const ClientListApps = () => {
                   )
                 }}
               />
-              <Button variant='contained'>Add Client</Button>
+              <Button
+                variant='contained'
+                onClick={() => {
+                  router.push('/apps/client/add-client')
+                }}
+              >
+                Add Client
+              </Button>
             </div>
           </Grid>
 
