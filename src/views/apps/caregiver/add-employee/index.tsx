@@ -30,29 +30,29 @@ import axios from 'axios'
 // Vars
 const steps = [
   {
-    title: '0',
+    title: '01',
     subtitle: 'Personal Details & Caregiver Notes'
   },
   {
-    title: '1',
+    title: '02',
     subtitle: 'Login Info & Mailing Address'
   },
   {
-    title: '2',
+    title: '03',
     subtitle: 'PCA UMPI Information'
   },
   {
-    title: '3',
+    title: '04',
     subtitle: 'Training Certificate & Driving License'
   },
   {
-    title: '4',
+    title: '05',
     subtitle: 'Documents'
-  },
-  {
-    title: '5',
-    subtitle: 'Submit'
   }
+  // {
+  //   title: '06',
+  //   subtitle: 'Submit'
+  // }
 ]
 
 const EmployeeStepper = () => {
@@ -246,12 +246,13 @@ const EmployeeStepper = () => {
       case 4:
         documentsFormRef.current?.handleSubmit((data: any) => {
           setDocumentsData(data)
-          setActiveStep(prevActiveStep => prevActiveStep + 1)
+          handleSave()
+          // setActiveStep(prevActiveStep => prevActiveStep + 1)
         })()
         break
-      case 5: // New case for the final submit
-        handleSave()
-        break
+      // case 5: // New case for the final submit
+      //   handleSave()
+      //   break
     }
   }
 
@@ -302,15 +303,15 @@ const EmployeeStepper = () => {
         return <TrainingCertificatesComponent ref={certificatesFormRef} onFinish={onTrainingCertificatesSubmit} />
       case 4:
         return <DocumentsSection ref={documentsFormRef} onFinish={onDocumentsSubmit} />
-      case 5:
-        return (
-          <div className='text-center p-6'>
-            <Typography variant='h5'>Ready to Submit</Typography>
-            <Typography className='mt-2'>
-              Please review your information and click Submit to complete the registration.
-            </Typography>
-          </div>
-        )
+      // case 5:
+      //   return (
+      //     <div className='text-center p-6'>
+      //       <Typography variant='h5'>Ready to Submit</Typography>
+      //       <Typography className='mt-2'>
+      //         Please review your information and click Submit to complete the registration.
+      //       </Typography>
+      //     </div>
+      //   )
       default:
         return 'Unknown step'
     }
@@ -318,12 +319,12 @@ const EmployeeStepper = () => {
 
   return (
     <>
-      <Card>
-        <Typography variant='h4' className='p-4'>
-          Adding a Employee / {steps[activeStep]?.subtitle}
+      <Card className='w-full px-6 py-3'>
+        <Typography variant='h4' className='p-4 mb-3'>
+          Adding an Employee / {steps[activeStep]?.subtitle}
         </Typography>
         <StepperWrapper>
-          <Stepper activeStep={activeStep} alternativeLabel>
+          <Stepper activeStep={activeStep} alternativeLabel className='mt-16'>
             {steps.map(label => {
               return (
                 <Step key={label.title}>
@@ -332,7 +333,7 @@ const EmployeeStepper = () => {
                       stepIcon: StepperCustomDot
                     }}
                   >
-                    <div className='step-label'>
+                    <div className='step-label -mt-[110px]'>
                       <div>
                         <Typography
                           className={`step-title text-base ${activeStep === steps.indexOf(label) ? (dark ? 'text-[#7112B7]' : 'text-[#4B0082]') : ''}`}
@@ -353,50 +354,49 @@ const EmployeeStepper = () => {
           </Stepper>
         </StepperWrapper>
       </Card>
-      {activeStep === steps.length - 1 ? (
-        <>
-          <Typography className='mlb-2 mli-1'>All steps are completed!</Typography>
-          <div className='flex justify-end mt-4'>
-            <Button variant='contained' onClick={handleNext}>
-              Submit
-            </Button>
-          </div>
-        </>
-      ) : (
-        <>
-          {/* <form onSubmit={e => e.preventDefault()}> */}
-          <Grid container spacing={6}>
-            {renderStepContent(activeStep)}
-            <Card className='w-full'>
-              <CardContent>
-                <Grid size={{ xs: 12, md: 12 }} className='flex justify-between'>
-                  <div>
-                    <Button variant='outlined' onClick={handleSave} color='secondary'>
-                      Cancel
-                    </Button>
-                  </div>
-                  <div>
-                    <Button
-                      variant='outlined'
-                      disabled={activeStep === 0}
-                      onClick={handleBack}
-                      color='secondary'
-                      className='mr-5'
-                    >
-                      Back
-                    </Button>
-                    <Button variant='contained' onClick={handleNext}>
-                      {activeStep === steps.length - 1 ? 'Submit' : 'Next'}
-                    </Button>
-                  </div>
-                </Grid>
-              </CardContent>
-            </Card>
-          </Grid>
-        </>
-      )}
+
+      {/* <form onSubmit={e => e.preventDefault()}> */}
+      <Grid container spacing={6}>
+        {renderStepContent(activeStep)}
+        <Card className='w-full'>
+          <CardContent>
+            <Grid size={{ xs: 12, md: 12 }} className='flex justify-between'>
+              <div>
+                <Button variant='outlined' onClick={handleCancel} color='secondary'>
+                  Cancel
+                </Button>
+              </div>
+              <div>
+                <Button
+                  variant='outlined'
+                  disabled={activeStep === 0}
+                  onClick={handleBack}
+                  color='secondary'
+                  className='mr-5'
+                >
+                  Back
+                </Button>
+                <Button variant='contained' onClick={handleNext}>
+                  {activeStep === steps.length - 1 ? 'Submit' : 'Next'}
+                </Button>
+              </div>
+            </Grid>
+          </CardContent>
+        </Card>
+      </Grid>
     </>
   )
 }
 
 export default EmployeeStepper
+
+// {activeStep === steps.length - 1 ? (
+//   <>
+//     <Typography className='mlb-2 mli-1'>All steps are completed!</Typography>
+//     <div className='flex justify-end mt-4'>
+//       <Button variant='contained' onClick={handleNext}>
+//         Submit
+//       </Button>
+//     </div>
+//   </>
+// ) :

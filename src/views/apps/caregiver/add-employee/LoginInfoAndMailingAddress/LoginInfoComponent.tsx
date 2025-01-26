@@ -143,25 +143,25 @@ const LoginInfoComponent = forwardRef<{ handleSubmit: any }, Props>(({ onFinish 
             {/* Assign Client */}
             <h2 className='text-xl font-semibold mt-10 mb-6'>Assign Client</h2>
             <Grid container spacing={4}>
-              <div className='flex items-center gap-4'>
-                <Grid size={{ xs: 12, sm: 4 }}>
-                  {/* Custom Input */}
-                  <CustomTextField
-                    label={'Client Name'}
-                    placeHolder={'Enter Client Name'}
-                    name={'clientName'}
-                    defaultValue={''}
-                    type={'text'}
-                    error={errors.clientName}
-                    control={control}
-                  />
-                </Grid>
+              <Grid size={{ xs: 12, sm: 4 }}>
+                {/* Custom Input */}
+                <CustomTextField
+                  label={'Client Name'}
+                  placeHolder={'Enter Client Name'}
+                  name={'clientName'}
+                  defaultValue={''}
+                  type={'text'}
+                  error={errors.clientName}
+                  control={control}
+                />
+              </Grid>
 
-                {/* Add Button */}
-                <Grid size={{ xs: 12, sm: 4 }}>
-                  <Button className='!bg-[#4B0082] !text-white hover:!bg-[#4B0082]'>+ ADD</Button>
-                </Grid>
-              </div>
+              {/* Add Button */}
+              <Grid size={{ xs: 12, sm: 4 }}>
+                <Button variant='contained' className='!bg-[#4B0082] !text-white hover:!bg-[#4B0082]'>
+                  + ADD
+                </Button>
+              </Grid>
             </Grid>
 
             {/* Mailing Address */}
