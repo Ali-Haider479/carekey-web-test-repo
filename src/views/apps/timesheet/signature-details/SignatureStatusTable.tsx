@@ -3,28 +3,11 @@
 import { useEffect, useState, useMemo } from 'react'
 import Card from '@mui/material/Card'
 import CardHeader from '@mui/material/CardHeader'
-import Typography from '@mui/material/Typography'
-import { createColumnHelper, Table } from '@tanstack/react-table'
-import type { ColumnDef, FilterFn } from '@tanstack/react-table'
-import TablePagination from '@mui/material/TablePagination'
-import { CircularProgress } from '@mui/material'
+import { Avatar, CircularProgress, Typography } from '@mui/material'
 import axios from 'axios'
-import tableStyles from '@core/styles/table.module.css'
-import classnames from 'classnames'
-import {
-  useReactTable,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getSortedRowModel,
-  getPaginationRowModel,
-  flexRender
-} from '@tanstack/react-table'
-import TablePaginationComponent from '@components/TablePaginationComponent'
-import TableFilters from '@/views/apps/user/list/TableFilters'
-import { RankingInfo, rankItem } from '@tanstack/match-sorter-utils'
-import { GridRenderCellParams } from '@mui/x-data-grid'
 import DataTable from '@/@core/components/mui/DataTable'
-
+import { GridColDef } from '@mui/x-data-grid'
+import AdUnitsIcon from '@mui/icons-material/AdUnits'
 // Updated interfaces to match your data structure
 interface Caregiver {
   id: number
@@ -37,15 +20,6 @@ interface Caregiver {
   payRate: number
   additionalPayRate: number
   caregiverLevel: string
-}
-
-declare module '@tanstack/table-core' {
-  interface FilterFns {
-    fuzzy: FilterFn<unknown>
-  }
-  interface FilterMeta {
-    itemRank: RankingInfo
-  }
 }
 
 interface Client {
@@ -72,29 +46,7 @@ interface Signature {
   timeLog: any[]
 }
 
-type SignatureWithAction = Signature & {
-  action?: string
-}
-
-const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
-  const itemRank = rankItem(row.getValue(columnId), value)
-  addMeta({ itemRank })
-  return itemRank.passed
-}
-
-const columnHelper = createColumnHelper<Signature>()
-
-// Create a custom TablePaginationComponent that accepts generic type
-interface CustomTablePaginationProps<T> {
-  table: Table<T>
-}
-
-const CustomTablePagination = <T,>({ table }: CustomTablePaginationProps<T>) => {
-  return <TablePaginationComponent table={table as unknown as Table<unknown>} />
-}
-
 const SignatureStatusTable = () => {
-  const [data, setData] = useState<Signature[]>([])
   const [filteredData, setFilteredData] = useState<Signature[]>([])
   const [globalFilter, setGlobalFilter] = useState('')
   const [rowSelection, setRowSelection] = useState({})
@@ -104,8 +56,9 @@ const SignatureStatusTable = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/signatures`)
-        setData(response.data)
+        // const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/signatures`)
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/time-log`)
+        console.log('DATA RECEIVED TIMSEHEET PAGE', response.data)
         setFilteredData(response.data)
         setIsLoading(false)
       } catch (error) {
@@ -116,90 +69,100 @@ const SignatureStatusTable = () => {
     fetchData()
   }, [])
 
-  const columns = useMemo(
+  const calculateHoursWorked = (clockIn: string, clockOut: string) => {
+    // Parse the clock-in and clock-out times
+    const clockInTime = new Date(clockIn)
+    const clockOutTime = new Date(clockOut)
+
+    // Calculate the difference in milliseconds
+    const differenceMs = clockOutTime.getTime() - clockInTime.getTime()
+
+    // Convert milliseconds to hours
+    const hours = differenceMs / (1000 * 60 * 60)
+
+    // Round to two decimal places
+    return hours.toFixed(2)
+  }
+
+  const columns = useMemo<GridColDef[]>(
     () => [
       {
         field: 'clientName',
-        headerName: 'Client Name',
+        headerName: 'CLIENT NAME',
         flex: 1.5,
-        renderCell: (params: GridRenderCellParams) => (
-          <>
-            **{`${params.row.client.firstName} ${params.row.client.lastName}`}**
-            {params.row.client.email}
-          </>
+        renderCell: (params: any) => (
+          <Typography className='font-normal text-base my-3'>
+            {params?.row?.client?.firstName} {params?.row?.client?.lastName}
+          </Typography>
         )
       },
       {
         field: 'caregiverName',
-        headerName: 'Caregiver Assigned',
+        headerName: 'CAREGIVER ASSIGNED',
         flex: 1.5,
-        renderCell: (params: GridRenderCellParams) => (
-          <>**{`${params.row.caregiver.firstName} ${params.row.caregiver.lastName}`}**</>
+        renderCell: (params: any) => (
+          <Typography className='font-normal text-base my-3'>
+            {params?.row?.caregiver?.firstName} {params?.row?.caregiver?.lastName}
+          </Typography>
         )
       },
       {
-        field: 'service',
-        headerName: 'Service',
+        field: 'serviceName',
+        headerName: 'SERVICE TAKEN',
         flex: 1.5,
-        renderCell: (params: GridRenderCellParams) => {
-          const services = params.row.client.clientServices
-          if (services && services.length > 0) {
-            const serviceNames = services.map((service: any) => service?.service?.name).join(', ')
-            return serviceNames
+        renderCell: (params: any) => (
+          <Typography className='font-normal text-base my-3'>{params?.row?.serviceName}</Typography>
+        )
+      },
+      {
+        field: 'payPeriod',
+        headerName: 'DATE',
+        flex: 1.5,
+        renderCell: (params: any) => {
+          const startDate = params?.row?.payPeriodHistory?.startDate
+          if (startDate) {
+            const date = new Date(startDate)
+            return (
+              <Typography className='font-normal text-base my-3'>
+                {`${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear().toString().slice(-2)}`}
+              </Typography>
+            )
           }
-          return 'No services available'
+          return <Typography className='font-normal text-base my-3'>N/A</Typography>
         }
       },
       {
-        field: 'timeLog',
-        headerName: 'Logs Recorded',
+        field: 'hoursWorked',
+        headerName: 'LOGS RECORDED',
         flex: 1,
-        renderCell: (params: GridRenderCellParams) => <>{params.value?.length || 0}</>
+        renderCell: (params: any) => {
+          try {
+            const hoursWorked = calculateHoursWorked(params.row.clockIn, params.row.clockOut)
+
+            return <Typography className='font-normal text-base my-3'>{hoursWorked} Hrs</Typography>
+          } catch (error) {
+            console.error('Error calculating hours worked:', error)
+            return <span>N/A</span>
+          }
+        }
       },
       {
-        field: 'clientSignStatus',
-        headerName: 'Sign Status',
-        flex: 1,
-        renderCell: (params: GridRenderCellParams) => <>{params.value}</>
+        field: 'logsVia',
+        headerName: 'LOGGED VIA',
+        flex: 1.5,
+        renderCell: (params: any) => <AdUnitsIcon className='my-3' />
       },
       {
-        field: 'tsApprovalStatus',
-        headerName: 'Service Status',
+        field: 'approvedLoc',
+        headerName: 'APPROVED LOC',
         flex: 1,
-        renderCell: (params: GridRenderCellParams) => <>{params.value}</>
-      },
-      {
-        field: 'duration',
-        headerName: 'Hours Worked',
-        flex: 1,
-        renderCell: (params: GridRenderCellParams) => <>{params.value}</>
+        renderCell: (params: any) => <Typography className='font-normal text-base my-3'>Yes</Typography>
       }
     ],
     []
   )
-  // const table = useReactTable({
-  //   data: filteredData,
-  //   columns,
-  //   filterFns: {
-  //     fuzzy: fuzzyFilter
-  //   },
-  //   state: {
-  //     rowSelection,
-  //     globalFilter
-  //   },
-  //   initialState: {
-  //     pagination: {
-  //       pageSize: 10
-  //     }
-  //   },
-  //   enableRowSelection: true,
-  //   onRowSelectionChange: setRowSelection,
-  //   getCoreRowModel: getCoreRowModel(),
-  //   onGlobalFilterChange: setGlobalFilter,
-  //   getFilteredRowModel: getFilteredRowModel(),
-  //   getSortedRowModel: getSortedRowModel(),
-  //   getPaginationRowModel: getPaginationRowModel()
-  // })
+
+  console.log('Filtred data', filteredData[0]?.client?.firstName)
 
   if (isLoading) {
     return (

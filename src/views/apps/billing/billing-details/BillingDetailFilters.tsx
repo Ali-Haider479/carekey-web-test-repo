@@ -5,7 +5,6 @@ import { Card, CardHeader, TextField, Grid, IconButton } from '@mui/material'
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import { DatePicker } from '@mui/x-date-pickers/DatePicker'
-import DataTableWithSearchBarAndFilters from '@/@core/components/mui/DataTableWithSearchBarAndFilters'
 import { GridColDef } from '@mui/x-data-grid'
 import { Calendar, Search } from 'lucide-react'
 

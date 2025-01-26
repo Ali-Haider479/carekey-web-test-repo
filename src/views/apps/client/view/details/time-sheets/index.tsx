@@ -252,21 +252,21 @@ const TimeSheets = () => {
 
   return (
     <>
-      <CardContent className=' h-[600px] w-[99%]  m-2 mt-1 mb-3 shadow-md rounded-lg border-solid border-2 '>
+      <Card className=' h-fit w-[99%]  m-2 mt-1 mb-3 shadow-md rounded-lg border-solid border-2 '>
         <div className='grid grid-cols-2 ml-4 mt-3 p-4 gap-y-4 gap-x-8'>
           <DetailItem label='Recipient Name:' value='Sameer' />
           <DetailItem label='Week Duration:' value='4 September 2024 - 10 September 2024' />
           <DetailItem label='Caregiver Name:' value='Stancy Moore' />
         </div>
         <DataTable columns={columns} data={data} />
-      </CardContent>
-      <CardContent className=' h-fit w-[99%] ml-2 mt-3 shadow-md rounded-lg mb-3  border-solid border-2'>
+      </Card>
+      <Card className=' h-fit w-[99%] ml-2 mt-3 shadow-md rounded-lg mb-3  border-solid border-2'>
         <h2 className='text-xl pt-4 ml-4 mb-4'>Total Hours</h2>
         <DataTable columns={dateColumns} data={dataTimeData} />
-      </CardContent>
+      </Card>
       <AcknowledgeSignature />
       <AcknowledgeSignatureCaregiver />
-      <CardContent className='mt-4 ml-4 mb-4  flex justify-between '>
+      <CardContent className='mt-4 mb-4 flex justify-between '>
         <div className='w-1/2 flex justify-start space-x-6'>
           <Button className='mr-6' variant='contained' onClick={() => {}}>
             Accept Timesheets

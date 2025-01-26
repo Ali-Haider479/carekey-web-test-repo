@@ -1,5 +1,5 @@
 'use client'
-import LoginInfoComponent from '@/views/apps/caregiver/add-employee/LoginInfoComponent'
+import LoginInfoComponent from '@/views/apps/caregiver/add-employee/LoginInfoAndMailingAddress/LoginInfoComponent'
 import PageNavigationButtons from '@layouts/components/horizontal/PageNavigationButtons'
 import { useRouter } from 'next/navigation'
 import { FormProvider, useForm } from 'react-hook-form'
