@@ -65,6 +65,13 @@ const TimesheetView = ({ tabContentList }: { tabContentList: { [key: string]: Re
               value='waiting-logs-approval'
               className='flex-row justify-start'
             />
+            <Tab
+              label='MANUAL TIMESHEET'
+              // icon={<i className='bx-package' />}
+              iconPosition='start'
+              value='manual-timesheet'
+              className='flex-row justify-start'
+            />
           </CustomTabList>
         </Grid>
         <Grid size={{ xs: 12, md: 12 }}>
