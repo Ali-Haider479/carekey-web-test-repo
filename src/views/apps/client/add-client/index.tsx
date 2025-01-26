@@ -1,7 +1,7 @@
 'use client'
 
 // React Imports
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 // MUI Imports
 import Card from '@mui/material/Card'
@@ -29,6 +29,9 @@ import {
   clientServiceFormDataType
 } from './add-client-forms/formTypes'
 import DocumentsForm from './add-client-forms/DocumentsForm'
+import axios from 'axios'
+import { CardContent } from '@mui/material'
+import { useRouter } from 'next/navigation'
 
 // Vars
 const steps = [
@@ -51,8 +54,13 @@ const steps = [
 ]
 
 const AddClientStepper = () => {
+  const router = useRouter()
   // States
   const [activeStep, setActiveStep] = useState(0)
+  const [personalDetails, setPersonalDetails] = useState<any>()
+  const [physicianDetails, setPhysicianDetails] = useState<any>()
+  const [serviceActivities, setServiceActivities] = useState<any>()
+  const [documents, setDocuments] = useState<any>()
 
   const personalDetailsFormRef = useRef<any>(null)
   const physicianAndCaseMangerFormRef = useRef<any>(null)
@@ -63,23 +71,142 @@ const AddClientStepper = () => {
     setActiveStep(0)
   }
 
+  const handleSave = async () => {
+    const createClientBody = {
+      firstName: personalDetails.firstName,
+      middleName: personalDetails.middleName,
+      lastName: personalDetails.lastName,
+      admissionDate: personalDetails.admissionDate,
+      dischargeDate: personalDetails.dateOfDischarge,
+      dateOfBirth: personalDetails.dateOfBirth,
+      pmiNumber: personalDetails.pmiNumber,
+      gender: personalDetails.gender,
+      primaryPhoneNumber: personalDetails.primaryPhoneNumber,
+      primaryCellNumber: personalDetails.primaryPhoneNumber,
+      additionalPhoneNumber: personalDetails.additionalPhoneNumber,
+      emergencyContactName: personalDetails.emergencyContactName,
+      emergencyContactNumber: personalDetails.emergencyContactNumber,
+      emergencyEmailId: personalDetails.emergencyEmail,
+      insuranceCode: personalDetails.insuranceCode,
+      clientCode: personalDetails.clientCode,
+      medicalSpendDown: personalDetails.medicalSpendDown,
+      amount: personalDetails.amount,
+      sharedCare: personalDetails.sharedCare,
+      pcaChoice: personalDetails.pcaChoice,
+      isClient: true,
+      isSignatureDraw: false,
+      tenantId: 1
+    }
+
+    const createClientResponse = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/client`, createClientBody)
+
+    console.log('Create Client Response ---> ', createClientResponse)
+
+    const clientId = createClientResponse.data.id
+
+    const clientPrimaryAddressBody = {
+      clientId: clientId,
+      city: personalDetails.primaryResidentialCity,
+      state: personalDetails.primaryResidentialState,
+      address: personalDetails.primaryResidentialAddress,
+      zipCode: personalDetails.primaryResidentialZipCode,
+      addressType: 'Residential'
+    }
+
+    // const clientSecondaryAddressBody = {
+    //   clientId: clientId,
+    //   city: personalDetails.secondaryResidentialCity,
+    //   state: personalDetails.secondaryResidentialState,
+    //   address: personalDetails.secondaryResidentialAddress,
+    //   zipCode: personalDetails.secondaryResidentialZipCode,
+    //   addressType: 'Secondary'
+    // }
+
+    const clientMailingAddressBody = {
+      clientId: clientId,
+      city: personalDetails.mailingCity,
+      state: personalDetails.mailingState,
+      address: personalDetails.mailingAddress,
+      zipCode: personalDetails.mailingZipCode,
+      addressType: 'Mailing'
+    }
+
+    const clientAddressArray = [clientPrimaryAddressBody, clientMailingAddressBody]
+
+    for (const addressBody of clientAddressArray) {
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/client/address`, addressBody)
+      console.log('Adding Address Response --> ', response)
+    }
+
+    const createPhysicianBody = {
+      name: physicianDetails.physicianName,
+      clinicName: physicianDetails.clinicName,
+      phoneNumber: physicianDetails.phoneNumber,
+      faxNumber: physicianDetails.faxNumber,
+      address: physicianDetails.physicalAddress,
+      city: physicianDetails.physicianCity,
+      state: physicianDetails.physicianState,
+      zipCode: physicianDetails.physicianZipCode,
+      primaryPhoneNumber: physicianDetails.primaryPhoneNumber,
+      clientId: clientId
+    }
+
+    const createPhysicianResponse = await axios.post(
+      `${process.env.NEXT_PUBLIC_API_URL}/client/physician`,
+      createPhysicianBody
+    )
+
+    console.log('Physician Details --> ', createPhysicianResponse)
+
+    // const createServiceTypeBody = {
+    //   iappProcess: serviceActivities.iappProcess,
+    //   lastCompleted: serviceActivities.lastCompletedDate,
+    //   schoolMeetingDue: serviceActivities.dueDate,
+    //   schoolMeetingCompleted: serviceActivities.schoolMeetingCompleted,
+    //   clientId: clientId
+    // }
+
+    // const createServiceActivitiesResponse = await axios.post(
+    //   `${process.env.NEXT_PUBLIC_API_URL}/client/service-activities`,
+    //   createServiceTypeBody
+    // )
+
+    // console.log('Service Activities Created ---> ', createServiceActivitiesResponse)
+
+    console.log('Client Body ---> ', createClientBody, clientPrimaryAddressBody)
+
+    // router.replace('/apps/client/list')
+  }
+
+  // useEffect(() => {
+  //   if (personalDetails) {
+  //     handleSave()
+  //   }
+  // }, [personalDetails])
+
   const handleNext = () => {
     console.log('in next', activeStep)
     if (activeStep === 0) {
       // Manually trigger form submission for the first step
       personalDetailsFormRef.current?.handleSubmit((data: PersonalDetailsFormDataType) => {
+        setPersonalDetails(data)
+        handleSave()
         console.log('Personal Details in Parent:', data)
         // Move to next step after successful validation
         setActiveStep(prevActiveStep => prevActiveStep + 1)
       })()
     } else if (activeStep === 1) {
       physicianAndCaseMangerFormRef.current?.handleSubmit((data: PhysicianAndCaseMangerFormDataType) => {
-        console.log('Personal Details in Parent:', data)
+        setPhysicianDetails(data)
+        handleSave()
+        console.log('Physician Details in Parent:', data)
         // Move to next step after successful validation
         setActiveStep(prevActiveStep => prevActiveStep + 1)
       })()
     } else if (activeStep === 2) {
       serviceActivitiesFormRef.current?.handleSubmit((data: clientServiceFormDataType) => {
+        setServiceActivities(data)
+        handleSave()
         console.log('Personal Details in Parent:', data)
         // Move to next step after successful validation
         setActiveStep(prevActiveStep => prevActiveStep + 1)
@@ -87,13 +214,12 @@ const AddClientStepper = () => {
     } else if (activeStep === 3) {
       // Manually trigger form submission for the first step
       documentsFormRef.current?.handleSubmit((data: any) => {
+        setDocuments(data)
+        handleSave()
         console.log('Documents data:', data)
         // Move to next step after successful validation
         setActiveStep(prevActiveStep => prevActiveStep + 1)
       })()
-    } else {
-      // For other steps, use existing logic
-      setActiveStep(prevActiveStep => prevActiveStep + 1)
     }
   }
 
@@ -174,47 +300,37 @@ const AddClientStepper = () => {
           </Stepper>
         </StepperWrapper>
       </Card>
-      {activeStep === steps.length ? (
-        <>
-          <Typography className='mlb-2 mli-1'>All steps are completed!</Typography>
-          <div className='flex justify-end mt-4'>
-            <Button variant='contained' onClick={handleReset}>
-              Reset
-            </Button>
-          </div>
-        </>
-      ) : (
-        <>
-          {/* <form onSubmit={e => e.preventDefault()}> */}
-          <Grid container spacing={6} sx={{ marginTop: 3 }}>
-            {renderStepContent(activeStep)}
-            <Grid size={{ xs: 12 }} className='flex justify-between'>
-              <Button
-                variant='tonal'
-                disabled={activeStep === 0}
-                onClick={handleBack}
-                color='secondary'
-                startIcon={<DirectionalIcon ltrIconClass='bx-left-arrow-alt' rtlIconClass='bx-right-arrow-alt' />}
-              >
-                Back
-              </Button>
-              <Button
-                variant='contained'
-                onClick={handleNext}
-                endIcon={
-                  activeStep === steps.length - 1 ? (
-                    <i className='bx-check' />
-                  ) : (
-                    <DirectionalIcon ltrIconClass='bx-right-arrow-alt' rtlIconClass='bx-left-arrow-alt' />
-                  )
-                }
-              >
-                {activeStep === steps.length - 1 ? 'Submit' : 'Next'}
-              </Button>
-            </Grid>
-          </Grid>
-        </>
-      )}
+      <>
+        {/* <form onSubmit={e => e.preventDefault()}> */}
+        <Grid container spacing={6} sx={{ marginTop: 3 }}>
+          {renderStepContent(activeStep)}
+          <Card className='w-full'>
+            <CardContent>
+              <Grid size={{ xs: 12, md: 12 }} className='flex justify-between'>
+                <div>
+                  <Button variant='outlined' onClick={() => router.replace('/apps/client/list')} color='secondary'>
+                    Cancel
+                  </Button>
+                </div>
+                <div>
+                  <Button
+                    variant='outlined'
+                    disabled={activeStep === 0}
+                    onClick={handleBack}
+                    color='secondary'
+                    className='mr-5'
+                  >
+                    Back
+                  </Button>
+                  <Button variant='contained' onClick={handleNext}>
+                    {activeStep === steps.length - 1 ? 'Submit' : 'Next'}
+                  </Button>
+                </div>
+              </Grid>
+            </CardContent>
+          </Card>
+        </Grid>
+      </>
     </>
   )
 }
