@@ -88,6 +88,12 @@ const EmployeeStepper = () => {
       const userResponse = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/user`, userPayload)
       const caregiverResponse = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/caregivers`, {
         ...caregiverData,
+        mailingCity: loginInfo.city,
+        mailingState: loginInfo.state,
+        mailingZipCode: loginInfo.zipCode,
+        mailingStreet: loginInfo.street,
+        mailingAddress: loginInfo.address,
+        mailingAddressType: 'Mailing',
         userId: userResponse.data.id,
         tenantId: 1
       })
