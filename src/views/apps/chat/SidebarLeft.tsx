@@ -65,11 +65,14 @@ type RenderChatType = {
 
 // Render chat list
 const renderChat = (props: RenderChatType) => {
-  // Props
   const { chatStore, getActiveUserData, setSidebarOpen, backdropOpen, setBackdropOpen, isBelowMdScreen } = props
 
   return chatStore.chats.map(chat => {
-    const contact = chatStore.contacts.find(contact => contact.id === chat.userId) || chatStore.contacts[0]
+    // Find contact using chat.userId which is now otherCaregiver.id
+    const contact = chatStore.contacts.find(contact => contact.id === chat.userId)
+
+    if (!contact) return null // Skip if no matching contact found
+
     const isChatActive = chatStore.activeUser?.id === contact.id
 
     return (
@@ -80,7 +83,7 @@ const renderChat = (props: RenderChatType) => {
           'text-[var(--mui-palette-primary-contrastText)]': isChatActive
         })}
         onClick={() => {
-          getActiveUserData(chat.userId)
+          getActiveUserData(contact.id) // Use contact.id (otherCaregiver.id) here
           isBelowMdScreen && setSidebarOpen(false)
           isBelowMdScreen && backdropOpen && setBackdropOpen(false)
         }}
@@ -93,7 +96,7 @@ const renderChat = (props: RenderChatType) => {
           color={contact.avatarColor}
         />
         <div className='min-is-0 flex-auto'>
-          <Typography color='inherit'>{contact?.fullName}</Typography>
+          <Typography color='inherit'>{contact.fullName}</Typography>
           {chat.chat.length ? (
             <Typography variant='body2' color={isChatActive ? 'inherit' : 'text.secondary'} className='truncate'>
               {chat.chat[chat.chat.length - 1].message}

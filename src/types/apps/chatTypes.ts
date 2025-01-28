@@ -47,4 +47,6 @@ export type ChatDataType = {
   contacts: ContactType[]
   chats: ChatType[]
   activeUser?: ContactType
+  loading: boolean
+  error?: string
 }

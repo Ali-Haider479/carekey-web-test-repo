@@ -1,20 +1,84 @@
-// Third-party Imports
-import { createSlice } from '@reduxjs/toolkit'
+import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
 import type { PayloadAction } from '@reduxjs/toolkit'
+import type { ChatDataType, StatusType } from '@/types/apps/chatTypes'
+import axios from 'axios'
 
-// Type Imports
-import type { StatusType } from '@/types/apps/chatTypes'
+const initialState: ChatDataType = {
+  profileUser: {
+    id: 1,
+    avatar: '/images/avatars/1.png',
+    fullName: 'John Doe',
+    role: 'Admin',
+    about:
+      'Dessert chocolate cake lemon drops jujubes. Biscuit cupcake ice cream bear claw brownie brownie marshmallow.',
+    status: 'online',
+    settings: {
+      isTwoStepAuthVerificationEnabled: true,
+      isNotificationsOn: false
+    }
+  },
+  contacts: [],
+  chats: [],
+  activeUser: {
+    id: 1,
+    fullName: '',
+    avatar: '',
+    avatarColor: 'primary',
+    status: 'online',
+    role: '',
+    about: ''
+  },
+  loading: false,
+  error: ''
+}
 
-// Data Imports
-import { db } from '@/fake-db/apps/chat'
+export const fetchChatRooms = createAsyncThunk('chat/fetchChatRooms', async (userId: number) => {
+  const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/chatroom/list/${userId}`)
+  const chatRooms = response.data
+
+  // Transform contacts - use otherCaregiver.id as the contact id
+  const contacts = chatRooms.map((room: any) => ({
+    id: room.otherCaregiver.id, // Use otherCaregiver.id instead of room.id
+    fullName: room.otherCaregiver.userName,
+    role: 'Caregiver',
+    about: `Chatroom for ${room.chatName}`,
+    avatar: room.otherCaregiver.profileImageUrl || '/images/avatars/default.png',
+    status: 'offline',
+    chatRoomId: room.id // Store chatRoomId for reference
+  }))
+
+  // Transform messages - use otherCaregiver.id as userId
+  const chats = chatRooms.map((room: any) => ({
+    id: room.id,
+    userId: room.otherCaregiver.id, // Use otherCaregiver.id to match with contact
+    unseenMsgs: room.unreadCount || 0,
+    chat: room.messages.map((msg: any) => ({
+      message: msg.messageContent,
+      time: msg.createdAt,
+      senderId: msg.sender.id,
+      msgStatus: {
+        isSent: true,
+        isDelivered: true,
+        isSeen: msg.isRead
+      }
+    }))
+  }))
+
+  return {
+    contacts,
+    chats
+  }
+})
 
 export const chatSlice = createSlice({
   name: 'chat',
-  initialState: db,
+  initialState,
   reducers: {
     getActiveUserData: (state, action: PayloadAction<number>) => {
+      // Find contact by otherCaregiver.id
       const activeUser = state.contacts.find(user => user.id === action.payload)
 
+      // Find chat using the same ID
       const chat = state.chats.find(chat => chat.userId === action.payload)
 
       if (chat && chat.unseenMsgs > 0) {
@@ -65,13 +129,27 @@ export const chatSlice = createSlice({
           }
         })
 
-        // Remove the chat from its current position
+        // Remove and add to beginning to maintain order
         state.chats = state.chats.filter(chat => chat.userId !== state.activeUser?.id)
-
-        // Add the chat back to the beginning of the array
         state.chats.unshift(existingChat)
       }
     }
+  },
+  extraReducers: builder => {
+    builder
+      .addCase(fetchChatRooms.pending, state => {
+        state.loading = true
+        state.error = ''
+      })
+      .addCase(fetchChatRooms.fulfilled, (state, action) => {
+        state.loading = false
+        state.contacts = action.payload.contacts
+        state.chats = action.payload.chats
+      })
+      .addCase(fetchChatRooms.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload as string
+      })
   }
 })
 
