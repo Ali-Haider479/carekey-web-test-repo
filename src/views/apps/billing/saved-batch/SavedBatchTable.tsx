@@ -1,70 +1,10 @@
 'use client'
 
-import { useEffect, useState, useMemo } from 'react'
+import { useState } from 'react'
 import Card from '@mui/material/Card'
-import CardHeader from '@mui/material/CardHeader'
-import TablePagination from '@mui/material/TablePagination'
-import { Avatar, CircularProgress } from '@mui/material'
-import axios from 'axios'
-import tableStyles from '@core/styles/table.module.css'
-import classnames from 'classnames'
-import {
-  useReactTable,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getSortedRowModel,
-  getPaginationRowModel,
-  flexRender
-} from '@tanstack/react-table'
-import { createColumnHelper } from '@tanstack/react-table'
-import type { ColumnDef, FilterFn, Table } from '@tanstack/react-table'
-import TablePaginationComponent from '@components/TablePaginationComponent'
-import { RankingInfo, rankItem } from '@tanstack/match-sorter-utils'
+import { CircularProgress } from '@mui/material'
 import DataTable from '@/@core/components/mui/DataTable'
 import { GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
-
-// Interfaces remain the same...
-interface Client {
-  id: number
-  firstName: string
-  lastName: string
-  middleName: string
-  gender: string
-  dateOfBirth: string
-  pmiNumber: string
-  clientCode: string
-  clientServices: any
-}
-
-interface Caregiver {
-  id: number
-  firstName: string
-  lastName: string
-  middleName: string
-  gender: string
-  dateOfBirth: string
-  caregiverUMPI: string
-  payRate: number
-  additionalPayRate: number
-  caregiverLevel: string
-}
-interface TimeLog {
-  id: number
-  dateOfService?: Date
-  clockIn?: string
-  clockOut?: string
-  notes?: string
-  serviceName?: string
-}
-
-interface Signature {
-  id: number
-  clientSignStatus: string
-  tsApprovalStatus: string
-  caregiver: Caregiver
-  client: Client
-  timeLog?: TimeLog
-}
 
 // Helper function to calculate duration with fallback
 const calculateDuration = (clockIn?: string, clockOut?: string): string => {
@@ -82,38 +22,6 @@ const calculateDuration = (clockIn?: string, clockOut?: string): string => {
   } catch (error) {
     return 'N/A'
   }
-}
-
-// Format date helper with fallback
-const formatDate = (date?: Date): string => {
-  if (!date) return 'N/A'
-
-  try {
-    return new Date(date).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    })
-  } catch (error) {
-    return 'N/A'
-  }
-}
-
-const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
-  const itemRank = rankItem(row.getValue(columnId), value)
-  addMeta({ itemRank })
-  return itemRank.passed
-}
-
-const columnHelper = createColumnHelper<Signature>()
-
-// Create a custom TablePaginationComponent that accepts generic type
-interface CustomTablePaginationProps<T> {
-  table: Table<T>
-}
-
-const CustomTablePagination = <T,>({ table }: CustomTablePaginationProps<T>) => {
-  return <TablePaginationComponent table={table as unknown as Table<unknown>} />
 }
 
 const rows = [
@@ -152,10 +60,7 @@ const rows = [
 ]
 
 const SavedBatchTable = () => {
-  const [data, setData] = useState<Signature[]>([])
   const [filteredData, setFilteredData] = useState(rows)
-  const [globalFilter, setGlobalFilter] = useState('')
-  const [rowSelection, setRowSelection] = useState({})
   const [isLoading, setIsLoading] = useState(false)
 
   const columns: GridColDef[] = [
@@ -207,7 +112,7 @@ const SavedBatchTable = () => {
 
   return (
     <Card sx={{ borderRadius: 1, boxShadow: 3 }}>
-      <CardHeader title='Saved Batch' className='pb-4' />
+      {/* <CardHeader title='Saved Batch' className='pb-4' /> */}
       <DataTable data={filteredData} columns={columns} />
     </Card>
   )

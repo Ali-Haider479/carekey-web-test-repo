@@ -10,7 +10,7 @@ const primaryColorConfig: PrimaryColorConfig[] = [
   {
     name: 'primary-1',
     light: '#4B0082',
-    main: '#4B0082',
+    main: '#7112B7',
     dark: '#7112B7'
   },
   {

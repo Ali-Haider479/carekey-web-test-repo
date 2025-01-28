@@ -7,17 +7,23 @@ import dynamic from 'next/dynamic'
 // Component Imports
 import ReportsView from '@views/apps/reports'
 
-const CaregiverList = dynamic(() => import('@/views/apps/reports/caregiver-list'))
-const ClientList = dynamic(() => import('@/views/apps/reports/client-list'))
+const CostReport = dynamic(() => import('@/views/apps/reports/cost-report'))
+const RemittanceReport = dynamic(() => import('@/views/apps/reports/remittance-report'))
+const ServiceAuthReport = dynamic(() => import('@/views/apps/reports/service-auth'))
+const FinancialSummary = dynamic(() => import('@/views/apps/reports/financial-summary'))
+const CustomReport = dynamic(() => import('@/views/apps/reports/custom-report'))
 
 // Vars
 const tabContentList = (): { [key: string]: ReactElement } => ({
-    'caregiver-list': <CaregiverList />,
-    'client-list': <ClientList />,
+  'cost-report': <CostReport />,
+  'remittance-report': <RemittanceReport />,
+  'service-auth-report': <ServiceAuthReport />,
+  'financial-summary': <FinancialSummary />,
+  'custom-report': <CustomReport />
 })
 
 const ReportsViewApp = () => {
-    return <ReportsView tabContentList={tabContentList()} />
+  return <ReportsView tabContentList={tabContentList()} />
 }
 
 export default ReportsViewApp

@@ -154,7 +154,16 @@ const SubmittedBatchTable = () => {
     {
       field: 'remitanceStatus',
       headerName: 'REMITANCE STATUS',
-      flex: 1
+      flex: 1,
+      renderCell: params => (
+        <span
+          className={`px-3 py-1 rounded-full text-xs ${
+            params.value === 'Completed' ? 'bg-[#72E1281F] text-[#67C932]' : 'bg-[#26C6F91F] text-[#21AEDB'
+          }`}
+        >
+          {params.value}
+        </span>
+      )
     },
     {
       field: 'finalStatus',
@@ -163,7 +172,7 @@ const SubmittedBatchTable = () => {
       renderCell: params => (
         <span
           className={`px-3 py-1 rounded-full text-xs ${
-            params.value === 'Completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+            params.value === 'Completed' ? 'bg-[#72E1281F] text-[#67C932]' : 'bg-[#666CFF1F] text-[#6062E8'
           }`}
         >
           {params.value}
@@ -184,7 +193,7 @@ const SubmittedBatchTable = () => {
 
   return (
     <Card sx={{ borderRadius: 1, boxShadow: 3 }}>
-      <CardHeader title='Submitted Batch' className='pb-4' />
+      {/* <CardHeader title='Submitted Batch' className='pb-4' /> */}
       <DataTable data={filteredData} columns={columns} />
     </Card>
   )

@@ -30,13 +30,7 @@ const BillingTabsView = ({ tabContentList }: { tabContentList: { [key: string]: 
           <Typography variant='h3' className='mbe-4'>
             Billing Overview
           </Typography>
-          <CustomTabList
-            orientation='horizontal'
-            onChange={handleChange}
-            className='is-fit'
-            pill='true'
-            overRideColor='#4B0082'
-          >
+          <CustomTabList orientation='horizontal' onChange={handleChange} className='is-fit' pill='true'>
             <Tab
               label='BILLING DETAILS'
               // icon={<i className='bx-store-alt' />}

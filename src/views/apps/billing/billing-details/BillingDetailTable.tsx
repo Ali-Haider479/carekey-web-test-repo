@@ -1,95 +1,12 @@
 'use client'
 
-import { useEffect, useState, useMemo } from 'react'
+import { useState } from 'react'
 import Card from '@mui/material/Card'
-import CardHeader from '@mui/material/CardHeader'
-import Typography from '@mui/material/Typography'
-import { createColumnHelper, Table } from '@tanstack/react-table'
-import type { ColumnDef, FilterFn } from '@tanstack/react-table'
-import TablePagination from '@mui/material/TablePagination'
-import { Avatar, CircularProgress } from '@mui/material'
-import axios from 'axios'
-import tableStyles from '@core/styles/table.module.css'
-import classnames from 'classnames'
-import {
-  useReactTable,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getSortedRowModel,
-  getPaginationRowModel,
-  flexRender
-} from '@tanstack/react-table'
-import TablePaginationComponent from '@components/TablePaginationComponent'
-import TableFilters from '@/views/apps/user/list/TableFilters'
-import { RankingInfo, rankItem } from '@tanstack/match-sorter-utils'
+import { CircularProgress } from '@mui/material'
 import DataTable from '@/@core/components/mui/DataTable'
-import { GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
-import BillingDetailFilters from './BillingDetailFilters'
-
-// Updated interfaces to match your data structure
-interface Caregiver {
-  id: number
-  firstName: string
-  lastName: string
-  middleName: string
-  gender: string
-  dateOfBirth: string
-  caregiverUMPI: string
-  payRate: number
-  additionalPayRate: number
-  caregiverLevel: string
-}
-
-declare module '@tanstack/table-core' {
-  interface FilterFns {
-    fuzzy: FilterFn<unknown>
-  }
-  interface FilterMeta {
-    itemRank: RankingInfo
-  }
-}
-
-interface Client {
-  id: number
-  firstName: string
-  lastName: string
-  middleName: string
-  gender: string
-  dateOfBirth: string
-  pmiNumber: string
-  clientCode: string
-  clientServices: any
-}
-
-interface Signature {
-  id: number
-  clientSignStatus: string
-  tsApprovalStatus: string
-  duration: string
-  caregiverSignature: string
-  clientSignature: string
-  caregiver: Caregiver
-  client: Client
-  timeLog: any[]
-  tenant: any
-}
-
-type SignatureWithAction = Signature & {
-  action?: string
-}
-
-const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
-  const itemRank = rankItem(row.getValue(columnId), value)
-  addMeta({ itemRank })
-  return itemRank.passed
-}
-
-const columnHelper = createColumnHelper<Signature>()
-
-// Create a custom TablePaginationComponent that accepts generic type
-interface CustomTablePaginationProps<T> {
-  table: Table<T>
-}
+import { GridColDef } from '@mui/x-data-grid'
+import Dropdown from '@/@core/components/mui/DropDown'
+import { dark } from '@mui/material/styles/createPalette'
 
 const dummyData = [
   {
@@ -134,38 +51,20 @@ const dummyData = [
   }
 ]
 
-const CustomTablePagination = <T,>({ table }: CustomTablePaginationProps<T>) => {
-  return <TablePaginationComponent table={table as unknown as Table<unknown>} />
-}
-
 const BillingDetailTable = () => {
-  const [data, setData] = useState<Signature[]>([])
   const [filteredData, setFilteredData] = useState<any[]>(dummyData)
-  const [globalFilter, setGlobalFilter] = useState('')
-  const [rowSelection, setRowSelection] = useState({})
   const [isLoading, setIsLoading] = useState(false)
-
-  // Fetch signatures data
-  // useEffect(() => {
-  //   const fetchData = async () => {
-  //     try {
-  //       const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/signatures`)
-  //       setData(response.data)
-  //       setFilteredData(response.data)
-  //       setIsLoading(false)
-  //     } catch (error) {
-  //       console.error('Error fetching signatures:', error)
-  //       setIsLoading(false)
-  //     }
-  //   }
-  //   fetchData()
-  // }, [])
 
   const columns: GridColDef[] = [
     {
       field: 'clientName',
       headerName: 'CLIENT NAME',
-      flex: 1
+      flex: 1,
+      renderCell: params => (
+        <div className='flex items-center'>
+          <span className={`${dark ? 'text-[#8082FF]' : 'text-[#4B0082]'}`}>{params.value}</span>
+        </div>
+      )
     },
     {
       field: 'caregiverName',
@@ -220,7 +119,13 @@ const BillingDetailTable = () => {
 
   return (
     <Card sx={{ borderRadius: 1, boxShadow: 3 }}>
-      <CardHeader title='Billing Details' className='pb-4' />
+      {/* <CardHeader title='Billing Details' className='pb-4' /> */}
+      <Dropdown
+        className='mt-5 ml-5 w-80 mb-5'
+        value={'all'}
+        setValue={() => {}}
+        options={[{ key: 1, value: 'all', displayValue: 'All' }]}
+      />
       <DataTable data={filteredData} columns={columns} />
     </Card>
   )

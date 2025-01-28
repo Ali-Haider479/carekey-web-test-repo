@@ -11,15 +11,16 @@ type DropDownProps = {
   value: string
   setValue: any
   options: OptionListType[]
+  className?: string
 }
 
-const Dropdown = ({ value, setValue, options }: DropDownProps) => {
+const Dropdown = ({ value, setValue, options, className }: DropDownProps) => {
   return (
     <CustomTextField
       select
-      fullWidth
       id='select-item'
       placeholder='status'
+      className={className?.length ? className : 'w-full'}
       value={value}
       onChange={e => setValue(e.target.value)}
       slotProps={{
