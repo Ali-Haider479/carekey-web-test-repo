@@ -422,45 +422,23 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
               </Grid>
               <Grid size={{ xs: 12, sm: 4 }}>
                 <CustomTextField
-                  label={'Phone Number'}
-                  placeHolder={'please enter Phone Number'}
-                  name={'secondaryResidentialPhoneNumber'}
-                  defaultValue={''}
-                  type={'number'}
-                  error={errors.secondaryResidentialPhoneNumber}
-                  control={control}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, sm: 4 }}>
-                <CustomTextField
-                  label={'FAX Number'}
-                  placeHolder={'please enter Fax Number'}
-                  name={'secondaryResidentialFaxNumber'}
-                  defaultValue={''}
-                  type={'number'}
-                  error={errors.secondaryResidentialFaxNumber}
-                  control={control}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, sm: 4 }}>
-                <CustomTextField
-                  label={'Case Manger Extension'}
-                  placeHolder={'please enter Case Manger Extension'}
-                  name={'caseMangerExtension'}
-                  defaultValue={''}
-                  type={'number'}
-                  error={errors.caseMangerExtension}
-                  control={control}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, sm: 4 }}>
-                <CustomTextField
-                  label={'Case Manger Note'}
-                  placeHolder={'please enter Case Manger Note'}
-                  name={'caseMangerNote'}
+                  label={'State'}
+                  placeHolder={'please enter State'}
+                  name={'secondaryResidentialState'}
                   defaultValue={''}
                   type={'text'}
-                  error={errors.caseMangerNote}
+                  error={errors.secondaryResidentialState}
+                  control={control}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 4 }}>
+                <CustomTextField
+                  label={'Zip Code'}
+                  placeHolder={'please enter Zip Code'}
+                  name={'secondaryResidentialZipCode'}
+                  defaultValue={''}
+                  type={'number'}
+                  error={errors.secondaryResidentialZipCode}
                   control={control}
                 />
               </Grid>
@@ -512,28 +490,6 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                   defaultValue={''}
                   type={'text'}
                   error={errors.clientResponsibilityPartyFaxNumber}
-                  control={control}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, sm: 4 }}>
-                <CustomTextField
-                  label={'Case Manger Extension'}
-                  placeHolder={'please enter Case Manger Extension'}
-                  name={'clientResponsibilityPartyCaseManagerExtension'}
-                  defaultValue={''}
-                  type={'number'}
-                  error={errors.clientResponsibilityPartyCaseManagerExtension}
-                  control={control}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, sm: 4 }}>
-                <CustomTextField
-                  label={'Case Manger Note'}
-                  placeHolder={'please enter Case Manger Note'}
-                  name={'clientResponsibilityPartyNote'}
-                  defaultValue={''}
-                  type={'text'}
-                  error={errors.clientResponsibilityPartyNote}
                   control={control}
                 />
               </Grid>

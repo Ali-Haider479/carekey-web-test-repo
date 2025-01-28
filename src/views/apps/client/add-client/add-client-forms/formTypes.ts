@@ -30,10 +30,8 @@ export type PersonalDetailsFormDataType = {
   mailingZipCode: number
   secondaryResidentialAddress: string
   secondaryResidentialCity: string
-  secondaryResidentialPhoneNumber: number
-  secondaryResidentialFaxNumber: number
-  caseMangerExtension: number
-  caseMangerNote: string
+  secondaryResidentialState: number
+  secondaryResidentialZipCode: number
   clientResponsibilityPartyName: string
   clientResponsibilityPartyEmailAddress: string
   clientResponsibilityPartyPhoneNumber: number

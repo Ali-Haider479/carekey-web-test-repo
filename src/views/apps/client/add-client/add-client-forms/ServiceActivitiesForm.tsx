@@ -1,5 +1,5 @@
 'use client'
-import { forwardRef, useImperativeHandle } from 'react'
+import { forwardRef, useEffect, useImperativeHandle, useState } from 'react'
 import { FormProvider, useForm } from 'react-hook-form'
 import { Button, Card, CardContent, Checkbox, FormControlLabel, FormGroup, Typography } from '@mui/material'
 import Grid from '@mui/material/Grid2'
@@ -9,6 +9,7 @@ import ServiceActivities from '@/@core/components/custom-inputs/ServiceAcitvites
 import { clientServiceFormDataType } from './formTypes'
 import CustomTextField from '@/@core/components/custom-inputs/CustomTextField'
 import ControlledDatePicker from '@/@core/components/custom-inputs/ControledDatePicker'
+import axios from 'axios'
 
 type Props = {
   form?: any
@@ -36,6 +37,22 @@ const ServiceActivitiesForm = forwardRef<{ handleSubmit: any }, Props>(({ onFini
     console.log('Submitted Data:', data)
     onFinish(data) // Pass form data to parent
   }
+
+  const [serviceTypes, setServiceTypes] = useState<any>()
+
+  const getServiceTypes = async () => {
+    try {
+      const serviceTypesResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/service`)
+      console.log('Service Types --> ', serviceTypesResponse)
+      setServiceTypes(serviceTypesResponse)
+    } catch (error) {
+      console.error('Error getting service types: ', error)
+    }
+  }
+  useEffect(() => {
+    getServiceTypes()
+  }, [])
+
   return (
     <FormProvider {...methods}>
       <form onSubmit={handleSubmit(onSubmit)} className='w-full'>
@@ -68,10 +85,15 @@ const ServiceActivitiesForm = forwardRef<{ handleSubmit: any }, Props>(({ onFini
                   control={control}
                   error={errors.service}
                   label={'Select Service'}
-                  optionList={[
-                    { key: 1, value: 'IHS', optionString: 'IHS' },
-                    { key: 2, value: 'IHS+', optionString: 'IHS+' }
-                  ]}
+                  optionList={
+                    serviceTypes?.data?.map((item: any) => {
+                      return {
+                        key: `${item.id}-${item.name}`,
+                        value: item.id,
+                        optionString: item.name
+                      }
+                    }) || []
+                  }
                   defaultValue={''}
                 />
               </Grid>

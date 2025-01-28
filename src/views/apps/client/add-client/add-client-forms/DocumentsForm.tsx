@@ -51,7 +51,7 @@ const DocumentsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish }, re
   // Update form values when files are selected
   useEffect(() => {
     setValue('documentFiles', documents)
-  }, [setDocuments, setValue])
+  }, [documents, setValue])
 
   const onSubmit = (data: any) => {
     // Combine files and form data
@@ -61,7 +61,7 @@ const DocumentsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish }, re
       }
     }
 
-    console.log('Submitted Training Certificates Data:', formData)
+    console.log('Submitted Documents Data:', formData)
     onFinish(formData) // Pass comprehensive form data to parent
   }
 
@@ -78,7 +78,7 @@ const DocumentsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish }, re
                   onFilesSelected={selectedFiles => {
                     setDocuments(selectedFiles)
                   }}
-                  mimeType={['application/pdf', 'image/jpeg', 'image/png']}
+                  mimeType={['application/pdf']}
                   fileCount={3}
                   fileSize={25 * 1024 * 1024} // 25MB
                   title='Choose Files'

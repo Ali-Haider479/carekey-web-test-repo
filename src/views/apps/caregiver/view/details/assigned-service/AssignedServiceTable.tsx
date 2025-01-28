@@ -5,23 +5,13 @@ import { useEffect, useState } from 'react'
 
 // MUI Imports
 import Card from '@mui/material/Card'
-import CardHeader from '@mui/material/CardHeader'
-import TextField from '@mui/material/TextField'
-import Chip from '@mui/material/Chip'
-import Avatar from '@mui/material/Avatar'
-import Button from '@mui/material/Button'
-import Grid from '@mui/material/Grid2'
-
-// Third-party Imports
-import { createColumnHelper, flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table'
-import axios from 'axios'
 
 // CSS Module Imports
 import styles from '../CaregiversTable.module.css'
 import { useRouter } from 'next/navigation'
 import { GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
 import DataTable from '@/@core/components/mui/DataTable'
-import { List, ListItem } from '@mui/material'
+import { List, ListItem, Typography } from '@mui/material'
 
 // type AccountHistory = {
 //   key: number
@@ -96,7 +86,16 @@ const AssignedServiceTable = () => {
     {
       field: 'services',
       headerName: 'SERVICES',
-      flex: 0.8
+      flex: 0.8,
+      renderCell: (params: GridRenderCellParams) => (
+        <div className='flex flex-row gap-2 mt-2'>
+          {params.row.services.map((service: any, index: any) => (
+            <div key={index} className='p-1 border border-[#666CFF] border-opacity-[50%] rounded-sm'>
+              <Typography className='text-[#4B0082]'>{service}</Typography>
+            </div>
+          ))}
+        </div>
+      )
     }
   ]
 

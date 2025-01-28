@@ -1,7 +1,7 @@
 'use client'
 
 // React Imports
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { SyntheticEvent, ReactElement } from 'react'
 
 // MUI Imports
@@ -14,14 +14,33 @@ import Grid from '@mui/material/Grid2'
 import CustomTabList from '@core/components/mui/TabList'
 import ProfileBanner from '@/@layouts/components/horizontal/ProfileBanner'
 import { Typography } from '@mui/material'
+import { useParams } from 'next/navigation'
+import axios from 'axios'
 
 interface BottomBodyProps {
   tabContentList: Record<string, ReactElement>
 }
 
 const CaregiverDetails = ({ tabContentList }: BottomBodyProps) => {
+  const { id } = useParams()
   // States
   const [activeTab, setActiveTab] = useState('profile')
+  const [data, setData] = useState<any>()
+  useEffect(() => {
+    // Fetch data from the backend API
+    const fetchData = async () => {
+      try {
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/caregivers/user/${id}`)
+        const fetchedData = response.data
+        console.log('Caregiver Profile Data ----> ', fetchedData)
+        setData(fetchedData)
+      } catch (error) {
+        console.error('Error fetching data', error)
+      }
+    }
+
+    fetchData()
+  }, [])
 
   const handleChange = (event: SyntheticEvent, value: string) => {
     setActiveTab(value)
@@ -48,6 +67,8 @@ const CaregiverDetails = ({ tabContentList }: BottomBodyProps) => {
     }
   }
 
+  const fullName = data?.firstName + ' ' + data?.middleName + ' ' + data?.lastName
+
   return (
     <>
       <TabContext value={activeTab}>
@@ -56,11 +77,11 @@ const CaregiverDetails = ({ tabContentList }: BottomBodyProps) => {
         </Typography>
         <ProfileBanner
           props={{
-            fullName: 'Suhanna Ibrahim',
+            fullName: fullName ? fullName : '---',
             coverImg: '/images/pages/profile-banner.png',
-            location: 'USA',
+            location: data?.addresses[0].address.state ? data?.addresses[0].address.state : '---',
             profileImg: '/images/avatars/2.png',
-            status: 'ACTIVE'
+            status: data?.user?.accountStatus ? data?.user?.accountStatus : '---'
           }}
         />
         <Grid container spacing={6}>

@@ -26,6 +26,7 @@ function CaregiverAboutCard() {
 
   console.log('user id ---> ', id)
   const [data, setData] = useState<any>()
+  const [notesData, setNotesData] = useState<any>()
   const [isLoading, setIsLoading] = useState(false)
   useEffect(() => {
     // Fetch data from the backend API
@@ -43,6 +44,21 @@ function CaregiverAboutCard() {
     }
 
     fetchData()
+
+    const fetchNotesData = async () => {
+      try {
+        setIsLoading(true)
+        const notesResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/caregivers/${id}/notes`)
+        const fetchedNotesData = notesResponse.data
+        console.log('Caregiver Notes Data ----> ', fetchedNotesData)
+        setNotesData(fetchedNotesData)
+      } catch (error) {
+        console.error('Error fetching data', error)
+      }
+      setIsLoading(false)
+    }
+
+    fetchNotesData()
   }, [])
 
   return (
@@ -127,16 +143,12 @@ function CaregiverAboutCard() {
                   </Typography>
                 </div>
                 <div className='flex justify-between text-sm text-gray-500'>
-                  <Typography>EMERGENCY C.NUMBER:</Typography>
-                  <Typography className=''>---</Typography>
+                  <Typography>EMERGENCY EMAIL ID: </Typography>
+                  <Typography className=''>{data?.emergencyEmailId ? data.emergencyEmailId : '---'}</Typography>
                 </div>
               </div>
               <div className='mt-6 border-t pt-6'>
                 <div className='grid grid-cols-2 gap-y-4 gap-x-8'>
-                  <div className='flex justify-between text-sm text-gray-500'>
-                    <Typography>Emergency Email ID:</Typography>
-                    <Typography className=''>{data?.emergencyEmailId ? data.emergencyEmailId : '---'}</Typography>
-                  </div>
                   <div className='flex justify-between text-sm text-gray-500'>
                     <Typography>Employee Number:</Typography>
                     <Typography className=''>---</Typography>
@@ -202,51 +214,31 @@ function CaregiverAboutCard() {
             </div>
 
             {/* Additional Details Section */}
-            <div className='mb-6 border-t pt-6'>
-              <div className='grid grid-cols-2 gap-y-4 gap-x-8'>
-                <div className='flex justify-between text-sm text-gray-500'>
-                  <Typography>Case Manager Name:</Typography>
-                  <Typography className=''>---</Typography>
-                </div>
-                <div className='flex justify-between text-sm text-gray-500'>
-                  <Typography>Case Manager's Extension:</Typography>
-                  <Typography className=''>---</Typography>
-                </div>
-                <div className='flex justify-between text-sm text-gray-500'>
-                  <Typography>Case Manager's Phone Number:</Typography>
-                  <Typography className=''>---</Typography>
-                </div>
-                <div className='flex justify-between text-sm text-gray-500'>
-                  <Typography>Case Manager's Email Details:</Typography>
-                  <Typography className=''>---</Typography>
-                </div>
-                <div className='flex justify-between text-sm text-gray-500'>
-                  <Typography>Case Manager's FAX Number:</Typography>
-                  <Typography className=''>---</Typography>
-                </div>
-              </div>
-            </div>
+            <div className='mb-6 border-t pt-0'></div>
             {/* Section: Responsible Party Details */}
             <div>
               <h2 className='text-lg font-semibold text-gray-600 mb-4'>Mailing Address</h2>
               <div className='grid grid-cols-2 gap-x-8 gap-y-4'>
                 <Typography className='text-sm text-gray-500'>
                   Address: <br />
-                  3132 5th Ave
+                  {data?.addresses[1].address.address ? data?.addresses[1].address.address : '---'}
                 </Typography>
                 <Typography className='text-sm text-gray-500'>
                   City: <br />
-                  ABC
+                  {data?.addresses[1].address.city ? data?.addresses[1].address.city : '---'}
                 </Typography>
                 <Typography className='text-sm text-gray-500'>
                   State: <br />
-                  MN
+                  {data?.addresses[1].address.city ? data?.addresses[1].address.city : '---'}
                 </Typography>
                 <Typography className='text-sm text-gray-500'>
                   Zip: <br />
-                  55408
+                  {data?.addresses[1].address.zipCode ? data?.addresses[1].address.zipCode : '---'}
                 </Typography>
-                <Typography className='text-base text-gray-500'>Pay Rate</Typography>
+                <Typography className='text-base text-gray-500'>
+                  Pay Rate: <br />
+                  {data?.payRate ? data?.payRate : '---'}
+                </Typography>
               </div>
               <Button
                 variant='contained'
@@ -302,38 +294,28 @@ function CaregiverAboutCard() {
 
           {/* Section: Service Plan Details */}
           <Card className='mt-5 w-full ml-2 shadow-md rounded-lg p-6'>
-            <h2 className='text-xl font-semibold text-gray-600 mb-4'>Caregiver Notes</h2>
-            <label className='text-lg text-gray-500'>Allergies</label>
-            <div className='space-y-4'>
-              <div>
-                <div className='text-sm text-gray-500'>
-                  <Typography className=''>IHS (with training) (H2014 UC U3)</Typography>
-                  <Typography> (Aug 1, 2023 - Nov 27, 2024) Approved Units: 1040 - </Typography>
-                  <Typography className=''> 0.5 Hrs/Day - 3.75 Hrs/Week</Typography>
-                </div>
-              </div>
-              <div>
-                <Typography className='text-sm text-gray-500'>
-                  Community Integration & Socialization: Assist with Community Participation, Entertainments,
-                  Activities, Health, Safety & Wellness, and completing Paperwork
-                </Typography>
-              </div>
-              <div>
-                <div className='text-sm text-gray-500'>
-                  <Typography className=''>Integrated Community Supports Daily (T1020 UC):</Typography>
-                  <Typography>(Nov 28, 2023 - Jul 31, 2024) Approved Units: </Typography>
-                  <Typography className=''>248 - 0.25 Hrs/Day - 1.75 Hrs/Week </Typography>
-                </div>
-              </div>
-              <div>
-                <Typography className='text-sm text-gray-500'>
-                  Going to store, Home Organization, Community Activity, Budgeting, Assist with scheduling ride to
-                  attend medical appointments, Client will work towards improving his health by being physically
-                  active/gym., Assist with reading and organizing mails
-                </Typography>
-              </div>
-            </div>
-            <div className='mb-6 border-t pt-6'>
+            <Typography className='text-xl font-semibold text-gray-600 mb-4'>Caregiver Notes</Typography>
+            <Typography className='text-lg text-gray-500'>
+              Allergies: <br />
+            </Typography>
+            <Typography className='text-sm text-gray-500'>
+              {notesData?.allergies ? notesData?.allergies : '---'}
+            </Typography>
+            <Typography className='text-lg text-gray-500 mt-3'>
+              Special Requests: <br />
+            </Typography>
+            <Typography className='text-sm text-gray-500'>
+              {notesData?.specialRequests ? notesData?.specialRequests : '---'}
+            </Typography>
+
+            <Typography className='text-lg text-gray-500 mt-3'>
+              Comments: <br />
+            </Typography>
+            <Typography className='text-sm text-gray-500'>
+              {notesData?.comments ? notesData?.comments : '---'}
+            </Typography>
+
+            <div className='mb-6 border-t pt-6 mt-5'>
               <div className='grid grid-cols-2 gap-x-8 gap-y-4'>
                 <div className='flex justify-between text-sm text-gray-500'>
                   <Typography>Available Services: </Typography>

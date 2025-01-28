@@ -61,6 +61,7 @@ const AddClientStepper = () => {
   const [physicianDetails, setPhysicianDetails] = useState<any>()
   const [serviceActivities, setServiceActivities] = useState<any>()
   const [documents, setDocuments] = useState<any>()
+  const [serviceTypes, setServiceTypes] = useState<any>()
 
   const personalDetailsFormRef = useRef<any>(null)
   const physicianAndCaseMangerFormRef = useRef<any>(null)
@@ -71,111 +72,234 @@ const AddClientStepper = () => {
     setActiveStep(0)
   }
 
-  const handleSave = async () => {
-    const createClientBody = {
-      firstName: personalDetails.firstName,
-      middleName: personalDetails.middleName,
-      lastName: personalDetails.lastName,
-      admissionDate: personalDetails.admissionDate,
-      dischargeDate: personalDetails.dateOfDischarge,
-      dateOfBirth: personalDetails.dateOfBirth,
-      pmiNumber: personalDetails.pmiNumber,
-      gender: personalDetails.gender,
-      primaryPhoneNumber: personalDetails.primaryPhoneNumber,
-      primaryCellNumber: personalDetails.primaryPhoneNumber,
-      additionalPhoneNumber: personalDetails.additionalPhoneNumber,
-      emergencyContactName: personalDetails.emergencyContactName,
-      emergencyContactNumber: personalDetails.emergencyContactNumber,
-      emergencyEmailId: personalDetails.emergencyEmail,
-      insuranceCode: personalDetails.insuranceCode,
-      clientCode: personalDetails.clientCode,
-      medicalSpendDown: personalDetails.medicalSpendDown,
-      amount: personalDetails.amount,
-      sharedCare: personalDetails.sharedCare,
-      pcaChoice: personalDetails.pcaChoice,
-      isClient: true,
-      isSignatureDraw: false,
-      tenantId: 1
+  const getServiceTypes = async () => {
+    try {
+      const serviceTypesResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/service`)
+      console.log('Service Types --> ', serviceTypesResponse)
+      setServiceTypes(serviceTypesResponse)
+    } catch (error) {
+      console.error('Error getting service types: ', error)
     }
+  }
+  useEffect(() => {
+    getServiceTypes()
+  }, [])
 
-    const createClientResponse = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/client`, createClientBody)
+  const handleSave = async (Docs: any) => {
+    try {
+      const createClientBody = {
+        firstName: personalDetails.firstName,
+        middleName: personalDetails.middleName,
+        lastName: personalDetails.lastName,
+        admissionDate: personalDetails.admissionDate,
+        dischargeDate: personalDetails.dateOfDischarge,
+        dateOfBirth: personalDetails.dateOfBirth,
+        pmiNumber: personalDetails.pmiNumber,
+        gender: personalDetails.gender,
+        primaryPhoneNumber: personalDetails.primaryPhoneNumber,
+        primaryCellNumber: personalDetails.primaryPhoneNumber,
+        additionalPhoneNumber: personalDetails.additionalPhoneNumber,
+        emergencyContactName: personalDetails.emergencyContactName,
+        emergencyContactNumber: personalDetails.emergencyContactNumber,
+        emergencyEmailId: personalDetails.emergencyEmail,
+        insuranceCode: personalDetails.insuranceCode,
+        clientCode: personalDetails.clientCode,
+        medicalSpendDown: personalDetails.medicalSpendDown,
+        amount: personalDetails.amount,
+        sharedCare: personalDetails.sharedCare,
+        pcaChoice: personalDetails.pcaChoice,
+        isClient: true,
+        isSignatureDraw: false,
+        tenantId: 1
+      }
 
-    console.log('Create Client Response ---> ', createClientResponse)
+      const createClientResponse = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/client`, createClientBody)
 
-    const clientId = createClientResponse.data.id
+      console.log('Create Client Response ---> ', createClientResponse)
 
-    const clientPrimaryAddressBody = {
-      clientId: clientId,
-      city: personalDetails.primaryResidentialCity,
-      state: personalDetails.primaryResidentialState,
-      address: personalDetails.primaryResidentialAddress,
-      zipCode: personalDetails.primaryResidentialZipCode,
-      addressType: 'Residential'
+      const clientId = createClientResponse.data.id
+
+      const clientPrimaryAddressBody = {
+        clientId: clientId,
+        city: personalDetails.primaryResidentialCity,
+        state: personalDetails.primaryResidentialState,
+        address: personalDetails.primaryResidentialAddress,
+        zipCode: personalDetails.primaryResidentialZipCode,
+        addressType: 'Residential'
+      }
+
+      const clientSecondaryAddressBody = {
+        clientId: clientId,
+        city: personalDetails.secondaryResidentialCity,
+        state: personalDetails.secondaryResidentialState,
+        address: personalDetails.secondaryResidentialAddress,
+        zipCode: personalDetails.secondaryResidentialZipCode,
+        addressType: 'Secondary Residential'
+      }
+
+      const clientMailingAddressBody = {
+        clientId: clientId,
+        city: personalDetails.mailingCity,
+        state: personalDetails.mailingState,
+        address: personalDetails.mailingAddress,
+        zipCode: personalDetails.mailingZipCode,
+        addressType: 'Mailing'
+      }
+
+      const clientAddressArray = [clientPrimaryAddressBody, clientSecondaryAddressBody, clientMailingAddressBody]
+
+      for (const addressBody of clientAddressArray) {
+        const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/client/address`, addressBody)
+        console.log('Adding Address Response --> ', response)
+      }
+
+      const clientResponsiblePartyBody = {
+        name: personalDetails.clientResponsibilityPartyName,
+        emailAddress: personalDetails.clientResponsibilityPartyEmailAddress,
+        phoneNumber: personalDetails.clientResponsibilityPartyPhoneNumber,
+        faxNumber: personalDetails.clientResponsibilityPartyFaxNumber,
+        clientId: clientId
+      }
+
+      const createClientResponsibleParty = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/client/responsible-party`,
+        clientResponsiblePartyBody
+      )
+      console.log('Client Responsible Party Created --> ', createClientResponsibleParty)
+
+      const createPhysicianBody = {
+        name: physicianDetails.physicianName,
+        clinicName: physicianDetails.clinicName,
+        phoneNumber: physicianDetails.phoneNumber,
+        faxNumber: physicianDetails.faxNumber,
+        address: physicianDetails.physicalAddress,
+        city: physicianDetails.physicianCity,
+        state: physicianDetails.physicianState,
+        zipCode: physicianDetails.physicianZipCode,
+        primaryPhoneNumber: physicianDetails.primaryPhoneNumber,
+        clientId: clientId
+      }
+
+      const createPhysicianResponse = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/client/physician`,
+        createPhysicianBody
+      )
+      console.log('Physician Details --> ', createPhysicianResponse)
+
+      const createCaseManagerBody = {
+        caseManagerName: physicianDetails.caseManagerName,
+        caseManagerEmail: physicianDetails.caseMangerEmail,
+        caseManagerPhoneNumber: physicianDetails.caseMangerPhoneNumber,
+        caseManagerExtention: physicianDetails.caseManagerExtension,
+        caseManagerFaxNumber: physicianDetails.caseManagerFaxNumber,
+        caseManagerNotes: physicianDetails.caseMangerNote,
+        clientId: clientId
+      }
+
+      const createCaseManagerResponse = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/client/casemanager`,
+        createCaseManagerBody
+      )
+      console.log('Case Manager Details --> ', createCaseManagerResponse)
+
+      const createClientServiceBody = {
+        note: serviceActivities.serviceNotes,
+        serviceId: serviceActivities.service,
+        clientId: clientId
+      }
+      const createClientServiceTypeResponse = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/client/client-service`,
+        createClientServiceBody
+      )
+      console.log('Client Service Type Created --> ', createClientServiceTypeResponse)
+
+      const createCarePlanDueBody = {
+        clientId: clientId,
+        lastCompletedDate: serviceActivities.lastCompletedDate,
+        dueDate: serviceActivities.dueDate,
+        qpAssigned: serviceActivities.qpAssigned,
+        notes: serviceActivities.notes
+      }
+
+      const createCarePlanDueResponse = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/client/careplan`,
+        createCarePlanDueBody
+      )
+      console.log('Create Care Plan Due Data --> ', createCarePlanDueResponse)
+
+      const uploadDocuments = async (
+        files: { path: string }[],
+        documentType: string,
+        expiryDate?: string,
+        additionalMetadata?: Record<string, any>
+      ) => {
+        // Skip upload if no files exist
+        if (!files || files.length === 0) {
+          console.log(`No files found for ${documentType}. Skipping upload.`)
+          return null
+        }
+
+        // Create a FormData object
+        const formData = new FormData()
+
+        // Append files
+        files.forEach((file: { path: string }) => {
+          // Use File object instead of Blob for better compatibility
+          const fileObject = new File([file.path], file.path, {
+            type: file.path.endsWith('.pdf')
+              ? 'application/pdf'
+              : file.path.endsWith('.jpg') || file.path.endsWith('.png')
+                ? 'image/jpeg'
+                : 'application/octet-stream'
+          })
+          formData.append('file', fileObject, file.path)
+        })
+
+        // Append common parameters
+        formData.append('documentType', documentType)
+        formData.append('clientId', clientId.toString())
+
+        // Handle expiry date
+        const finalExpiryDate =
+          expiryDate || new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString()
+
+        formData.append('expiryDays', '365')
+        formData.append('expiryDate', finalExpiryDate)
+
+        // Append additional metadata if exists
+        if (additionalMetadata) {
+          Object.entries(additionalMetadata).forEach(([key, value]) => {
+            formData.append(key, value as string)
+          })
+        }
+
+        // Make the API call
+        try {
+          return await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/client/documents`, formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data'
+            }
+          })
+        } catch (error) {
+          console.error(`Error uploading ${documentType} documents:`, error)
+          return null
+        }
+      }
+
+      const documentUpload = [uploadDocuments(Docs.documents, 'other')]
+
+      const uploadResponses = await Promise.all(documentUpload)
+
+      const successfulUploads = uploadResponses.filter(response => response !== null)
+
+      console.log('Successful document uploads:', successfulUploads)
+
+      console.log('Client Body ---> ', createClientBody, clientPrimaryAddressBody)
+
+      router.replace('/apps/client/list')
+    } catch (error) {
+      console.error('Error saving data: ', error)
     }
-
-    // const clientSecondaryAddressBody = {
-    //   clientId: clientId,
-    //   city: personalDetails.secondaryResidentialCity,
-    //   state: personalDetails.secondaryResidentialState,
-    //   address: personalDetails.secondaryResidentialAddress,
-    //   zipCode: personalDetails.secondaryResidentialZipCode,
-    //   addressType: 'Secondary'
-    // }
-
-    const clientMailingAddressBody = {
-      clientId: clientId,
-      city: personalDetails.mailingCity,
-      state: personalDetails.mailingState,
-      address: personalDetails.mailingAddress,
-      zipCode: personalDetails.mailingZipCode,
-      addressType: 'Mailing'
-    }
-
-    const clientAddressArray = [clientPrimaryAddressBody, clientMailingAddressBody]
-
-    for (const addressBody of clientAddressArray) {
-      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/client/address`, addressBody)
-      console.log('Adding Address Response --> ', response)
-    }
-
-    const createPhysicianBody = {
-      name: physicianDetails.physicianName,
-      clinicName: physicianDetails.clinicName,
-      phoneNumber: physicianDetails.phoneNumber,
-      faxNumber: physicianDetails.faxNumber,
-      address: physicianDetails.physicalAddress,
-      city: physicianDetails.physicianCity,
-      state: physicianDetails.physicianState,
-      zipCode: physicianDetails.physicianZipCode,
-      primaryPhoneNumber: physicianDetails.primaryPhoneNumber,
-      clientId: clientId
-    }
-
-    const createPhysicianResponse = await axios.post(
-      `${process.env.NEXT_PUBLIC_API_URL}/client/physician`,
-      createPhysicianBody
-    )
-
-    console.log('Physician Details --> ', createPhysicianResponse)
-
-    // const createServiceTypeBody = {
-    //   iappProcess: serviceActivities.iappProcess,
-    //   lastCompleted: serviceActivities.lastCompletedDate,
-    //   schoolMeetingDue: serviceActivities.dueDate,
-    //   schoolMeetingCompleted: serviceActivities.schoolMeetingCompleted,
-    //   clientId: clientId
-    // }
-
-    // const createServiceActivitiesResponse = await axios.post(
-    //   `${process.env.NEXT_PUBLIC_API_URL}/client/service-activities`,
-    //   createServiceTypeBody
-    // )
-
-    // console.log('Service Activities Created ---> ', createServiceActivitiesResponse)
-
-    console.log('Client Body ---> ', createClientBody, clientPrimaryAddressBody)
-
-    // router.replace('/apps/client/list')
   }
 
   // useEffect(() => {
@@ -184,42 +308,78 @@ const AddClientStepper = () => {
   //   }
   // }, [personalDetails])
 
+  // const handleNext = () => {
+  //   console.log('in next', activeStep)
+  //   if (activeStep === 0) {
+  //     // Manually trigger form submission for the first step
+  //     personalDetailsFormRef.current?.handleSubmit((data: PersonalDetailsFormDataType) => {
+  //       setPersonalDetails(data)
+  //       handleSave()
+  //       console.log('Personal Details in Parent:', data)
+  //       // Move to next step after successful validation
+  //       setActiveStep(prevActiveStep => prevActiveStep + 1)
+  //     })()
+  //   } else if (activeStep === 1) {
+  //     physicianAndCaseMangerFormRef.current?.handleSubmit((data: PhysicianAndCaseMangerFormDataType) => {
+  //       setPhysicianDetails(data)
+  //       handleSave()
+  //       console.log('Physician Details in Parent:', data)
+  //       // Move to next step after successful validation
+  //       setActiveStep(prevActiveStep => prevActiveStep + 1)
+  //     })()
+  //   } else if (activeStep === 2) {
+  //     serviceActivitiesFormRef.current?.handleSubmit((data: clientServiceFormDataType) => {
+  //       setServiceActivities(data)
+  //       handleSave()
+  //       console.log('Personal Details in Parent:', data)
+  //       // Move to next step after successful validation
+  //       setActiveStep(prevActiveStep => prevActiveStep + 1)
+  //     })()
+  //   } else if (activeStep === 3) {
+  //     // Manually trigger form submission for the first step
+  //     documentsFormRef.current?.handleSubmit((data: any) => {
+  //       setDocuments(data)
+  //       handleSave()
+  //       console.log('Documents data:', data)
+  //       // Move to next step after successful validation
+  //       setActiveStep(prevActiveStep => prevActiveStep + 1)
+  //     })()
+  //   }
+  // }
+
   const handleNext = () => {
-    console.log('in next', activeStep)
-    if (activeStep === 0) {
-      // Manually trigger form submission for the first step
-      personalDetailsFormRef.current?.handleSubmit((data: PersonalDetailsFormDataType) => {
-        setPersonalDetails(data)
-        handleSave()
-        console.log('Personal Details in Parent:', data)
-        // Move to next step after successful validation
-        setActiveStep(prevActiveStep => prevActiveStep + 1)
-      })()
-    } else if (activeStep === 1) {
-      physicianAndCaseMangerFormRef.current?.handleSubmit((data: PhysicianAndCaseMangerFormDataType) => {
-        setPhysicianDetails(data)
-        handleSave()
-        console.log('Physician Details in Parent:', data)
-        // Move to next step after successful validation
-        setActiveStep(prevActiveStep => prevActiveStep + 1)
-      })()
-    } else if (activeStep === 2) {
-      serviceActivitiesFormRef.current?.handleSubmit((data: clientServiceFormDataType) => {
-        setServiceActivities(data)
-        handleSave()
-        console.log('Personal Details in Parent:', data)
-        // Move to next step after successful validation
-        setActiveStep(prevActiveStep => prevActiveStep + 1)
-      })()
-    } else if (activeStep === 3) {
-      // Manually trigger form submission for the first step
-      documentsFormRef.current?.handleSubmit((data: any) => {
-        setDocuments(data)
-        handleSave()
-        console.log('Documents data:', data)
-        // Move to next step after successful validation
-        setActiveStep(prevActiveStep => prevActiveStep + 1)
-      })()
+    switch (activeStep) {
+      case 0:
+        personalDetailsFormRef.current?.handleSubmit((data: PersonalDetailsFormDataType) => {
+          setPersonalDetails(data)
+          console.log('Personal Details in Parent:', data)
+          // Move to next step after successful validation
+          setActiveStep(prevActiveStep => prevActiveStep + 1)
+        })()
+        break
+      case 1:
+        physicianAndCaseMangerFormRef.current?.handleSubmit((data: PhysicianAndCaseMangerFormDataType) => {
+          setPhysicianDetails(data)
+          console.log('Physician Details in Parent:', data)
+          // Move to next step after successful validation
+          setActiveStep(prevActiveStep => prevActiveStep + 1)
+        })()
+        break
+      case 2:
+        serviceActivitiesFormRef.current?.handleSubmit((data: clientServiceFormDataType) => {
+          setServiceActivities(data)
+          console.log('Personal Details in Parent:', data)
+          // Move to next step after successful validation
+          setActiveStep(prevActiveStep => prevActiveStep + 1)
+        })()
+        break
+      case 3:
+        documentsFormRef.current?.handleSubmit((data: any) => {
+          setDocuments(data)
+          handleSave(data)
+          console.log('Documents data:', data)
+        })()
+        break
     }
   }
 

@@ -146,7 +146,7 @@ const PhysicianAndCaseMangerForm = forwardRef<{ handleSubmit: any }, Props>(({ o
         </Card>
         <Card className='mt-3'>
           <CardContent>
-            <Typography className='text-xl font-semibold mb-4'>Physician Details</Typography>
+            <Typography className='text-xl font-semibold mb-4'>Case Manager Details</Typography>
             <Grid container spacing={5}>
               <Grid size={{ xs: 12, sm: 4 }}>
                 <CustomTextField

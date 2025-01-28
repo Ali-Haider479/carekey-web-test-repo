@@ -1,5 +1,8 @@
-import React from 'react'
+'use client'
+import React, { useEffect, useState } from 'react'
 import { Card, Typography } from '@mui/material'
+import axios from 'axios'
+import { useParams } from 'next/navigation'
 
 const InfoCard = () => {
   const clients = [
@@ -20,17 +23,34 @@ const InfoCard = () => {
       image: '/images/avatars/8.png'
     }
   ]
+  const { id } = useParams()
+  const [data, setData] = useState<any>()
+  useEffect(() => {
+    // Fetch data from the backend API
+    const fetchData = async () => {
+      try {
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/caregivers/user/${id}`)
+        const fetchedData = response.data
+        console.log('Caregiver Profile Data ----> ', fetchedData)
+        setData(fetchedData)
+      } catch (error) {
+        console.error('Error fetching data', error)
+      }
+    }
+
+    fetchData()
+  }, [])
 
   return (
     <Card className='max-w-md ml-0 mr-4 shadow-md rounded-lg p-6'>
       <div className='mb-4'>
         <div className='flex justify-between text-sm text-gray-400 mb-2'>
           <Typography>Role:</Typography>
-          <Typography className='text-gray-400'>Caregiver, Office Admin</Typography>
+          <Typography className='text-gray-400'>{data?.caregiverLevel ? data?.caregiverLevel : '---'}</Typography>
         </div>
         <div className='flex justify-between text-sm text-gray-400 mb-2'>
           <Typography>Caregiver ID:</Typography>
-          <Typography className='text-gray-400'>190860</Typography>
+          <Typography className='text-gray-400'>{id}</Typography>
         </div>
       </div>
 
