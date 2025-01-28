@@ -86,16 +86,14 @@ const DocumentsSection = forwardRef<{ handleSubmit: any }, Props>(({ onFinish },
 
   const onSubmit = (data: any) => {
     const formData = {
-      trainingCertificates: {
-        files: data.trainingCertificateFiles || [],
-        trainingCertificateName: data.trainingCertificateName,
-        trainingCertificateExpiryDate: data.trainingCertificateExpiryDate
-      },
-      drivingCertificates: {
-        files: data.drivingCertificateFiles || [],
-        drivingLicenseExpiryDate: data.drivingLicenseExpiryDate,
-        drivingLicenseNumber: data.drivingLicenseNumber,
-        dlState: data.dlState
+      caregiverDocuments: {
+        ssnFile: data.ssnFileObject || [],
+        adultFile: data.adultFileObject || [],
+        umpiFile: data.umpiFileObject || [],
+        clearanceFile: data.clearanceFileObject || [],
+        employeeNumber: data.employeeNumber,
+        additionalPayRate: data.additionalPayRate,
+        serviceType: data.serviceType
       }
     }
 
@@ -160,7 +158,7 @@ const DocumentsSection = forwardRef<{ handleSubmit: any }, Props>(({ onFinish },
                     onFilesSelected={selectedFiles => {
                       setSsnFile(selectedFiles)
                     }}
-                    mimeType={['application/pdf', 'image/jpeg', 'image/png']}
+                    mimeType={['application/pdf']}
                     fileCount={1}
                     fileSize={25 * 1024 * 1024}
                     title='Upload SSN'

@@ -74,7 +74,7 @@ const EmployeeStepper = () => {
     setActiveStep(0)
   }
 
-  const handleSave = async () => {
+  const handleSave = async (Docs: any) => {
     try {
       const userPayload = {
         userName: loginInfo.userName,
@@ -95,6 +95,8 @@ const EmployeeStepper = () => {
         mailingAddress: loginInfo.address,
         mailingAddressType: 'Mailing',
         userId: userResponse.data.id,
+        dlState: certificatesData.dlState,
+        additionalPayRate: Docs.additionalPayRate,
         tenantId: 1
       })
 
@@ -185,28 +187,28 @@ const EmployeeStepper = () => {
 
         // SSN File
         uploadDocuments(
-          documentsData.ssnFileObject,
+          Docs.ssnFileObject,
           'other',
           new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString()
         ),
 
         // Adult File
         uploadDocuments(
-          documentsData.adultFileObject,
+          Docs.adultFileObject,
           'other',
           new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString()
         ),
 
         // UMPI File
         uploadDocuments(
-          documentsData.umpiFileObject,
+          Docs.umpiFileObject,
           'other',
           new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString()
         ),
 
         // Clearance File
         uploadDocuments(
-          documentsData.clearanceFileObject,
+          Docs.clearanceFileObject,
           'other',
           new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString()
         )
@@ -252,7 +254,7 @@ const EmployeeStepper = () => {
       case 4:
         documentsFormRef.current?.handleSubmit((data: any) => {
           setDocumentsData(data)
-          handleSave()
+          handleSave(data)
           // setActiveStep(prevActiveStep => prevActiveStep + 1)
         })()
         break
