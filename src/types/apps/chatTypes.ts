@@ -50,3 +50,15 @@ export type ChatDataType = {
   loading: boolean
   error?: string
 }
+
+export interface ChatMessage {
+  senderId: string
+  receiverId: string
+  message: string
+  time: string
+  msgStatus: {
+    isSent: boolean
+    isDelivered: boolean
+    isSeen: boolean
+  }
+}

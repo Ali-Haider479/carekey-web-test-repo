@@ -18,7 +18,7 @@ import Picker from '@emoji-mart/react'
 import data from '@emoji-mart/data'
 
 // Type Imports
-import type { ContactType } from '@/types/apps/chatTypes'
+import type { ChatDataType, ContactType } from '@/types/apps/chatTypes'
 import type { AppDispatch } from '@/redux-store'
 
 // Slice Imports
@@ -26,12 +26,14 @@ import { sendMsg } from '@/redux-store/slices/chat'
 
 // Component Imports
 import CustomIconButton from '@core/components/mui/IconButton'
+import { useMqttClient } from '@/hooks/useMqtt'
 
 type Props = {
   dispatch: AppDispatch
   activeUser: ContactType
   isBelowSmScreen: boolean
   messageInputRef: RefObject<HTMLDivElement>
+  chatStore: ChatDataType
 }
 
 // Emoji Picker Component for selecting emojis
@@ -84,17 +86,24 @@ const EmojiPicker = ({
   )
 }
 
-const SendMsgForm = ({ dispatch, activeUser, isBelowSmScreen, messageInputRef }: Props) => {
+const SendMsgForm = ({ dispatch, activeUser, isBelowSmScreen, messageInputRef, chatStore }: Props) => {
   // States
-  const [msg, setMsg] = useState('')
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null)
   const [openEmojiPicker, setOpenEmojiPicker] = useState(false)
+  const [msg, setMsg] = useState('')
+  const { profileUser } = chatStore
+  const scrollRef = useRef(null)
 
   // Refs
   const anchorRef = useRef<HTMLButtonElement>(null)
 
   // Vars
   const open = Boolean(anchorEl)
+
+  // Mqtt
+  const mqttClient = useMqttClient({
+    username: profileUser.fullName
+  })
 
   const handleToggle = () => {
     setOpenEmojiPicker(prevOpen => !prevOpen)
@@ -108,12 +117,37 @@ const SendMsgForm = ({ dispatch, activeUser, isBelowSmScreen, messageInputRef }:
     setAnchorEl(null)
   }
 
+  // const handleSendMsg = (event: FormEvent | KeyboardEvent, msg: string) => {
+  //   event.preventDefault()
+
+  //   if (msg.trim() !== '') {
+  //     dispatch(sendMsg({ msg }))
+  //     setMsg('')
+  //   }
+  // }
+
   const handleSendMsg = (event: FormEvent | KeyboardEvent, msg: string) => {
     event.preventDefault()
 
     if (msg.trim() !== '') {
-      dispatch(sendMsg({ msg }))
-      setMsg('')
+      const messageData = {
+        senderId: profileUser.id,
+        receiverId: activeUser.id,
+        message: msg,
+        time: new Date().toISOString(),
+        msgStatus: { isSent: true, isDelivered: false, isSeen: false }
+      }
+
+      const chatTopic = `carekey/chat/${profileUser.id}/${activeUser.id}`
+
+      if (mqttClient.isConnected) {
+        mqttClient.publish(chatTopic, JSON.stringify(messageData))
+        dispatch(sendMsg({ msg }))
+        setMsg('')
+      } else {
+        console.warn('Message not sent: MQTT not connected')
+        // Optionally show a user-friendly error message
+      }
     }
   }
 
@@ -196,7 +230,13 @@ const SendMsgForm = ({ dispatch, activeUser, isBelowSmScreen, messageInputRef }:
             <i className='bx-paper-plane' />
           </CustomIconButton>
         ) : (
-          <Button variant='contained' color='primary' type='submit' endIcon={<i className='bx-paper-plane' />} sx={{ backgroundColor: '#4B0082' }}>
+          <Button
+            variant='contained'
+            color='primary'
+            type='submit'
+            endIcon={<i className='bx-paper-plane' />}
+            sx={{ backgroundColor: '#4B0082' }}
+          >
             Send
           </Button>
         )}

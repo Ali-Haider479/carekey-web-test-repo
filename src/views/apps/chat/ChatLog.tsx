@@ -19,6 +19,9 @@ import CustomAvatar from '@core/components/mui/Avatar'
 
 // Util Imports
 import { getInitials } from '@/utils/getInitials'
+import { useMqttClient } from '@/hooks/useMqtt'
+import { useAppDispatch } from '@/hooks/useDispatch'
+import { receiveMessage } from '@/redux-store/slices/chat'
 
 type MsgGroupType = {
   senderId: number
@@ -96,14 +99,39 @@ const ScrollWrapper = ({
 }
 
 const ChatLog = ({ chatStore, isBelowLgScreen, isBelowMdScreen, isBelowSmScreen }: ChatLogProps) => {
-  // Props
-  const { profileUser, contacts } = chatStore
-
+  const { profileUser, contacts, activeUser } = chatStore
+  const dispatch = useAppDispatch()
   // Vars
   const activeUserChat = chatStore.chats.find((chat: ChatType) => chat.userId === chatStore.activeUser?.id)
-
-  // Refs
   const scrollRef = useRef(null)
+
+  const mqttClient = useMqttClient({
+    username: profileUser.fullName
+  })
+
+  useEffect(() => {
+    if (activeUser && mqttClient.isConnected) {
+      // Subscribe to both directions of communication
+      const incomingTopic = `carekey/chat/${activeUser.id}/${profileUser.id}`
+      const outgoingTopic = `carekey/chat/${profileUser.id}/${activeUser.id}`
+
+      const handleMessage = (message: string) => {
+        try {
+          const messageData = JSON.parse(message)
+          dispatch(receiveMessage(messageData))
+        } catch (error) {
+          console.error('Error parsing MQTT message:', error)
+        }
+      }
+
+      mqttClient.subscribe(incomingTopic, handleMessage)
+      mqttClient.subscribe(outgoingTopic, handleMessage)
+
+      return () => {
+        // Cleanup will be handled by the hook
+      }
+    }
+  }, [activeUser, profileUser.id, mqttClient.isConnected])
 
   // Function to scroll to bottom when new message is sent
   const scrollToBottom = () => {

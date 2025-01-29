@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
 import type { PayloadAction } from '@reduxjs/toolkit'
-import type { ChatDataType, StatusType } from '@/types/apps/chatTypes'
+import type { ChatDataType, ChatMessage, StatusType } from '@/types/apps/chatTypes'
 import axios from 'axios'
 
 const initialState: ChatDataType = {
@@ -53,7 +53,7 @@ export const fetchChatRooms = createAsyncThunk('chat/fetchChatRooms', async (use
     userId: room.otherCaregiver.id, // Use otherCaregiver.id to match with contact
     unseenMsgs: room.unreadCount || 0,
     chat: room.messages.map((msg: any) => ({
-      message: msg.messageContent,
+      message: msg.message,
       time: msg.createdAt,
       senderId: msg.sender.id,
       msgStatus: {
@@ -133,6 +133,19 @@ export const chatSlice = createSlice({
         state.chats = state.chats.filter(chat => chat.userId !== state.activeUser?.id)
         state.chats.unshift(existingChat)
       }
+    },
+
+    receiveMessage: (state, action: PayloadAction<ChatMessage>) => {
+      const { senderId, receiverId } = action.payload
+      const chatId = Number(senderId) === state.profileUser.id ? Number(receiverId) : Number(senderId)
+
+      const chat = state.chats.find(c => c.userId === chatId)
+      if (chat) {
+        chat.chat.push({
+          ...action.payload,
+          senderId: Number(action.payload.senderId)
+        })
+      }
     }
   },
   extraReducers: builder => {
@@ -153,6 +166,6 @@ export const chatSlice = createSlice({
   }
 })
 
-export const { getActiveUserData, addNewChat, setUserStatus, sendMsg } = chatSlice.actions
+export const { getActiveUserData, addNewChat, setUserStatus, sendMsg, receiveMessage } = chatSlice.actions
 
 export default chatSlice.reducer
