@@ -202,6 +202,22 @@ const AddClientStepper = () => {
       )
       console.log('Case Manager Details --> ', createCaseManagerResponse)
 
+      const assignCaregiverBody = {
+        tenantId: 1,
+        clientId: clientId,
+        userId: serviceActivities.caregiverId,
+        assignmentDate: serviceActivities.assignmentDate,
+        unassignmentDate: serviceActivities.unassignmentDate,
+        notes: serviceActivities.assignmentNotes,
+        scheduleHours: serviceActivities.scheduleHours
+      }
+
+      const assignCaregiverResponse = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/user/createClientUser`,
+        assignCaregiverBody
+      )
+      console.log('Assigned Caregiver Details --> ', assignCaregiverResponse)
+
       const createClientServiceBody = {
         note: serviceActivities.serviceNotes,
         serviceId: serviceActivities.service,

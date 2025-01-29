@@ -109,7 +109,7 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                     placeHolder={'caregiverUmpi'}
                     name='caregiverUMPI'
                     defaultValue={''}
-                    type={'text'}
+                    type={'number'}
                     error={errors.caregiverUMPI}
                     control={control}
                   />

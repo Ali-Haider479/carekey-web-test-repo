@@ -3,7 +3,7 @@ export type PersonalDetailsFormDataType = {
   middleName: string
   lastName: string
   role: string
-  caregiverUMPI: string | null
+  caregiverUMPI: number | null
   dateOfBirth: Date | null
   caregiverLevel: string
   address: string

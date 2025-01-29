@@ -221,19 +221,19 @@ function CaregiverAboutCard() {
               <div className='grid grid-cols-2 gap-x-8 gap-y-4'>
                 <Typography className='text-sm text-gray-500'>
                   Address: <br />
-                  {data?.addresses[1].address.address ? data?.addresses[1].address.address : '---'}
+                  {data?.addresses[1]?.address?.address ? data?.addresses[1].address.address : '---'}
                 </Typography>
                 <Typography className='text-sm text-gray-500'>
                   City: <br />
-                  {data?.addresses[1].address.city ? data?.addresses[1].address.city : '---'}
+                  {data?.addresses[1]?.address?.city ? data?.addresses[1].address.city : '---'}
                 </Typography>
                 <Typography className='text-sm text-gray-500'>
                   State: <br />
-                  {data?.addresses[1].address.city ? data?.addresses[1].address.city : '---'}
+                  {data?.addresses[1]?.address?.city ? data?.addresses[1].address.city : '---'}
                 </Typography>
                 <Typography className='text-sm text-gray-500'>
                   Zip: <br />
-                  {data?.addresses[1].address.zipCode ? data?.addresses[1].address.zipCode : '---'}
+                  {data?.addresses[1]?.address?.zipCode ? data?.addresses[1].address.zipCode : '---'}
                 </Typography>
                 <Typography className='text-base text-gray-500'>
                   Pay Rate: <br />

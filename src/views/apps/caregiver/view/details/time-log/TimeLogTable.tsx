@@ -18,7 +18,7 @@ import axios from 'axios'
 
 // CSS Module Imports
 import styles from '../CaregiversTable.module.css'
-import { useRouter } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import { GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
 import DataTable from '@/@core/components/mui/DataTable'
 import { List, ListItem } from '@mui/material'
@@ -32,9 +32,23 @@ import { List, ListItem } from '@mui/material'
 // }
 
 const TimeLogTable = () => {
+  const { id } = useParams()
   // State
   const [data, setData] = useState([])
   const [search, setSearch] = useState('')
+
+  const fetchTimeLog = async () => {
+    try {
+      const fetchedTimeLog = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/caregiver/${id}`)
+      console.log('Caregiver Timelog Data --> ', fetchedTimeLog)
+    } catch (error) {
+      console.error('Error fetching data: ', error)
+    }
+  }
+
+  useEffect(() => {
+    fetchTimeLog()
+  }, [])
 
   const router = useRouter()
 

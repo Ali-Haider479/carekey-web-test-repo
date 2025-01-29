@@ -97,7 +97,12 @@ const EmployeeStepper = () => {
         userId: userResponse.data.id,
         dlState: certificatesData.dlState,
         additionalPayRate: Docs.additionalPayRate,
-        tenantId: 1
+        tenantId: 1,
+        clientId: loginInfo.clientId,
+        assignmentDate: loginInfo.assignmentDate,
+        unassignmentDate: loginInfo.unassignmentDate,
+        notes: loginInfo.assignmentNotes,
+        scheduleHours: loginInfo.scheduleHours
       })
 
       const caregiverId = caregiverResponse.data.id

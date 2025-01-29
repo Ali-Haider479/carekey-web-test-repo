@@ -11,6 +11,7 @@ type Props = {
   type: any
   error: any
   control: any
+  slotProps?: any
 }
 
 const CustomTextField = (props: Props) => {
@@ -31,6 +32,7 @@ const CustomTextField = (props: Props) => {
             label={props.label}
             placeholder={props.placeHolder}
             type={props.type}
+            slotProps={props.slotProps}
           />
         )}
       />
