@@ -101,9 +101,10 @@ const ScrollWrapper = ({
 const ChatLog = ({ chatStore, isBelowLgScreen, isBelowMdScreen, isBelowSmScreen }: ChatLogProps) => {
   const { profileUser, contacts, activeUser } = chatStore
   const dispatch = useAppDispatch()
-  // Vars
   const activeUserChat = chatStore.chats.find((chat: ChatType) => chat.userId === chatStore.activeUser?.id)
   const scrollRef = useRef(null)
+  // Keep track of processed message IDs to prevent duplicates
+  const processedMessages = useRef(new Set<string>())
 
   const mqttClient = useMqttClient({
     username: profileUser.fullName
@@ -111,14 +112,20 @@ const ChatLog = ({ chatStore, isBelowLgScreen, isBelowMdScreen, isBelowSmScreen 
 
   useEffect(() => {
     if (activeUser && mqttClient.isConnected) {
-      // Subscribe to both directions of communication
       const incomingTopic = `carekey/chat/${activeUser.id}/${profileUser.id}`
       const outgoingTopic = `carekey/chat/${profileUser.id}/${activeUser.id}`
 
       const handleMessage = (message: string) => {
         try {
           const messageData = JSON.parse(message)
-          dispatch(receiveMessage(messageData))
+          // Create a unique message identifier using content and timestamp
+          const messageId = `${messageData.message}-${messageData.time}-${messageData.senderId}`
+
+          // Only process message if we haven't seen it before
+          if (!processedMessages.current.has(messageId)) {
+            processedMessages.current.add(messageId)
+            dispatch(receiveMessage(messageData))
+          }
         } catch (error) {
           console.error('Error parsing MQTT message:', error)
         }
@@ -128,7 +135,8 @@ const ChatLog = ({ chatStore, isBelowLgScreen, isBelowMdScreen, isBelowSmScreen 
       mqttClient.subscribe(outgoingTopic, handleMessage)
 
       return () => {
-        // Cleanup will be handled by the hook
+        // Clear processed messages when unmounting or changing active user
+        processedMessages.current.clear()
       }
     }
   }, [activeUser, profileUser.id, mqttClient.isConnected])

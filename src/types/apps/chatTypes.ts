@@ -23,6 +23,7 @@ export type ContactType = {
   fullName: string
   role: string
   about: string
+  chatRoomId?: number
   avatar?: string
   avatarColor?: ThemeColor
   status: StatusType

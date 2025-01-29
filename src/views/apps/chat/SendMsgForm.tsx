@@ -87,11 +87,10 @@ const EmojiPicker = ({
 }
 
 const SendMsgForm = ({ dispatch, activeUser, isBelowSmScreen, messageInputRef, chatStore }: Props) => {
-  // States
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null)
   const [openEmojiPicker, setOpenEmojiPicker] = useState(false)
   const [msg, setMsg] = useState('')
-  const { profileUser } = chatStore
+  const { profileUser, contacts } = chatStore
   const scrollRef = useRef(null)
 
   // Refs
@@ -117,22 +116,16 @@ const SendMsgForm = ({ dispatch, activeUser, isBelowSmScreen, messageInputRef, c
     setAnchorEl(null)
   }
 
-  // const handleSendMsg = (event: FormEvent | KeyboardEvent, msg: string) => {
-  //   event.preventDefault()
-
-  //   if (msg.trim() !== '') {
-  //     dispatch(sendMsg({ msg }))
-  //     setMsg('')
-  //   }
-  // }
-
   const handleSendMsg = (event: FormEvent | KeyboardEvent, msg: string) => {
     event.preventDefault()
-
     if (msg.trim() !== '') {
+      // Find contact details from contacts array
+      const contactDetails = contacts.find(contact => contact.id === activeUser.id)
       const messageData = {
+        messageId: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, // Unique message ID
         senderId: profileUser.id,
         receiverId: activeUser.id,
+        chatRoomId: contactDetails?.chatRoomId,
         message: msg,
         time: new Date().toISOString(),
         msgStatus: { isSent: true, isDelivered: false, isSeen: false }
@@ -142,7 +135,7 @@ const SendMsgForm = ({ dispatch, activeUser, isBelowSmScreen, messageInputRef, c
 
       if (mqttClient.isConnected) {
         mqttClient.publish(chatTopic, JSON.stringify(messageData))
-        dispatch(sendMsg({ msg }))
+        dispatch(sendMsg({ msg })) // Pass full messageData to redux
         setMsg('')
       } else {
         console.warn('Message not sent: MQTT not connected')
