@@ -131,8 +131,11 @@ const SendMsgForm = ({ dispatch, activeUser, isBelowSmScreen, messageInputRef, c
         msgStatus: { isSent: true, isDelivered: false, isSeen: false }
       }
 
-      const chatTopic = `carekey/chat/${profileUser.id}/${activeUser.id}`
-
+      console.log('PROFILE USER MQTT', profileUser)
+      console.log('ACTIVE USER MQTT', activeUser)
+      // const chatTopic = `carekey/chat/${profileUser.id}/${activeUser.id}`
+      const chatTopic = `carekey/chat/${profileUser.fullName.replaceAll(' ', '_')}-${profileUser.id}/${activeUser?.fullName.replaceAll(' ', '_')}-${activeUser?.id}`
+      console.log('MQTT CHAT TOPIC LOG', chatTopic)
       if (mqttClient.isConnected) {
         mqttClient.publish(chatTopic, JSON.stringify(messageData))
         dispatch(sendMsg({ msg })) // Pass full messageData to redux

@@ -115,7 +115,7 @@ const renderChat = (props: RenderChatType) => {
               'text-textDisabled': !isChatActive
             })}
           >
-            {chat.chat.length ? formatDateToMonthShort(chat.chat[chat.chat.length - 1].time) : null}
+            {chat.chat.length ? formatDateToMonthShort(chat.chat[chat.chat.length - 1].time || new Date()) : null}
           </Typography>
           {chat.unseenMsgs > 0 ? <CustomChip round='true' label={chat.unseenMsgs} color='error' size='small' /> : null}
         </div>

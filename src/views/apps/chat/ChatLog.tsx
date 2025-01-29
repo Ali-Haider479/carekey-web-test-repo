@@ -112,8 +112,11 @@ const ChatLog = ({ chatStore, isBelowLgScreen, isBelowMdScreen, isBelowSmScreen 
 
   useEffect(() => {
     if (activeUser && mqttClient.isConnected) {
-      const incomingTopic = `carekey/chat/${activeUser.id}/${profileUser.id}`
-      const outgoingTopic = `carekey/chat/${profileUser.id}/${activeUser.id}`
+      // const incomingTopic = `carekey/chat/${activeUser.id}/${profileUser.id}`
+      // const outgoingTopic = `carekey/chat/${profileUser.id}/${activeUser.id}`
+
+      const outgoingTopic = `carekey/chat/${profileUser.fullName.replaceAll(' ', '_')}-${profileUser.id}/${activeUser?.fullName.replaceAll(' ', '_')}-${activeUser?.id}`
+      const incomingTopic = `carekey/chat/${activeUser.fullName.replaceAll(' ', '_')}-${activeUser.id}/${profileUser?.fullName.replaceAll(' ', '_')}-${profileUser?.id}`
 
       const handleMessage = (message: string) => {
         try {
