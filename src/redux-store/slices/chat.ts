@@ -137,16 +137,16 @@ export const chatSlice = createSlice({
 
     receiveMessage: (state, action: PayloadAction<ChatMessage>) => {
       // MQTT handel display new message so no need to add it manually
-      // const { senderId, receiverId } = action.payload
-      // const chatId = Number(senderId) === state.profileUser.id ? Number(receiverId) : Number(senderId)
-      // console.log('ACTION PAYLOAD MQTT', action.payload)
-      // const chat = state.chats.find(c => c.userId === chatId)
-      // if (chat) {
-      //   chat.chat.push({
-      //     ...action.payload,
-      //     senderId: Number(action.payload.senderId)
-      //   })
-      // }
+      const { senderId, receiverId } = action.payload
+      const chatId = Number(senderId) === state.profileUser.id ? Number(receiverId) : Number(senderId)
+      console.log('ACTION PAYLOAD MQTT', action.payload)
+      const chat = state.chats.find(c => c.userId === chatId)
+      if (chat) {
+        chat.chat.push({
+          ...action.payload,
+          senderId: Number(action.payload.senderId)
+        })
+      }
     }
   },
   extraReducers: builder => {
