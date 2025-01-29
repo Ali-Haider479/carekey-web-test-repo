@@ -19,6 +19,9 @@ import CustomAvatar from '@core/components/mui/Avatar'
 
 // Util Imports
 import { getInitials } from '@/utils/getInitials'
+import { useMqttClient } from '@/hooks/useMqtt'
+import { useAppDispatch } from '@/hooks/useDispatch'
+import { receiveMessage } from '@/redux-store/slices/chat'
 
 type MsgGroupType = {
   senderId: number
@@ -96,14 +99,50 @@ const ScrollWrapper = ({
 }
 
 const ChatLog = ({ chatStore, isBelowLgScreen, isBelowMdScreen, isBelowSmScreen }: ChatLogProps) => {
-  // Props
-  const { profileUser, contacts } = chatStore
-
-  // Vars
+  const { profileUser, contacts, activeUser } = chatStore
+  const dispatch = useAppDispatch()
   const activeUserChat = chatStore.chats.find((chat: ChatType) => chat.userId === chatStore.activeUser?.id)
-
-  // Refs
   const scrollRef = useRef(null)
+  // Keep track of processed message IDs to prevent duplicates
+  const processedMessages = useRef(new Set<string>())
+
+  const mqttClient = useMqttClient({
+    username: profileUser.fullName
+  })
+
+  useEffect(() => {
+    if (activeUser && mqttClient.isConnected) {
+      // const incomingTopic = `carekey/chat/${activeUser.id}/${profileUser.id}`
+      // const outgoingTopic = `carekey/chat/${profileUser.id}/${activeUser.id}`
+
+      const outgoingTopic = `carekey/chat/${profileUser.fullName.replaceAll(' ', '_')}-${profileUser.id}/${activeUser?.fullName.replaceAll(' ', '_')}-${activeUser?.id}`
+      const incomingTopic = `carekey/chat/${activeUser.fullName.replaceAll(' ', '_')}-${activeUser.id}/${profileUser?.fullName.replaceAll(' ', '_')}-${profileUser?.id}`
+
+      const handleMessage = (message: string) => {
+        try {
+          const messageData = JSON.parse(message)
+          // Create a unique message identifier using content and timestamp
+          const messageId = `${messageData.message}-${messageData.time}-${messageData.senderId}`
+
+          // Only process message if we haven't seen it before
+          if (!processedMessages.current.has(messageId)) {
+            processedMessages.current.add(messageId)
+            dispatch(receiveMessage(messageData))
+          }
+        } catch (error) {
+          console.error('Error parsing MQTT message:', error)
+        }
+      }
+
+      mqttClient.subscribe(incomingTopic, handleMessage)
+      mqttClient.subscribe(outgoingTopic, handleMessage)
+
+      return () => {
+        // Clear processed messages when unmounting or changing active user
+        processedMessages.current.clear()
+      }
+    }
+  }, [activeUser, profileUser.id, mqttClient.isConnected])
 
   // Function to scroll to bottom when new message is sent
   const scrollToBottom = () => {

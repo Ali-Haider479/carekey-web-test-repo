@@ -16,7 +16,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import type { RootState } from '@/redux-store'
 
 // Slice Imports
-import { getActiveUserData } from '@/redux-store/slices/chat'
+import { fetchChatRooms, getActiveUserData } from '@/redux-store/slices/chat'
 
 // Component Imports
 import SidebarLeft from './SidebarLeft'
@@ -27,6 +27,7 @@ import { useSettings } from '@core/hooks/useSettings'
 
 // Util Imports
 import { commonLayoutClasses } from '@layouts/utils/layoutClasses'
+import { useAppDispatch } from '@/hooks/useDispatch'
 
 const ChatWrapper = () => {
   // States
@@ -38,16 +39,23 @@ const ChatWrapper = () => {
 
   // Hooks
   const { settings } = useSettings()
-  const dispatch = useDispatch()
+  const dispatch = useAppDispatch()
+
   const chatStore = useSelector((state: RootState) => state.chatReducer)
   const isBelowLgScreen = useMediaQuery((theme: Theme) => theme.breakpoints.down('lg'))
   const isBelowMdScreen = useMediaQuery((theme: Theme) => theme.breakpoints.down('md'))
   const isBelowSmScreen = useMediaQuery((theme: Theme) => theme.breakpoints.down('sm'))
+  const loggedInUserId = 1
 
   // Get active user’s data
   const activeUser = (id: number) => {
     dispatch(getActiveUserData(id))
   }
+
+  useEffect(() => {
+    dispatch(fetchChatRooms(loggedInUserId))
+    // dispatch(fetchChatHistory(1))
+  }, [dispatch])
 
   // Focus on message input when active user changes
   useEffect(() => {
@@ -80,6 +88,7 @@ const ChatWrapper = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [backdropOpen])
 
+  console.log('CHAT STORE', chatStore)
   return (
     <div
       className={classNames(commonLayoutClasses.contentHeightFixed, 'flex is-full overflow-hidden rounded relative', {

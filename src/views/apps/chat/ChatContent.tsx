@@ -201,6 +201,7 @@ const ChatContent = (props: Props) => {
 
           <SendMsgForm
             dispatch={dispatch}
+            chatStore={chatStore}
             activeUser={activeUser}
             isBelowSmScreen={isBelowSmScreen}
             messageInputRef={messageInputRef}

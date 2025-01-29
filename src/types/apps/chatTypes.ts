@@ -23,6 +23,7 @@ export type ContactType = {
   fullName: string
   role: string
   about: string
+  chatRoomId?: number
   avatar?: string
   avatarColor?: ThemeColor
   status: StatusType
@@ -47,4 +48,18 @@ export type ChatDataType = {
   contacts: ContactType[]
   chats: ChatType[]
   activeUser?: ContactType
+  loading: boolean
+  error?: string
+}
+
+export interface ChatMessage {
+  senderId: string
+  receiverId: string
+  message: string
+  time: string
+  msgStatus: {
+    isSent: boolean
+    isDelivered: boolean
+    isSeen: boolean
+  }
 }
