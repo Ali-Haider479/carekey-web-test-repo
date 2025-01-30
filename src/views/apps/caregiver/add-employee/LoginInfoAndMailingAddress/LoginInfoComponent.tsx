@@ -12,6 +12,7 @@ import ControlledTextArea from '@/@core/components/custom-inputs/ControlledTextA
 
 type Props = {
   onFinish: any
+  defaultValues: any
 }
 
 interface FormDataType {
@@ -36,22 +37,23 @@ interface FormDataType {
   state?: string
   zipCode?: string
 }
-const LoginInfoComponent = forwardRef<{ handleSubmit: any }, Props>(({ onFinish }, ref) => {
+const LoginInfoComponent = forwardRef<{ handleSubmit: any }, Props>(({ onFinish, defaultValues }, ref) => {
   const methods = useForm<FormDataType>({
     // Optional: Add default validation settings
-    mode: 'onSubmit',
-    reValidateMode: 'onChange'
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
+    defaultValues: defaultValues
   })
-
-  useImperativeHandle(ref, () => ({
-    handleSubmit: (onValid: (data: FormDataType) => void) => handleSubmit(onValid)
-  }))
 
   const {
     control,
     formState: { errors },
     handleSubmit // Add this if you want to use form submission
   } = methods // Use methods instead of useFormContext
+
+  useImperativeHandle(ref, () => ({
+    handleSubmit: (onValid: (data: FormDataType) => void) => handleSubmit(onValid)
+  }))
 
   const onSubmit = (data: FormDataType) => {
     console.log('Submitted Data:', data)

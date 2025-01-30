@@ -237,13 +237,13 @@ const EmployeeStepper = () => {
     switch (activeStep) {
       case 0:
         personalDetailsFormRef.current?.handleSubmit((data: PersonalDetailsFormDataType) => {
-          setCaregiverData({ ...data, addressType: 'Residential' })
+          setCaregiverData((prevData: any) => ({ ...prevData, ...data, addressType: 'Residential' }))
           setActiveStep(prevActiveStep => prevActiveStep + 1)
         })()
         break
       case 1:
         loginInfoFormRef.current?.handleSubmit((data: FormDataType) => {
-          setLoginInfo({ ...data, addressType: 'Mailing' })
+          setLoginInfo((prevData: any) => ({ ...prevData, ...data, addressType: 'Mailing' }))
           setActiveStep(prevActiveStep => prevActiveStep + 1)
         })()
         break
@@ -252,13 +252,13 @@ const EmployeeStepper = () => {
         break
       case 3:
         certificatesFormRef.current?.handleSubmit((data: any) => {
-          setCertificatesData(data)
+          setCertificatesData((prevData: any) => ({ ...prevData, ...data }))
           setActiveStep(prevActiveStep => prevActiveStep + 1)
         })()
         break
       case 4:
         documentsFormRef.current?.handleSubmit((data: any) => {
-          setDocumentsData(data)
+          setDocumentsData((prevData: any) => ({ ...prevData, ...data }))
           handleSave(data)
           // setActiveStep(prevActiveStep => prevActiveStep + 1)
         })()
@@ -277,14 +277,16 @@ const EmployeeStepper = () => {
     router.replace('/apps/caregiver/list')
   }
 
-  const onPersonalDetailsSubmit = (values: FormDataType) => {
+  const onPersonalDetailsSubmit = (values: FormDataType, data: any) => {
     console.log('Personal Details in Parent:', values)
+    // setCaregiverData((prevData: any) => ({ ...prevData, ...data }))
     // Optionally store values or perform next step logic
     handleNext() // Move to next step
   }
 
-  const onLoginInfoSubmit = (values: any) => {
+  const onLoginInfoSubmit = (values: any, data: any) => {
     console.log('Login Info in Parent: ', values)
+    setCaregiverData((prevData: any) => ({ ...prevData, ...data }))
     handleNext()
   }
 
@@ -292,12 +294,16 @@ const EmployeeStepper = () => {
     console.log('Personal Detail', values)
   }
 
-  const onTrainingCertificatesSubmit = (values: any) => {
+  const onTrainingCertificatesSubmit = (values: any, data: any) => {
     console.log('Personal Detail', values)
+    setCertificatesData((prevData: any) => ({ ...prevData, ...data }))
+    handleNext()
   }
 
-  const onDocumentsSubmit = (values: any) => {
+  const onDocumentsSubmit = (values: any, data: any) => {
     console.log('Personal Detail', values)
+    setCertificatesData((prevData: any) => ({ ...prevData, ...data }))
+    handleNext()
   }
   console.log('Certificares data', certificatesData)
   console.log('Caregiver data', caregiverData)
@@ -307,15 +313,27 @@ const EmployeeStepper = () => {
   const renderStepContent = (activeStep: number) => {
     switch (activeStep) {
       case 0:
-        return <PersonalDetailsForm ref={personalDetailsFormRef} onFinish={onPersonalDetailsSubmit} />
+        return (
+          <PersonalDetailsForm
+            ref={personalDetailsFormRef}
+            onFinish={onPersonalDetailsSubmit}
+            defaultValues={caregiverData}
+          />
+        )
       case 1:
-        return <LoginInfoComponent ref={loginInfoFormRef} onFinish={onLoginInfoSubmit} />
+        return <LoginInfoComponent ref={loginInfoFormRef} onFinish={onLoginInfoSubmit} defaultValues={loginInfo} />
       case 2:
         return <PCAUMPITable />
       case 3:
-        return <TrainingCertificatesComponent ref={certificatesFormRef} onFinish={onTrainingCertificatesSubmit} />
+        return (
+          <TrainingCertificatesComponent
+            ref={certificatesFormRef}
+            onFinish={onTrainingCertificatesSubmit}
+            defaultValues={certificatesData}
+          />
+        )
       case 4:
-        return <DocumentsSection ref={documentsFormRef} onFinish={onDocumentsSubmit} />
+        return <DocumentsSection ref={documentsFormRef} onFinish={onDocumentsSubmit} defaultValues={documentsData} />
       // case 5:
       //   return (
       //     <div className='text-center p-6'>

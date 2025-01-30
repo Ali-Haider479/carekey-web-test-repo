@@ -8,12 +8,14 @@ import { PhysicianAndCaseMangerFormDataType } from './formTypes'
 type Props = {
   form?: any
   onFinish?: any
+  defaultValues: any
 }
 
-const PhysicianAndCaseMangerForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish }, ref) => {
+const PhysicianAndCaseMangerForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish, defaultValues }, ref) => {
   const methods = useForm<PhysicianAndCaseMangerFormDataType>({
     mode: 'onSubmit',
-    reValidateMode: 'onChange'
+    reValidateMode: 'onChange',
+    defaultValues: defaultValues || []
   })
 
   // Expose handleSubmit to parent via ref

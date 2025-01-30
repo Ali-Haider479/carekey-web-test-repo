@@ -1,7 +1,7 @@
 'use client'
 
 // React Imports
-import { forwardRef, useImperativeHandle } from 'react'
+import { forwardRef, useEffect, useImperativeHandle } from 'react'
 
 // MUI Imports
 import Card from '@mui/material/Card'
@@ -28,24 +28,28 @@ import { PersonalDetailsFormDataType } from '../types'
 type Props = {
   // form?: any
   onFinish: any
+  defaultValues: any
 }
 
-const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish }, ref) => {
+const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish, defaultValues }, ref) => {
   const methods = useForm<PersonalDetailsFormDataType>({
     mode: 'onSubmit',
-    reValidateMode: 'onChange'
+    reValidateMode: 'onChange',
+    defaultValues: defaultValues || []
   })
+
+  const {
+    control,
+    formState: { errors },
+    handleSubmit // Add this if you want to use form submission
+  } = methods
 
   // Expose handleSubmit to parent via ref
   useImperativeHandle(ref, () => ({
     handleSubmit: (onValid: (data: PersonalDetailsFormDataType) => void) => handleSubmit(onValid)
   }))
 
-  const {
-    control,
-    formState: { errors },
-    handleSubmit // Add this if you want to use form submission
-  } = methods // Use methods instead of useFormContext
+  // Use methods instead of useFormContext
 
   const onSubmit = (data: PersonalDetailsFormDataType) => {
     console.log('Submitted Data:', data)

@@ -14,12 +14,14 @@ import axios from 'axios'
 type Props = {
   form?: any
   onFinish?: any
+  defaultValues: any
 }
 
-const ServiceActivitiesForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish }, ref) => {
+const ServiceActivitiesForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish, defaultValues }, ref) => {
   const methods = useForm<clientServiceFormDataType>({
     mode: 'onSubmit',
-    reValidateMode: 'onChange'
+    reValidateMode: 'onChange',
+    defaultValues: defaultValues || []
   })
 
   // Expose handleSubmit to parent via ref

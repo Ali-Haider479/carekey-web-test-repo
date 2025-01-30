@@ -1,11 +1,11 @@
 'use client'
 import React, { useEffect, useState } from 'react'
-import { EditOutlined, PlusOutlined } from '@ant-design/icons'
 import { Button, Card, styled, Typography } from '@mui/material'
 import CircularProgress from '@mui/material/CircularProgress'
 import type { CircularProgressProps } from '@mui/material/CircularProgress'
 import { useParams } from 'next/navigation'
 import axios from 'axios'
+import { AddOutlined, EditOutlined } from '@mui/icons-material'
 
 const CircularProgressDeterminate = styled(CircularProgress)<CircularProgressProps>({
   color: 'var(--mui-palette-customColors-trackBg)'
@@ -242,7 +242,7 @@ function CaregiverAboutCard() {
               </div>
               <Button
                 variant='contained'
-                startIcon={<PlusOutlined />}
+                startIcon={<AddOutlined />}
                 sx={{
                   marginTop: '10px',
                   backgroundColor: '#4B0082',
