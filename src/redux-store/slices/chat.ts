@@ -19,17 +19,9 @@ const initialState: ChatDataType = {
   },
   contacts: [],
   chats: [],
-  activeUser: {
-    id: 1,
-    fullName: '',
-    avatar: '',
-    avatarColor: 'primary',
-    status: 'online',
-    role: '',
-    about: ''
-  },
+  activeUser: undefined, // Since `activeUser` is optional
   loading: false,
-  error: ''
+  error: undefined
 }
 
 export const fetchChatRooms = createAsyncThunk('chat/fetchChatRooms', async (userId: number) => {
@@ -114,38 +106,61 @@ export const chatSlice = createSlice({
 
     sendMsg: (state, action: PayloadAction<{ msg: string }>) => {
       const { msg } = action.payload
-
       const existingChat = state.chats.find(chat => chat.userId === state.activeUser?.id)
 
       if (existingChat) {
-        existingChat.chat.push({
+        const newMessage = {
           message: msg,
-          time: new Date(),
+          time: new Date().toISOString(),
           senderId: state.profileUser.id,
           msgStatus: {
             isSent: true,
             isDelivered: false,
             isSeen: false
           }
-        })
+        }
 
-        // Remove and add to beginning to maintain order
-        state.chats = state.chats.filter(chat => chat.userId !== state.activeUser?.id)
-        state.chats.unshift(existingChat)
+        // Check if the message already exists
+        const isDuplicate = existingChat.chat.some(
+          chatMsg =>
+            chatMsg.message === newMessage.message &&
+            chatMsg.senderId === newMessage.senderId &&
+            Math.abs(new Date(chatMsg.time).getTime() - new Date(newMessage.time).getTime()) < 1000 // Allow 1-second tolerance
+        )
+
+        if (!isDuplicate) {
+          existingChat.chat.push(newMessage)
+
+          // Remove and add to beginning to maintain order
+          state.chats = state.chats.filter(chat => chat.userId !== state.activeUser?.id)
+          state.chats.unshift(existingChat)
+        }
       }
     },
 
     receiveMessage: (state, action: PayloadAction<ChatMessage>) => {
-      // MQTT handel display new message so no need to add it manually
       const { senderId, receiverId } = action.payload
       const chatId = Number(senderId) === state.profileUser.id ? Number(receiverId) : Number(senderId)
-      console.log('ACTION PAYLOAD MQTT', action.payload)
       const chat = state.chats.find(c => c.userId === chatId)
+
       if (chat) {
-        chat.chat.push({
+        const newMessage = {
           ...action.payload,
-          senderId: Number(action.payload.senderId)
-        })
+          senderId: Number(action.payload.senderId),
+          time: new Date(action.payload.time).toISOString()
+        }
+
+        // Check if the message already exists
+        const isDuplicate = chat.chat.some(
+          chatMsg =>
+            chatMsg.message === newMessage.message &&
+            chatMsg.senderId === newMessage.senderId &&
+            Math.abs(new Date(chatMsg.time).getTime() - new Date(newMessage.time).getTime()) < 1000 // Allow 1-second tolerance
+        )
+
+        if (!isDuplicate) {
+          chat.chat.push(newMessage)
+        }
       }
     }
   },

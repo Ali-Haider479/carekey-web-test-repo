@@ -34,6 +34,7 @@ export type UserChatType = {
   time: string | Date
   senderId: number
   msgStatus?: Record<'isSent' | 'isDelivered' | 'isSeen', boolean>
+  chatRoomId?: number
 }
 
 export type ChatType = {
@@ -53,6 +54,7 @@ export type ChatDataType = {
 }
 
 export interface ChatMessage {
+  timestamp: string | number | Date
   senderId: string
   receiverId: string
   message: string
