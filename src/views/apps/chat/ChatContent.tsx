@@ -161,7 +161,7 @@ const ChatContent = (props: Props) => {
               />
             ) : (
               <div className='flex items-center gap-1'>
-                <IconButton color='secondary'>
+                {/* <IconButton color='secondary'>
                   <i className='bx-phone' />
                 </IconButton>
                 <IconButton color='secondary'>
@@ -169,7 +169,7 @@ const ChatContent = (props: Props) => {
                 </IconButton>
                 <IconButton color='secondary'>
                   <i className='bx-search' />
-                </IconButton>
+                </IconButton> */}
                 <OptionMenu
                   iconButtonProps={{ size: 'medium', color: 'secondary' }}
                   options={[

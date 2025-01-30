@@ -121,6 +121,7 @@ const ChatLog = ({ chatStore, isBelowLgScreen, isBelowMdScreen, isBelowSmScreen 
       const handleMessage = (message: string) => {
         try {
           const messageData = JSON.parse(message)
+          console.log('I FOUND LIVE MESSAGE', messageData)
           // Create a unique message identifier using content and timestamp
           const messageId = `${messageData.message}-${messageData.time}-${messageData.senderId}`
 

@@ -53,6 +53,7 @@ export type ChatDataType = {
 }
 
 export interface ChatMessage {
+  timestamp: string | number | Date
   senderId: string
   receiverId: string
   message: string

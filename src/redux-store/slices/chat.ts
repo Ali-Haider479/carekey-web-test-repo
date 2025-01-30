@@ -19,17 +19,9 @@ const initialState: ChatDataType = {
   },
   contacts: [],
   chats: [],
-  activeUser: {
-    id: 1,
-    fullName: '',
-    avatar: '',
-    avatarColor: 'primary',
-    status: 'online',
-    role: '',
-    about: ''
-  },
+  activeUser: undefined, // Since `activeUser` is optional
   loading: false,
-  error: ''
+  error: undefined
 }
 
 export const fetchChatRooms = createAsyncThunk('chat/fetchChatRooms', async (userId: number) => {
@@ -139,12 +131,12 @@ export const chatSlice = createSlice({
       // MQTT handel display new message so no need to add it manually
       const { senderId, receiverId } = action.payload
       const chatId = Number(senderId) === state.profileUser.id ? Number(receiverId) : Number(senderId)
-      console.log('ACTION PAYLOAD MQTT', action.payload)
       const chat = state.chats.find(c => c.userId === chatId)
       if (chat) {
         chat.chat.push({
           ...action.payload,
-          senderId: Number(action.payload.senderId)
+          senderId: Number(action.payload.senderId),
+          time: new Date(action.payload.timestamp).toISOString()
         })
       }
     }
