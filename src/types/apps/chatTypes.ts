@@ -34,6 +34,7 @@ export type UserChatType = {
   time: string | Date
   senderId: number
   msgStatus?: Record<'isSent' | 'isDelivered' | 'isSeen', boolean>
+  chatRoomId?: number
 }
 
 export type ChatType = {
