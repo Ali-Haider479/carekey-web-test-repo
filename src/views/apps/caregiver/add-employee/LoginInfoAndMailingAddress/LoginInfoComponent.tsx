@@ -1,14 +1,18 @@
 'use client'
 
-import React, { forwardRef, useImperativeHandle, useState } from 'react'
+import React, { forwardRef, useEffect, useImperativeHandle, useState } from 'react'
 import CustomTextField from '@core/components/custom-inputs/CustomTextField'
 import { FormProvider, useForm, useFormContext } from 'react-hook-form'
 import CustomDropDown from '@core/components/custom-inputs/CustomDropDown'
-import { Button, Card, CardContent } from '@mui/material'
+import { Button, Card, CardContent, IconButton, InputAdornment } from '@mui/material'
 import Grid from '@mui/material/Grid2'
+import axios from 'axios'
+import ControlledDatePicker from '@/@core/components/custom-inputs/ControledDatePicker'
+import ControlledTextArea from '@/@core/components/custom-inputs/ControlledTextArea'
 
 type Props = {
   onFinish: any
+  defaultValues: any
 }
 
 interface FormDataType {
@@ -21,7 +25,11 @@ interface FormDataType {
   accountStatus?: string
 
   // Assign Client
-  clientName?: string
+  clientId?: number
+  assignmentDate: Date
+  unassignmentDate: Date
+  assignmentNotes: string
+  scheduleHours: number
 
   // Mailing Address
   address?: string
@@ -29,16 +37,13 @@ interface FormDataType {
   state?: string
   zipCode?: string
 }
-const LoginInfoComponent = forwardRef<{ handleSubmit: any }, Props>(({ onFinish }, ref) => {
+const LoginInfoComponent = forwardRef<{ handleSubmit: any }, Props>(({ onFinish, defaultValues }, ref) => {
   const methods = useForm<FormDataType>({
     // Optional: Add default validation settings
-    mode: 'onSubmit',
-    reValidateMode: 'onChange'
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
+    defaultValues: defaultValues
   })
-
-  useImperativeHandle(ref, () => ({
-    handleSubmit: (onValid: (data: FormDataType) => void) => handleSubmit(onValid)
-  }))
 
   const {
     control,
@@ -46,10 +51,32 @@ const LoginInfoComponent = forwardRef<{ handleSubmit: any }, Props>(({ onFinish 
     handleSubmit // Add this if you want to use form submission
   } = methods // Use methods instead of useFormContext
 
+  useImperativeHandle(ref, () => ({
+    handleSubmit: (onValid: (data: FormDataType) => void) => handleSubmit(onValid)
+  }))
+
   const onSubmit = (data: FormDataType) => {
     console.log('Submitted Data:', data)
     onFinish(data)
   }
+
+  const [clientList, setClientList] = useState<any>()
+  const [isPasswordShown, setIsPasswordShown] = useState(false)
+  const [isConfirmPasswordShown, setIsConfirmPasswordShown] = useState(false)
+
+  const handleClickShowPassword = () => setIsPasswordShown(show => !show)
+
+  const handleClickShowConfirmPassword = () => setIsConfirmPasswordShown(show => !show)
+
+  const fetchClients = async () => {
+    const fetchedClients = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/client`)
+    console.log('List of all clients --> ', fetchedClients)
+    setClientList(fetchedClients)
+  }
+
+  useEffect(() => {
+    fetchClients()
+  }, [])
 
   return (
     <FormProvider {...methods}>
@@ -92,9 +119,24 @@ const LoginInfoComponent = forwardRef<{ handleSubmit: any }, Props>(({ onFinish 
                   placeHolder={'.....'}
                   name={'password'}
                   defaultValue={''}
-                  type={'text'}
+                  type={isPasswordShown ? 'text' : 'password'}
                   error={errors.password}
                   control={control}
+                  slotProps={{
+                    input: {
+                      endAdornment: (
+                        <InputAdornment position='end'>
+                          <IconButton
+                            edge='end'
+                            onClick={handleClickShowPassword}
+                            onMouseDown={e => e.preventDefault()}
+                          >
+                            <i className={isPasswordShown ? 'bx-hide' : 'bx-show'} />
+                          </IconButton>
+                        </InputAdornment>
+                      )
+                    }
+                  }}
                 />
               </Grid>
 
@@ -105,9 +147,24 @@ const LoginInfoComponent = forwardRef<{ handleSubmit: any }, Props>(({ onFinish 
                   placeHolder={'.....'}
                   name={'confirmPassword'}
                   defaultValue={''}
-                  type={'text'}
+                  type={isConfirmPasswordShown ? 'text' : 'password'}
                   error={errors.confirmPassword}
                   control={control}
+                  slotProps={{
+                    input: {
+                      endAdornment: (
+                        <InputAdornment position='end'>
+                          <IconButton
+                            edge='end'
+                            onClick={handleClickShowConfirmPassword}
+                            onMouseDown={e => e.preventDefault()}
+                          >
+                            <i className={isConfirmPasswordShown ? 'bx-hide' : 'bx-show'} />
+                          </IconButton>
+                        </InputAdornment>
+                      )
+                    }
+                  }}
                 />
               </Grid>
 
@@ -144,24 +201,61 @@ const LoginInfoComponent = forwardRef<{ handleSubmit: any }, Props>(({ onFinish 
             <h2 className='text-xl font-semibold mt-10 mb-6'>Assign Client</h2>
             <Grid container spacing={4}>
               <Grid size={{ xs: 12, sm: 4 }}>
-                {/* Custom Input */}
-                <CustomTextField
-                  label={'Client Name'}
-                  placeHolder={'Enter Client Name'}
-                  name={'clientName'}
+                <CustomDropDown
+                  label='Select a client'
+                  optionList={
+                    clientList?.data?.map((item: any) => {
+                      return {
+                        key: `${item.id}-${item.firstName}`,
+                        value: item.id,
+                        optionString: `${item.firstName} ${item.lastName}`
+                      }
+                    }) || []
+                  }
+                  name={'clientId'}
+                  control={control}
+                  error={errors.clientId}
                   defaultValue={''}
-                  type={'text'}
-                  error={errors.clientName}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 4 }}>
+                <ControlledDatePicker
+                  name={'assignmentDate'}
+                  control={control}
+                  error={errors.assignmentDate}
+                  label={'Assignment Date'}
+                  defaultValue={undefined}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 4 }}>
+                <ControlledDatePicker
+                  name={'unassignmentDate'}
+                  control={control}
+                  error={errors.unassignmentDate}
+                  label={'Unassignment Date'}
+                  defaultValue={undefined}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 4 }}>
+                <CustomTextField
+                  label={'Scheduled Hours'}
+                  placeHolder={'Scheduled Hours'}
+                  name={'scheduleHours'}
+                  defaultValue={''}
+                  type={'number'}
+                  error={errors.scheduleHours}
                   control={control}
                 />
               </Grid>
-
-              {/* Add Button */}
-              <Grid size={{ xs: 12, sm: 4 }}>
-                <Button variant='contained' className='!bg-[#4B0082] !text-white hover:!bg-[#4B0082]'>
-                  + ADD
-                </Button>
-              </Grid>
+            </Grid>
+            <Grid container spacing={4} sx={{ marginTop: 4 }}>
+              <ControlledTextArea
+                name={'assignmentNotes'}
+                control={control}
+                label={'Assignment Notes'}
+                placeHolder={'Assignment Notes'}
+                defaultValue={''}
+              />
             </Grid>
 
             {/* Mailing Address */}

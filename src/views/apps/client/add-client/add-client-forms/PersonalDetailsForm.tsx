@@ -15,12 +15,14 @@ import { PersonalDetailsFormDataType } from './formTypes'
 type Props = {
   form?: any
   onFinish?: any
+  defaultValues: any
 }
 
-const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish }, ref) => {
+const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish, defaultValues }, ref) => {
   const methods = useForm<PersonalDetailsFormDataType>({
     mode: 'onSubmit',
-    reValidateMode: 'onChange'
+    reValidateMode: 'onChange',
+    defaultValues: defaultValues || []
   })
 
   // Expose handleSubmit to parent via ref

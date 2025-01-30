@@ -24,25 +24,18 @@ import CustomTextField from '@/@core/components/custom-inputs/CustomTextField'
 type Props = {
   // form?: any
   onFinish: any
+  defaultValues: any
 }
 
 // const TrainingCertificatesComponent = () => {
-const TrainingCertificatesComponent = forwardRef<{ handleSubmit: any }, Props>(({ onFinish }, ref) => {
+const TrainingCertificatesComponent = forwardRef<{ handleSubmit: any }, Props>(({ onFinish, defaultValues }, ref) => {
   const [trainingCertificates, setTrainingCertificates] = useState<any>([])
   const [drivingCertificates, setDrivingCertificates] = useState<any>([])
 
   const methods = useForm({
     mode: 'onSubmit',
     reValidateMode: 'onChange',
-    defaultValues: {
-      trainingCertificateFiles: [],
-      drivingCertificateFiles: [],
-      trainingCertificateName: '',
-      trainingCertificateExpiryDate: new Date(),
-      drivingLicenseNumber: '',
-      dlState: '',
-      drivingLicenseExpiryDate: new Date()
-    }
+    defaultValues: defaultValues || []
   })
 
   // Expose handleSubmit to parent via ref

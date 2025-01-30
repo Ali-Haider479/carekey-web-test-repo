@@ -32,9 +32,10 @@ interface DocumentsFormData {
 
 type Props = {
   onFinish: any
+  defaultValues: any
 }
 
-const DocumentsSection = forwardRef<{ handleSubmit: any }, Props>(({ onFinish }, ref) => {
+const DocumentsSection = forwardRef<{ handleSubmit: any }, Props>(({ onFinish, defaultValues }, ref) => {
   const [ssnFile, setSsnFile] = useState<any>([])
   const [adultFile, setAdultFile] = useState<any>([])
   const [umpiFile, setUmpiFile] = useState<any>([])

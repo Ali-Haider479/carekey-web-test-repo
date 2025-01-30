@@ -1,10 +1,28 @@
 'use client'
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { Button, Card, CardContent, Divider, Typography } from '@mui/material'
 import Grid from '@mui/material/Grid2'
 import ModeEditOutlineOutlinedIcon from '@mui/icons-material/ModeEditOutlineOutlined'
+import { useParams } from 'next/navigation'
+import axios from 'axios'
 
 function ClientAboutCard() {
+  const { id } = useParams()
+  const [clientData, setClientData] = useState<any>()
+  const getClientData = async () => {
+    try {
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/client/detail/${id}`)
+      console.log('Response Client from Profile Data =>>', response.data)
+      setClientData(response.data)
+    } catch (error) {
+      console.error('Error getting Client Data: ', error)
+    }
+  }
+
+  useEffect(() => {
+    getClientData()
+  }, [])
+
   return (
     <Card className='w-full shadow-md rounded-lg p-6'>
       {/* About Header */}
@@ -21,39 +39,39 @@ function ClientAboutCard() {
         <div className='grid grid-cols-2 gap-y-4 gap-x-8'>
           <div className='flex justify-between text-sm '>
             <Typography>First Name:</Typography>
-            <Typography>Sameer</Typography>
+            <Typography>{`${clientData?.firstName ? clientData?.firstName : ''}`}</Typography>
           </div>
           <div className='flex justify-between text-sm '>
             <Typography>PMI Number:</Typography>
-            <Typography>094382632</Typography>
+            <Typography>{`${clientData?.pmiNumber ? clientData?.pmiNumber : ''}`}</Typography>
           </div>
           <div className='flex justify-between text-sm '>
             <Typography>Middle Name:</Typography>
-            <Typography>K</Typography>
+            <Typography>{`${clientData?.middleName ? clientData?.middleName : ''}`}</Typography>
           </div>
           <div className='flex justify-between text-sm '>
             <Typography>Client Code:</Typography>
-            <Typography>2714</Typography>
+            <Typography>{`${clientData?.clientCode ? clientData?.clientCode : ''}`}</Typography>
           </div>
           <div className='flex justify-between text-sm '>
             <Typography>Last Name:</Typography>
-            <Typography>Khan</Typography>
+            <Typography>{`${clientData?.lastName ? clientData?.lastName : ''}`}</Typography>
           </div>
           <div className='flex justify-between text-sm '>
             <Typography>Phone Number:</Typography>
-            <Typography>+123-412-4214-4</Typography>
+            <Typography>{`${clientData?.primaryPhoneNumber ? clientData?.primaryPhoneNumber : ''}`}</Typography>
           </div>
           <div className='flex justify-between text-sm '>
             <Typography>Date of Birth:</Typography>
-            <Typography>05/05/2000</Typography>
+            <Typography>{`${clientData?.dateOfBirth ? clientData?.dateOfBirth : ''}`}</Typography>
           </div>
           <div className='flex justify-between text-sm '>
             <Typography>Email Address:</Typography>
-            <Typography>sameer@gmail.com</Typography>
+            <Typography>{`${clientData?.email ? clientData?.email : ''}`}</Typography>
           </div>
           <div className='flex justify-between text-sm '>
             <Typography>Cell Phone Number:</Typography>
-            <Typography>+238146</Typography>
+            <Typography>{`${clientData?.primaryCellNumber ? clientData?.primaryCellNumber : ''}`}</Typography>
           </div>
         </div>
       </CardContent>
@@ -62,79 +80,81 @@ function ClientAboutCard() {
       <CardContent className=' mb-6 border-t pt-6'>
         <div className='grid grid-cols-2 gap-y-4 gap-x-8'>
           <div className='flex justify-between text-sm '>
-            <Typography>EMERGENCY NUMBER:</Typography>
-            <Typography>---</Typography>
+            <Typography>EMERGENCY CONTACT NAME:</Typography>
+            <Typography>{`${clientData?.emergencyContactName ? clientData?.emergencyContactName : ''}`}</Typography>
           </div>
           <div className='flex justify-between text-sm '>
             <Typography>EMERGENCY C.NUMBER:</Typography>
-            <Typography>---</Typography>
+            <Typography>{`${clientData?.emergencyContactNumber ? clientData?.emergencyContactNumber : ''}`}</Typography>
           </div>
         </div>
         <div className='mt-6 border-t pt-6'>
           <div className='grid grid-cols-2 gap-y-4 gap-x-8'>
             <div className='flex justify-between text-sm '>
               <Typography>Emergency Email ID:</Typography>
-              <Typography>sameerkhan@gmail</Typography>
+              <Typography>{`${clientData?.emergencyEmailId ? clientData?.emergencyEmailId : ''}`}</Typography>
             </div>
             <div className='flex justify-between text-sm '>
               <Typography>Gender:</Typography>
-              <Typography>Male</Typography>
+              <Typography>{`${clientData?.gender ? clientData?.gender : ''}`}</Typography>
             </div>
             <div className='flex justify-between text-sm '>
               <Typography>Address:</Typography>
-              <Typography>5th Street</Typography>
+              <Typography>
+                {clientData?.addresses?.length ? (clientData.addresses[0]?.address?.address ?? '') : ''}
+              </Typography>
             </div>
             <div className='flex justify-between text-sm '>
               <Typography>City:</Typography>
-              <Typography>CALIFORNIA</Typography>
+              <Typography>{`${clientData?.addresses?.length ? (clientData?.addresses[0]?.address?.city ?? '') : ''}`}</Typography>
             </div>
             <div className='flex justify-between text-sm '>
               <Typography>State:</Typography>
-              <Typography>United States</Typography>
+              <Typography>{`${clientData?.addresses?.length ? (clientData?.addresses[0]?.address?.state ?? '') : ''}`}</Typography>
             </div>
             <div className='flex justify-between text-sm '>
               <Typography>Zip:</Typography>
-              <Typography>124512</Typography>
+              <Typography>{`${clientData?.addresses?.length ? (clientData?.addresses[0]?.address?.zipCode ?? '') : ''}`}</Typography>
             </div>
             <div className='flex justify-between text-sm '>
-              <Typography>Physical Name:</Typography>
-              <Typography>Sameer Khan</Typography>
+              <Typography>Physician Name:</Typography>
+              <Typography>{`${clientData?.clientPhysician?.name ? clientData?.clientPhysician?.name : ''}`}</Typography>
             </div>
             <div className='flex justify-between text-sm '>
-              <Typography>Physical Phone:</Typography>
-              <Typography>+2374129242</Typography>
+              <Typography>Physician Phone:</Typography>
+              <Typography>{`${clientData?.clientPhysician?.phoneNumber ? clientData?.clientPhysician?.phoneNumber : ''}`}</Typography>
             </div>
             <div className='flex justify-between text-sm '>
-              <Typography>Physical Clinic Name:</Typography>
-              <Typography>Al Hayat clinic</Typography>
+              <Typography>Physician Clinic Name:</Typography>
+              <Typography>{`${clientData?.clientPhysician?.clinicName ? clientData?.clientPhysician?.clinicName : ''}`}</Typography>
             </div>
             <div className='flex justify-between text-sm '>
               <Typography>Physician FAX:</Typography>
-              <Typography>53132</Typography>
+              <Typography>{`${clientData?.clientPhysician?.faxNumber ? clientData?.clientPhysician?.faxNumber : ''}`}</Typography>
             </div>
             <div className='flex justify-between text-sm '>
-              <Typography>Physical Address:</Typography>
-              <Typography>5th Road</Typography>
+              <Typography>Physician Address:</Typography>
+              <Typography>{`${clientData?.clientPhysician?.address ? clientData?.clientPhysician?.address : ''}`}</Typography>
             </div>
             <div className='flex justify-between text-sm '>
               <Typography>Physician City:</Typography>
-              <Typography>Newyork</Typography>
+              <Typography>{`${clientData?.clientPhysician?.city ? clientData?.clientPhysician?.city : ''}`}</Typography>
             </div>
             <div className='flex justify-between text-sm '>
               <Typography>Physician State:</Typography>
-              <Typography>United States</Typography>
+              <Typography>{`${clientData?.clientPhysician?.state ? clientData?.clientPhysician?.state : ''}`}</Typography>
             </div>
             <div className='flex justify-between text-sm '>
               <Typography>Physician Zip:</Typography>
-              <Typography>126723</Typography>
+              <Typography>{`${clientData?.clientPhysician?.zipCode ? clientData?.clientPhysician?.zipCode : ''}`}</Typography>
             </div>
             <div className='flex justify-between text-sm '>
               <Typography>Admission Date :</Typography>
-              <Typography>01/01/2023</Typography>
+              <Typography>{`${clientData?.admissionDate ? clientData?.admissionDate : ''}`}</Typography>
             </div>
             <div className='flex justify-between text-sm '>
               <Typography>Discharge Date :</Typography>
-              <Typography>29/01/2024</Typography>
+              <Typography>{`${clientData?.dischargeDate ? clientData?.dischargeDate : ''}`}</Typography>
             </div>
           </div>
         </div>
@@ -145,23 +165,23 @@ function ClientAboutCard() {
         <div className='grid grid-cols-2 gap-y-4 gap-x-8'>
           <div className='flex justify-between text-sm '>
             <Typography>Case Manager Name:</Typography>
-            <Typography>---</Typography>
+            <Typography>{`${clientData?.clientCaseManager?.caseManagerName ? clientData?.clientCaseManager?.caseManagerName : ''}`}</Typography>
           </div>
           <div className='flex justify-between text-sm '>
             <Typography>Case Manager's Extension:</Typography>
-            <Typography>---</Typography>
+            <Typography>{`${clientData?.clientCaseManager?.caseManagerExtention ? clientData?.clientCaseManager?.caseManagerExtention : ''}`}</Typography>
           </div>
           <div className='flex justify-between text-sm '>
             <Typography>Case Manager's Phone Number:</Typography>
-            <Typography>---</Typography>
+            <Typography>{`${clientData?.clientCaseManager?.caseManagerPhoneNumber ? clientData?.clientCaseManager?.caseManagerPhoneNumber : ''}`}</Typography>
           </div>
           <div className='flex justify-between text-sm '>
             <Typography>Case Manager's Email Details:</Typography>
-            <Typography>---</Typography>
+            <Typography>{`${clientData?.clientCaseManager?.caseManagerEmail ? clientData?.clientCaseManager?.caseManagerEmail : ''}`}</Typography>
           </div>
           <div className='flex justify-between text-sm '>
             <Typography>Case Manager's FAX Number:</Typography>
-            <Typography>---</Typography>
+            <Typography>{`${clientData?.clientCaseManager?.caseManagerFaxNumber ? clientData?.clientCaseManager?.caseManagerFaxNumber : ''}`}</Typography>
           </div>
         </div>
       </CardContent>
@@ -170,19 +190,24 @@ function ClientAboutCard() {
         <h2 className='text-lg font-semibold  mb-4'>Responsible Party Details</h2>
         <div className='grid grid-cols-2 gap-x-8 gap-y-4'>
           <span className='text-sm '>
-            Name: <Typography>---</Typography>
+            Name:{' '}
+            <Typography>{`${clientData?.clientResponsibilityParty?.name ? clientData?.clientResponsibilityParty?.name : ''}`}</Typography>
           </span>
           <span className='text-sm '>
-            Relationship: <Typography>---</Typography>
+            Relationship:{' '}
+            <Typography>{`${clientData?.clientResponsibilityParty?.relationship ? clientData?.clientResponsibilityParty?.relationship : ''}`}</Typography>
           </span>
           <span className='text-sm '>
-            Phone: <Typography>---</Typography>
+            Phone:{' '}
+            <Typography>{`${clientData?.clientResponsibilityParty?.phoneNumber ? clientData?.clientResponsibilityParty?.phoneNumber : ''}`}</Typography>
           </span>
           <span className='text-sm '>
-            Address: <Typography>---</Typography>
+            Fax Number:{' '}
+            <Typography>{`${clientData?.clientResponsibilityParty?.faxNumber ? clientData?.clientResponsibilityParty?.faxNumber : ''}`}</Typography>
           </span>
           <span className='text-sm '>
-            Email: <Typography>---</Typography>
+            Email:{' '}
+            <Typography>{`${clientData?.clientResponsibilityParty?.emailAddress ? clientData?.clientResponsibilityParty?.emailAddress : ''}`}</Typography>
           </span>
         </div>
       </CardContent>
@@ -192,7 +217,7 @@ function ClientAboutCard() {
         <h2 className='text-lg font-semibold  mb-4'>Service Information</h2>
         <div className='grid grid-cols-2 gap-x-8 gap-y-4'>
           <span className='text-sm '>
-            Shared Care: <Typography>No</Typography>
+            Shared Care: <Typography>{`${clientData?.sharedCare ? clientData?.sharedCare : ''}`}</Typography>
           </span>
           <span className='text-sm '>
             Approved Service Locations: <Typography>NA</Typography>

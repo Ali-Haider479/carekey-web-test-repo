@@ -1,6 +1,8 @@
 'use client'
 import { Card, CardContent, Typography } from '@mui/material'
-import React from 'react'
+import axios from 'axios'
+import { useParams } from 'next/navigation'
+import React, { useEffect, useState } from 'react'
 
 const InfoCard = () => {
   const caregivers = [
@@ -21,6 +23,38 @@ const InfoCard = () => {
       image: '/images/avatars/4.png'
     }
   ]
+
+  const getInitials = (fullName: string): string => {
+    const names = fullName?.trim()?.split(' ')?.filter(Boolean) // Split and remove extra spaces
+
+    if (names?.length === 1) {
+      return names[0][0].toUpperCase() // Only one name, return its initial
+    }
+
+    if (names?.length >= 2) {
+      return `${names[0][0].toUpperCase()}${names[names.length - 1][0].toUpperCase()}` // First and last name initials
+    }
+
+    return '' // Return empty string if no valid names
+  }
+
+  const [assignedCaregiver, setAssignedCaregiver] = useState<any>()
+  const { id } = useParams()
+
+  const fetchAssignCaregivers = async () => {
+    try {
+      const clientResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/client/assigned-caregivers/${id}`)
+      const fetchedClient = clientResponse.data
+      console.log('Assigned Caregivers --> ', fetchedClient)
+      setAssignedCaregiver(fetchedClient)
+    } catch (error) {
+      console.error('error fetching data: ', error)
+    }
+  }
+
+  useEffect(() => {
+    fetchAssignCaregivers()
+  }, [])
 
   return (
     <Card className='max-w-md mr-4 shadow-md rounded-lg'>
@@ -71,15 +105,24 @@ const InfoCard = () => {
 
       {/* Assigned Caregivers */}
       <CardContent className='pl-0'>
-        <h3 className='ml-6 text-xl font-semibold text-gray-500 mb-2'>Assigned Caregivers ({caregivers.length})</h3>
+        <h3 className='ml-6 text-xl font-semibold text-gray-500 mb-2'>
+          Assigned Caregivers ({assignedCaregiver?.length})
+        </h3>
         <ul>
-          {caregivers.map((caregiver, index) => (
+          {assignedCaregiver?.map((item: any, index: number) => (
             <li key={index} className='flex justify-between mb-4 last:mb-0'>
               <div className='flex items-center space-x-3'>
-                <img src={caregiver.image} alt={caregiver.name} className='w-10 h-10 rounded-full' />
+                {item?.user.profileImageUrl ? (
+                  <img src={item?.user.profileImageUrl} alt={item?.user.userName} className='w-10 h-10 rounded-full' />
+                ) : (
+                  <div className='w-10 h-10 rounded-full bg-gray-400 flex items-center justify-center text-white font-bold'>
+                    {getInitials(item?.user.userName)}
+                  </div>
+                )}
+
                 <div>
-                  <Typography className='text-sm font-medium text-gray-400'>{caregiver.name}</Typography>
-                  <Typography className='text-sm text-[#71DD37]'>{caregiver.phone}</Typography>
+                  <Typography className='text-sm font-medium text-gray-400'>{item?.user.userName}</Typography>
+                  <Typography className='text-sm text-[#71DD37]'>{item?.user.emailAddress}</Typography>
                 </div>
               </div>
               {/* < className="text- bg-[#666CFF]"> #4B0082*/}

@@ -14,12 +14,14 @@ import axios from 'axios'
 type Props = {
   form?: any
   onFinish?: any
+  defaultValues: any
 }
 
-const ServiceActivitiesForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish }, ref) => {
+const ServiceActivitiesForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish, defaultValues }, ref) => {
   const methods = useForm<clientServiceFormDataType>({
     mode: 'onSubmit',
-    reValidateMode: 'onChange'
+    reValidateMode: 'onChange',
+    defaultValues: defaultValues || []
   })
 
   // Expose handleSubmit to parent via ref
@@ -39,6 +41,7 @@ const ServiceActivitiesForm = forwardRef<{ handleSubmit: any }, Props>(({ onFini
   }
 
   const [serviceTypes, setServiceTypes] = useState<any>()
+  const [caregiversList, setCaregiversList] = useState<any>()
 
   const getServiceTypes = async () => {
     try {
@@ -49,8 +52,20 @@ const ServiceActivitiesForm = forwardRef<{ handleSubmit: any }, Props>(({ onFini
       console.error('Error getting service types: ', error)
     }
   }
+
+  const getCaregiversList = async () => {
+    try {
+      const caregiversListData = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/caregivers`)
+      console.log('Caregivers List Data--> ', caregiversListData)
+      setCaregiversList(caregiversListData)
+    } catch (error) {
+      console.error('Error fetching data: ', error)
+    }
+  }
+
   useEffect(() => {
     getServiceTypes()
+    getCaregiversList()
   }, [])
 
   return (
@@ -59,16 +74,61 @@ const ServiceActivitiesForm = forwardRef<{ handleSubmit: any }, Props>(({ onFini
         <Card>
           <CardContent>
             <Typography className='text-xl font-semibold mb-4'>Assign Caregiver</Typography>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <CustomDropDown
-                name={'caregiver'}
+            <Grid container spacing={4}>
+              <Grid size={{ xs: 12, sm: 4 }}>
+                <CustomDropDown
+                  name={'caregiverId'}
+                  control={control}
+                  error={errors.caregiverId}
+                  label={'Caregiver'}
+                  optionList={
+                    caregiversList?.data?.map((item: any) => {
+                      return {
+                        key: `${item.id}-${item.firstName}`,
+                        value: item.id,
+                        optionString: `${item.firstName} ${item.lastName}`
+                      }
+                    }) || []
+                  }
+                  defaultValue={''}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 4 }}>
+                <ControlledDatePicker
+                  name={'assignmentDate'}
+                  control={control}
+                  error={errors.assignmentDate}
+                  label={'Assignment Date'}
+                  defaultValue={undefined}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 4 }}>
+                <ControlledDatePicker
+                  name={'unassignmentDate'}
+                  control={control}
+                  error={errors.unassignmentDate}
+                  label={'Unassignment Date'}
+                  defaultValue={undefined}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 4 }}>
+                <CustomTextField
+                  label={'Scheduled Hours'}
+                  placeHolder={'Scheduled Hours'}
+                  name={'scheduleHours'}
+                  defaultValue={''}
+                  type={'number'}
+                  error={errors.scheduleHours}
+                  control={control}
+                />
+              </Grid>
+            </Grid>
+            <Grid container spacing={4} sx={{ marginTop: 4 }}>
+              <ControlledTextArea
+                name={'assignmentNotes'}
                 control={control}
-                error={errors.caregiver}
-                label={'Caregiver'}
-                optionList={[
-                  { key: 1, value: 'John Doe', optionString: 'John Doe' },
-                  { key: 2, value: 'Jane Doe', optionString: 'Jane Doe' }
-                ]}
+                label={'Assignment Notes'}
+                placeHolder={'Assignment Notes'}
                 defaultValue={''}
               />
             </Grid>

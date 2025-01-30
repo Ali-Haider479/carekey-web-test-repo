@@ -202,6 +202,22 @@ const AddClientStepper = () => {
       )
       console.log('Case Manager Details --> ', createCaseManagerResponse)
 
+      const assignCaregiverBody = {
+        tenantId: 1,
+        clientId: clientId,
+        userId: serviceActivities.caregiverId,
+        assignmentDate: serviceActivities.assignmentDate,
+        unassignmentDate: serviceActivities.unassignmentDate,
+        notes: serviceActivities.assignmentNotes,
+        scheduleHours: serviceActivities.scheduleHours
+      }
+
+      const assignCaregiverResponse = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/user/createClientUser`,
+        assignCaregiverBody
+      )
+      console.log('Assigned Caregiver Details --> ', assignCaregiverResponse)
+
       const createClientServiceBody = {
         note: serviceActivities.serviceNotes,
         serviceId: serviceActivities.service,
@@ -351,7 +367,7 @@ const AddClientStepper = () => {
     switch (activeStep) {
       case 0:
         personalDetailsFormRef.current?.handleSubmit((data: PersonalDetailsFormDataType) => {
-          setPersonalDetails(data)
+          setPersonalDetails((prevData: any) => ({ ...prevData, ...data }))
           console.log('Personal Details in Parent:', data)
           // Move to next step after successful validation
           setActiveStep(prevActiveStep => prevActiveStep + 1)
@@ -359,7 +375,7 @@ const AddClientStepper = () => {
         break
       case 1:
         physicianAndCaseMangerFormRef.current?.handleSubmit((data: PhysicianAndCaseMangerFormDataType) => {
-          setPhysicianDetails(data)
+          setPhysicianDetails((prevData: any) => ({ ...prevData, ...data }))
           console.log('Physician Details in Parent:', data)
           // Move to next step after successful validation
           setActiveStep(prevActiveStep => prevActiveStep + 1)
@@ -367,7 +383,7 @@ const AddClientStepper = () => {
         break
       case 2:
         serviceActivitiesFormRef.current?.handleSubmit((data: clientServiceFormDataType) => {
-          setServiceActivities(data)
+          setServiceActivities((prevData: any) => ({ ...prevData, ...data }))
           console.log('Personal Details in Parent:', data)
           // Move to next step after successful validation
           setActiveStep(prevActiveStep => prevActiveStep + 1)
@@ -375,7 +391,7 @@ const AddClientStepper = () => {
         break
       case 3:
         documentsFormRef.current?.handleSubmit((data: any) => {
-          setDocuments(data)
+          setDocuments((prevData: any) => ({ ...prevData, ...data }))
           handleSave(data)
           console.log('Documents data:', data)
         })()
@@ -387,37 +403,60 @@ const AddClientStepper = () => {
     setActiveStep(prevActiveStep => prevActiveStep - 1)
   }
 
-  const onPersonalDetailsSubmit = (values: PersonalDetailsFormDataType) => {
+  const onPersonalDetailsSubmit = (values: PersonalDetailsFormDataType, data: any) => {
     console.log('Personal Details in Parent:', values)
+    setPersonalDetails((prevData: any) => ({ ...prevData, ...data }))
     // Optionally store values or perform next step logic
     handleNext() // Move to next step
   }
 
-  const physicianAndCaseMangerFormSubmit = (values: any) => {
+  const physicianAndCaseMangerFormSubmit = (values: any, data: any) => {
     console.log('physicianAndCaseMangerFormSubmit', values)
+    setPhysicianDetails((prevData: any) => ({ ...prevData, ...data }))
+    handleNext()
   }
 
-  const serviceActivitiesFormSubmit = (values: any) => {
+  const serviceActivitiesFormSubmit = (values: any, data: any) => {
     console.log('Personal Detail', values)
+    setServiceActivities((prevData: any) => ({ ...prevData, ...data }))
+    handleNext()
   }
 
-  const onDocumentsFormSubmit = (values: any) => {
+  const onDocumentsFormSubmit = (values: any, data: any) => {
     console.log('Personal Detail', values)
+    setDocuments((prevData: any) => ({ ...prevData, ...data }))
+    handleNext()
   }
 
   console.log('ACTIVE STREP', activeStep)
   const renderStepContent = (activeStep: number) => {
     switch (activeStep) {
       case 0:
-        return <PersonalDetailsForm ref={personalDetailsFormRef} onFinish={onPersonalDetailsSubmit} />
+        return (
+          <PersonalDetailsForm
+            ref={personalDetailsFormRef}
+            onFinish={onPersonalDetailsSubmit}
+            defaultValues={personalDetails}
+          />
+        )
       case 1:
         return (
-          <PhysicianAndCaseMangerForm ref={physicianAndCaseMangerFormRef} onFinish={physicianAndCaseMangerFormSubmit} />
+          <PhysicianAndCaseMangerForm
+            ref={physicianAndCaseMangerFormRef}
+            onFinish={physicianAndCaseMangerFormSubmit}
+            defaultValues={physicianDetails}
+          />
         )
       case 2:
-        return <ServiceActivitiesForm ref={serviceActivitiesFormRef} onFinish={serviceActivitiesFormSubmit} />
+        return (
+          <ServiceActivitiesForm
+            ref={serviceActivitiesFormRef}
+            onFinish={serviceActivitiesFormSubmit}
+            defaultValues={serviceActivities}
+          />
+        )
       case 3:
-        return <DocumentsForm ref={documentsFormRef} onFinish={onDocumentsFormSubmit} />
+        return <DocumentsForm ref={documentsFormRef} onFinish={onDocumentsFormSubmit} defaultValues={documents} />
       default:
         return 'Unknown step'
     }

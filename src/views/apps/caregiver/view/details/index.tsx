@@ -67,7 +67,7 @@ const CaregiverDetails = ({ tabContentList }: BottomBodyProps) => {
     }
   }
 
-  const fullName = data?.firstName + ' ' + data?.middleName + ' ' + data?.lastName
+  const fullName = [data?.firstName || '', data?.middleName || '', data?.lastName || ''].filter(Boolean).join(' ')
 
   return (
     <>
@@ -77,10 +77,10 @@ const CaregiverDetails = ({ tabContentList }: BottomBodyProps) => {
         </Typography>
         <ProfileBanner
           props={{
-            fullName: fullName ? fullName : '---',
+            fullName: fullName,
             coverImg: '/images/pages/profile-banner.png',
             location: data?.addresses[0].address.state ? data?.addresses[0].address.state : '---',
-            profileImg: '/images/avatars/2.png',
+            profileImg: data?.user?.profileImageUrl,
             status: data?.user?.accountStatus ? data?.user?.accountStatus : '---'
           }}
         />

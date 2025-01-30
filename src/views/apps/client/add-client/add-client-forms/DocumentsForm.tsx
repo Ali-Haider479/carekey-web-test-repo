@@ -21,18 +21,17 @@ import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf'
 type Props = {
   // form?: any
   onFinish: any
+  defaultValues: any
 }
 
 // const TrainingCertificatesComponent = () => {
-const DocumentsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish }, ref) => {
+const DocumentsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish, defaultValues }, ref) => {
   const [documents, setDocuments] = useState<any>([])
 
   const methods = useForm({
     mode: 'onSubmit',
     reValidateMode: 'onChange',
-    defaultValues: {
-      documentFiles: []
-    }
+    defaultValues: defaultValues || []
   })
 
   // Expose handleSubmit to parent via ref
