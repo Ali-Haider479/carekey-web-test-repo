@@ -1,7 +1,7 @@
 'use client'
 
 // React Imports
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { SyntheticEvent, ReactElement } from 'react'
 
 // MUI Imports
@@ -14,6 +14,8 @@ import Grid from '@mui/material/Grid2'
 import CustomTabList from '@core/components/mui/TabList'
 import ProfileBanner from '@/@layouts/components/horizontal/ProfileBanner'
 import { Typography } from '@mui/material'
+import axios from 'axios'
+import { useParams } from 'next/navigation'
 
 interface BottomBodyProps {
   tabContentList: Record<string, ReactElement>
@@ -22,6 +24,9 @@ interface BottomBodyProps {
 const ClientDetails = ({ tabContentList }: BottomBodyProps) => {
   // States
   const [activeTab, setActiveTab] = useState('profile')
+  const [clientData, setClientData] = useState<any>()
+
+  const { id } = useParams()
 
   const handleChange = (event: SyntheticEvent, value: string) => {
     setActiveTab(value)
@@ -50,6 +55,20 @@ const ClientDetails = ({ tabContentList }: BottomBodyProps) => {
     }
   }
 
+  const fetchClientData = async () => {
+    try {
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/client/${id}`)
+      console.log('Response Client Data =>>', response.data)
+      setClientData(response.data)
+    } catch (error) {
+      console.error('Error getting Client Data: ', error)
+    }
+  }
+
+  useEffect(() => {
+    fetchClientData()
+  }, [])
+
   return (
     <>
       <TabContext value={activeTab}>
@@ -60,10 +79,10 @@ const ClientDetails = ({ tabContentList }: BottomBodyProps) => {
         {shouldShowBanner && (
           <ProfileBanner
             props={{
-              fullName: 'Suhanna Ibrahim',
+              fullName: `${clientData?.firstName ? clientData?.firstName : ''} ${clientData?.lastName ? clientData?.lastName : ''}`,
               coverImg: '/images/pages/profile-banner.png',
-              location: 'USA',
-              profileImg: '/images/avatars/2.png',
+              location: `${clientData?.addresses[0]?.address?.state ? clientData?.addresses[0]?.address?.state : ''}`,
+              profileImg: clientData?.imgUrl,
               status: 'ACTIVE'
             }}
           />

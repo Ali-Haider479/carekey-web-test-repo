@@ -86,8 +86,12 @@ const ProfileBanner = ({ props }: { props: ProfileHeaderType }) => {
             </div>
             <div className='flex flex-wrap gap-0 justify-center sm:justify-normal'>
               <div className='flex items-center gap-2'>
-                <i className='bx-map' />
-                <Typography className='font-medium'>{props.location}</Typography>
+                {props?.location !== '' && (
+                  <>
+                    <i className='bx-map' />
+                    <Typography className='font-medium'>{props.location}</Typography>
+                  </>
+                )}
               </div>
             </div>
           </div>
