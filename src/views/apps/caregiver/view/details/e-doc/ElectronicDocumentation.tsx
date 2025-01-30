@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { Typography, Button, Divider, List, Menu, MenuItem, IconButton, Pagination } from '@mui/material'
+import { Typography, Button, Divider, List, Menu, MenuItem, IconButton, Pagination, Card } from '@mui/material'
 import { Mail as MailIcon, MoreVert as MoreVertIcon } from '@mui/icons-material'
 import CustomCheckList from '@core/components/mui/CustomChecklist'
 
@@ -58,7 +58,7 @@ const ElectronicDocumentation = () => {
   )
 
   return (
-    <div className='bg-white p-6 rounded-lg shadow-md w-full ml-3'>
+    <Card className='p-6 rounded-lg shadow-md w-full ml-3'>
       {/* Header */}
       <div className='flex justify-between items-center mb-4'>
         <Typography variant='h4' className='text-gray-600'>
@@ -84,7 +84,7 @@ const ElectronicDocumentation = () => {
       <CustomCheckList listTitle='New Hire Paper Work' documents={documents} menu={renderMenu()} />
       <Divider className='' />
       <CustomCheckList listTitle='Miscellaneous Forms' documents={documents} menu={renderMenu()} />
-    </div>
+    </Card>
   )
 }
 

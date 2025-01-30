@@ -1,8 +1,8 @@
 import React from 'react'
 import CustomCheckList from '@core/components/mui/CustomChecklist'
-import { UnorderedListOutlined } from '@ant-design/icons'
 import { Button, Menu, MenuItem, Typography } from '@mui/material'
 import { Mail as MailIcon, MoreVert as MoreVertIcon } from '@mui/icons-material'
+import ListAltIcon from '@mui/icons-material/ListAlt'
 
 interface CareGiverChecklistProps {
   onShowForms?: () => void
@@ -77,7 +77,7 @@ const CaregiverChecklist = ({ onShowForms }: CareGiverChecklistProps) => {
         <div>
           <Button
             variant='contained'
-            startIcon={<UnorderedListOutlined />}
+            startIcon={<ListAltIcon />}
             sx={{
               marginRight: '10px',
               backgroundColor: '#4B0082',

@@ -1,9 +1,9 @@
 'use client'
 import React from 'react'
-import { UnorderedListOutlined } from '@ant-design/icons'
 import { useRouter, useParams } from 'next/navigation'
 import CustomCheckList from '@core/components/mui/CustomChecklist'
-import { Button, Menu, MenuItem, Typography } from '@mui/material'
+import { Button, Card, Menu, MenuItem, Typography } from '@mui/material'
+import ListAltIcon from '@mui/icons-material/ListAlt'
 
 interface CareGiverFormCardProps {
   onShowChecklist?: () => void
@@ -68,7 +68,7 @@ const CareGiverFormCard = ({ onShowChecklist }: CareGiverFormCardProps) => {
   )
 
   return (
-    <div className='bg-white p-6 rounded-lg shadow-md w-full ml-3 '>
+    <Card className=' p-6 rounded-lg shadow-md w-full ml-3 '>
       {/* Header */}
       <div className='flex justify-between items-center mb-4'>
         <Typography variant='h4' className='font-semibold text-gray-600'>
@@ -76,7 +76,7 @@ const CareGiverFormCard = ({ onShowChecklist }: CareGiverFormCardProps) => {
         </Typography>
         <Button
           variant='contained'
-          startIcon={<UnorderedListOutlined />}
+          startIcon={<ListAltIcon />}
           sx={{
             backgroundColor: '#4B0082',
             color: 'white',
@@ -90,7 +90,7 @@ const CareGiverFormCard = ({ onShowChecklist }: CareGiverFormCardProps) => {
         </Button>
       </div>
       <CustomCheckList listTitle='' documents={documents} menu={renderMenu()} />
-    </div>
+    </Card>
   )
 }
 
