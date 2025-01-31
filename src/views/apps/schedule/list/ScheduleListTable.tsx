@@ -1,19 +1,13 @@
 'use client'
-
 // React Imports
 import { useState } from 'react'
-
 // MUI Imports
 import Card from '@mui/material/Card'
 import CardHeader from '@mui/material/CardHeader'
 import Chip from '@mui/material/Chip'
 import Avatar from '@mui/material/Avatar'
-
-import styles from './scheduleTable.module.css'
-
 // Third-party Imports
-import { createColumnHelper, flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table'
-import { Button } from '@mui/material'
+import { Button, Typography } from '@mui/material'
 import { getLocalizedUrl } from '@/utils/i18n'
 import { Locale } from '@/configs/i18n'
 import { useParams } from 'next/navigation'
@@ -23,132 +17,78 @@ import { GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
 // Type Definitions
 type User = {
   id: number
-  fullName: string
-  email: string
+  clientName: string
+  clientEmail: string
   proMod: string
-  startDate: string
-  endDate: string
+  start: string
+  end: string
   status: 'ACTIVE' | 'EXPIRED'
-  totalUnit: string
+  assignedHours: number
+  client: any
+  caregiver: any
   avatar: string
 }
-
-// Sample Data
-const defaultData: User[] = [
-  {
-    id: 1,
-    fullName: 'Jordan Stevenson',
-    email: 'Layne_Kuvalis@gmail.com',
-    proMod: 'H2014(UCU3)',
-    startDate: '08/01/2023',
-    endDate: '11/27/2024',
-    status: 'ACTIVE',
-    totalUnit: '1040 (260 Hrs)',
-    avatar: '/path/to/avatar1.jpg'
-  },
-  {
-    id: 2,
-    fullName: 'Jordan Stevenson',
-    email: 'Layne_Kuvalis@gmail.com',
-    proMod: 'H2014(UCU3)',
-    startDate: '08/01/2023',
-    endDate: '11/27/2024',
-    status: 'EXPIRED',
-    totalUnit: '1040 (260 Hrs)',
-    avatar: '/path/to/avatar2.jpg'
-  },
-  {
-    id: 3,
-    fullName: 'Jordan Stevenson',
-    email: 'Layne_Kuvalis@gmail.com',
-    proMod: 'H2014(UCU3)',
-    startDate: '08/01/2023',
-    endDate: '11/27/2024',
-    status: 'ACTIVE',
-    totalUnit: '1040 (260 Hrs)',
-    avatar: '/path/to/avatar3.jpg'
-  }
-]
-
-// Column Definitions
-const columnHelper = createColumnHelper<User>()
-
-const columns = [
-  columnHelper.accessor('id', {
-    cell: info => <span>{info.getValue()}</span>,
-    header: '#'
-  }),
-  columnHelper.accessor('fullName', {
-    cell: info => (
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <Avatar alt={info.row.original.fullName} src={info.row.original.avatar} />
-        <div>
-          <strong>{info.getValue()}</strong>
-          <br />
-          <span style={{ fontSize: '12px', color: '#757575' }}>{info.row.original.email}</span>
-        </div>
-      </div>
-    ),
-    header: 'CLIENT NAME'
-  }),
-  columnHelper.accessor('proMod', {
-    cell: info => info.getValue(),
-    header: 'PRO & MOD'
-  }),
-  columnHelper.accessor('startDate', {
-    cell: info => info.getValue(),
-    header: 'START DATE'
-  }),
-  columnHelper.accessor('endDate', {
-    cell: info => info.getValue(),
-    header: 'END DATE'
-  }),
-  columnHelper.accessor('status', {
-    cell: info => (
-      <Chip
-        label={info.getValue()}
-        size='small'
-        sx={{
-          color: info.getValue() === 'ACTIVE' ? '#4CAF50' : '#F44336',
-          backgroundColor: info.getValue() === 'ACTIVE' ? '#E8F5E9' : '#FFEBEE',
-          fontWeight: 'bold'
-        }}
-      />
-    ),
-    header: 'STATUS'
-  }),
-  columnHelper.accessor('totalUnit', {
-    cell: info => info.getValue(),
-    header: 'TOTAL UNIT'
-  })
-]
 
 const newCols: GridColDef[] = [
   { field: 'id', headerName: 'ID', flex: 0.5 },
   {
     field: 'firstName',
-    headerName: 'Client',
+    headerName: 'CLIENT NAME',
     flex: 1.5,
     renderCell: (params: GridRenderCellParams) => (
-      <div style={{ height: '50px', display: 'flex', alignItems: 'center', gap: '8px', margin: 0, padding: 0 }}>
-        <Avatar alt={params.row.fullName} src={params.row.avatar} />
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <strong className='h-4'>{params.row.fullName}</strong>
-          <span style={{ fontSize: '12px', color: '#757575' }}>{params.row.email}</span>
+      console.log('PARAMS', params),
+      (
+        <div style={{ height: '50px', display: 'flex', alignItems: 'center', gap: '8px', margin: 0, padding: 0 }}>
+          <Avatar alt={params.row.status} src={params.row.avatar} />
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <strong className='h-4'>{params.row.client.firstName}</strong>
+            <span style={{ fontSize: '12px', color: '#757575' }}>{params.row.client.emergencyEmailId}</span>
+          </div>
         </div>
-      </div>
+      )
     )
   },
-  { field: 'proMod', headerName: 'PRO & MOD', flex: 1 },
   {
-    field: 'startDate',
-    headerName: 'Start Date',
-    flex: 0.75
+    field: 'proMod',
+    headerName: 'PRO & MOD',
+    flex: 1,
+    renderCell: (params: any) => {
+      return <Typography className='font-normal text-base my-3'>N/A</Typography>
+    }
   },
   {
-    field: 'endDate',
+    field: 'start',
+    headerName: 'Start Date',
+    flex: 0.75,
+    renderCell: (params: any) => {
+      const startDate = params?.row?.start
+      if (startDate) {
+        const date = new Date(startDate)
+        return (
+          <Typography className='font-normal text-base my-3'>
+            {`${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear().toString().slice(-2)}`}
+          </Typography>
+        )
+      }
+      return <Typography className='font-normal text-base my-3'>N/A</Typography>
+    }
+  },
+  {
+    field: 'end',
     headerName: 'End Date',
-    flex: 0.75
+    flex: 0.75,
+    renderCell: (params: any) => {
+      const startDate = params?.row?.end
+      if (startDate) {
+        const date = new Date(startDate)
+        return (
+          <Typography className='font-normal text-base my-3'>
+            {`${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear().toString().slice(-2)}`}
+          </Typography>
+        )
+      }
+      return <Typography className='font-normal text-base my-3'>N/A</Typography>
+    }
   },
   {
     field: 'status',
@@ -156,10 +96,10 @@ const newCols: GridColDef[] = [
     flex: 0.75,
     renderCell: (params: GridRenderCellParams) => (
       <Chip
-        label={params.value}
+        label={params.value.includes('pending') ? 'PENDING' : 'WAITING'}
         size='small'
         sx={{
-          color: params.value === 'ACTIVE' ? '#4CAF50' : '#F44336',
+          color: params.value === 'pending' ? '#4CAF50' : '#F44336',
           backgroundColor: params.value === 'ACTIVE' ? '#E8F5E9' : '#FFEBEE',
           fontWeight: 'bold'
         }}
@@ -167,26 +107,14 @@ const newCols: GridColDef[] = [
     )
   },
   {
-    field: 'totalUnit',
+    field: 'assignedHours',
     headerName: 'Total Unit',
     flex: 0.75
   }
 ]
 
-const ScheduleListTable = () => {
+const ScheduleListTable = ({ events }: any) => {
   const { lang: locale } = useParams()
-  // State
-  const [data] = useState(() => [...defaultData])
-
-  // Table Hook
-  const table = useReactTable({
-    data,
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-    filterFns: {
-      fuzzy: () => false
-    }
-  })
 
   return (
     <Card sx={{ borderRadius: 1, boxShadow: 3 }}>
@@ -204,60 +132,7 @@ const ScheduleListTable = () => {
         }
       />
       <div style={{ overflowX: 'auto', padding: '0px' }}>
-        <DataTable data={data} columns={newCols} />
-        {/* <table
-          className={styles.table}
-          style={{
-            width: '100%',
-            borderCollapse: 'collapse'
-          }}
-        >
-          <thead>
-            {table.getHeaderGroups().map(headerGroup => (
-              <tr
-                key={headerGroup.id}
-                style={{
-                  backgroundColor: '#f5f5f5', // Explicitly set gray background
-                  borderBottom: '1px solid #E0E0E0'
-                }}
-              >
-                {headerGroup.headers.map(header => (
-                  <th
-                    key={header.id}
-                    style={{
-                      textAlign: 'left',
-                      padding: '12px 16px',
-                      fontSize: '14px',
-                      color: '#616161',
-                      fontWeight: 'bold'
-                    }}
-                  >
-                    {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
-                  </th>
-                ))}
-              </tr>
-            ))}
-          </thead>
-          <tbody>
-            {table.getRowModel().rows.map(row => (
-              <tr
-                key={row.id}
-                style={{
-                  borderBottom: '1px solid #E0E0E0',
-                  backgroundColor: '#fff',
-                  textAlign: 'left',
-                  cursor: 'pointer'
-                }}
-              >
-                {row.getVisibleCells().map(cell => (
-                  <td key={cell.id} style={{ padding: '12px 16px', fontSize: '14px' }}>
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table> */}
+        <DataTable data={events.events} columns={newCols} />
       </div>
     </Card>
   )

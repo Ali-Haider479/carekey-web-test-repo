@@ -8,7 +8,7 @@ import { useMediaQuery } from '@mui/material'
 import type { Theme } from '@mui/material/styles'
 
 // Third-party Imports
-import { useDispatch, useSelector } from 'react-redux'
+import { useSelector } from 'react-redux'
 
 // Type Imports
 import type { CalendarColors, CalendarType } from '@/types/apps/calendarTypes'
@@ -20,6 +20,7 @@ import AddScheduleSidebar from './AddScheduleSidebar'
 import { fetchEvents } from '@/redux-store/slices/calendar'
 import axios from 'axios'
 import { useParams } from 'next/navigation'
+import { useAppDispatch } from '@/hooks/useDispatch'
 
 // CalendarColors Object
 const calendarsColor: CalendarColors = {
@@ -41,7 +42,7 @@ const AppCalendar = () => {
   const [addEventSidebarOpen, setAddEventSidebarOpen] = useState<boolean>(false)
 
   // Hooks
-  const dispatch = useDispatch()
+  const dispatch = useAppDispatch()
   const calendarStore = useSelector((state: { calendarReducer: CalendarType }) => state.calendarReducer)
   const CurrentCaregiverCalenderEvents = calendarStore.events.filter((item: any) => item.caregiver.id == id)
   console.log(CurrentCaregiverCalenderEvents)

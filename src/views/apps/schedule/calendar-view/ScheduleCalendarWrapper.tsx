@@ -19,6 +19,7 @@ import ScheduleSidebarLeft from './ScheduleSidebarLeft'
 import AddScheduleSidebar from './AddScheduleSidebar'
 import { fetchEvents } from '@/redux-store/slices/calendar'
 import axios from 'axios'
+import { useAppDispatch } from '@/hooks/useDispatch'
 
 // CalendarColors Object
 const calendarsColor: CalendarColors = {
@@ -39,7 +40,7 @@ const AppCalendar = () => {
   const [addEventSidebarOpen, setAddEventSidebarOpen] = useState<boolean>(false)
 
   // Hooks
-  const dispatch = useDispatch()
+  const dispatch = useAppDispatch()
   const calendarStore = useSelector((state: { calendarReducer: CalendarType }) => state.calendarReducer)
   const mdAbove = useMediaQuery((theme: Theme) => theme.breakpoints.up('md'))
 

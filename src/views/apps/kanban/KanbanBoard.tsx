@@ -19,6 +19,7 @@ import { addColumn, updateColumns } from '@/redux-store/slices/kanban'
 import KanbanList from './KanbanList'
 import NewColumn from './NewColumn'
 import KanbanDrawer from './KanbanDrawer'
+import { useAppDispatch } from '@/hooks/useDispatch'
 
 const KanbanBoard = () => {
   // State
@@ -26,7 +27,7 @@ const KanbanBoard = () => {
 
   // Hooks
   const kanbanStore = useSelector((state: RootState) => state.kanbanReducer)
-  const dispatch = useDispatch()
+  const dispatch = useAppDispatch()
 
   const [boardRef, columns, setColumns] = useDragAndDrop(kanbanStore.columns, {
     plugins: [animations()],

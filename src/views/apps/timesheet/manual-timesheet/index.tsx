@@ -5,8 +5,8 @@ import Grid from '@mui/material/Grid2'
 import ManualTimesheet from './ManualTimesheet'
 import { useEffect, useState } from 'react'
 import axios from 'axios'
-import { useDispatch } from 'react-redux'
 import { fetchEvents } from '@/redux-store/slices/calendar'
+import { useAppDispatch } from '@/hooks/useDispatch'
 
 // Component Imports
 
@@ -15,7 +15,7 @@ const ManualTimesheetPage = () => {
   const [clientList, setClientList] = useState<[] | any>([])
   const [serviceList, setServiceList] = useState<[] | any>([])
   const [payPeriod, setPayPeriod] = useState<[] | any>([])
-  const dispatch = useDispatch()
+  const dispatch = useAppDispatch()
   const tenantId = 1
 
   useEffect(() => {

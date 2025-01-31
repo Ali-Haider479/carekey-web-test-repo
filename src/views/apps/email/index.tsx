@@ -10,7 +10,7 @@ import type { Theme } from '@mui/material/styles'
 
 // Third-party Imports
 import classnames from 'classnames'
-import { useDispatch, useSelector } from 'react-redux'
+import { useSelector } from 'react-redux'
 
 // Type Imports
 import type { RootState } from '@/redux-store'
@@ -27,6 +27,7 @@ import { useSettings } from '@core/hooks/useSettings'
 
 // Util Imports
 import { commonLayoutClasses } from '@layouts/utils/layoutClasses'
+import { useAppDispatch } from '@/hooks/useDispatch'
 
 const EmailWrapper = ({ folder, label }: { folder?: string; label?: string }) => {
   // States
@@ -39,7 +40,7 @@ const EmailWrapper = ({ folder, label }: { folder?: string; label?: string }) =>
   // Hooks
   const { settings } = useSettings()
   const emailStore = useSelector((state: RootState) => state.emailReducer)
-  const dispatch = useDispatch()
+  const dispatch = useAppDispatch()
   const isBelowLgScreen = useMediaQuery((theme: Theme) => theme.breakpoints.down('lg'))
   const isBelowMdScreen = useMediaQuery((theme: Theme) => theme.breakpoints.down('md'))
   const isBelowSmScreen = useMediaQuery((theme: Theme) => theme.breakpoints.down('sm'))

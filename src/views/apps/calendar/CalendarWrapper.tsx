@@ -8,7 +8,7 @@ import { useMediaQuery } from '@mui/material'
 import type { Theme } from '@mui/material/styles'
 
 // Third-party Imports
-import { useDispatch, useSelector } from 'react-redux'
+import { useSelector } from 'react-redux'
 
 // Type Imports
 import type { CalendarColors, CalendarType } from '@/types/apps/calendarTypes'
@@ -17,6 +17,7 @@ import type { CalendarColors, CalendarType } from '@/types/apps/calendarTypes'
 import Calendar from './Calendar'
 import SidebarLeft from './SidebarLeft'
 import AddEventSidebar from './AddEventSidebar'
+import { useAppDispatch } from '@/hooks/useDispatch'
 
 // CalendarColors Object
 const calendarsColor: CalendarColors = {
@@ -34,7 +35,7 @@ const AppCalendar = () => {
   const [addEventSidebarOpen, setAddEventSidebarOpen] = useState<boolean>(false)
 
   // Hooks
-  const dispatch = useDispatch()
+  const dispatch = useAppDispatch()
   const calendarStore = useSelector((state: { calendarReducer: CalendarType }) => state.calendarReducer)
   const mdAbove = useMediaQuery((theme: Theme) => theme.breakpoints.up('md'))
 
