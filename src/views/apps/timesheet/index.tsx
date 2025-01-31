@@ -35,7 +35,6 @@ const TimesheetView = ({ tabContentList }: { tabContentList: { [key: string]: Re
             onChange={handleChange}
             className='is-fit'
             pill='true'
-            overRideColor='#4B0082'
           >
             <Tab
               label='RECEIVED TIMESHEET'

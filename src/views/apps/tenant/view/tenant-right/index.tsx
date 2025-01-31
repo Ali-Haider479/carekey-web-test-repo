@@ -26,7 +26,7 @@ const TenantRight = ({ tabContentList }: { tabContentList: { [key: string]: Reac
       <TabContext value={activeTab}>
         <Grid container spacing={6}>
           <Grid size={{ xs: 12 }}>
-            <CustomTabList onChange={handleChange} variant='scrollable' pill='true' overRideColor='#4B0082'>
+            <CustomTabList onChange={handleChange} variant='scrollable' pill='true'>
               <Tab icon={<i className='bx-user' />} value='overview' label='Overview' iconPosition='start' />
               <Tab icon={<i className='bx-lock-alt' />} value='security' label='Security' iconPosition='start' />
               <Tab

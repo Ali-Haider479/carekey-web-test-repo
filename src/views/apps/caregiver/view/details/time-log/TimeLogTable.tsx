@@ -5,31 +5,15 @@ import { useEffect, useState } from 'react'
 
 // MUI Imports
 import Card from '@mui/material/Card'
-import CardHeader from '@mui/material/CardHeader'
-import TextField from '@mui/material/TextField'
-import Chip from '@mui/material/Chip'
-import Avatar from '@mui/material/Avatar'
-import Button from '@mui/material/Button'
-import Grid from '@mui/material/Grid2'
-
 // Third-party Imports
-import { createColumnHelper, flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table'
 import axios from 'axios'
 
 // CSS Module Imports
-import styles from '../CaregiversTable.module.css'
 import { useParams, useRouter } from 'next/navigation'
-import { GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
+import { GridColDef } from '@mui/x-data-grid'
 import DataTable from '@/@core/components/mui/DataTable'
-import { List, ListItem } from '@mui/material'
-
-// type AccountHistory = {
-//   key: number
-//   dateAndTime: string
-//   admin: string
-//   section: string
-//   changesMade: string
-// }
+import { Typography } from '@mui/material'
+import AdUnitsIcon from '@mui/icons-material/AdUnits'
 
 const TimeLogTable = () => {
   const { id } = useParams()
@@ -39,7 +23,8 @@ const TimeLogTable = () => {
 
   const fetchTimeLog = async () => {
     try {
-      const fetchedTimeLog = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/caregiver/${id}`)
+      const fetchedTimeLog = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/time-log/caregiver/${id}`)
+      setData(fetchedTimeLog.data)
       console.log('Caregiver Timelog Data --> ', fetchedTimeLog)
     } catch (error) {
       console.error('Error fetching data: ', error)
@@ -50,97 +35,123 @@ const TimeLogTable = () => {
     fetchTimeLog()
   }, [])
 
-  const router = useRouter()
+  const calculateHoursWorked = (clockIn: string, clockOut: string) => {
+    // Parse the clock-in and clock-out times
+    const clockInTime = new Date(clockIn)
+    const clockOutTime = new Date(clockOut)
 
-  const rowData = [
-    {
-      id: '1',
-      client: 'Donald Degree',
-      date: '04/29/2024',
-      startTime: '10:30:00 AM',
-      endTime: '02:18:00 PM',
-      timeDuration: '3.75 Hrs',
-      loggedVia: 'APP (Manual)'
-    },
-    {
-      id: '2',
-      client: 'Stancy Midth',
-      date: '04/29/2024',
-      startTime: '10:30:00 AM',
-      endTime: '02:18:00 PM',
-      timeDuration: '3.75 Hrs',
-      loggedVia: 'APP (Manual)'
-    },
-    {
-      id: '3',
-      client: 'Alfonzo',
-      date: '04/29/2024',
-      startTime: '10:30:00 AM',
-      endTime: '02:18:00 PM',
-      timeDuration: '3.75 Hrs',
-      loggedVia: 'APP (Manual)'
-    },
-    {
-      id: '4',
-      client: 'Tokyo',
-      date: '04/29/2024',
-      startTime: '10:30:00 AM',
-      endTime: '02:18:00 PM',
-      timeDuration: '3.75 Hrs',
-      loggedVia: 'APP (Manual)'
-    },
-    {
-      id: '5',
-      client: 'Sheena',
-      date: '04/29/2024',
-      startTime: '10:30:00 AM',
-      endTime: '02:18:00 PM',
-      timeDuration: '3.75 Hrs',
-      loggedVia: 'APP (Manual)'
-    }
-  ]
+    // Calculate the difference in milliseconds
+    const differenceMs = clockOutTime.getTime() - clockInTime.getTime()
+
+    // Convert milliseconds to hours
+    const hours = differenceMs / (1000 * 60 * 60)
+
+    // Round to two decimal places
+    return hours.toFixed(2)
+  }
 
   const newColumns: GridColDef[] = [
-    // {
-    //   field: 'itemNumber',
-    //   headerName: '#',
-    //   flex: 0.5,
-    //   renderCell: (params: GridRenderCellParams) => <span>{params.row.index + 1}</span>
-    // },
     {
       field: 'id',
       headerName: '#',
       flex: 0.1
     },
     {
-      field: 'client',
+      field: 'clientName',
       headerName: 'CLIENT NAME',
-      flex: 0.3
+      flex: 1,
+      renderCell: (params: any) => (
+        <Typography className='font-normal text-base my-3'>
+          {params?.row?.client?.firstName} {params?.row?.client?.lastName}
+        </Typography>
+      )
     },
     {
-      field: 'date',
+      field: 'payPeriod',
       headerName: 'DATE',
-      flex: 0.3
+      flex: 1,
+      renderCell: (params: any) => {
+        const startTime = params?.row?.clockIn
+        if (startTime) {
+          // Parse the date string into a Date object
+          const date = new Date(startTime)
+          // Format the date as "14/06/2025"
+          const formattedDate = date.toLocaleDateString('en-GB', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+          })
+
+          return <Typography className='font-normal text-base my-3'>{formattedDate}</Typography>
+        }
+
+        return <Typography className='font-normal text-base my-3'>N/A</Typography>
+      }
     },
     {
-      field: 'startTime',
+      field: 'clockIn',
       headerName: 'START TIME',
-      flex: 0.3
+      flex: 1,
+      renderCell: (params: any) => {
+        const startTime = params?.row?.clockIn
+        if (startTime) {
+          // Parse the date string into a Date object
+          const date = new Date(startTime)
+          // Format the time as "03:00:08 PM"
+          const formattedTime = date.toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: true
+          })
+          return <Typography className='font-normal text-base my-3'>{formattedTime}</Typography>
+        }
+
+        return <Typography className='font-normal text-base my-3'>N/A</Typography>
+      }
     },
     {
-      field: 'endTime',
+      field: 'clockOut',
       headerName: 'END TIME',
-      flex: 0.3
+      flex: 1,
+      renderCell: (params: any) => {
+        const endTime = params?.row?.clockOut
+        if (endTime) {
+          // Parse the date string into a Date object
+          const date = new Date(endTime)
+          // Format the time as "03:00:08 PM"
+          const formattedTime = date.toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: true
+          })
+          return <Typography className='font-normal text-base my-3'>{formattedTime}</Typography>
+        }
+
+        return <Typography className='font-normal text-base my-3'>N/A</Typography>
+      }
     },
     {
-      field: 'timeDuration',
+      field: 'hoursWorked',
       headerName: 'TIME DURATION',
-      flex: 0.3
+      flex: 1,
+      renderCell: (params: any) => {
+        try {
+          const hoursWorked = calculateHoursWorked(params.row.clockIn, params.row.clockOut)
+
+          return <Typography className='font-normal text-base my-3'>{hoursWorked} Hrs</Typography>
+        } catch (error) {
+          console.error('Error calculating hours worked:', error)
+          return <span>N/A</span>
+        }
+      }
     },
     {
-      field: 'loggedVia',
+      field: 'logsVia',
       headerName: 'LOGGED VIA',
-      flex: 0.3
+      flex: 1,
+      renderCell: (params: any) => <AdUnitsIcon className='my-3' />
     }
   ]
 
@@ -148,7 +159,7 @@ const TimeLogTable = () => {
     <Card sx={{ borderRadius: 1, boxShadow: 3, p: 0 }}>
       {/* Table */}
       <div style={{ overflowX: 'auto' }}>
-        <DataTable columns={newColumns} data={rowData} />
+        <DataTable columns={newColumns} data={data} />
       </div>
     </Card>
   )
