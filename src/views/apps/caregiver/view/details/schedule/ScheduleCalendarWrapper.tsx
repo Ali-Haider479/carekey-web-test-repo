@@ -17,7 +17,7 @@ import type { CalendarColors, CalendarType } from '@/types/apps/calendarTypes'
 import ScheduleCalendar from './ScheduleCalendar'
 import ScheduleSidebarLeft from './ScheduleSidebarLeft'
 import AddScheduleSidebar from './AddScheduleSidebar'
-import { fetchEvents } from '@/redux-store/slices/calendar'
+import { fetchEvents, filterCaregiverSchedules } from '@/redux-store/slices/calendar'
 import axios from 'axios'
 import { useParams } from 'next/navigation'
 import { useAppDispatch } from '@/hooks/useDispatch'
@@ -44,26 +44,24 @@ const AppCalendar = () => {
   // Hooks
   const dispatch = useAppDispatch()
   const calendarStore = useSelector((state: { calendarReducer: CalendarType }) => state.calendarReducer)
-  const CurrentCaregiverCalenderEvents = calendarStore.events.filter((item: any) => item.caregiver.id == id)
-  console.log(CurrentCaregiverCalenderEvents)
-  const CurrentCaregiverFilteredEvents = calendarStore.filteredEvents.filter((item: any) => item.caregiver.id == id)
-  console.log(CurrentCaregiverFilteredEvents)
-  const CaregiverCalenderStore = {
-    ...calendarStore,
-    events: CurrentCaregiverCalenderEvents,
-    filteredEvents: CurrentCaregiverFilteredEvents
-  }
 
-  console.log('Calender store data', calendarStore)
   const mdAbove = useMediaQuery((theme: Theme) => theme.breakpoints.up('md'))
 
   const handleLeftSidebarToggle = () => setLeftSidebarOpen(!leftSidebarOpen)
 
   const handleAddEventSidebarToggle = () => setAddEventSidebarOpen(!addEventSidebarOpen)
 
+  // Fetch events on component mount
   useEffect(() => {
     dispatch(fetchEvents())
   }, [dispatch])
+
+  // Filter caregiver events after events are fetched
+  useEffect(() => {
+    if (calendarStore.events.length > 0) {
+      dispatch(filterCaregiverSchedules(id))
+    }
+  }, [dispatch, calendarStore.events, id])
 
   useEffect(() => {
     ;(async () => {
@@ -88,7 +86,7 @@ const AppCalendar = () => {
         mdAbove={mdAbove}
         dispatch={dispatch}
         calendarApi={calendarApi}
-        calendarStore={CaregiverCalenderStore}
+        calendarStore={calendarStore}
         calendarsColor={calendarsColor}
         leftSidebarOpen={leftSidebarOpen}
         handleLeftSidebarToggle={handleLeftSidebarToggle}
@@ -98,7 +96,7 @@ const AppCalendar = () => {
         <ScheduleCalendar
           dispatch={dispatch}
           calendarApi={calendarApi}
-          calendarStore={CaregiverCalenderStore}
+          calendarStore={calendarStore}
           setCalendarApi={setCalendarApi}
           calendarsColor={calendarsColor}
           handleLeftSidebarToggle={handleLeftSidebarToggle}
@@ -108,7 +106,7 @@ const AppCalendar = () => {
       <AddScheduleSidebar
         dispatch={dispatch}
         calendarApi={calendarApi}
-        calendarStore={CaregiverCalenderStore}
+        calendarStore={calendarStore}
         addEventSidebarOpen={addEventSidebarOpen}
         handleAddEventSidebarToggle={handleAddEventSidebarToggle}
         caregiverList={caregiverList}
