@@ -71,7 +71,7 @@ const CareGiverFormCard = ({ onShowChecklist }: CareGiverFormCardProps) => {
     <Card className=' p-6 rounded-lg shadow-md w-full ml-3 '>
       {/* Header */}
       <div className='flex justify-between items-center mb-4'>
-        <Typography variant='h4' className='font-semibold text-gray-600'>
+        <Typography variant='h4' className='font-semibold'>
           Submitted Forms
         </Typography>
         <Button

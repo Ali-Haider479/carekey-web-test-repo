@@ -23,7 +23,6 @@ import CustomDropDown from '@/@core/components/custom-inputs/CustomDropDown'
 import ControlledDatePicker from '@/@core/components/custom-inputs/ControledDatePicker'
 import ControlledTextArea from '@/@core/components/custom-inputs/ControlledTextArea'
 import CustomTextField from '@/@core/components/custom-inputs/CustomTextField'
-import clientList from '@/views/apps/reports/client-list'
 import { useForm } from 'react-hook-form'
 import DialogCloseButton from '@/components/dialogs/DialogCloseButton'
 
@@ -155,7 +154,7 @@ const InfoCard = () => {
       {/* Assigned Caregivers */}
       <div className='border-t pt-4'>
         <div className='flex flex-row items-center justify-between'>
-          <Typography variant='h3' className='mt-1 text-xl font-semibold text-gray-500 mb-2'>
+          <Typography variant='h3' className='mt-1 text-xl font-semibold mb-2'>
             Assigned Clients ({assignedClients?.length})
           </Typography>
           <IconButton

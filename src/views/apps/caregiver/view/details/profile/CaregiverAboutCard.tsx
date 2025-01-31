@@ -70,7 +70,7 @@ function CaregiverAboutCard() {
           <Card className='w-full ml-2 shadow-md rounded-lg p-6'>
             {/* About Header */}
             <div className='flex justify-between items-center mb-6'>
-              <Typography variant='h2' className='text-2xl font-semibold text-gray-700'>
+              <Typography variant='h2' className='text-2xl font-semibold'>
                 About
               </Typography>
               <Button
@@ -217,28 +217,36 @@ function CaregiverAboutCard() {
             <div className='mb-6 border-t pt-0'></div>
             {/* Section: Responsible Party Details */}
             <div>
-              <h2 className='text-lg font-semibold text-gray-600 mb-4'>Mailing Address</h2>
+              <Typography className='text-lg font-semibold mb-4'>Mailing Address</Typography>
               <div className='grid grid-cols-2 gap-x-8 gap-y-4'>
-                <Typography className='text-sm text-gray-500'>
-                  Address: <br />
-                  {data?.addresses[1]?.address?.address ? data?.addresses[1].address.address : '---'}
-                </Typography>
-                <Typography className='text-sm text-gray-500'>
-                  City: <br />
-                  {data?.addresses[1]?.address?.city ? data?.addresses[1].address.city : '---'}
-                </Typography>
-                <Typography className='text-sm text-gray-500'>
-                  State: <br />
-                  {data?.addresses[1]?.address?.city ? data?.addresses[1].address.city : '---'}
-                </Typography>
-                <Typography className='text-sm text-gray-500'>
-                  Zip: <br />
-                  {data?.addresses[1]?.address?.zipCode ? data?.addresses[1].address.zipCode : '---'}
-                </Typography>
-                <Typography className='text-base text-gray-500'>
-                  Pay Rate: <br />
-                  {data?.payRate ? data?.payRate : '---'}
-                </Typography>
+                <div className='flex justify-between text-sm text-gray-500'>
+                  <Typography>Address:</Typography>
+                  <Typography className=''>
+                    {data?.addresses[1]?.address?.address ? data?.addresses[1].address.adrress : '---'}
+                  </Typography>
+                </div>
+                <div className='flex justify-between text-sm text-gray-500'>
+                  <Typography>City:</Typography>
+                  <Typography className=''>
+                    {data?.addresses[1]?.address?.city ? data?.addresses[1].address.city : '---'}
+                  </Typography>
+                </div>
+                <div className='flex justify-between text-sm text-gray-500'>
+                  <Typography>State:</Typography>
+                  <Typography className=''>
+                    {data?.addresses[1]?.address?.state ? data?.addresses[1].address.state : '---'}
+                  </Typography>
+                </div>
+                <div className='flex justify-between text-sm text-gray-500'>
+                  <Typography>Zip Code:</Typography>
+                  <Typography className=''>
+                    {data?.addresses[1]?.address?.zipCode ? data?.addresses[1].address.zipCode : '---'}
+                  </Typography>
+                </div>
+                <div className='flex justify-between text-sm text-gray-500'>
+                  <Typography>Pay Rate:</Typography>
+                  <Typography className=''>{data?.payRate ? data?.payRate : '---'}</Typography>
+                </div>
               </div>
               <Button
                 variant='contained'
@@ -259,61 +267,53 @@ function CaregiverAboutCard() {
 
           {/* Section: Service Information */}
           <Card className='mt-5 w-full ml-2 shadow-md rounded-lg p-6'>
-            <h2 className='text-lg font-semibold text-gray-600 mb-4'>PCA UMPI Information</h2>
+            <Typography className='text-lg font-semibold mb-4'>PCA UMPI Information</Typography>
             <div className='grid grid-cols-2 gap-x-8 gap-y-4'>
-              <Typography className='text-sm text-gray-500'>
-                Payor: <br />
-                No
-              </Typography>
-              <Typography className='text-sm text-gray-500'>
-                UMPI: <br />
-                NA
-              </Typography>
-            </div>
-            <div className='grid grid-cols-2 gap-x-8 gap-y-4'>
-              <Typography className='text-sm text-gray-500'>
-                Activation Date: <br />
-                No
-              </Typography>
-              <Typography className='text-sm text-gray-500'>
-                Expiry Date: <br />
-                NA
-              </Typography>
-            </div>
-            <div className='grid grid-cols-2 gap-x-8 gap-y-4'>
-              <Typography className='text-sm text-gray-500'>
-                Fax Date: <br />
-                No
-              </Typography>
-              <Typography className='text-sm text-gray-500'>
-                Recieved Date: <br />
-                NA
-              </Typography>
+              <div className='flex justify-between text-sm text-gray-500'>
+                <Typography className='text-sm'>Payor:</Typography>
+                <Typography className='text-sm'>---</Typography>
+              </div>
+              <div className='flex justify-between text-sm text-gray-500'>
+                <Typography className='text-sm'>UMPI:</Typography>
+                <Typography className='text-sm'>---</Typography>
+              </div>
+              <div className='flex justify-between text-sm text-gray-500'>
+                <Typography className='text-sm'>Activation Date:</Typography>
+                <Typography className='text-sm'>---</Typography>
+              </div>
+              <div className='flex justify-between text-sm text-gray-500'>
+                <Typography className='text-sm'>Expiry Date:</Typography>
+                <Typography className='text-sm'>---</Typography>
+              </div>
+              <div className='flex justify-between text-sm text-gray-500'>
+                <Typography className='text-sm'>Fax Date:</Typography>
+                <Typography className='text-sm'>---</Typography>
+              </div>
+              <div className='flex justify-between text-sm text-gray-500'>
+                <Typography className='text-sm'>Recieved Date:</Typography>
+                <Typography className='text-sm'>---</Typography>
+              </div>
             </div>
           </Card>
 
           {/* Section: Service Plan Details */}
           <Card className='mt-5 w-full ml-2 shadow-md rounded-lg p-6'>
-            <Typography className='text-xl font-semibold text-gray-600 mb-4'>Caregiver Notes</Typography>
-            <Typography className='text-lg text-gray-500'>
+            <Typography className='text-xl font-semibold mb-4'>Caregiver Notes</Typography>
+            <Typography className='text-lg'>
               Allergies: <br />
             </Typography>
-            <Typography className='text-sm text-gray-500'>
-              {notesData?.allergies ? notesData?.allergies : '---'}
-            </Typography>
-            <Typography className='text-lg text-gray-500 mt-3'>
+            <Typography className='text-sm'>{notesData?.allergies ? notesData?.allergies : '---'}</Typography>
+            <Typography className='text-lg mt-3'>
               Special Requests: <br />
             </Typography>
-            <Typography className='text-sm text-gray-500'>
+            <Typography className='text-sm'>
               {notesData?.specialRequests ? notesData?.specialRequests : '---'}
             </Typography>
 
-            <Typography className='text-lg text-gray-500 mt-3'>
+            <Typography className='text-lg mt-3'>
               Comments: <br />
             </Typography>
-            <Typography className='text-sm text-gray-500'>
-              {notesData?.comments ? notesData?.comments : '---'}
-            </Typography>
+            <Typography className='text-sm'>{notesData?.comments ? notesData?.comments : '---'}</Typography>
 
             <div className='mb-6 border-t pt-6 mt-5'>
               <div className='grid grid-cols-2 gap-x-8 gap-y-4'>
