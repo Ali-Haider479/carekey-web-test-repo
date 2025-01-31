@@ -3,10 +3,12 @@ import DataTable from '@/@core/components/mui/DataTable'
 import { CheckOutlined, CloseOutlined } from '@mui/icons-material'
 import { Button, Card, CardContent, Typography } from '@mui/material'
 import { GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import moment from 'moment'
 import AcknowledgeSignature from './ClientSignatureSection'
 import AcknowledgeSignatureCaregiver from './CaregiverSignatureSection'
+import { useParams } from 'next/navigation'
+import axios from 'axios'
 
 interface DetailItemProps {
   label: string
@@ -21,105 +23,64 @@ const DetailItem: React.FC<DetailItemProps> = ({ label, value }) => (
 )
 
 const TimeSheets = () => {
-  const data: any[] = [
-    {
-      id: '1',
-      date: '4 SEPT,MONDAY',
-      radio: '1:1',
-      locationShared: 'NO',
-      locApproved: 'YES',
-      stayFacility: 'NO',
-      timeIn: '11:00 AM',
-      timeOut: '11:00 PM',
-      activity: 'Assist with daily living skills Others'
-    },
-    {
-      id: '2',
-      date: '5 SEPT,MONDAY',
-      radio: '1:1',
-      locationShared: 'NO',
-      locApproved: 'YES',
-      stayFacility: '',
-      timeIn: '11:00 AM',
-      timeOut: '11:00 PM',
-      activity: 'Assist with daily living skills Others'
-    },
-    {
-      id: '3',
-      date: '6 SEPT,MONDAY',
-      radio: '1:1',
-      locationShared: 'NO',
-      locApproved: 'YES',
-      stayFacility: 'NO',
-      timeIn: '11:00 AM',
-      timeOut: '11:00 PM',
-      activity: ''
-    },
-    {
-      id: '4',
-      date: '7 SEPT,MONDAY',
-      radio: '1:1',
-      locationShared: 'NO',
-      locApproved: 'YES',
-      stayFacility: 'NO',
-      timeIn: '11:00 AM',
-      timeOut: '11:00 PM',
-      activity: 'Assist with daily living skills Others'
-    },
-    {
-      id: '5',
-      date: '8 SEPT,MONDAY',
-      radio: '1:1',
-      locationShared: 'NO',
-      locApproved: 'YES',
-      stayFacility: 'NO',
-      timeIn: '11:00 AM',
-      timeOut: '11:00 PM',
-      activity: ''
-    },
-    {
-      id: '6',
-      date: '9 SEPT,MONDAY',
-      radio: '1:1',
-      locationShared: 'NO',
-      locApproved: 'YES',
-      stayFacility: 'NO',
-      timeIn: '11:00 AM',
-      timeOut: '11:00 PM',
-      activity: 'Assist with daily living skills Others'
-    },
-    {
-      id: '7',
-      date: '10 SEPT,MONDAY',
-      radio: '1:1',
-      locationShared: 'NO',
-      locApproved: 'YES',
-      stayFacility: '',
-      timeIn: '11:00 AM',
-      timeOut: '11:00 PM',
-      activity: ''
+  const { id } = useParams()
+  const [timelogData, setTimelogData] = useState<any>([])
+  const [search, setSearch] = useState('')
+
+  const fetchTimeLog = async () => {
+    try {
+      const fetchedTimeLog = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/time-log/client/${id}`)
+      setTimelogData(fetchedTimeLog.data)
+      console.log('Client Timelog Data --> ', fetchedTimeLog.data)
+    } catch (error) {
+      console.error('Error fetching data: ', error)
     }
-  ]
+  }
+
+  useEffect(() => {
+    fetchTimeLog()
+  }, [])
+
   const columns: GridColDef[] = [
     {
+      field: 'payPeriod',
       headerName: 'DATE',
-      field: 'date',
-      flex: 0.75
+      flex: 1,
+      renderCell: (params: any) => {
+        const startTime = params?.row?.clockIn
+        if (startTime) {
+          // Parse the date string into a Date object
+          const date = new Date(startTime)
+          // Format the date as "14/06/2025"
+          const formattedDate = date.toLocaleDateString('en-GB', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+          })
+
+          return <Typography className='font-normal text-base my-3'>{formattedDate}</Typography>
+        }
+
+        return <Typography className='font-normal text-base my-3'>N/A</Typography>
+      }
     },
     {
       headerName: 'RADIO',
       field: 'radio',
-      flex: 0.5
+      flex: 1
     },
     {
       headerName: 'SHARED LOCATION',
       field: 'locationShared',
-      flex: 0.75
+      flex: 1,
+      renderCell: (params: any) => (
+        <Typography className='font-normal text-base my-3'>{params?.row?.client?.sharedCare}</Typography>
+      )
     },
     {
       headerName: 'LOC APPROVED',
       field: 'locApproved',
-      flex: 0.75,
+      flex: 1,
       renderCell: (params: GridRenderCellParams) => (
         <>
           {params.value === 'YES' ? (
@@ -133,27 +94,67 @@ const TimeSheets = () => {
     {
       headerName: 'FACILITY STAY',
       field: 'stayFacility',
-      flex: 0.5
+      flex: 1,
+      renderCell: (params: any) => (
+        <Typography className='font-normal text-base my-3'>{params?.row?.client?.sharedCare}</Typography>
+      )
     },
     {
       headerName: 'TIME IN',
       field: 'timeIn',
-      flex: 0.5
+      flex: 1,
+      renderCell: (params: any) => {
+        const startTime = params?.row?.clockIn
+        if (startTime) {
+          // Parse the date string into a Date object
+          const date = new Date(startTime)
+          // Format the time as "03:00:08 PM"
+          const formattedTime = date.toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: true
+          })
+          return <Typography className='font-normal text-base my-3'>{formattedTime}</Typography>
+        }
+
+        return <Typography className='font-normal text-base my-3'>N/A</Typography>
+      }
     },
     {
       headerName: 'TIME-OUT',
       field: 'timeOut',
-      flex: 0.5
+      flex: 1,
+      renderCell: (params: any) => {
+        const endTime = params?.row?.clockOut
+        if (endTime) {
+          // Parse the date string into a Date object
+          const date = new Date(endTime)
+          // Format the time as "03:00:08 PM"
+          const formattedTime = date.toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: true
+          })
+          return <Typography className='font-normal text-base my-3'>{formattedTime}</Typography>
+        }
+
+        return <Typography className='font-normal text-base my-3'>N/A</Typography>
+      }
     },
     {
       headerName: 'ACTIVITIES',
       field: 'activity',
       flex: 1.5,
-      renderCell: (params: GridRenderCellParams) => (
-        <>
-          {params.value && params.value !== '' ? <p>{params.value}</p> : <CloseOutlined className='text-[#FF3E1D]' />}
-        </>
-      )
+      renderCell: (params: any) =>
+        params.row.checkedActivity ? (
+          <Typography className='font-normal text-base my-3'>
+            {params?.row?.checkedActivity?.activities.map((activity: any) => activity.title).join(', ')}
+          </Typography>
+        ) : (
+          <CloseOutlined className='text-[#FF3E1D]' />
+        )
     }
   ]
 
@@ -173,7 +174,7 @@ const TimeSheets = () => {
   const dateColumns: GridColDef[] = [
     {
       field: 'monday',
-      flex: 0.5,
+      flex: 1,
       renderHeader: () => (
         <div>
           Monday
@@ -184,7 +185,7 @@ const TimeSheets = () => {
     },
     {
       field: 'tuesday',
-      flex: 0.5,
+      flex: 1,
       renderHeader: () => (
         <div>
           Tuesday
@@ -195,7 +196,7 @@ const TimeSheets = () => {
     },
     {
       field: 'wednesday',
-      flex: 0.5,
+      flex: 1,
       renderHeader: () => (
         <div>
           Wednesday
@@ -206,7 +207,7 @@ const TimeSheets = () => {
     },
     {
       field: 'thursday',
-      flex: 0.5,
+      flex: 1,
       renderHeader: () => (
         <div>
           Thursday
@@ -217,7 +218,7 @@ const TimeSheets = () => {
     },
     {
       field: 'friday',
-      flex: 0.5,
+      flex: 1,
       renderHeader: () => (
         <div>
           Friday
@@ -228,7 +229,7 @@ const TimeSheets = () => {
     },
     {
       field: 'saturday',
-      flex: 0.5,
+      flex: 1,
       renderHeader: () => (
         <div>
           Saturday
@@ -239,7 +240,7 @@ const TimeSheets = () => {
     },
     {
       field: 'sunday',
-      flex: 0.5,
+      flex: 1,
       renderHeader: () => (
         <div>
           Sunday
@@ -253,12 +254,12 @@ const TimeSheets = () => {
   return (
     <>
       <Card className=' h-fit w-[99%]  m-2 mt-1 mb-3 shadow-md rounded-lg border-solid border-2 '>
-        <div className='grid grid-cols-2 ml-4 mt-3 p-4 gap-y-4 gap-x-8'>
-          <DetailItem label='Recipient Name:' value='Sameer' />
+        <div className='grid grid-cols-2 ml-4 mt-3 p-4 gap-y-4 gap-x-4'>
+          <DetailItem label='Recipient Name:' value={timelogData[0]?.client.firstName} />
           <DetailItem label='Week Duration:' value='4 September 2024 - 10 September 2024' />
           <DetailItem label='Caregiver Name:' value='Stancy Moore' />
         </div>
-        <DataTable columns={columns} data={data} />
+        <DataTable columns={columns} data={timelogData} />
       </Card>
       <Card className=' h-fit w-[99%] ml-2 mt-3 shadow-md rounded-lg mb-3  border-solid border-2'>
         <h2 className='text-xl pt-4 ml-4 mb-4'>Total Hours</h2>
