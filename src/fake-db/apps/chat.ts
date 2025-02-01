@@ -543,5 +543,7 @@ export const db: ChatDataType = {
         }
       ]
     }
-  ]
+  ],
+  loading: false,
+  error: ''
 }

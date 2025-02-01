@@ -1,29 +1,13 @@
 'use client'
 import React, { useEffect, useState } from 'react'
-import {
-  Button,
-  Card,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  FormControlLabel,
-  Grid2 as Grid,
-  IconButton,
-  MenuItem,
-  Modal,
-  Switch,
-  Typography
-} from '@mui/material'
+import { Button, Card, Dialog, Grid2 as Grid, IconButton, Typography } from '@mui/material'
 import axios from 'axios'
 import { useParams } from 'next/navigation'
 import { Add } from '@mui/icons-material'
-import FormModal from '@/@core/components/mui/Modal'
 import CustomDropDown from '@/@core/components/custom-inputs/CustomDropDown'
 import ControlledDatePicker from '@/@core/components/custom-inputs/ControledDatePicker'
 import ControlledTextArea from '@/@core/components/custom-inputs/ControlledTextArea'
 import CustomTextField from '@/@core/components/custom-inputs/CustomTextField'
-import clientList from '@/views/apps/reports/client-list'
 import { useForm } from 'react-hook-form'
 import DialogCloseButton from '@/components/dialogs/DialogCloseButton'
 

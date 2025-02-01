@@ -5,7 +5,7 @@ import type { getDictionary } from '@/utils/getDictionary'
 const horizontalMenuData = (dictionary: Awaited<ReturnType<typeof getDictionary>>): HorizontalMenuDataType[] => [
   // This is how you will normally render submenu
   {
-    label: dictionary['navigation'].dashboards,
+    label: dictionary['navigation'].dashboard,
     icon: 'bx-home-smile',
     children: [
       // This is how you will normally render menu item
