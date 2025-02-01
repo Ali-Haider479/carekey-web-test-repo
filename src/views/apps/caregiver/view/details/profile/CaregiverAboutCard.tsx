@@ -156,25 +156,25 @@ function CaregiverAboutCard() {
                   <div className='flex justify-between text-sm text-gray-500'>
                     <Typography>Address:</Typography>
                     <Typography className=''>
-                      {data?.addresses[0].address.address ? data?.addresses[0].address.address : '---'}
+                      {data?.addresses[0]?.address.address ? data?.addresses[0]?.address.address : '---'}
                     </Typography>
                   </div>
                   <div className='flex justify-between text-sm text-gray-500'>
                     <Typography>City:</Typography>
                     <Typography className=''>
-                      {data?.addresses[0].address.city ? data?.addresses[0].address.city : '---'}
+                      {data?.addresses[0]?.address?.city ? data?.addresses[0]?.address?.city : '---'}
                     </Typography>
                   </div>
                   <div className='flex justify-between text-sm text-gray-500'>
                     <Typography>State:</Typography>
                     <Typography className=''>
-                      {data?.addresses[0].address.state ? data?.addresses[0].address.state : '---'}
+                      {data?.addresses[0]?.address?.state ? data?.addresses[0]?.address?.state : '---'}
                     </Typography>
                   </div>
                   <div className='flex justify-between text-sm text-gray-500'>
                     <Typography>Zip:</Typography>
                     <Typography className=''>
-                      {data?.addresses[0].address.zipCode ? data?.addresses[0].address.zipCode : '---'}
+                      {data?.addresses[0]?.address?.zipCode ? data?.addresses[0]?.address?.zipCode : '---'}
                     </Typography>
                   </div>
                   <div className='flex justify-between text-sm text-gray-500'>
