@@ -683,6 +683,7 @@ export const db: DB = {
     designation: 'UX Designer',
     profileImg: '/images/avatars/1.png',
     designationIcon: 'bx-palette',
-    coverImg: '/images/pages/profile-banner.png'
+    coverImg: '/images/pages/profile-banner.png',
+    status: ''
   }
 }

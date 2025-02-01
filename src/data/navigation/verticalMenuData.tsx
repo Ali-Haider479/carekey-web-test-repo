@@ -5,7 +5,7 @@ import type { getDictionary } from '@/utils/getDictionary'
 const verticalMenuData = (dictionary: Awaited<ReturnType<typeof getDictionary>>): VerticalMenuDataType[] => [
   // This is how you will normally render submenu
   {
-    label: dictionary['navigation'].dashboards,
+    label: dictionary['navigation'].dashboard,
     suffix: {
       label: '5',
       color: 'error'

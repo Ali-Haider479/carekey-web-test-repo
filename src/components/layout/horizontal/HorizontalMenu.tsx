@@ -90,7 +90,7 @@ const HorizontalMenu = ({ dictionary }: { dictionary: Awaited<ReturnType<typeof 
           menuSectionStyles: verticalMenuSectionStyles(verticalNavOptions, theme)
         }}
       >
-        <SubMenu label={dictionary['navigation'].dashboards} icon={<i className='bx-home-smile' />}>
+        <SubMenu label={dictionary['navigation'].dashboard} icon={<i className='bx-home-smile' />}>
           <MenuItem href={`/${locale}/dashboards/crm`} icon={<i className='bx-doughnut-chart' />}>
             {dictionary['navigation'].crm}
           </MenuItem>
