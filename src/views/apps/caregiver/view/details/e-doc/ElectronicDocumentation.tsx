@@ -61,7 +61,7 @@ const ElectronicDocumentation = () => {
     <Card className='p-6 rounded-lg shadow-md w-full ml-3'>
       {/* Header */}
       <div className='flex justify-between items-center mb-4'>
-        <Typography variant='h4' className='text-gray-600'>
+        <Typography variant='h4' className=''>
           Electronic Documentation
         </Typography>
         <Button
