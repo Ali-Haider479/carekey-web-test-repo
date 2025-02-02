@@ -41,34 +41,37 @@ const Layout = async (props: ChildrenType & { params: Promise<{ lang: Locale }> 
 
   return (
     <Providers direction={direction}>
-      {/* <AuthGuard locale={params.lang}> */}
-      <LayoutWrapper
-        systemMode={systemMode}
-        verticalLayout={
-          <VerticalLayout
-            navigation={<Navigation dictionary={dictionary} mode={mode} />}
-            navbar={<Navbar />}
-            // footer={<VerticalFooter />}
+      <AuthGuard locale={params.lang}>
+        <LayoutWrapper
+          systemMode={systemMode}
+          verticalLayout={
+            <VerticalLayout
+              navigation={<Navigation dictionary={dictionary} mode={mode} />}
+              navbar={<Navbar />}
+              // footer={<VerticalFooter />}
+            >
+              {children}
+            </VerticalLayout>
+          }
+          horizontalLayout={
+            <HorizontalLayout
+              header={<Header dictionary={dictionary} />}
+              // footer={<HorizontalFooter />}
+            >
+              {children}
+            </HorizontalLayout>
+          }
+        />
+        <ScrollToTop className='mui-fixed'>
+          <Button
+            variant='contained'
+            className='is-10 bs-10 rounded-full p-0 min-is-0 flex items-center justify-center'
           >
-            {children}
-          </VerticalLayout>
-        }
-        horizontalLayout={
-          <HorizontalLayout
-            header={<Header dictionary={dictionary} />}
-            // footer={<HorizontalFooter />}
-          >
-            {children}
-          </HorizontalLayout>
-        }
-      />
-      <ScrollToTop className='mui-fixed'>
-        <Button variant='contained' className='is-10 bs-10 rounded-full p-0 min-is-0 flex items-center justify-center'>
-          <i className='bx-up-arrow-alt' />
-        </Button>
-      </ScrollToTop>
-      {/* <Customizer dir={direction} /> */}
-      {/* </AuthGuard> */}
+            <i className='bx-up-arrow-alt' />
+          </Button>
+        </ScrollToTop>
+        {/* <Customizer dir={direction} /> */}
+      </AuthGuard>
     </Providers>
   )
 }

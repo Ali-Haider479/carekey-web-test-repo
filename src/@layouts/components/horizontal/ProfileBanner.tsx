@@ -1,3 +1,4 @@
+'use client'
 import { Card, CardContent, CardMedia, Typography } from '@mui/material'
 import React from 'react'
 import type { ProfileHeaderType } from '@/types/pages/profileTypes'
@@ -17,8 +18,6 @@ const ProfileBanner = ({ props }: { props: ProfileHeaderType }) => {
 
     return '' // Return empty string if no valid names
   }
-  console.log('Initals', getInitials(props.fullName))
-  console.log(props.profileImg)
 
   const handleImageChange = async (file: File) => {
     // try {
