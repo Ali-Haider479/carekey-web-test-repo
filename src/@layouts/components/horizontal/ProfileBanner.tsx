@@ -1,5 +1,6 @@
-import { Box, Card, CardContent, CardMedia, styled, Typography } from '@mui/material'
+'use client'
 import React, { useState } from 'react'
+import { Box, Card, CardContent, CardMedia, styled, Typography } from '@mui/material'
 import type { ProfileHeaderType } from '@/types/pages/profileTypes'
 import CustomAvatar from '@/@core/components/mui/Avatar'
 import axios from 'axios'
