@@ -1,6 +1,6 @@
 import React from 'react'
 import CustomCheckList from '@core/components/mui/CustomChecklist'
-import { Button, Menu, MenuItem, Typography } from '@mui/material'
+import { Button, Card, Menu, MenuItem, Typography } from '@mui/material'
 import { Mail as MailIcon, MoreVert as MoreVertIcon } from '@mui/icons-material'
 import ListAltIcon from '@mui/icons-material/ListAlt'
 
@@ -70,10 +70,10 @@ const CaregiverChecklist = ({ onShowForms }: CareGiverChecklistProps) => {
   )
 
   return (
-    <div className='bg-white p-6 rounded-lg shadow-md w-full mb-2'>
+    <Card className=' p-6 rounded-lg shadow-md w-full mb-2'>
       {/* Header */}
       <div className='h-[38px] flex justify-between items-center'>
-        <h2 className='text-2xl font-semibold text-gray-600'>Checklist</h2>
+        <Typography className='text-2xl font-semibold'>Checklist</Typography>
         <div>
           <Button
             variant='contained'
@@ -108,7 +108,7 @@ const CaregiverChecklist = ({ onShowForms }: CareGiverChecklistProps) => {
       <CustomCheckList listTitle='New Hire Paper Work' documents={documents} menu={renderMenu()} />
 
       <CustomCheckList listTitle='Miscellaneous Forms' documents={MiscDocsForms} menu={renderMenu()} />
-    </div>
+    </Card>
   )
 }
 

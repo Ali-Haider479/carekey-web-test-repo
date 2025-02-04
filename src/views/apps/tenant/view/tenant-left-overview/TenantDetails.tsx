@@ -53,6 +53,7 @@ const TenantDetails = () => {
         if (data?.users?.[3]?.profileImageUrl) {
           const imageUrl = `https://${process.env.NEXT_PUBLIC_AWS_S3_BUCKET}.s3.amazonaws.com/${data.users[3].profileImageUrl}`
           setFileUrl(imageUrl)
+          console.log('Img Url', imageUrl)
         }
       } catch (error) {
         console.error('Error fetching tenant data:', error)

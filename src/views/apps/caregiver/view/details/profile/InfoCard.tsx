@@ -139,7 +139,7 @@ const InfoCard = () => {
       {/* Assigned Caregivers */}
       <div className='border-t pt-4'>
         <div className='flex flex-row items-center justify-between'>
-          <Typography variant='h3' className='mt-1 text-xl font-semibold text-gray-500 mb-2'>
+          <Typography variant='h3' className='mt-1 text-xl font-semibold mb-2'>
             Assigned Clients ({assignedClients?.length})
           </Typography>
           <IconButton
