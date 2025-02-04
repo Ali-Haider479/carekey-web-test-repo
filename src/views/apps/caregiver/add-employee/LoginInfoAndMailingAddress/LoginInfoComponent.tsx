@@ -210,7 +210,13 @@ const LoginInfoComponent = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
                         value: item.id,
                         optionString: `${item.firstName} ${item.lastName}`
                       }
-                    }) || []
+                    }) || [
+                      {
+                        key: `1-Mudassir`,
+                        value: 1,
+                        optionString: `Mudassir Ahmad`
+                      }
+                    ]
                   }
                   name={'clientId'}
                   control={control}
