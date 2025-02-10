@@ -79,7 +79,7 @@ const CaregiverDetails = ({ tabContentList }: BottomBodyProps) => {
           props={{
             fullName: fullName,
             coverImg: '/images/pages/profile-banner.png',
-            location: data?.addresses[0].address.state ? data?.addresses[0].address.state : '---',
+            location: data?.addresses[0]?.address?.state ? data?.addresses[0]?.address?.state : '---',
             profileImg: data?.user?.profileImageUrl,
             status: data?.user?.accountStatus ? data?.user?.accountStatus : '---'
           }}

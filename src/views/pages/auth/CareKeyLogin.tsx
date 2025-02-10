@@ -37,7 +37,7 @@ import { dark } from '@mui/material/styles/createPalette'
 import CareKeyLogoDark from '@/@core/svg/LogoDark'
 import CareKeyLogoLight from '@/@core/svg/LogoLight'
 import { getSession, signIn } from 'next-auth/react'
-import { Grid2 as Grid } from '@mui/material'
+import { CircularProgress, Grid2 as Grid } from '@mui/material'
 
 const CareKeyLogin = () => {
   const router = useRouter()
@@ -48,6 +48,7 @@ const CareKeyLogin = () => {
   const [alertOpen, setAlertOpen] = useState(false)
   const [alertProps, setAlertProps] = useState<any>()
   const [isPasswordShown, setIsPasswordShown] = useState(false)
+  const [loading, setLoading] = useState<boolean>(false)
 
   // Hooks
   const { lang: locale } = useParams()
@@ -87,6 +88,7 @@ const CareKeyLogin = () => {
     }
 
     try {
+      setLoading(true)
       const res = await signIn('credentials', {
         redirect: false,
         email,
@@ -127,6 +129,8 @@ const CareKeyLogin = () => {
         message: 'An unexpected error occurred. Please try again later.',
         severity: 'error'
       })
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -188,8 +192,15 @@ const CareKeyLogin = () => {
                 Forgot password?
               </Typography>
             </div>
-            <Button fullWidth variant='contained' type='submit' onClick={handleLoginClick}>
-              Login
+            <Button
+              fullWidth
+              variant='contained'
+              type='submit'
+              onClick={handleLoginClick}
+              disabled={loading}
+              startIcon={loading ? <CircularProgress size={20} color='inherit' /> : null}
+            >
+              {loading ? 'Logging in...' : 'Login'}
             </Button>
           </Grid>
         </div>

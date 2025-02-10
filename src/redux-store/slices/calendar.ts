@@ -11,6 +11,7 @@ import type { CalendarFiltersType, CalendarType } from '@/types/apps/calendarTyp
 const initialState: CalendarType & { loading: boolean; error: string | null } = {
   events: [],
   caregiverEvents: [],
+  clientEvents: [],
   filteredEvents: [],
   selectedEvent: null,
   selectedCalendars: ['Personal', 'Business', 'Family', 'Holiday', 'ETC'],
@@ -43,7 +44,13 @@ const filterEventsUsingCheckbox = (events: EventInput[], selectedCalendars: Cale
 }
 
 const filterEventsUsingCaregiverId = (events: EventInput[], caregiverId: number) => {
+  console.log('redux caregiver id', caregiverId, typeof caregiverId)
   return events.filter(event => event.caregiver?.id === caregiverId)
+}
+
+const filterEventsUsingClientId = (events: EventInput[], clientId: number) => {
+  console.log('redux client id', clientId, typeof clientId)
+  return events.filter(event => event.client?.id === clientId)
 }
 
 export const calendarSlice = createSlice({
@@ -104,6 +111,14 @@ export const calendarSlice = createSlice({
     filterCaregiverSchedules: (state, action) => {
       const caregiverId = action.payload
       state.caregiverEvents = filterEventsUsingCaregiverId(state.filteredEvents, Number(caregiverId))
+    },
+    filterClientSchedules: (state, action) => {
+      const clientId = action.payload
+      state.clientEvents = filterEventsUsingClientId(state.filteredEvents, Number(clientId))
+    },
+    clearFilter: state => {
+      state.clientEvents = []
+      state.caregiverEvents = []
     }
   },
   extraReducers: builder => {
@@ -132,7 +147,9 @@ export const {
   selectedEvent,
   filterCalendarLabel,
   filterCaregiverSchedules,
-  filterAllCalendarLabels
+  filterClientSchedules,
+  filterAllCalendarLabels,
+  clearFilter
 } = calendarSlice.actions
 
 export default calendarSlice.reducer

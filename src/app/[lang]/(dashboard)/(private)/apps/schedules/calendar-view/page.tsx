@@ -5,13 +5,11 @@ import ScheduleCalendarWrapper from '@/views/apps/schedule/calendar-view/Schedul
 import { Card } from '@mui/material'
 
 const CalendarViewApp = async () => {
-    return (
-        <Card className='overflow-visible'>
-            <AppFullCalendar className='app-calendar'>
-                <ScheduleCalendarWrapper />
-            </AppFullCalendar>
-        </Card>
-    )
+  return (
+    <AppFullCalendar className='app-calendar'>
+      <ScheduleCalendarWrapper />
+    </AppFullCalendar>
+  )
 }
 
 export default CalendarViewApp

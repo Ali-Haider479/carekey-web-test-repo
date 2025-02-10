@@ -82,8 +82,9 @@ const ClientDetails = ({ tabContentList }: BottomBodyProps) => {
               fullName: `${clientData?.firstName ? clientData?.firstName : ''} ${clientData?.lastName ? clientData?.lastName : ''}`,
               coverImg: '/images/pages/profile-banner.png',
               location: `${clientData?.addresses[0]?.address?.state ? clientData?.addresses[0]?.address?.state : ''}`,
-              profileImg: clientData?.imgUrl,
-              status: 'ACTIVE'
+              profileImg: clientData?.profileImgUrl,
+              status: 'ACTIVE',
+              isClient: true
             }}
           />
         )}

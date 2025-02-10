@@ -24,6 +24,7 @@ import TableFilters from '@/views/apps/user/list/TableFilters'
 import { RankingInfo, rankItem } from '@tanstack/match-sorter-utils'
 import { GridColDef } from '@mui/x-data-grid'
 import DataTable from '@/@core/components/mui/DataTable'
+import ReactTable from '@/@core/components/mui/ReactTable'
 
 // Updated interfaces to match your data structure
 interface Caregiver {
@@ -93,14 +94,24 @@ const CustomTablePagination = <T,>({ table }: CustomTablePaginationProps<T>) => 
   return <TablePaginationComponent table={table as unknown as Table<unknown>} />
 }
 
-const rows = [
+const dummyData = [
   {
     id: 1,
     batchName: 'Exercise',
     dateOfSubmission: '2025-01-10',
     submissionDate: '2025-01-12',
     remitanceStatus: 'Pending',
-    finalStatus: 'In Progress'
+    finalStatus: 'In Progress',
+    subRows: [
+      {
+        id: 2,
+        batchName: 'Running',
+        dateOfSubmission: '2025-01-08',
+        submissionDate: '2025-01-09',
+        remitanceStatus: 'Completed',
+        finalStatus: 'Completed'
+      }
+    ]
   },
   {
     id: 2,
@@ -130,71 +141,51 @@ const rows = [
 
 const SubmittedBatchTable = () => {
   const [data, setData] = useState<Signature[]>([])
-  const [filteredData, setFilteredData] = useState(rows)
+  const [filteredData, setFilteredData] = useState(dummyData)
   const [globalFilter, setGlobalFilter] = useState('')
   const [rowSelection, setRowSelection] = useState({})
   const [isLoading, setIsLoading] = useState(false)
 
-  const columns: GridColDef[] = [
+  const columns = [
     {
-      field: 'batchName',
-      headerName: 'BATCH NAME',
-      flex: 1.5
+      accessorKey: 'batchName',
+      header: 'BATCH NAME'
     },
     {
-      field: 'dateOfSubmission',
-      headerName: 'DATE OF SUBMISSION',
-      flex: 1
+      accessorKey: 'dateOfSubmission',
+      header: 'DATE OF SUBMISSION'
     },
     {
-      field: 'submissionDate',
-      headerName: 'SUBMISSION DATE',
-      flex: 1
+      accessorKey: 'submissionDate',
+      header: 'SUBMISSION DATE'
     },
     {
-      field: 'remitanceStatus',
-      headerName: 'REMITANCE STATUS',
-      flex: 1,
-      renderCell: params => (
-        <span
-          className={`px-3 py-1 rounded-full text-xs ${
-            params.value === 'Completed' ? 'bg-[#72E1281F] text-[#67C932]' : 'bg-[#26C6F91F] text-[#21AEDB'
-          }`}
-        >
-          {params.value}
-        </span>
-      )
+      accessorKey: 'remitanceStatus',
+      header: 'REMITANCE STATUS'
     },
     {
-      field: 'finalStatus',
-      headerName: 'FINAL STATUS',
-      flex: 1,
-      renderCell: params => (
-        <span
-          className={`px-3 py-1 rounded-full text-xs ${
-            params.value === 'Completed' ? 'bg-[#72E1281F] text-[#67C932]' : 'bg-[#666CFF1F] text-[#6062E8'
-          }`}
-        >
-          {params.value}
-        </span>
-      )
+      accessorKey: 'finalStatus',
+      header: 'FINAL STATUS'
     }
   ]
 
-  if (isLoading) {
-    return (
-      <Card>
-        <div className='flex items-center justify-center p-10'>
-          <CircularProgress />
-        </div>
-      </Card>
-    )
-  }
+  useEffect(() => {
+    // Simulate data loading and theme initialization
+    const timer = setTimeout(() => {
+      setIsLoading(false)
+    }, 500)
+    return () => clearTimeout(timer)
+  }, [])
 
   return (
     <Card sx={{ borderRadius: 1, boxShadow: 3 }}>
-      {/* <CardHeader title='Submitted Batch' className='pb-4' /> */}
-      <DataTable data={filteredData} columns={columns} />
+      {isLoading ? (
+        <div className='flex items-center justify-center p-10'>
+          <CircularProgress />
+        </div>
+      ) : (
+        <ReactTable columns={columns} data={dummyData} enableExpanding={true} enableExpandAll={false} />
+      )}
     </Card>
   )
 }

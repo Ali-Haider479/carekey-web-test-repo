@@ -16,7 +16,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import type { RootState } from '@/redux-store'
 
 // Slice Imports
-import { fetchChatRooms, getActiveUserData } from '@/redux-store/slices/chat'
+import { fetchChatRooms, getActiveUserData, updateProfileFromSession } from '@/redux-store/slices/chat'
 
 // Component Imports
 import SidebarLeft from './SidebarLeft'
@@ -28,11 +28,13 @@ import { useSettings } from '@core/hooks/useSettings'
 // Util Imports
 import { commonLayoutClasses } from '@layouts/utils/layoutClasses'
 import { useAppDispatch } from '@/hooks/useDispatch'
+import { useSession } from 'next-auth/react'
 
 const ChatWrapper = () => {
   // States
   const [backdropOpen, setBackdropOpen] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const { data: session } = useSession()
 
   // Refs
   const messageInputRef = useRef<HTMLDivElement>(null)
@@ -45,17 +47,47 @@ const ChatWrapper = () => {
   const isBelowLgScreen = useMediaQuery((theme: Theme) => theme.breakpoints.down('lg'))
   const isBelowMdScreen = useMediaQuery((theme: Theme) => theme.breakpoints.down('md'))
   const isBelowSmScreen = useMediaQuery((theme: Theme) => theme.breakpoints.down('sm'))
-  const loggedInUserId = 1
+  const isInitialFetchRef = useRef(false)
+  const [isSessionLoaded, setIsSessionLoaded] = useState(false)
 
   // Get active user’s data
+  // useEffect(() => {
+  //   if (session?.user) {
+  //     dispatch(
+  //       updateProfileFromSession({
+  //         id: session.user.id,
+  //         userName: session.user.userName
+  //       })
+  //     )
+  //   }
+  //   // dispatch(fetchChatRooms(loggedInUserId))
+  // }, [session, dispatch])
+
+  useEffect(() => {
+    // Check if session exists and hasn't been processed yet
+    if (session?.user && !isInitialFetchRef.current && !isSessionLoaded) {
+      isInitialFetchRef.current = true // Mark that we've started the fetch
+      setIsSessionLoaded(true)
+
+      // Update profile and fetch chat rooms
+      dispatch(
+        updateProfileFromSession({
+          id: session.user.id,
+          userName: session.user.userName
+        })
+      )
+      dispatch(fetchChatRooms(session.user.id))
+    }
+  }, [session, dispatch, isSessionLoaded])
+
   const activeUser = (id: number) => {
     dispatch(getActiveUserData(id))
   }
 
-  useEffect(() => {
-    dispatch(fetchChatRooms(loggedInUserId))
-    // dispatch(fetchChatHistory(1))
-  }, [dispatch])
+  // useEffect(() => {
+  //   dispatch(fetchChatRooms(loggedInUserId))
+  //   // dispatch(fetchChatHistory(1))
+  // }, [dispatch])
 
   // Focus on message input when active user changes
   useEffect(() => {

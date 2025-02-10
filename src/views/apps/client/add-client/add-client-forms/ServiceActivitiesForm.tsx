@@ -40,14 +40,24 @@ const ServiceActivitiesForm = forwardRef<{ handleSubmit: any }, Props>(({ onFini
     onFinish(data) // Pass form data to parent
   }
 
-  const [serviceTypes, setServiceTypes] = useState<any>()
+  const [serviceTypes, setServiceTypes] = useState<any[]>()
+  const [activities, setActivities] = useState<any[]>()
   const [caregiversList, setCaregiversList] = useState<any>()
+
+  const getAvailableServices = async () => {
+    try {
+      const activities = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/activity`)
+      setActivities(activities.data)
+    } catch (error) {
+      console.error('Error getting activities: ', error)
+    }
+  }
 
   const getServiceTypes = async () => {
     try {
       const serviceTypesResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/service`)
       console.log('Service Types --> ', serviceTypesResponse)
-      setServiceTypes(serviceTypesResponse)
+      setServiceTypes(serviceTypesResponse.data)
     } catch (error) {
       console.error('Error getting service types: ', error)
     }
@@ -65,6 +75,7 @@ const ServiceActivitiesForm = forwardRef<{ handleSubmit: any }, Props>(({ onFini
 
   useEffect(() => {
     getServiceTypes()
+    getAvailableServices()
     getCaregiversList()
   }, [])
 
@@ -146,7 +157,7 @@ const ServiceActivitiesForm = forwardRef<{ handleSubmit: any }, Props>(({ onFini
                   error={errors.service}
                   label={'Select Service'}
                   optionList={
-                    serviceTypes?.data?.map((item: any) => {
+                    serviceTypes?.map((item: any) => {
                       return {
                         key: `${item.id}-${item.name}`,
                         value: item.id,
@@ -177,7 +188,8 @@ const ServiceActivitiesForm = forwardRef<{ handleSubmit: any }, Props>(({ onFini
               control={control}
               label={'Select Service'}
               error={errors.serviceActivities}
-              defaultValue={''}
+              defaultValue={[]}
+              activities={activities || []}
             />
           </CardContent>
         </Card>

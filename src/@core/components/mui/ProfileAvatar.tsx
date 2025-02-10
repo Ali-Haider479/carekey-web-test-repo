@@ -1,3 +1,4 @@
+'use client'
 // React Imports
 import { forwardRef, useRef, useState } from 'react'
 
@@ -12,12 +13,15 @@ import Box from '@mui/material/Box'
 import type { ThemeColor } from '@core/types'
 import { Typography } from '@mui/material'
 import { ProfileHeaderType } from '@/types/pages/profileTypes'
+import { CameraAlt } from '@mui/icons-material'
 
 export type CustomAvatarProps = AvatarProps & {
   color?: ThemeColor
   skin?: 'filled' | 'light' | 'light-static'
   size?: number
   onImageChange?: (file: File) => Promise<void>
+  placeholder_text_size?: string
+  allowupdate?: string
 }
 
 const AvatarStyled = styled(MuiAvatar)<CustomAvatarProps>(({ skin, color, size, theme }) => {
@@ -66,7 +70,7 @@ const UploadOverlay = styled(Box)(({ theme }) => ({
   alignItems: 'center',
   justifyContent: 'center',
   backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  borderRadius: '50%',
+  borderRadius: '5%',
   opacity: 0,
   transition: theme.transitions.create('opacity', {
     duration: theme.transitions.duration.shorter
@@ -84,8 +88,6 @@ const ProfileAvatar = forwardRef<HTMLDivElement, CustomAvatarProps>((props: Cust
   // States
   const [previewUrl, setPreviewUrl] = useState<string | undefined>(rest.src)
   const [isInitials, setIsInitials] = useState<Boolean>(false)
-
-  console.log('PreviewUrl', rest.src)
 
   if (previewUrl?.length === 2) {
     console.log('URL is Initals', previewUrl)
@@ -141,10 +143,18 @@ const ProfileAvatar = forwardRef<HTMLDivElement, CustomAvatarProps>((props: Cust
         skin={skin}
         sx={{ ...rest.sx, width: size, height: size }}
       >
-        {!isInitials && <Typography className='font-bold text-4xl'>{getInitials(altText)}</Typography>}
+        {!isInitials && (
+          <Typography className={`font-bold ${props.placeholder_text_size ? props.placeholder_text_size : 'text-4xl'}`}>
+            {getInitials(altText)}
+          </Typography>
+        )}
       </AvatarStyled>
 
-      <UploadOverlay onClick={handleClick} />
+      {props.allowupdate === 'true' && (
+        <UploadOverlay onClick={handleClick}>
+          <CameraAlt sx={{ color: '#fff', fontSize: 40 }} />
+        </UploadOverlay>
+      )}
       {/* <IconButton
           sx={{
             color: 'white',

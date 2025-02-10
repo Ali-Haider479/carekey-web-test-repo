@@ -1,5 +1,5 @@
 'use client'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Box, Card, CardContent, CardMedia, styled, Typography } from '@mui/material'
 import type { ProfileHeaderType } from '@/types/pages/profileTypes'
 import CustomAvatar from '@/@core/components/mui/Avatar'
@@ -30,30 +30,37 @@ const ProfileBanner = ({ props }: { props: ProfileHeaderType }) => {
   const [fileUrl, setFileUrl] = useState<string | undefined>(props?.profileImg)
   const [loading, setLoading] = useState<boolean>(true)
 
-  const getInitials = (fullName: string): string => {
-    const names = fullName.trim().split(' ').filter(Boolean) // Split and remove extra spaces
-
-    if (names.length === 1) {
-      return names[0][0].toUpperCase() // Only one name, return its initial
+  useEffect(() => {
+    if (props?.profileImg) {
+      getProfileImage(props?.profileImg)
     }
+  }, [props?.profileImg])
 
-    if (names.length >= 2) {
-      return `${names[0][0].toUpperCase()}${names[names.length - 1][0].toUpperCase()}` // First and last name initials
+  const getProfileImage = async (key: string) => {
+    try {
+      const res = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_URL}/${props.isClient ? 'client' : 'caregivers'}/getProfileUrl/${key}`
+      )
+      setFileUrl(res.data)
+    } catch (err) {
+      throw Error(`Error in fetching profile image url, ${err}`)
     }
-    return '' // Return empty string if no valid names
   }
-  console.log('Initals', getInitials(props.fullName))
 
   const handleImageChange = async (file: File) => {
     try {
       setLoading(true)
       const formData = new FormData()
       formData.append('image', file)
-      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/user/${id}/profile-image`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/${props.isClient ? 'client' : 'user'}/${id}/profile-image`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
         }
-      })
+      )
       console.log('UPDATE RESPONSE', response.data)
       // Update the fileUrl state with the new image URL after successful upload
       if (response.data?.profileImageUrl) {
@@ -71,38 +78,14 @@ const ProfileBanner = ({ props }: { props: ProfileHeaderType }) => {
       <CardMedia image={props.coverImg} className='bs-[250px]' />
       <CardContent className='flex gap-6 justify-center flex-col items-center md:items-end md:flex-row !pt-0 md:justify-start'>
         <div className='flex items-center justify-center rounded-bs-md mbs-[-40px] border-[5px] mis-[-5px] border-b-0 border-backgroundPaper bg-backgroundPaper'>
-          {/* <CustomAvatar
-            alt='user-profile'
-            src={props.profileImg ? props?.profileImg : getInitials(props.fullName)}
-            variant='rounded'
-            size={120}
-            onImageChange={handleImageChange}
-          /> */}
           <ProfileAvatar
             alt={props.fullName}
-            // src={fileUrl !== undefined ? fileUrl : `${getInitials(props?.fullName)}`}
             src={fileUrl}
             variant='rounded'
             size={120}
             onImageChange={handleImageChange}
+            allowupdate={'true'}
           />
-          {/* {fileUrl ? (
-            // <img height={120} width={120} src={props.profileImg} className='rounded' alt='Profile Img' />
-            <CustomAvatar
-              alt='user-profile'
-              src={fileUrl || getInitials(props.fullName)}
-              variant='rounded'
-              size={120}
-              onImageChange={handleImageChange}
-            />
-          ) : (
-            <div className='flex items-center justify-center w-[120px] h-[120px] rounded bg-gray-400 text-5xl font-bold text-white'>
-              <div>{getInitials(props.fullName)}</div>
-              <div>
-                <UploadOverlay />
-              </div>
-            </div>
-          )} */}
         </div>
 
         <div className='flex is-full justify-start self-end flex-col items-center gap-6 sm-gap-0 sm:flex-row sm:justify-between sm:items-end '>

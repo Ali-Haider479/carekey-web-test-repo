@@ -51,7 +51,7 @@ const TenantDetails = () => {
         // Update both states at once
         setTenantData(data)
         if (data?.users?.[3]?.profileImageUrl) {
-          const imageUrl = `https://${process.env.NEXT_PUBLIC_AWS_S3_BUCKET}.s3.amazonaws.com/${data.users[3].profileImageUrl}`
+          const imageUrl = `https://${process.env.NEXT_PUBLIC_AWS_S3_PROFILE_BUCKET}.s3.amazonaws.com/${data.users[3].profileImageUrl}`
           setFileUrl(imageUrl)
           console.log('Img Url', imageUrl)
         }

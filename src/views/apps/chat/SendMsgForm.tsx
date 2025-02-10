@@ -120,7 +120,7 @@ const SendMsgForm = ({ dispatch, activeUser, isBelowSmScreen, messageInputRef, c
     event.preventDefault()
     if (msg.trim() !== '') {
       // Find contact details from contacts array
-      const contactDetails = contacts.find(contact => contact.id === activeUser.id)
+      const contactDetails = contacts.find(contact => contact.chatRoomId === activeUser.chatRoomId)
       const messageData = {
         messageId: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, // Unique message ID
         senderId: profileUser.id,
@@ -131,11 +131,8 @@ const SendMsgForm = ({ dispatch, activeUser, isBelowSmScreen, messageInputRef, c
         msgStatus: { isSent: true, isDelivered: false, isSeen: false }
       }
 
-      console.log('PROFILE USER MQTT', profileUser)
-      console.log('ACTIVE USER MQTT', activeUser)
       // const chatTopic = `carekey/chat/${profileUser.id}/${activeUser.id}`
       const chatTopic = `carekey/chat/${profileUser.fullName.replaceAll(' ', '_')}-${profileUser.id}/${activeUser?.fullName.replaceAll(' ', '_')}-${activeUser?.id}`
-      console.log('MQTT CHAT TOPIC LOG', chatTopic)
       if (mqttClient.isConnected) {
         mqttClient.publish(chatTopic, JSON.stringify(messageData))
         dispatch(sendMsg({ msg })) // Pass full messageData to redux

@@ -3,18 +3,20 @@ import CustomTextField from './TextField'
 
 type OptionListType = {
   key: number
-  value: string
+  value: string | number
   displayValue: string
 }
 
 type DropDownProps = {
-  value: string
+  value: string | number
   setValue: any
   options: OptionListType[]
   className?: string
+  disabled?: boolean
+  onChange?: any
 }
 
-const Dropdown = ({ value, setValue, options, className }: DropDownProps) => {
+const Dropdown = ({ value, setValue, options, className, disabled, onChange }: DropDownProps) => {
   return (
     <CustomTextField
       select
@@ -22,12 +24,13 @@ const Dropdown = ({ value, setValue, options, className }: DropDownProps) => {
       placeholder='status'
       className={className?.length ? className : 'w-full'}
       value={value}
-      onChange={e => setValue(e.target.value)}
+      onChange={onChange ? onChange : e => setValue(e.target.value)}
+      disabled={disabled}
       slotProps={{
         select: { displayEmpty: true }
       }}
     >
-      {options.map((item: OptionListType) => (
+      {options?.map((item: OptionListType) => (
         <MenuItem key={item.key} value={item.value}>
           {item.displayValue}
         </MenuItem>

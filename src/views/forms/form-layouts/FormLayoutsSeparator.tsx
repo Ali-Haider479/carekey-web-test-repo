@@ -227,8 +227,6 @@ const FormLayoutsSeparator = () => {
             <Grid size={{ xs: 12, sm: 6 }}>
               <AppReactDatepicker
                 selected={formData.date}
-                showYearDropdown
-                showMonthDropdown
                 onChange={(date: Date | null) => setFormData({ ...formData, date })}
                 placeholderText='MM/DD/YYYY'
                 customInput={<CustomTextField fullWidth label='Birth Date' placeholder='MM-DD-YYYY' />}

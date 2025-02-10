@@ -7,7 +7,7 @@ export type ClientTypes = {
   insuranceCode: string
   pmiNumber: string
   checked?: boolean
-  profilePic?: string
+  profileImgUrl: string
   status?: string
   item?: string
 }

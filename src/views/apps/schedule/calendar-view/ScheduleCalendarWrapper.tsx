@@ -4,7 +4,7 @@
 import { useEffect, useState } from 'react'
 
 // MUI Imports
-import { useMediaQuery } from '@mui/material'
+import { Card, useMediaQuery } from '@mui/material'
 import type { Theme } from '@mui/material/styles'
 
 // Third-party Imports
@@ -17,9 +17,10 @@ import type { CalendarColors, CalendarType } from '@/types/apps/calendarTypes'
 import ScheduleCalendar from './ScheduleCalendar'
 import ScheduleSidebarLeft from './ScheduleSidebarLeft'
 import AddScheduleSidebar from './AddScheduleSidebar'
-import { fetchEvents } from '@/redux-store/slices/calendar'
+import { fetchEvents, filterCaregiverSchedules, filterClientSchedules } from '@/redux-store/slices/calendar'
 import axios from 'axios'
 import { useAppDispatch } from '@/hooks/useDispatch'
+import CalenderFilters from './CalenderFilters'
 
 // CalendarColors Object
 const calendarsColor: CalendarColors = {
@@ -38,6 +39,7 @@ const AppCalendar = () => {
   const [serviceList, setServiceList] = useState<[] | any>([])
   const [leftSidebarOpen, setLeftSidebarOpen] = useState<boolean>(false)
   const [addEventSidebarOpen, setAddEventSidebarOpen] = useState<boolean>(false)
+  const [isClient, setIsClient] = useState<boolean>(false)
 
   // Hooks
   const dispatch = useAppDispatch()
@@ -51,6 +53,19 @@ const AppCalendar = () => {
   useEffect(() => {
     dispatch(fetchEvents())
   }, [dispatch])
+
+  const filterEvent = (value: any, label: any) => {
+    console.log('filter value --> ', value, label)
+    if (label.includes('caregiver')) {
+      console.log('Inside caregiver')
+      dispatch(filterCaregiverSchedules(value))
+      setIsClient(false)
+    } else if (label.includes('client')) {
+      console.log('inside client')
+      dispatch(filterClientSchedules(value))
+      setIsClient(true)
+    }
+  }
 
   useEffect(() => {
     ;(async () => {
@@ -70,39 +85,44 @@ const AppCalendar = () => {
   }, [])
 
   return (
-    <>
-      <ScheduleSidebarLeft
-        mdAbove={mdAbove}
-        dispatch={dispatch}
-        calendarApi={calendarApi}
-        calendarStore={calendarStore}
-        calendarsColor={calendarsColor}
-        leftSidebarOpen={leftSidebarOpen}
-        handleLeftSidebarToggle={handleLeftSidebarToggle}
-        handleAddEventSidebarToggle={handleAddEventSidebarToggle}
-      />
-      <div className='p-6 pbe-0 flex-grow overflow-visible bg-backgroundPaper rounded'>
-        <ScheduleCalendar
+    <div className='flex flex-col w-full'>
+      <Card className='p-5 mb-5'>
+        <CalenderFilters filterEvent={filterEvent} />
+      </Card>
+      <Card className='flex w-full'>
+        <ScheduleSidebarLeft
+          mdAbove={mdAbove}
           dispatch={dispatch}
           calendarApi={calendarApi}
           calendarStore={calendarStore}
-          setCalendarApi={setCalendarApi}
           calendarsColor={calendarsColor}
+          leftSidebarOpen={leftSidebarOpen}
           handleLeftSidebarToggle={handleLeftSidebarToggle}
           handleAddEventSidebarToggle={handleAddEventSidebarToggle}
         />
-      </div>
-      <AddScheduleSidebar
-        dispatch={dispatch}
-        calendarApi={calendarApi}
-        calendarStore={calendarStore}
-        addEventSidebarOpen={addEventSidebarOpen}
-        handleAddEventSidebarToggle={handleAddEventSidebarToggle}
-        caregiverList={caregiverList}
-        clientList={clientList}
-        serviceList={serviceList}
-      />
-    </>
+        <div className='p-6 pbe-0 flex-grow overflow-visible bg-backgroundPaper rounded'>
+          <ScheduleCalendar
+            dispatch={dispatch}
+            calendarApi={calendarApi}
+            // calendarStore={calendarStore}
+            setCalendarApi={setCalendarApi}
+            calendarsColor={calendarsColor}
+            handleLeftSidebarToggle={handleLeftSidebarToggle}
+            handleAddEventSidebarToggle={handleAddEventSidebarToggle}
+          />
+        </div>
+        <AddScheduleSidebar
+          dispatch={dispatch}
+          calendarApi={calendarApi}
+          calendarStore={calendarStore}
+          addEventSidebarOpen={addEventSidebarOpen}
+          handleAddEventSidebarToggle={handleAddEventSidebarToggle}
+          caregiverList={caregiverList}
+          clientList={clientList}
+          serviceList={serviceList}
+        />
+      </Card>
+    </div>
   )
 }
 

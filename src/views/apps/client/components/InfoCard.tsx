@@ -1,43 +1,11 @@
 'use client'
-import { Card, CardContent, Typography } from '@mui/material'
+import ProfileAvatar from '@/@core/components/mui/ProfileAvatar'
+import { Avatar, Card, CardContent, Typography } from '@mui/material'
 import axios from 'axios'
 import { useParams } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
 
 const InfoCard = () => {
-  const caregivers = [
-    {
-      name: 'Shamso Abshir',
-      phone: '(952)726-1234',
-      image: '/images/avatars/1.png'
-    },
-    { name: 'Alia Khan', phone: '(952)726-1234', image: '/images/avatars/2.png' },
-    {
-      name: 'Alonso James',
-      phone: '(952)726-1234',
-      image: '/images/avatars/3.png'
-    },
-    {
-      name: 'Alisha Lehman',
-      phone: '(952)726-1234',
-      image: '/images/avatars/4.png'
-    }
-  ]
-
-  const getInitials = (fullName: string): string => {
-    const names = fullName?.trim()?.split(' ')?.filter(Boolean) // Split and remove extra spaces
-
-    if (names?.length === 1) {
-      return names[0][0].toUpperCase() // Only one name, return its initial
-    }
-
-    if (names?.length >= 2) {
-      return `${names[0][0].toUpperCase()}${names[names.length - 1][0].toUpperCase()}` // First and last name initials
-    }
-
-    return '' // Return empty string if no valid names
-  }
-
   const [assignedCaregiver, setAssignedCaregiver] = useState<any>()
   const { id } = useParams()
 
@@ -46,15 +14,37 @@ const InfoCard = () => {
       const clientResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/client/assigned-caregivers/${id}`)
       const fetchedClient = clientResponse.data
       console.log('Assigned Caregivers --> ', fetchedClient)
-      setAssignedCaregiver(fetchedClient)
+
+      // Fetch profile images directly inside
+      const caregiversWithPhotos = await Promise.all(
+        fetchedClient.map(async (item: any) => {
+          const profileImageUrl =
+            item?.user?.profileImageUrl !== null
+              ? await getProfileImage(item?.user?.profileImageUrl)
+              : item?.user?.profileImageUrl
+          return { ...item, profileImageUrl }
+        })
+      )
+
+      setAssignedCaregiver(caregiversWithPhotos)
     } catch (error) {
-      console.error('error fetching data: ', error)
+      console.error('Error fetching data: ', error)
     }
   }
 
   useEffect(() => {
     fetchAssignCaregivers()
   }, [])
+
+  const getProfileImage = async (key: string) => {
+    try {
+      const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/client/getProfileUrl/${key}`)
+      return res.data
+    } catch (err) {
+      console.error(`Error fetching profile image: ${err}`)
+      return '/default-avatar.png' // Fallback image
+    }
+  }
 
   return (
     <Card className='max-w-md mr-4 shadow-md rounded-lg'>
@@ -112,22 +102,19 @@ const InfoCard = () => {
           {assignedCaregiver?.map((item: any, index: number) => (
             <li key={index} className='flex justify-between mb-4 last:mb-0'>
               <div className='flex items-center space-x-3'>
-                {item?.user.profileImageUrl ? (
-                  <img src={item?.user.profileImageUrl} alt={item?.user.userName} className='w-10 h-10 rounded-full' />
-                ) : (
-                  <div className='w-10 h-10 rounded-full bg-gray-400 flex items-center justify-center text-white font-bold'>
-                    {getInitials(item?.user.userName)}
-                  </div>
-                )}
-
+                <Avatar
+                  alt={item?.user?.userName}
+                  src={item?.profileImageUrl || item?.user?.userName}
+                  className='w-10 h-10'
+                />
                 <div>
-                  <Typography className='text-sm font-medium text-gray-400'>{item?.user.userName}</Typography>
-                  <Typography className='text-sm text-[#71DD37]'>{item?.user.emailAddress}</Typography>
+                  <Typography className='text-sm font-medium text-gray-400'>{item?.user?.userName}</Typography>
+                  <Typography className='text-sm text-[#71DD37]'>{item?.user?.emailAddress}</Typography>
                 </div>
               </div>
               {/* < className="text- bg-[#666CFF]"> #4B0082*/}
               <img
-                className='bg-[#666CFF] bg-opacity-20 h-6 w-6  rounded-full'
+                className='bg-[#666CFF] bg-opacity-20 h-8 border-4 border-transparent rounded-full mt-1'
                 src='/assets/svg-icons/openLink.svg'
                 alt=''
               />

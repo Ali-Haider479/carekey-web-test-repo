@@ -18,6 +18,7 @@ type Props = {
   label: string
   optionList: Option[]
   defaultValue: any
+  sx?: any
 }
 
 function CustomDropDown(props: Props) {
@@ -28,14 +29,14 @@ function CustomDropDown(props: Props) {
       defaultValue={props.defaultValue}
       rules={{ required: `${props.label} is required` }}
       render={({ field }) => (
-        <FormControl fullWidth error={!!props.error} className='relative'>
+        <FormControl fullWidth error={!!props.error} className='relative' sx={props.sx}>
           <InputLabel size='small'>{props.label}</InputLabel>
           <Select
             {...field} // Spread field to bind value and onChange
             label={props.label}
             size='small'
           >
-            {props.optionList.map((item: any) => (
+            {props?.optionList?.map((item: any) => (
               <MenuItem key={item.key} value={item.value}>
                 {item.optionString}
               </MenuItem>

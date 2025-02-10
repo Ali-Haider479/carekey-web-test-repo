@@ -1,65 +1,131 @@
 'use client'
 import React, { useEffect, useState } from 'react'
-import { Button, Card, styled, Typography } from '@mui/material'
+import { Button, Card, styled, TextField, Typography } from '@mui/material'
 import CircularProgress from '@mui/material/CircularProgress'
 import type { CircularProgressProps } from '@mui/material/CircularProgress'
 import { useParams } from 'next/navigation'
 import axios from 'axios'
-import { AddOutlined, EditOutlined } from '@mui/icons-material'
+import { AddOutlined, EditOutlined, SaveOutlined } from '@mui/icons-material'
+import { EditableField } from '@/@core/components/custom-inputs/CustomEditableTextField'
+import CloseIcon from '@mui/icons-material/Close'
 
 const CircularProgressDeterminate = styled(CircularProgress)<CircularProgressProps>({
   color: 'var(--mui-palette-customColors-trackBg)'
 })
 
-const CircularProgressIndeterminate = styled(CircularProgress)<CircularProgressProps>(({ theme }) => ({
-  left: 0,
-  position: 'absolute',
-  animationDuration: '550ms',
-  color: '#1a90ff',
-  ...theme.applyStyles('dark', {
-    color: '#308fe8'
-  })
-}))
-
 function CaregiverAboutCard() {
   const { id } = useParams()
-
-  console.log('user id ---> ', id)
-  const [data, setData] = useState<any>()
-  const [notesData, setNotesData] = useState<any>()
+  const [data, setData] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [isEdit, setIsEdit] = useState(true)
+  const [formData, setFormData] = useState<any>({})
+
   useEffect(() => {
-    // Fetch data from the backend API
-    const fetchData = async () => {
-      try {
-        setIsLoading(true)
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/caregivers/user/${id}`)
-        const fetchedData = response.data
-        console.log('Caregiver Profile Data ----> ', fetchedData)
-        setData(fetchedData)
-      } catch (error) {
-        console.error('Error fetching data', error)
-      }
-      setIsLoading(false)
-    }
-
     fetchData()
+  }, [])
 
-    const fetchNotesData = async () => {
-      try {
-        setIsLoading(true)
-        const notesResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/caregivers/${id}/notes`)
-        const fetchedNotesData = notesResponse.data
-        console.log('Caregiver Notes Data ----> ', fetchedNotesData)
-        setNotesData(fetchedNotesData)
-      } catch (error) {
-        console.error('Error fetching data', error)
-      }
+  // Initialize form data when data is fetched
+  useEffect(() => {
+    if (data) {
+      setFormData({
+        firstName: data.firstName,
+        middleName: data.middleName,
+        lastName: data.lastName,
+        primaryPhoneNumber: data.primaryPhoneNumber,
+        dateOfBirth: data.dateOfBirth,
+        emailAddress: data.user?.emailAddress,
+        secondaryPhoneNumber: data.secondaryPhoneNumber,
+        emergencyContactNumber: data.emergencyContactNumber,
+        emergencyEmailId: data.emergencyEmailId,
+        address: data.addresses?.[0]?.address?.address,
+        city: data.addresses?.[0]?.address?.city,
+        state: data.addresses?.[0]?.address?.state,
+        zipCode: data.addresses?.[0]?.address?.zipCode,
+        payRate: data.payRate,
+        payor: data.pcaUMPIInfo?.payor,
+        umpi: data.pcaUMPIInfo?.umpi,
+        activationDate: data.pcaUMPIInfo?.activationDate,
+        receivedDate: data.pcaUMPIInfo?.receivedDate,
+        faxDate: data.pcaUMPIInfo?.faxDate,
+        expiryDate: data.pcaUMPIInfo?.expiryDate,
+        dateOfHire: data.dateOfHire,
+        specialRequests: data.caregiverNotes?.specialRequests,
+        comments: data.caregiverNotes?.comments,
+        allergies: data.caregiverNotes?.allergies
+      })
+    }
+  }, [data])
+
+  const fetchData = async () => {
+    try {
+      setIsLoading(true)
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/caregivers/user/${id}`)
+      setData(response.data)
+    } catch (error) {
+      console.error('Error fetching data', error)
+    } finally {
       setIsLoading(false)
     }
+  }
 
-    fetchNotesData()
-  }, [])
+  const handleFieldChange = (name: string, value: any) => {
+    setFormData((prev: any) => ({
+      ...prev,
+      [name]: value
+    }))
+  }
+
+  const handleSave = async () => {
+    try {
+      setIsLoading(true)
+      await axios.put(`${process.env.NEXT_PUBLIC_API_URL}/caregivers/${id}`, formData)
+      console.log('FORM DATA', formData)
+      setIsEdit(true)
+      fetchData() // Refresh data after update
+    } catch (error) {
+      console.error('Error updating data', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const personalFields = [
+    { label: 'First Name', name: 'firstName', value: formData.firstName },
+    { label: 'Middle Name', name: 'middleName', value: formData.middleName },
+    { label: 'Last Name', name: 'lastName', value: formData.lastName },
+    { label: 'Phone Number', name: 'primaryPhoneNumber', value: formData.primaryPhoneNumber },
+    { label: 'Date of Birth', name: 'dateOfBirth', value: formData.dateOfBirth },
+    { label: 'Email Address', name: 'emergencyEmailId', value: formData.emergencyEmailId },
+    { label: 'Cell Phone Number', name: 'secondaryPhoneNumber', value: formData.secondaryPhoneNumber }
+  ]
+
+  const emergencyFields = [
+    { label: 'Emergency Number', name: 'emergencyContactNumber', value: formData.emergencyContactNumber },
+    { label: 'Emergency Email ID', name: 'emergencyEmailId', value: formData.emergencyEmailId }
+  ]
+
+  const addressFields = [
+    { label: 'Address', name: 'address', value: formData.address },
+    { label: 'City', name: 'city', value: formData.city },
+    { label: 'State', name: 'state', value: formData.state },
+    { label: 'Zip', name: 'zipCode', value: formData.zipCode },
+    { label: 'Pay Rate', name: 'payRate', value: formData.payRate }
+  ]
+
+  const pcaUmpiFields = [
+    { label: 'Payor', name: 'payor', value: formData.payor },
+    { label: 'UMPI', name: 'umpi', value: formData.umpi },
+    { label: 'Activation Date', name: 'activationDate', value: formData.activationDate },
+    { label: 'Expiry Date', name: 'expiryDate', value: formData.expiryDate },
+    { label: 'Fax Date', name: 'faxDate', value: formData.faxDate },
+    { label: 'Received Date', name: 'receivedDate', value: formData.receivedDate }
+  ]
+
+  const caregiverNotesFields = [
+    { label: 'Allergies', name: 'allergies', value: formData.allergies },
+    { label: 'Special Requests', name: 'specialRequests', value: formData.specialRequests },
+    { label: 'Comments', name: 'comments', value: formData.comments }
+  ]
 
   return (
     <>
@@ -73,19 +139,26 @@ function CaregiverAboutCard() {
               <Typography variant='h2' className='text-2xl font-semibold'>
                 About
               </Typography>
-              <Button
-                variant='contained'
-                startIcon={<EditOutlined />}
-                sx={{
-                  backgroundColor: '#4B0082',
-                  color: 'white',
-                  '&:hover': {
-                    backgroundColor: '#6A0DAD'
-                  }
-                }}
-              >
-                Edit
-              </Button>
+              <div className='flex items-center justify-center gap-2'>
+                {!isEdit && (
+                  <Button
+                    variant='contained'
+                    startIcon={<CloseIcon />}
+                    className='text-white hover:bg-indigo-800'
+                    onClick={() => setIsEdit(true)}
+                  >
+                    Cancel
+                  </Button>
+                )}
+                <Button
+                  variant='contained'
+                  startIcon={isEdit ? <EditOutlined /> : <SaveOutlined />}
+                  className='bg-indigo-900 text-white hover:bg-indigo-800'
+                  onClick={isEdit ? () => setIsEdit(false) : handleSave}
+                >
+                  {isEdit ? 'Edit' : 'Update'}
+                </Button>
+              </div>
             </div>
 
             {/* Personal Details Section */}
@@ -94,122 +167,32 @@ function CaregiverAboutCard() {
                 Personal Details
               </Typography>
               <div className='grid grid-cols-2 gap-y-4 gap-x-8'>
-                <div className='flex justify-between text-sm text-gray-500'>
-                  <Typography>First Name:</Typography>
-                  <Typography className=''>{data?.firstName ? data.firstName : '---'}</Typography>
-                </div>
-                <div className='flex justify-between text-sm text-gray-500'>
-                  <Typography>User Name:</Typography>
-                  <Typography className=''>{data?.user?.userName ? data.user.userName : '---'}</Typography>
-                </div>
-                <div className='flex justify-between text-sm text-gray-500'>
-                  <Typography>Middle Name:</Typography>
-                  <Typography className=''>{data?.middleName ? data.middleName : '---'}</Typography>
-                </div>
-                <div className='flex justify-between text-sm text-gray-500'>
-                  <Typography>Title:</Typography>
-                  <Typography className=''>{data?.schedules?.title ? data?.schedules.title : '---'}</Typography>
-                </div>
-                <div className='flex justify-between text-sm text-gray-500'>
-                  <Typography>Last Name:</Typography>
-                  <Typography className=''>{data?.lastName ? data.lastName : '---'}</Typography>
-                </div>
-                <div className='flex justify-between text-sm text-gray-500'>
-                  <Typography>Phone Number:</Typography>
-                  <Typography className=''>{data?.primaryPhoneNumber ? data.primaryPhoneNumber : '---'}</Typography>
-                </div>
-                <div className='flex justify-between text-sm text-gray-500'>
-                  <Typography>Date of Birth:</Typography>
-                  <Typography className=''>{data?.dateOfBirth ? data.dateOfBirth : '---'}</Typography>
-                </div>
-                <div className='flex justify-between text-sm text-gray-500'>
-                  <Typography>Email Address:</Typography>
-                  <Typography className=''>{data?.user?.emailAddress ? data.user.emailAddress : '---'}</Typography>
-                </div>
-                <div className='flex justify-between text-sm text-gray-500'>
-                  <Typography>Cell Phone Number:</Typography>
-                  <Typography className=''>{data?.secondryPhoneNumber ? data.secondryPhoneNumber : ''}</Typography>
-                </div>
+                {personalFields.map(field => (
+                  <EditableField
+                    key={field.name}
+                    label={field.label}
+                    value={field.value}
+                    isEdit={isEdit}
+                    onChange={handleFieldChange}
+                    name={field.name}
+                  />
+                ))}
               </div>
             </div>
 
             {/* Emergency Details Section */}
-            <div className=' mb-6 border-t pt-6'>
+            <div className='mb-6 border-t pt-6'>
               <div className='grid grid-cols-2 gap-y-4 gap-x-8'>
-                <div className='flex justify-between text-sm text-gray-500'>
-                  <Typography>EMERGENCY NUMBER:</Typography>
-                  <Typography className=''>
-                    {data?.emergencyContactNumber ? data.emergencyContactNumber : '---'}
-                  </Typography>
-                </div>
-                <div className='flex justify-between text-sm text-gray-500'>
-                  <Typography>EMERGENCY EMAIL ID: </Typography>
-                  <Typography className=''>{data?.emergencyEmailId ? data.emergencyEmailId : '---'}</Typography>
-                </div>
-              </div>
-              <div className='mt-6 border-t pt-6'>
-                <div className='grid grid-cols-2 gap-y-4 gap-x-8'>
-                  <div className='flex justify-between text-sm text-gray-500'>
-                    <Typography>Employee Number:</Typography>
-                    <Typography className=''>---</Typography>
-                  </div>
-                  <div className='flex justify-between text-sm text-gray-500'>
-                    <Typography>Address:</Typography>
-                    <Typography className=''>
-                      {data?.addresses[0]?.address.address ? data?.addresses[0]?.address.address : '---'}
-                    </Typography>
-                  </div>
-                  <div className='flex justify-between text-sm text-gray-500'>
-                    <Typography>City:</Typography>
-                    <Typography className=''>
-                      {data?.addresses[0]?.address?.city ? data?.addresses[0]?.address?.city : '---'}
-                    </Typography>
-                  </div>
-                  <div className='flex justify-between text-sm text-gray-500'>
-                    <Typography>State:</Typography>
-                    <Typography className=''>
-                      {data?.addresses[0]?.address?.state ? data?.addresses[0]?.address?.state : '---'}
-                    </Typography>
-                  </div>
-                  <div className='flex justify-between text-sm text-gray-500'>
-                    <Typography>Zip:</Typography>
-                    <Typography className=''>
-                      {data?.addresses[0]?.address?.zipCode ? data?.addresses[0]?.address?.zipCode : '---'}
-                    </Typography>
-                  </div>
-                  <div className='flex justify-between text-sm text-gray-500'>
-                    <Typography>Date of Hire:</Typography>
-                    <Typography className=''>{data?.dateOfHire ? data?.dateOfHire : '---'}</Typography>
-                  </div>
-                  <div className='flex justify-between text-sm text-gray-500'>
-                    <Typography>Caregiver Level:</Typography>
-                    <Typography className=''>{data?.caregiverLevel ? data?.caregiverLevel : '---'}</Typography>
-                  </div>
-                  <div className='flex justify-between text-sm text-gray-500'>
-                    <Typography>NPI/UMPI Number:</Typography>
-                    <Typography className=''>{data?.caregiverUMPI ? data?.caregiverUMPI : '---'}</Typography>
-                  </div>
-                  <div className='flex justify-between text-sm text-gray-500'>
-                    <Typography>Training Completed:</Typography>
-                    <Typography className=''>---</Typography>
-                  </div>
-                  <div className='flex justify-between text-sm text-gray-500'>
-                    <Typography>Is 245D licensed:</Typography>
-                    <Typography className=''>{data?.isLicensed245d === true ? 'Yes' : 'No'}</Typography>
-                  </div>
-                  <div className='flex justify-between text-sm text-gray-500'>
-                    <Typography>DL Expiration Date:</Typography>
-                    <Typography className=''>---</Typography>
-                  </div>
-                  <div className='flex justify-between text-sm text-gray-500'>
-                    <Typography>Driver Liscensed:</Typography>
-                    <Typography className=''>---</Typography>
-                  </div>
-                  <div className='flex justify-between text-sm text-gray-500'>
-                    <Typography>Addional Pay Rate:</Typography>
-                    <Typography className=''>{data?.additionalPayRate ? data?.additionalPayRate : '---'}</Typography>
-                  </div>
-                </div>
+                {emergencyFields.map(field => (
+                  <EditableField
+                    key={field.name}
+                    label={field.label}
+                    value={field.value}
+                    isEdit={isEdit}
+                    onChange={handleFieldChange}
+                    name={field.name}
+                  />
+                ))}
               </div>
             </div>
 
@@ -218,35 +201,17 @@ function CaregiverAboutCard() {
             {/* Section: Responsible Party Details */}
             <div>
               <Typography className='text-lg font-semibold mb-4'>Mailing Address</Typography>
-              <div className='grid grid-cols-2 gap-x-8 gap-y-4'>
-                <div className='flex justify-between text-sm text-gray-500'>
-                  <Typography>Address:</Typography>
-                  <Typography className=''>
-                    {data?.addresses[1]?.address?.address ? data?.addresses[1].address.adrress : '---'}
-                  </Typography>
-                </div>
-                <div className='flex justify-between text-sm text-gray-500'>
-                  <Typography>City:</Typography>
-                  <Typography className=''>
-                    {data?.addresses[1]?.address?.city ? data?.addresses[1].address.city : '---'}
-                  </Typography>
-                </div>
-                <div className='flex justify-between text-sm text-gray-500'>
-                  <Typography>State:</Typography>
-                  <Typography className=''>
-                    {data?.addresses[1]?.address?.state ? data?.addresses[1].address.state : '---'}
-                  </Typography>
-                </div>
-                <div className='flex justify-between text-sm text-gray-500'>
-                  <Typography>Zip Code:</Typography>
-                  <Typography className=''>
-                    {data?.addresses[1]?.address?.zipCode ? data?.addresses[1].address.zipCode : '---'}
-                  </Typography>
-                </div>
-                <div className='flex justify-between text-sm text-gray-500'>
-                  <Typography>Pay Rate:</Typography>
-                  <Typography className=''>{data?.payRate ? data?.payRate : '---'}</Typography>
-                </div>
+              <div className='grid grid-cols-2 gap-y-4 gap-x-8'>
+                {addressFields.map(field => (
+                  <EditableField
+                    key={field.name}
+                    label={field.label}
+                    value={field.value}
+                    isEdit={isEdit}
+                    onChange={handleFieldChange}
+                    name={field.name}
+                  />
+                ))}
               </div>
               <Button
                 variant='contained'
@@ -268,52 +233,33 @@ function CaregiverAboutCard() {
           {/* Section: Service Information */}
           <Card className='mt-5 w-full ml-2 shadow-md rounded-lg p-6'>
             <Typography className='text-lg font-semibold mb-4'>PCA UMPI Information</Typography>
-            <div className='grid grid-cols-2 gap-x-8 gap-y-4'>
-              <div className='flex justify-between text-sm text-gray-500'>
-                <Typography className='text-sm'>Payor:</Typography>
-                <Typography className='text-sm'>---</Typography>
-              </div>
-              <div className='flex justify-between text-sm text-gray-500'>
-                <Typography className='text-sm'>UMPI:</Typography>
-                <Typography className='text-sm'>---</Typography>
-              </div>
-              <div className='flex justify-between text-sm text-gray-500'>
-                <Typography className='text-sm'>Activation Date:</Typography>
-                <Typography className='text-sm'>---</Typography>
-              </div>
-              <div className='flex justify-between text-sm text-gray-500'>
-                <Typography className='text-sm'>Expiry Date:</Typography>
-                <Typography className='text-sm'>---</Typography>
-              </div>
-              <div className='flex justify-between text-sm text-gray-500'>
-                <Typography className='text-sm'>Fax Date:</Typography>
-                <Typography className='text-sm'>---</Typography>
-              </div>
-              <div className='flex justify-between text-sm text-gray-500'>
-                <Typography className='text-sm'>Recieved Date:</Typography>
-                <Typography className='text-sm'>---</Typography>
-              </div>
+            <div className='grid grid-cols-2 gap-y-4 gap-x-8'>
+              {pcaUmpiFields.map(field => (
+                <EditableField
+                  key={field.name}
+                  label={field.label}
+                  value={field.value}
+                  isEdit={isEdit}
+                  onChange={handleFieldChange}
+                  name={field.name}
+                />
+              ))}
             </div>
           </Card>
 
           {/* Section: Service Plan Details */}
           <Card className='mt-5 w-full ml-2 shadow-md rounded-lg p-6'>
             <Typography className='text-xl font-semibold mb-4'>Caregiver Notes</Typography>
-            <Typography className='text-lg'>
-              Allergies: <br />
-            </Typography>
-            <Typography className='text-sm'>{notesData?.allergies ? notesData?.allergies : '---'}</Typography>
-            <Typography className='text-lg mt-3'>
-              Special Requests: <br />
-            </Typography>
-            <Typography className='text-sm'>
-              {notesData?.specialRequests ? notesData?.specialRequests : '---'}
-            </Typography>
-
-            <Typography className='text-lg mt-3'>
-              Comments: <br />
-            </Typography>
-            <Typography className='text-sm'>{notesData?.comments ? notesData?.comments : '---'}</Typography>
+            {caregiverNotesFields.map(field => (
+              <EditableField
+                key={field.name}
+                label={field.label}
+                value={field.value}
+                isEdit={isEdit}
+                onChange={handleFieldChange}
+                name={field.name}
+              />
+            ))}
 
             <div className='mb-6 border-t pt-6 mt-5'>
               <div className='grid grid-cols-2 gap-x-8 gap-y-4'>

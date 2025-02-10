@@ -61,7 +61,6 @@ const AddClientStepper = () => {
   const [physicianDetails, setPhysicianDetails] = useState<any>()
   const [serviceActivities, setServiceActivities] = useState<any>()
   const [documents, setDocuments] = useState<any>()
-  const [serviceTypes, setServiceTypes] = useState<any>()
 
   const personalDetailsFormRef = useRef<any>(null)
   const physicianAndCaseMangerFormRef = useRef<any>(null)
@@ -72,18 +71,73 @@ const AddClientStepper = () => {
     setActiveStep(0)
   }
 
-  const getServiceTypes = async () => {
+  const uploadDocuments = async (
+    files: { path: string; size: number; name: string }[],
+    documentType: string,
+    id: string,
+    expiryDate?: string,
+    additionalMetadata?: Record<string, any>
+  ) => {
+    if (!files || files.length === 0) {
+      console.log(`No files found for ${documentType}. Skipping upload.`)
+      return null
+    }
+
     try {
-      const serviceTypesResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/service`)
-      console.log('Service Types --> ', serviceTypesResponse)
-      setServiceTypes(serviceTypesResponse)
+      // Extract file names
+      const fileNames = files.map(file => file.name)
+
+      console.log('Files to be uploaded:', fileNames)
+
+      // Request pre-signed URLs from the backend
+      const { data: preSignedUrls } = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/upload-document/get-signed-pdf-put-url`,
+        fileNames
+      )
+
+      console.log('Received Pre-Signed URLs:', preSignedUrls)
+
+      // Upload each file to S3
+      const uploadPromises = files.map(async (file, index) => {
+        const { key, url } = preSignedUrls[index] // Get corresponding pre-signed URL
+        const fileType = file.path.split('.').pop() || 'pdf' // Default to 'pdf' if undefined
+
+        console.log(`Uploading ${file.name} to S3...`)
+
+        // Upload file to S3
+        await axios.put(url, file, {
+          headers: {
+            'Content-Type': 'application/pdf' // Adjust based on file type
+          }
+        })
+
+        console.log(`${file.name} uploaded successfully.`)
+
+        // Prepare metadata to store in DB
+        const body = {
+          fileName: file.name,
+          documentType,
+          fileKey: key,
+          fileType,
+          fileSize: file.size,
+          clientId: id
+        }
+
+        // Store record in backend
+        return axios.post(`${process.env.NEXT_PUBLIC_API_URL}/client/documents`, body)
+      })
+
+      // Wait for all uploads & database records to complete
+      const results = await Promise.all(uploadPromises)
+
+      console.log('All files uploaded & records created:', results)
+
+      return results
     } catch (error) {
-      console.error('Error getting service types: ', error)
+      console.error(`Error uploading ${documentType} documents:`, error)
+      return null
     }
   }
-  useEffect(() => {
-    getServiceTypes()
-  }, [])
 
   const handleSave = async (Docs: any) => {
     try {
@@ -243,66 +297,9 @@ const AddClientStepper = () => {
       )
       console.log('Create Care Plan Due Data --> ', createCarePlanDueResponse)
 
-      const uploadDocuments = async (
-        files: { path: string }[],
-        documentType: string,
-        expiryDate?: string,
-        additionalMetadata?: Record<string, any>
-      ) => {
-        // Skip upload if no files exist
-        if (!files || files.length === 0) {
-          console.log(`No files found for ${documentType}. Skipping upload.`)
-          return null
-        }
+      console.log('New Docs', Docs)
 
-        // Create a FormData object
-        const formData = new FormData()
-
-        // Append files
-        files.forEach((file: { path: string }) => {
-          // Use File object instead of Blob for better compatibility
-          const fileObject = new File([file.path], file.path, {
-            type: file.path.endsWith('.pdf')
-              ? 'application/pdf'
-              : file.path.endsWith('.jpg') || file.path.endsWith('.png')
-                ? 'image/jpeg'
-                : 'application/octet-stream'
-          })
-          formData.append('file', fileObject, file.path)
-        })
-
-        // Append common parameters
-        formData.append('documentType', documentType)
-        formData.append('clientId', clientId.toString())
-
-        // Handle expiry date
-        const finalExpiryDate =
-          expiryDate || new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString()
-
-        formData.append('expiryDays', '365')
-        formData.append('expiryDate', finalExpiryDate)
-
-        // Append additional metadata if exists
-        if (additionalMetadata) {
-          Object.entries(additionalMetadata).forEach(([key, value]) => {
-            formData.append(key, value as string)
-          })
-        }
-
-        // Make the API call
-        try {
-          return await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/client/documents`, formData, {
-            headers: {
-              'Content-Type': 'multipart/form-data'
-            }
-          })
-        } catch (error) {
-          console.error(`Error uploading ${documentType} documents:`, error)
-          return null
-        }
-      }
-
-      const documentUpload = [uploadDocuments(Docs.documents, 'other')]
+      const documentUpload = [uploadDocuments(Docs.documentFiles, 'other', clientId.toString())]
 
       const uploadResponses = await Promise.all(documentUpload)
 
@@ -310,58 +307,13 @@ const AddClientStepper = () => {
 
       console.log('Successful document uploads:', successfulUploads)
 
-      console.log('Client Body ---> ', createClientBody, clientPrimaryAddressBody)
+      // console.log('Client Body ---> ', createClientBody, clientPrimaryAddressBody)
 
       router.replace('/apps/client/list')
     } catch (error) {
       console.error('Error saving data: ', error)
     }
   }
-
-  // useEffect(() => {
-  //   if (personalDetails) {
-  //     handleSave()
-  //   }
-  // }, [personalDetails])
-
-  // const handleNext = () => {
-  //   console.log('in next', activeStep)
-  //   if (activeStep === 0) {
-  //     // Manually trigger form submission for the first step
-  //     personalDetailsFormRef.current?.handleSubmit((data: PersonalDetailsFormDataType) => {
-  //       setPersonalDetails(data)
-  //       handleSave()
-  //       console.log('Personal Details in Parent:', data)
-  //       // Move to next step after successful validation
-  //       setActiveStep(prevActiveStep => prevActiveStep + 1)
-  //     })()
-  //   } else if (activeStep === 1) {
-  //     physicianAndCaseMangerFormRef.current?.handleSubmit((data: PhysicianAndCaseMangerFormDataType) => {
-  //       setPhysicianDetails(data)
-  //       handleSave()
-  //       console.log('Physician Details in Parent:', data)
-  //       // Move to next step after successful validation
-  //       setActiveStep(prevActiveStep => prevActiveStep + 1)
-  //     })()
-  //   } else if (activeStep === 2) {
-  //     serviceActivitiesFormRef.current?.handleSubmit((data: clientServiceFormDataType) => {
-  //       setServiceActivities(data)
-  //       handleSave()
-  //       console.log('Personal Details in Parent:', data)
-  //       // Move to next step after successful validation
-  //       setActiveStep(prevActiveStep => prevActiveStep + 1)
-  //     })()
-  //   } else if (activeStep === 3) {
-  //     // Manually trigger form submission for the first step
-  //     documentsFormRef.current?.handleSubmit((data: any) => {
-  //       setDocuments(data)
-  //       handleSave()
-  //       console.log('Documents data:', data)
-  //       // Move to next step after successful validation
-  //       setActiveStep(prevActiveStep => prevActiveStep + 1)
-  //     })()
-  //   }
-  // }
 
   const handleNext = () => {
     switch (activeStep) {

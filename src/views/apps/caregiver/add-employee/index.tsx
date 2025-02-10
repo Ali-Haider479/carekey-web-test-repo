@@ -74,6 +74,66 @@ const EmployeeStepper = () => {
     setActiveStep(0)
   }
 
+  // Function to upload documents with improved handling
+  const uploadDocuments = async (
+    files: { path: string }[],
+    documentType: string,
+    caregiverId: string,
+    expiryDate?: string,
+    additionalMetadata?: Record<string, any>
+  ) => {
+    // Skip upload if no files exist
+    if (!files || files.length === 0) {
+      console.log(`No files found for ${documentType}. Skipping upload.`)
+      return null
+    }
+
+    // Create a FormData object
+    const formData = new FormData()
+
+    // Append files
+    files.forEach((file: { path: string }) => {
+      // Use File object instead of Blob for better compatibility
+      const fileObject = new File([file.path], file.path, {
+        type: file.path.endsWith('.pdf')
+          ? 'application/pdf'
+          : file.path.endsWith('.jpg') || file.path.endsWith('.png')
+            ? 'image/jpeg'
+            : 'application/octet-stream'
+      })
+      formData.append('file', fileObject, file.path)
+    })
+
+    // Append common parameters
+    formData.append('documentType', documentType)
+    formData.append('caregiverId', caregiverId.toString())
+
+    // Handle expiry date
+    const finalExpiryDate = expiryDate || new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString()
+
+    formData.append('expiryDays', '365')
+    formData.append('expiryDate', finalExpiryDate)
+
+    // Append additional metadata if exists
+    if (additionalMetadata) {
+      Object.entries(additionalMetadata).forEach(([key, value]) => {
+        formData.append(key, value as string)
+      })
+    }
+
+    // Make the API call
+    try {
+      return await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/caregivers/document`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      })
+    } catch (error) {
+      console.error(`Error uploading ${documentType} documents:`, error)
+      return null
+    }
+  }
+
   const handleSave = async (Docs: any) => {
     try {
       const userPayload = {
@@ -107,66 +167,6 @@ const EmployeeStepper = () => {
 
       const caregiverId = caregiverResponse.data.id
 
-      // Function to upload documents with improved handling
-      const uploadDocuments = async (
-        files: { path: string }[],
-        documentType: string,
-        expiryDate?: string,
-        additionalMetadata?: Record<string, any>
-      ) => {
-        // Skip upload if no files exist
-        if (!files || files.length === 0) {
-          console.log(`No files found for ${documentType}. Skipping upload.`)
-          return null
-        }
-
-        // Create a FormData object
-        const formData = new FormData()
-
-        // Append files
-        files.forEach((file: { path: string }) => {
-          // Use File object instead of Blob for better compatibility
-          const fileObject = new File([file.path], file.path, {
-            type: file.path.endsWith('.pdf')
-              ? 'application/pdf'
-              : file.path.endsWith('.jpg') || file.path.endsWith('.png')
-                ? 'image/jpeg'
-                : 'application/octet-stream'
-          })
-          formData.append('file', fileObject, file.path)
-        })
-
-        // Append common parameters
-        formData.append('documentType', documentType)
-        formData.append('caregiverId', caregiverId.toString())
-
-        // Handle expiry date
-        const finalExpiryDate =
-          expiryDate || new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString()
-
-        formData.append('expiryDays', '365')
-        formData.append('expiryDate', finalExpiryDate)
-
-        // Append additional metadata if exists
-        if (additionalMetadata) {
-          Object.entries(additionalMetadata).forEach(([key, value]) => {
-            formData.append(key, value as string)
-          })
-        }
-
-        // Make the API call
-        try {
-          return await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/caregivers/document`, formData, {
-            headers: {
-              'Content-Type': 'multipart/form-data'
-            }
-          })
-        } catch (error) {
-          console.error(`Error uploading ${documentType} documents:`, error)
-          return null
-        }
-      }
-
       // Prepare document uploads with explicit expiry dates or default
       const documentUploads = [
         // Training Certificates
@@ -174,6 +174,7 @@ const EmployeeStepper = () => {
           certificatesData.trainingCertificateFiles,
           'trainingCertificate',
           certificatesData.trainingCertificateExpiryDate,
+          caregiverId.toString(),
           {
             trainingCertificateName: certificatesData.trainingCertificateName
           }
@@ -184,6 +185,7 @@ const EmployeeStepper = () => {
           certificatesData.drivingCertificateFiles,
           'drivingLicense',
           certificatesData.drivingLicenseExpiryDate,
+          caregiverId.toString(),
           {
             drivingLicenseNumber: certificatesData.drivingLicenseNumber,
             dlState: certificatesData.dlState
@@ -194,6 +196,7 @@ const EmployeeStepper = () => {
         uploadDocuments(
           Docs.ssnFileObject,
           'other',
+          caregiverId.toString(),
           new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString()
         ),
 
@@ -201,6 +204,7 @@ const EmployeeStepper = () => {
         uploadDocuments(
           Docs.adultFileObject,
           'other',
+          caregiverId.toString(),
           new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString()
         ),
 
@@ -208,6 +212,7 @@ const EmployeeStepper = () => {
         uploadDocuments(
           Docs.umpiFileObject,
           'other',
+          caregiverId.toString(),
           new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString()
         ),
 
@@ -215,6 +220,7 @@ const EmployeeStepper = () => {
         uploadDocuments(
           Docs.clearanceFileObject,
           'other',
+          caregiverId.toString(),
           new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString()
         )
       ]

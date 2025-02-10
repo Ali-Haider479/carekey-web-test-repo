@@ -1,10 +1,9 @@
 'use client'
 
-import { useEffect, useState, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import Card from '@mui/material/Card'
 import CardHeader from '@mui/material/CardHeader'
-import { Avatar, CircularProgress, Typography } from '@mui/material'
-import axios from 'axios'
+import { CircularProgress, Typography } from '@mui/material'
 import DataTable from '@/@core/components/mui/DataTable'
 import { GridColDef } from '@mui/x-data-grid'
 import AdUnitsIcon from '@mui/icons-material/AdUnits'
@@ -34,40 +33,14 @@ interface Client {
   clientServices: any
 }
 
-interface Signature {
-  id: number
-  clientSignStatus: string
-  tsApprovalStatus: string
-  duration: string
-  caregiverSignature: string
-  clientSignature: string
-  caregiver: Caregiver
-  client: Client
-  timeLog: any[]
+interface SignatureStatusTableProps {
+  data: []
+  isLoading: boolean
 }
 
-const SignatureStatusTable = () => {
-  const [filteredData, setFilteredData] = useState<Signature[]>([])
+const SignatureStatusTable = ({ data, isLoading }: SignatureStatusTableProps) => {
   const [globalFilter, setGlobalFilter] = useState('')
   const [rowSelection, setRowSelection] = useState({})
-  const [isLoading, setIsLoading] = useState(true)
-
-  // Fetch signatures data
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/signatures`)
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/time-log`)
-        console.log('DATA RECEIVED TIMSEHEET PAGE', response.data)
-        setFilteredData(response.data)
-        setIsLoading(false)
-      } catch (error) {
-        console.error('Error fetching signatures:', error)
-        setIsLoading(false)
-      }
-    }
-    fetchData()
-  }, [])
 
   const calculateHoursWorked = (clockIn: string, clockOut: string) => {
     // Parse the clock-in and clock-out times
@@ -162,8 +135,6 @@ const SignatureStatusTable = () => {
     []
   )
 
-  console.log('Filtred data', filteredData[0]?.client?.firstName)
-
   if (isLoading) {
     return (
       <Card>
@@ -178,7 +149,7 @@ const SignatureStatusTable = () => {
     <Card sx={{ borderRadius: 1, boxShadow: 3 }}>
       <CardHeader title='Signatures Status' className='pb-4' />
       <div style={{ overflowX: 'auto', padding: '0px' }}>
-        <DataTable data={filteredData} columns={columns} />
+        <DataTable data={data} columns={columns} />
       </div>
     </Card>
   )

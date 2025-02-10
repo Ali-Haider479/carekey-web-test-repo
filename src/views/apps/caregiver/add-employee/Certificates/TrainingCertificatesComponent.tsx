@@ -154,8 +154,6 @@ const TrainingCertificatesComponent = forwardRef<{ handleSubmit: any }, Props>((
                   <AppReactDatepicker
                     selected={field.value} // Bind value from react-hook-form
                     onChange={(date: Date | null) => field.onChange(date)} // Update react-hook-form on change
-                    showYearDropdown
-                    showMonthDropdown
                     placeholderText='MM/DD/YYYY'
                     customInput={
                       <TextField
@@ -252,8 +250,6 @@ const TrainingCertificatesComponent = forwardRef<{ handleSubmit: any }, Props>((
                   <AppReactDatepicker
                     selected={field.value} // Bind value from react-hook-form
                     onChange={(date: Date | null) => field.onChange(date)} // Update react-hook-form on change
-                    showYearDropdown
-                    showMonthDropdown
                     placeholderText='MM/DD/YYYY'
                     customInput={
                       <TextField

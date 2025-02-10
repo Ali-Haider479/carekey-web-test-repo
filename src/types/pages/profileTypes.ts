@@ -20,6 +20,7 @@ export type ProfileHeaderType = {
   joiningDate?: string
   designation?: string
   designationIcon?: string
+  isClient?: boolean
 }
 export type ProfileAvatarGroupType = {
   name: string

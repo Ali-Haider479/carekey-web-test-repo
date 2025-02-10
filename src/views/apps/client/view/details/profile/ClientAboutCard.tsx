@@ -5,210 +5,286 @@ import Grid from '@mui/material/Grid2'
 import ModeEditOutlineOutlinedIcon from '@mui/icons-material/ModeEditOutlineOutlined'
 import { useParams } from 'next/navigation'
 import axios from 'axios'
+import { EditOutlined, SaveOutlined } from '@mui/icons-material'
+import { EditableField } from '@/@core/components/custom-inputs/CustomEditableTextField'
+import CloseIcon from '@mui/icons-material/Close'
 
 function ClientAboutCard() {
   const { id } = useParams()
-  const [clientData, setClientData] = useState<any>()
-  const getClientData = async () => {
+  const [data, setData] = useState<any>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const [isEdit, setIsEdit] = useState(true)
+  const [formData, setFormData] = useState<any>({})
+
+  useEffect(() => {
+    fetchData()
+  }, [])
+
+  const fetchData = async () => {
     try {
+      setIsLoading(true)
       const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/client/detail/${id}`)
-      console.log('Response Client from Profile Data =>>', response.data)
-      setClientData(response.data)
+      console.log('CLIENT RES', response.data)
+      setData(response.data)
     } catch (error) {
-      console.error('Error getting Client Data: ', error)
+      console.error('Error fetching data', error)
+    } finally {
+      setIsLoading(false)
     }
   }
 
   useEffect(() => {
-    getClientData()
-  }, [])
+    if (data) {
+      setFormData({
+        firstName: data.firstName,
+        middleName: data.middleName,
+        lastName: data.lastName,
+        pmiNumber: data.pmiNumber,
+        clientCode: data.clientCode,
+        primaryPhoneNumber: data.primaryPhoneNumber,
+        dateOfBirth: data.dateOfBirth,
+        email: data.email,
+        sharedCare: data.sharedCare,
+        primaryCellNumber: data.primaryCellNumber,
+        emergencyContactName: data.emergencyContactName,
+        emergencyContactNumber: data.emergencyContactNumber,
+        emergencyEmailId: data.emergencyEmailId,
+        gender: data.gender,
+        address: data.addresses?.[0]?.address?.address,
+        city: data.addresses?.[0]?.address?.city,
+        state: data.addresses?.[0]?.address?.state,
+        zipCode: data.addresses?.[0]?.address?.zipCode,
+        admissionDate: data.admissionDate,
+        dischargeDate: data.dischargeDate,
+        'physician.name': data.clientPhysician?.name,
+        'physician.phoneNumber': data.clientPhysician?.phoneNumber,
+        'physician.clinicName': data.clientPhysician?.clinicName,
+        'physician.faxNumber': data.clientPhysician?.faxNumber,
+        'physician.address': data.clientPhysician?.address,
+        'physician.city': data.clientPhysician?.city,
+        'physician.state': data.clientPhysician?.state,
+        'physician.zipCode': data.clientPhysician?.zipCode,
+        'caseManager.name': data.clientCaseManager?.caseManagerName,
+        'caseManager.extension': data.clientCaseManager?.caseManagerExtention,
+        'caseManager.phoneNumber': data.clientCaseManager?.caseManagerPhoneNumber,
+        'caseManager.email': data.clientCaseManager?.caseManagerEmail,
+        'caseManager.faxNumber': data.clientCaseManager?.caseManagerFaxNumber,
+        'responsibleParty.name': data.clientResponsibilityParty?.name,
+        'responsibleParty.relationship': data.clientResponsibilityParty?.relationship,
+        'responsibleParty.phoneNumber': data.clientResponsibilityParty?.phoneNumber,
+        'responsibleParty.faxNumber': data.clientResponsibilityParty?.faxNumber,
+        'responsibleParty.emailAddress': data.clientResponsibilityParty?.emailAddress
+      })
+    }
+  }, [data])
 
+  const handleFieldChange = (name: string, value: any) => {
+    setFormData((prev: any) => ({
+      ...prev,
+      [name]: value
+    }))
+  }
+
+  const handleSave = async () => {
+    try {
+      setIsLoading(true)
+      await axios.put(`${process.env.NEXT_PUBLIC_API_URL}/client/${id}`, formData)
+      console.log('FORM DATA', formData)
+      setIsEdit(true)
+      fetchData() // Refresh data after update
+    } catch (error) {
+      console.error('Error updating data', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Field groupings for different sections
+  const personalFields = [
+    { label: 'First Name', name: 'firstName', value: formData.firstName },
+    { label: 'Middle Name', name: 'middleName', value: formData.middleName },
+    { label: 'Last Name', name: 'lastName', value: formData.lastName },
+    { label: 'PMI Number', name: 'pmiNumber', value: formData.pmiNumber },
+    { label: 'Client Code', name: 'clientCode', value: formData.clientCode },
+    { label: 'Phone Number', name: 'primaryPhoneNumber', value: formData.primaryPhoneNumber },
+    { label: 'Date of Birth', name: 'dateOfBirth', value: formData.dateOfBirth },
+    { label: 'Email', name: 'email', value: formData.email },
+    { label: 'Cell Phone Number', name: 'primaryCellNumber', value: formData.primaryCellNumber },
+    { label: 'Gender', name: 'gender', value: formData.gender }
+  ]
+
+  const emergencyFields = [
+    { label: 'Emergency Contact Name', name: 'emergencyContactName', value: formData.emergencyContactName },
+    { label: 'Emergency Contact Number', name: 'emergencyContactNumber', value: formData.emergencyContactNumber },
+    { label: 'Emergency Email ID', name: 'emergencyEmailId', value: formData.emergencyEmailId }
+  ]
+
+  const addressFields = [
+    { label: 'Address', name: 'address', value: formData.address },
+    { label: 'City', name: 'city', value: formData.city },
+    { label: 'State', name: 'state', value: formData.state },
+    { label: 'Zip Code', name: 'zipCode', value: formData.zipCode }
+  ]
+
+  const physicianFields = [
+    { label: 'Physician Name', name: 'physician.name', value: formData['physician.name'] },
+    { label: 'Phone Number', name: 'physician.phoneNumber', value: formData['physician.phoneNumber'] },
+    { label: 'Clinic Name', name: 'physician.clinicName', value: formData['physician.clinicName'] },
+    { label: 'Fax Number', name: 'physician.faxNumber', value: formData['physician.faxNumber'] },
+    { label: 'Address', name: 'physician.address', value: formData['physician.address'] },
+    { label: 'City', name: 'physician.city', value: formData['physician.city'] },
+    { label: 'State', name: 'physician.state', value: formData['physician.state'] },
+    { label: 'Zip Code', name: 'physician.zipCode', value: formData['physician.zipCode'] }
+  ]
+
+  const caseManagerFields = [
+    { label: 'Case Manager Name', name: 'caseManager.name', value: formData['caseManager.name'] },
+    { label: 'Extension', name: 'caseManager.extension', value: formData['caseManager.extension'] },
+    { label: 'Phone Number', name: 'caseManager.phoneNumber', value: formData['caseManager.phoneNumber'] },
+    { label: 'Email', name: 'caseManager.email', value: formData['caseManager.email'] },
+    { label: 'Fax Number', name: 'caseManager.faxNumber', value: formData['caseManager.faxNumber'] }
+  ]
+
+  const responsiblePartyFields = [
+    { label: 'Name', name: 'responsibleParty.name', value: formData['responsibleParty.name'] },
+    { label: 'Relationship', name: 'responsibleParty.relationship', value: formData['responsibleParty.relationship'] },
+    { label: 'Phone Number', name: 'responsibleParty.phoneNumber', value: formData['responsibleParty.phoneNumber'] },
+    { label: 'Fax Number', name: 'responsibleParty.faxNumber', value: formData['responsibleParty.faxNumber'] },
+    { label: 'Email Address', name: 'responsibleParty.emailAddress', value: formData['responsibleParty.emailAddress'] }
+  ]
+
+  const admissionFields = [
+    { label: 'Admission Date', name: 'admissionDate', value: formData.admissionDate },
+    { label: 'Discharge Date', name: 'dischargeDate', value: formData.dischargeDate }
+  ]
+
+  // Updated CardContent section for rendering fields
   return (
     <Card className='w-full shadow-md rounded-lg p-6'>
       {/* About Header */}
       <CardContent className='flex justify-between items-center mb-6'>
         <Typography className='text-2xl font-semibold'>About</Typography>
-        <Button startIcon={<ModeEditOutlineOutlinedIcon />} className={'bg-[#4B0082] text-white'}>
-          Edit
-        </Button>
+        <div className='flex items-center justify-center gap-2'>
+          {!isEdit && (
+            <Button
+              variant='contained'
+              startIcon={<CloseIcon />}
+              className='text-white hover:bg-indigo-800'
+              onClick={() => setIsEdit(true)}
+            >
+              Cancel
+            </Button>
+          )}
+          <Button
+            variant='contained'
+            startIcon={isEdit ? <EditOutlined /> : <SaveOutlined />}
+            className='bg-indigo-900 text-white hover:bg-indigo-800'
+            onClick={isEdit ? () => setIsEdit(false) : handleSave}
+          >
+            {isEdit ? 'Edit' : 'Update'}
+          </Button>
+        </div>
       </CardContent>
 
       {/* Personal Details Section */}
       <CardContent className='mb-6'>
-        <Typography className='text-lg font-semibold  mb-4'>Personal Details</Typography>
+        <Typography className='text-lg font-semibold mb-4'>Personal Details</Typography>
         <div className='grid grid-cols-2 gap-y-4 gap-x-8'>
-          <div className='flex justify-between text-sm '>
-            <Typography>First Name:</Typography>
-            <Typography>{`${clientData?.firstName ? clientData?.firstName : ''}`}</Typography>
-          </div>
-          <div className='flex justify-between text-sm '>
-            <Typography>PMI Number:</Typography>
-            <Typography>{`${clientData?.pmiNumber ? clientData?.pmiNumber : ''}`}</Typography>
-          </div>
-          <div className='flex justify-between text-sm '>
-            <Typography>Middle Name:</Typography>
-            <Typography>{`${clientData?.middleName ? clientData?.middleName : ''}`}</Typography>
-          </div>
-          <div className='flex justify-between text-sm '>
-            <Typography>Client Code:</Typography>
-            <Typography>{`${clientData?.clientCode ? clientData?.clientCode : ''}`}</Typography>
-          </div>
-          <div className='flex justify-between text-sm '>
-            <Typography>Last Name:</Typography>
-            <Typography>{`${clientData?.lastName ? clientData?.lastName : ''}`}</Typography>
-          </div>
-          <div className='flex justify-between text-sm '>
-            <Typography>Phone Number:</Typography>
-            <Typography>{`${clientData?.primaryPhoneNumber ? clientData?.primaryPhoneNumber : ''}`}</Typography>
-          </div>
-          <div className='flex justify-between text-sm '>
-            <Typography>Date of Birth:</Typography>
-            <Typography>{`${clientData?.dateOfBirth ? clientData?.dateOfBirth : ''}`}</Typography>
-          </div>
-          <div className='flex justify-between text-sm '>
-            <Typography>Email Address:</Typography>
-            <Typography>{`${clientData?.email ? clientData?.email : ''}`}</Typography>
-          </div>
-          <div className='flex justify-between text-sm '>
-            <Typography>Cell Phone Number:</Typography>
-            <Typography>{`${clientData?.primaryCellNumber ? clientData?.primaryCellNumber : ''}`}</Typography>
-          </div>
+          {personalFields.map(field => (
+            <EditableField
+              key={field.name}
+              label={field.label}
+              value={field.value}
+              isEdit={isEdit}
+              onChange={handleFieldChange}
+              name={field.name}
+            />
+          ))}
         </div>
       </CardContent>
 
-      {/* Emergency Details Section */}
-      <CardContent className=' mb-6 border-t pt-6'>
-        <div className='grid grid-cols-2 gap-y-4 gap-x-8'>
-          <div className='flex justify-between text-sm '>
-            <Typography>EMERGENCY CONTACT NAME:</Typography>
-            <Typography>{`${clientData?.emergencyContactName ? clientData?.emergencyContactName : ''}`}</Typography>
-          </div>
-          <div className='flex justify-between text-sm '>
-            <Typography>EMERGENCY C.NUMBER:</Typography>
-            <Typography>{`${clientData?.emergencyContactNumber ? clientData?.emergencyContactNumber : ''}`}</Typography>
-          </div>
-        </div>
-        <div className='mt-6 border-t pt-6'>
-          <div className='grid grid-cols-2 gap-y-4 gap-x-8'>
-            <div className='flex justify-between text-sm '>
-              <Typography>Emergency Email ID:</Typography>
-              <Typography>{`${clientData?.emergencyEmailId ? clientData?.emergencyEmailId : ''}`}</Typography>
-            </div>
-            <div className='flex justify-between text-sm '>
-              <Typography>Gender:</Typography>
-              <Typography>{`${clientData?.gender ? clientData?.gender : ''}`}</Typography>
-            </div>
-            <div className='flex justify-between text-sm '>
-              <Typography>Address:</Typography>
-              <Typography>
-                {clientData?.addresses?.length ? (clientData.addresses[0]?.address?.address ?? '') : ''}
-              </Typography>
-            </div>
-            <div className='flex justify-between text-sm '>
-              <Typography>City:</Typography>
-              <Typography>{`${clientData?.addresses?.length ? (clientData?.addresses[0]?.address?.city ?? '') : ''}`}</Typography>
-            </div>
-            <div className='flex justify-between text-sm '>
-              <Typography>State:</Typography>
-              <Typography>{`${clientData?.addresses?.length ? (clientData?.addresses[0]?.address?.state ?? '') : ''}`}</Typography>
-            </div>
-            <div className='flex justify-between text-sm '>
-              <Typography>Zip:</Typography>
-              <Typography>{`${clientData?.addresses?.length ? (clientData?.addresses[0]?.address?.zipCode ?? '') : ''}`}</Typography>
-            </div>
-            <div className='flex justify-between text-sm '>
-              <Typography>Physician Name:</Typography>
-              <Typography>{`${clientData?.clientPhysician?.name ? clientData?.clientPhysician?.name : ''}`}</Typography>
-            </div>
-            <div className='flex justify-between text-sm '>
-              <Typography>Physician Phone:</Typography>
-              <Typography>{`${clientData?.clientPhysician?.phoneNumber ? clientData?.clientPhysician?.phoneNumber : ''}`}</Typography>
-            </div>
-            <div className='flex justify-between text-sm '>
-              <Typography>Physician Clinic Name:</Typography>
-              <Typography>{`${clientData?.clientPhysician?.clinicName ? clientData?.clientPhysician?.clinicName : ''}`}</Typography>
-            </div>
-            <div className='flex justify-between text-sm '>
-              <Typography>Physician FAX:</Typography>
-              <Typography>{`${clientData?.clientPhysician?.faxNumber ? clientData?.clientPhysician?.faxNumber : ''}`}</Typography>
-            </div>
-            <div className='flex justify-between text-sm '>
-              <Typography>Physician Address:</Typography>
-              <Typography>{`${clientData?.clientPhysician?.address ? clientData?.clientPhysician?.address : ''}`}</Typography>
-            </div>
-            <div className='flex justify-between text-sm '>
-              <Typography>Physician City:</Typography>
-              <Typography>{`${clientData?.clientPhysician?.city ? clientData?.clientPhysician?.city : ''}`}</Typography>
-            </div>
-            <div className='flex justify-between text-sm '>
-              <Typography>Physician State:</Typography>
-              <Typography>{`${clientData?.clientPhysician?.state ? clientData?.clientPhysician?.state : ''}`}</Typography>
-            </div>
-            <div className='flex justify-between text-sm '>
-              <Typography>Physician Zip:</Typography>
-              <Typography>{`${clientData?.clientPhysician?.zipCode ? clientData?.clientPhysician?.zipCode : ''}`}</Typography>
-            </div>
-            <div className='flex justify-between text-sm '>
-              <Typography>Admission Date :</Typography>
-              <Typography>{`${clientData?.admissionDate ? clientData?.admissionDate : ''}`}</Typography>
-            </div>
-            <div className='flex justify-between text-sm '>
-              <Typography>Discharge Date :</Typography>
-              <Typography>{`${clientData?.dischargeDate ? clientData?.dischargeDate : ''}`}</Typography>
-            </div>
-          </div>
-        </div>
-      </CardContent>
-
-      {/* Additional Details Section */}
+      {/* Emergency Contact Section */}
       <CardContent className='mb-6 border-t pt-6'>
+        <Typography className='text-lg font-semibold mb-4'>Emergency Contact</Typography>
         <div className='grid grid-cols-2 gap-y-4 gap-x-8'>
-          <div className='flex justify-between text-sm '>
-            <Typography>Case Manager Name:</Typography>
-            <Typography>{`${clientData?.clientCaseManager?.caseManagerName ? clientData?.clientCaseManager?.caseManagerName : ''}`}</Typography>
-          </div>
-          <div className='flex justify-between text-sm '>
-            <Typography>Case Manager's Extension:</Typography>
-            <Typography>{`${clientData?.clientCaseManager?.caseManagerExtention ? clientData?.clientCaseManager?.caseManagerExtention : ''}`}</Typography>
-          </div>
-          <div className='flex justify-between text-sm '>
-            <Typography>Case Manager's Phone Number:</Typography>
-            <Typography>{`${clientData?.clientCaseManager?.caseManagerPhoneNumber ? clientData?.clientCaseManager?.caseManagerPhoneNumber : ''}`}</Typography>
-          </div>
-          <div className='flex justify-between text-sm '>
-            <Typography>Case Manager's Email Details:</Typography>
-            <Typography>{`${clientData?.clientCaseManager?.caseManagerEmail ? clientData?.clientCaseManager?.caseManagerEmail : ''}`}</Typography>
-          </div>
-          <div className='flex justify-between text-sm '>
-            <Typography>Case Manager's FAX Number:</Typography>
-            <Typography>{`${clientData?.clientCaseManager?.caseManagerFaxNumber ? clientData?.clientCaseManager?.caseManagerFaxNumber : ''}`}</Typography>
-          </div>
+          {emergencyFields.map(field => (
+            <EditableField
+              key={field.name}
+              label={field.label}
+              value={field.value}
+              isEdit={isEdit}
+              onChange={handleFieldChange}
+              name={field.name}
+            />
+          ))}
         </div>
       </CardContent>
-      {/* Section: Responsible Party Details */}
-      <CardContent>
-        <h2 className='text-lg font-semibold  mb-4'>Responsible Party Details</h2>
-        <div className='grid grid-cols-2 gap-x-8 gap-y-4'>
-          <span className='text-sm '>
-            Name:{' '}
-            <Typography>{`${clientData?.clientResponsibilityParty?.name ? clientData?.clientResponsibilityParty?.name : ''}`}</Typography>
-          </span>
-          <span className='text-sm '>
-            Relationship:{' '}
-            <Typography>{`${clientData?.clientResponsibilityParty?.relationship ? clientData?.clientResponsibilityParty?.relationship : ''}`}</Typography>
-          </span>
-          <span className='text-sm '>
-            Phone:{' '}
-            <Typography>{`${clientData?.clientResponsibilityParty?.phoneNumber ? clientData?.clientResponsibilityParty?.phoneNumber : ''}`}</Typography>
-          </span>
-          <span className='text-sm '>
-            Fax Number:{' '}
-            <Typography>{`${clientData?.clientResponsibilityParty?.faxNumber ? clientData?.clientResponsibilityParty?.faxNumber : ''}`}</Typography>
-          </span>
-          <span className='text-sm '>
-            Email:{' '}
-            <Typography>{`${clientData?.clientResponsibilityParty?.emailAddress ? clientData?.clientResponsibilityParty?.emailAddress : ''}`}</Typography>
-          </span>
+
+      {/* Address Section */}
+      <CardContent className='mb-6 border-t pt-6'>
+        <Typography className='text-lg font-semibold mb-4'>Address</Typography>
+        <div className='grid grid-cols-2 gap-y-4 gap-x-8'>
+          {addressFields.map(field => (
+            <EditableField
+              key={field.name}
+              label={field.label}
+              value={field.value}
+              isEdit={isEdit}
+              onChange={handleFieldChange}
+              name={field.name}
+            />
+          ))}
+        </div>
+      </CardContent>
+
+      {/* Physician Section */}
+      <CardContent className='mb-6 border-t pt-6'>
+        <Typography className='text-lg font-semibold mb-4'>Physician Information</Typography>
+        <div className='grid grid-cols-2 gap-y-4 gap-x-8'>
+          {physicianFields.map(field => (
+            <EditableField
+              key={field.name}
+              label={field.label}
+              value={field.value}
+              isEdit={isEdit}
+              onChange={handleFieldChange}
+              name={field.name}
+            />
+          ))}
+        </div>
+      </CardContent>
+
+      {/* Case Manager Section */}
+      <CardContent className='mb-6 border-t pt-6'>
+        <Typography className='text-lg font-semibold mb-4'>Case Manager</Typography>
+        <div className='grid grid-cols-2 gap-y-4 gap-x-8'>
+          {caseManagerFields.map(field => (
+            <EditableField
+              key={field.name}
+              label={field.label}
+              value={field.value}
+              isEdit={isEdit}
+              onChange={handleFieldChange}
+              name={field.name}
+            />
+          ))}
+        </div>
+      </CardContent>
+
+      {/* Responsible Party Section */}
+      <CardContent className='mb-6 border-t pt-6'>
+        <Typography className='text-lg font-semibold mb-4'>Responsible Party</Typography>
+        <div className='grid grid-cols-2 gap-y-4 gap-x-8'>
+          {responsiblePartyFields.map(field => (
+            <EditableField
+              key={field.name}
+              label={field.label}
+              value={field.value}
+              isEdit={isEdit}
+              onChange={handleFieldChange}
+              name={field.name}
+            />
+          ))}
         </div>
       </CardContent>
 
@@ -217,7 +293,7 @@ function ClientAboutCard() {
         <h2 className='text-lg font-semibold  mb-4'>Service Information</h2>
         <div className='grid grid-cols-2 gap-x-8 gap-y-4'>
           <span className='text-sm '>
-            Shared Care: <Typography>{`${clientData?.sharedCare ? clientData?.sharedCare : ''}`}</Typography>
+            Shared Care: <Typography>{`${formData?.sharedCare ? formData?.sharedCare : ''}`}</Typography>
           </span>
           <span className='text-sm '>
             Approved Service Locations: <Typography>NA</Typography>
@@ -255,7 +331,7 @@ function ClientAboutCard() {
             </span>
           </div>
         </div>
-        <div className='mb-6 border-t pt-6'>
+        <div className='mb-6 border-t pt-6 mt-4'>
           <div className='grid grid-cols-2 gap-x-8 gap-y-4'>
             <span className='text-sm '>
               Available Services: <Typography>---</Typography>

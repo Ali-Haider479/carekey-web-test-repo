@@ -1,6 +1,6 @@
 // React Imports
-import { useState } from 'react'
-import type { ReactNode, RefObject } from 'react'
+import { useEffect, useState } from 'react'
+import type { ReactNode, RefObject, SyntheticEvent } from 'react'
 
 // MUI Imports
 import Avatar from '@mui/material/Avatar'
@@ -9,6 +9,7 @@ import Typography from '@mui/material/Typography'
 import Autocomplete from '@mui/material/Autocomplete'
 import InputAdornment from '@mui/material/InputAdornment'
 import IconButton from '@mui/material/IconButton'
+import PersonIcon from '@mui/icons-material/Person'
 
 // Third-party Imports
 import classnames from 'classnames'
@@ -20,7 +21,7 @@ import type { ChatDataType, StatusObjType } from '@/types/apps/chatTypes'
 import type { AppDispatch } from '@/redux-store'
 
 // Slice Imports
-import { addNewChat } from '@/redux-store/slices/chat'
+import { addNewChat, createChatRoom, fetchChatRooms } from '@/redux-store/slices/chat'
 
 // Component Imports
 import CustomAvatar from '@core/components/mui/Avatar'
@@ -32,12 +33,23 @@ import CustomTextField from '@core/components/mui/TextField'
 // Util Imports
 import { getInitials } from '@/utils/getInitials'
 import { formatDateToMonthShort } from './utils'
+import { Button, Chip, Dialog, Grid2 as Grid } from '@mui/material'
+import DialogCloseButton from '@/components/dialogs/DialogCloseButton'
+import CustomDropDown from '@/@core/components/custom-inputs/CustomDropDown'
+import { useForm } from 'react-hook-form'
+import axios from 'axios'
+import { useSession } from 'next-auth/react'
 
 export const statusObj: StatusObjType = {
   busy: 'error',
   away: 'warning',
   online: 'success',
   offline: 'secondary'
+}
+
+type FormItems = {
+  clientId?: number
+  caregiverId?: number
 }
 
 type Props = {
@@ -66,14 +78,10 @@ type RenderChatType = {
 // Render chat list
 const renderChat = (props: RenderChatType) => {
   const { chatStore, getActiveUserData, setSidebarOpen, backdropOpen, setBackdropOpen, isBelowMdScreen } = props
-
   return chatStore.chats.map(chat => {
-    // Find contact using chat.userId which is now otherCaregiver.id
-    const contact = chatStore.contacts.find(contact => contact.id === chat.userId)
-
-    if (!contact) return null // Skip if no matching contact found
-
-    const isChatActive = chatStore.activeUser?.id === contact.id
+    const contact = chatStore.contacts.find(contact => contact.chatRoomId === chat.id)
+    if (!contact) return null
+    const isChatActive = chatStore.activeUser?.chatRoomId === contact.chatRoomId
 
     return (
       <li
@@ -83,7 +91,9 @@ const renderChat = (props: RenderChatType) => {
           'text-[var(--mui-palette-primary-contrastText)]': isChatActive
         })}
         onClick={() => {
-          getActiveUserData(contact.id) // Use contact.id (otherCaregiver.id) here
+          if (contact.chatRoomId !== undefined) {
+            getActiveUserData(contact.chatRoomId)
+          }
           isBelowMdScreen && setSidebarOpen(false)
           isBelowMdScreen && backdropOpen && setBackdropOpen(false)
         }}
@@ -96,7 +106,12 @@ const renderChat = (props: RenderChatType) => {
           color={contact.avatarColor}
         />
         <div className='min-is-0 flex-auto'>
-          <Typography color='inherit'>{contact.fullName}</Typography>
+          <div className='flex items-center gap-3'>
+            <Typography>
+              {contact.fullName.length > 8 ? `${contact.fullName.substring(0, 8)}...` : contact.fullName}
+            </Typography>
+            <Chip icon={<PersonIcon />} label={contact.about.split('/')[1]} variant='outlined' />
+          </div>
           {chat.chat.length ? (
             <Typography variant='body2' color={isChatActive ? 'inherit' : 'text.secondary'} className='truncate'>
               {chat.chat[chat.chat.length - 1].message}
@@ -151,18 +166,88 @@ const SidebarLeft = (props: Props) => {
 
   // States
   const [userSidebar, setUserSidebar] = useState(false)
-  const [searchValue, setSearchValue] = useState<string | null>()
+  const [searchValue, setSearchValue] = useState<{ label: string; chatRoomId: number | undefined } | null>(null)
+  const [isModalShow, setIsModalShow] = useState(false)
+  const [clients, setClients] = useState<any>([])
+  const [caregivers, setCaregivers] = useState<any>([])
+  const { data: session } = useSession()
 
-  const handleChange = (event: any, newValue: string | null) => {
+  useEffect(() => {
+    const fetchClients = async () => {
+      try {
+        // const tenantId = session?.user?.tenant?.id
+        const tenantId = 1
+        const clientList: any = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/user/clientUsers/${tenantId}`)
+
+        const formattedClients =
+          clientList?.data?.map((item: any) => {
+            return {
+              key: `${item.client.id}-${item.client.firstName}`,
+              value: item.client.id,
+              optionString: `${item.client.firstName} ${item.client.lastName}`
+            }
+          }) || []
+
+        const caregiverList: any = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/user/tenant/${tenantId}`)
+        console.log('LIST CG D', caregiverList.data, session?.user.id)
+        const formattedCaregivers = caregiverList.data
+          .filter((item: any) => item !== null && item.id != session?.user?.id) // Filter out null and current user
+          ?.map((item: any) => ({
+            key: `${item?.id}-${item?.userName}`,
+            value: item?.id,
+            optionString: `${item?.userName}`
+          }))
+
+        setCaregivers(formattedCaregivers)
+        setClients(formattedClients)
+      } catch (err: any) {
+        console.error('Error fetching clients:', err.message)
+      }
+    }
+    fetchClients()
+  }, [session])
+
+  const handleChange = (
+    event: SyntheticEvent<Element, Event>,
+    newValue: { label: string; chatRoomId: number | undefined } | null,
+    reason: any,
+    details?: any
+  ) => {
     setSearchValue(newValue)
-    dispatch(addNewChat({ id: chatStore.contacts.find(contact => contact.fullName === newValue)?.id }))
-    getActiveUserData(
-      chatStore.contacts.find(contact => contact.fullName === newValue)?.id || (chatStore.activeUser?.id as number)
+    if (newValue?.chatRoomId) {
+      getActiveUserData(newValue.chatRoomId)
+      isBelowMdScreen && setSidebarOpen(false)
+      setBackdropOpen(false)
+      setSearchValue(null)
+      messageInputRef.current?.focus()
+    }
+  }
+
+  const {
+    control,
+    handleSubmit,
+    reset,
+    formState: { errors, isSubmitting }
+  } = useForm<FormItems>()
+
+  const handleModalClose = () => {
+    setIsModalShow(false)
+  }
+
+  const onSubmit = async (data: FormItems) => {
+    const { caregiverId, clientId } = data
+    const chatRoomName = `chatroom-${Math.min(session?.user?.id, Number(caregiverId))}-${Math.max(session?.user?.id, Number(caregiverId))}-${clientId}`
+
+    dispatch(
+      createChatRoom({
+        chatRoomName,
+        caregiverId: session?.user?.id,
+        clientId: Number(clientId),
+        otherCaregiverId: Number(caregiverId)
+      })
     )
-    isBelowMdScreen && setSidebarOpen(false)
-    setBackdropOpen(false)
-    setSearchValue(null)
-    messageInputRef.current?.focus()
+    dispatch(fetchChatRooms(session?.user?.id))
+    handleModalClose()
   }
 
   return (
@@ -202,9 +287,15 @@ const SidebarLeft = (props: Props) => {
               fullWidth
               size='small'
               id='select-contact'
-              options={chatStore.contacts.map(contact => contact.fullName) || []}
-              value={searchValue || null}
+              options={chatStore.contacts.map(contact => ({
+                label: `${contact.fullName} (${contact.about.split('/')[1]})`,
+                chatRoomId: contact.chatRoomId,
+                key: contact.chatRoomId // Add the key prop here
+              }))}
+              value={searchValue}
               onChange={handleChange}
+              getOptionLabel={option => option.label}
+              isOptionEqualToValue={(option, value) => option.chatRoomId === value.chatRoomId}
               renderInput={params => (
                 <CustomTextField
                   {...params}
@@ -223,37 +314,17 @@ const SidebarLeft = (props: Props) => {
                   }}
                 />
               )}
-              renderOption={(props, option) => {
-                const contact = chatStore.contacts.find(contact => contact.fullName === option)
-
-                return (
-                  <li
-                    {...props}
-                    key={option.toLowerCase().replace(/\s+/g, '-')}
-                    className={classnames('gap-3 max-sm:pli-3', props.className)}
-                  >
-                    {contact ? (
-                      contact.avatar ? (
-                        <Avatar
-                          alt={contact.fullName}
-                          src={contact.avatar}
-                          key={option.toLowerCase().replace(/\s+/g, '-')}
-                        />
-                      ) : (
-                        <CustomAvatar
-                          color={contact.avatarColor as ThemeColor}
-                          skin='light'
-                          key={option.toLowerCase().replace(/\s+/g, '-')}
-                        >
-                          {getInitials(contact.fullName)}
-                        </CustomAvatar>
-                      )
-                    ) : null}
-                    {option}
-                  </li>
-                )
-              }}
             />
+            <IconButton
+              className='mis-2'
+              size='small'
+              onClick={() => {
+                setIsModalShow(true)
+              }}
+            >
+              <i className='bx bx-plus text-2xl' />
+            </IconButton>
+
             {isBelowMdScreen ? (
               <IconButton
                 className='mis-2'
@@ -290,6 +361,57 @@ const SidebarLeft = (props: Props) => {
         isBelowLgScreen={isBelowLgScreen}
         isBelowSmScreen={isBelowSmScreen}
       />
+
+      <Dialog
+        open={isModalShow}
+        onClose={handleModalClose}
+        closeAfterTransition={false}
+        sx={{ '& .MuiDialog-paper': { overflow: 'visible' } }}
+        maxWidth='md'
+      >
+        <DialogCloseButton onClick={() => setIsModalShow(false)} disableRipple>
+          <i className='bx-x' />
+        </DialogCloseButton>
+        <div className='flex items-center justify-center w-full px-5'>
+          <form onSubmit={handleSubmit(onSubmit)} autoComplete='off'>
+            <div>
+              <h2 className='text-xl font-semibold mt-10 mb-6'>Create chat</h2>
+              <Grid container spacing={4}>
+                <Grid size={{ xs: 12, sm: 12 }}>
+                  <CustomDropDown
+                    label='Select a client'
+                    optionList={clients}
+                    name={'clientId'}
+                    control={control}
+                    error={errors.clientId}
+                    defaultValue={''}
+                    sx={{ width: '100%', minWidth: '180px' }} // added width styling
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 12 }}>
+                  <CustomDropDown
+                    label='Select caregiver'
+                    optionList={caregivers}
+                    name={'caregiverId'}
+                    control={control}
+                    error={errors.caregiverId}
+                    defaultValue={''}
+                    sx={{ width: '100%', minWidth: '180px' }} // added width styling
+                  />
+                </Grid>
+              </Grid>
+            </div>
+            <div className='flex gap-4 justify-end mt-4 mb-4'>
+              <Button variant='outlined' color='secondary' onClick={handleModalClose}>
+                Cancel
+              </Button>
+              <Button type='submit' variant='contained' className='bg-[#4B0082]'>
+                Create
+              </Button>
+            </div>
+          </form>
+        </div>
+      </Dialog>
     </>
   )
 }

@@ -101,7 +101,7 @@ const ScrollWrapper = ({
 const ChatLog = ({ chatStore, isBelowLgScreen, isBelowMdScreen, isBelowSmScreen }: ChatLogProps) => {
   const { profileUser, contacts, activeUser } = chatStore
   const dispatch = useAppDispatch()
-  const activeUserChat = chatStore.chats.find((chat: ChatType) => chat.userId === chatStore.activeUser?.id)
+  const activeUserChat = chatStore.chats.find((chat: ChatType) => chat.id === chatStore.activeUser?.chatRoomId)
   const scrollRef = useRef(null)
   // Keep track of processed message IDs to prevent duplicates
   const processedMessages = useRef(new Set<string>())
@@ -109,7 +109,6 @@ const ChatLog = ({ chatStore, isBelowLgScreen, isBelowMdScreen, isBelowSmScreen 
   const mqttClient = useMqttClient({
     username: profileUser.fullName
   })
-
   useEffect(() => {
     if (activeUser && mqttClient.isConnected) {
       // const incomingTopic = `carekey/chat/${activeUser.id}/${profileUser.id}`

@@ -1,6 +1,6 @@
 'use client'
 import React, { useEffect, useState } from 'react'
-import { Button, Card, Dialog, Grid2 as Grid, IconButton, Typography } from '@mui/material'
+import { Avatar, Button, Card, Dialog, Grid2 as Grid, IconButton, Typography } from '@mui/material'
 import axios from 'axios'
 import { useParams } from 'next/navigation'
 import { Add } from '@mui/icons-material'
@@ -52,14 +52,31 @@ const InfoCard = () => {
     formState: { errors, isSubmitting }
   } = useForm<FormItems>()
 
+  const getProfileImage = async (key: string | null) => {
+    if (!key) return
+    try {
+      const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/client/getProfileUrl/${key}`)
+      return res.data
+    } catch (err) {
+      console.error(`Error fetching profile image: ${err}`)
+      return
+    }
+  }
+
   const fetchAssignClient = async () => {
     try {
-      const clientResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/user/clientUsers/${id}`)
-      const fetchedClient = clientResponse.data
-      console.log('Assigned Client --> ', fetchedClient)
-      setAssignedClients(fetchedClient)
+      const { data: fetchedClient } = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/user/clientUsers/${id}`)
+      const fetchedClientsWithPhotos = await Promise.all(
+        fetchedClient.map(async (item: any) => {
+          const profileImgUrl = item?.client?.profileImgUrl
+            ? await getProfileImage(item?.client?.profileImgUrl)
+            : item?.client?.profileImgUrl
+          return { ...item, client: { ...item.client, profileImgUrl } }
+        })
+      )
+      setAssignedClients(fetchedClientsWithPhotos)
     } catch (error) {
-      console.error('error fetching data: ', error)
+      console.error('Error fetching assigned clients: ', error)
     }
   }
 
@@ -84,21 +101,7 @@ const InfoCard = () => {
     fetchData()
     fetchAssignClient()
     fetchClients()
-  }, [])
-
-  const getInitials = (fullName: string): string => {
-    const names = fullName?.trim()?.split(' ')?.filter(Boolean) // Split and remove extra spaces
-
-    if (names?.length === 1) {
-      return names[0][0].toUpperCase() // Only one name, return its initial
-    }
-
-    if (names?.length >= 2) {
-      return `${names[0][0].toUpperCase()}${names[names.length - 1][0].toUpperCase()}` // First and last name initials
-    }
-
-    return '' // Return empty string if no valid names
-  }
+  }, [id])
 
   const onSubmit = async (data: FormItems) => {
     console.log('Form Data:', data)
@@ -156,13 +159,11 @@ const InfoCard = () => {
           {assignedClients?.map((data: any, index: number) => (
             <li key={index} className='flex items-center justify-between mb-4 last:mb-0'>
               <div className='flex items-center space-x-3'>
-                {data?.client.image ? (
-                  <img src={data?.client.image} alt={data.client.firstName} className='w-10 h-10 rounded-full' />
-                ) : (
-                  <div className='w-10 h-10 rounded-full bg-gray-400 flex items-center justify-center text-white font-bold'>
-                    {getInitials(`${data?.client?.firstName} ${data?.client?.lastName}`)}
-                  </div>
-                )}
+                <Avatar
+                  alt={`${data?.client?.firstName} ${data?.client?.lastName}`}
+                  src={data?.client?.profileImgUrl || data?.client?.firstName}
+                  className='w-10 h-10'
+                />
                 <div>
                   <Typography className='text-sm font-medium text-gray-400'>{`${data.client.firstName} ${data.client.lastName}`}</Typography>
                   <Typography className='text-sm text-green-600'>
@@ -171,7 +172,7 @@ const InfoCard = () => {
                 </div>
               </div>
               <img
-                className='bg-[#666CFF] bg-opacity-20 border-4 rounded-full'
+                className='bg-[#666CFF] bg-opacity-20 h-7 border-4 border-transparent rounded-full mt-1'
                 src='/assets/svg-icons/openLink.svg'
                 alt=''
               />

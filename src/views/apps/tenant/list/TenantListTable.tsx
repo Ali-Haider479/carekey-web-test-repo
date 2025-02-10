@@ -63,6 +63,7 @@ import { CircularProgress } from '@mui/material'
 import { useDispatch, useSelector } from 'react-redux'
 import { fetchTenants, setCurrentViewTenant } from '@/redux-store/slices/tenant'
 import { useAppDispatch } from '@/hooks/useDispatch'
+import { dark, light } from '@mui/material/styles/createPalette'
 
 declare module '@tanstack/table-core' {
   interface FilterFns {
@@ -421,8 +422,8 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
                     <tr
                       key={headerGroup.id}
                       style={{
-                        backgroundColor: '#f5f5f5', // Explicitly set gray background
-                        borderBottom: '1px solid #E0E0E0'
+                        backgroundColor: `${dark ? '#2b2c3f' : '#f5f5f5'} ${light ? '#f5f5f5' : '#2b2c3f'}`, // Explicitly set gray background
+                        borderBottom: `1px solid ${dark ? '#36374a' : '#E0E0E0'} ${light ? '#E0E0E0' : '#36374a'}`
                       }}
                     >
                       {headerGroup.headers.map(header => (

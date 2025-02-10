@@ -167,8 +167,6 @@ const FormValidationBasic = () => {
                 render={({ field: { value, onChange } }) => (
                   <AppReactDatepicker
                     selected={value}
-                    showYearDropdown
-                    showMonthDropdown
                     onChange={onChange}
                     placeholderText='MM/DD/YYYY'
                     customInput={

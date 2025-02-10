@@ -14,29 +14,10 @@ import DataTable from '@/@core/components/mui/DataTable'
 import { GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
 import { useRouter } from 'next/navigation'
 
-const initialData: ClientTypes[] = [
-  {
-    id: '1',
-    firstName: 'John',
-    middleName: 'K',
-    lastName: 'Doe',
-    email: 'john@example.com',
-    insuranceCode: 'MA',
-    pmiNumber: '36874834'
-  },
-  {
-    id: '2',
-    firstName: 'John',
-    middleName: 'K',
-    lastName: 'Smith',
-    email: 'john@example.com',
-    insuranceCode: 'MA',
-    pmiNumber: '36874836'
-  }
-]
 const ClientListApps = () => {
   const router = useRouter()
-  const [data, setData] = useState(initialData)
+  const [data, setData] = useState<ClientTypes[]>([])
+  const [dataWithProfileImg, setDataWithProfileImg] = useState<ClientTypes[]>([])
   const [selectedRole, setSelectedRole] = useState<string>('')
   const [search, setSearch] = useState('')
   const [item, setItem] = useState('')
@@ -62,6 +43,37 @@ const ClientListApps = () => {
     }
   }
 
+  useEffect(() => {
+    if (data?.length > 0) {
+      fetchProfileImages()
+    }
+  }, [data])
+
+  const getProfileImage = async (key: string) => {
+    try {
+      const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/client/getProfileUrl/${key}`)
+      return res.data
+    } catch (err) {
+      throw Error(`Error in fetching profile image url, ${err}`)
+    }
+  }
+
+  const fetchProfileImages = async () => {
+    if (data) {
+      const dataWithPhotoUrls = await Promise.all(
+        data?.map(async (item: any) => {
+          const profileImgUrl =
+            item?.profileImgUrl !== null ? await getProfileImage(item?.profileImgUrl) : item?.profileImgUrl
+          return {
+            ...item,
+            profileImgUrl: profileImgUrl
+          }
+        })
+      )
+      setDataWithProfileImg(dataWithPhotoUrls)
+    }
+  }
+
   const handleNext = (record: any) => {
     console.log(record)
     router.push(`/apps/client/${record.id}/detail`)
@@ -70,20 +82,22 @@ const ClientListApps = () => {
   const newCols: GridColDef[] = [
     { field: 'id', headerName: 'ID', flex: 0.5 },
     {
-      field: '',
+      field: 'clientName',
       headerName: 'CLIENT NAME',
       flex: 1.5,
-      renderCell: (params: GridRenderCellParams) => (
-        <div
-          style={{ height: '50px', display: 'flex', alignItems: 'center', gap: '8px', margin: 0, padding: 0 }}
-          onClick={() => handleNext(params.row)}
-        >
-          <Avatar alt={params.row.firstName} src={params.row.profilePic} />
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <strong>{`${params.row.firstName} ${params.row.lastName}`}</strong>
+      renderCell: (params: GridRenderCellParams) => {
+        return (
+          <div
+            style={{ height: '50px', display: 'flex', alignItems: 'center', gap: '8px', margin: 0, padding: 0 }}
+            onClick={() => handleNext(params.row)}
+          >
+            <Avatar alt={params.row.firstName} src={params.row.profileImgUrl} />
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <strong>{`${params.row.firstName} ${params.row.lastName}`}</strong>
+            </div>
           </div>
-        </div>
-      )
+        )
+      }
     },
     { field: 'firstName', headerName: 'FIRST NAME', flex: 1 },
     {
@@ -157,7 +171,7 @@ const ClientListApps = () => {
             </div>
           </Grid>
 
-          <DataTable columns={newCols} data={data} />
+          <DataTable columns={newCols} data={dataWithProfileImg} />
         </Card>
       </Grid>
     </Grid>

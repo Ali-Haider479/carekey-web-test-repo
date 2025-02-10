@@ -18,6 +18,7 @@ export type CalendarColors = {
 export type CalendarType = {
   events: EventInput[]
   caregiverEvents: EventInput[]
+  clientEvents: EventInput[]
   filteredEvents: EventInput[]
   selectedEvent: null | any
   selectedCalendars: CalendarFiltersType[]

@@ -11,10 +11,10 @@ import { dark, light } from '@mui/material/styles/createPalette'
 export type CustomTabListProps = TabListProps & {
   color?: ThemeColor
   pill?: 'true' | 'false'
-  overRideColor?: string
+  overridecolor?: string
 }
 
-const TabList = styled(MuiTabList)<CustomTabListProps>(({ color, theme, pill, orientation, overRideColor }) => ({
+const TabList = styled(MuiTabList)<CustomTabListProps>(({ color, theme, pill, orientation, overridecolor }) => ({
   ...(pill === 'true' && {
     minHeight: 38,
     ...(orientation === 'vertical'
@@ -39,28 +39,28 @@ const TabList = styled(MuiTabList)<CustomTabListProps>(({ color, theme, pill, or
       gap: theme.spacing(3)
     },
     '& .Mui-selected': {
-      backgroundColor: overRideColor || `${dark ? '#7112B7' : '#4B0082'} !important`,
+      backgroundColor: overridecolor || `${dark ? '#7112B7' : '#4B0082'} !important`,
       color: `var(--mui-palette-${color}-contrastText) !important`,
-      boxShadow: overRideColor ? `0px 3px 5px rgba(0, 0, 0, 0.2)` : `var(--mui-customShadows-${color}-sm)`,
+      boxShadow: overridecolor ? `0px 3px 5px rgba(0, 0, 0, 0.2)` : `var(--mui-customShadows-${color}-sm)`,
       // Prevent hover effect on active tab
       '&:hover': {
-        backgroundColor: overRideColor || `var(--mui-palette-${color}-main)`
+        backgroundColor: overridecolor || `var(--mui-palette-${color}-main)`
       }
     },
     '& .MuiTab-root': {
       minHeight: 38,
       padding: theme.spacing(2, 5),
       borderRadius: 'var(--mui-shape-borderRadius)',
-      backgroundColor: overRideColor
-        ? `${overRideColor}33` // Default background color for inactive tabs
+      backgroundColor: overridecolor
+        ? `${overridecolor}33` // Default background color for inactive tabs
         : `${'#666CFF'}20`, // Use light opacity of the theme color
-      color: overRideColor || `${dark ? '#ffffff' : '#4B0082'} ${light ? '#4B0082' : '#ffffff'} !important`,
+      color: overridecolor || `${dark ? '#ffffff' : '#4B0082'} ${light ? '#4B0082' : '#ffffff'} !important`,
       '&:hover': {
         border: 0,
-        backgroundColor: overRideColor
-          ? `${overRideColor}33` // Light opacity for hover
+        backgroundColor: overridecolor
+          ? `${overridecolor}33` // Light opacity for hover
           : `var(--mui-palette-${color}-lightOpacity)`,
-        color: overRideColor || `var(--mui-palette-${color}-main)`,
+        color: overridecolor || `var(--mui-palette-${color}-main)`,
         ...(orientation === 'vertical'
           ? {
               paddingInlineEnd: theme.spacing(5)
@@ -75,10 +75,10 @@ const TabList = styled(MuiTabList)<CustomTabListProps>(({ color, theme, pill, or
 
 const CustomTabList = (props: CustomTabListProps) => {
   // Props
-  const { color = 'primary', overRideColor, ...rest } = props
+  const { color = 'primary', overridecolor, ...rest } = props
 
-  // Pass overRideColor to the styled component
-  return <TabList color={color} overRideColor={overRideColor} {...rest} />
+  // Pass overridecolor to the styled component
+  return <TabList color={color} overridecolor={overridecolor} {...rest} />
 }
 
 export default CustomTabList
