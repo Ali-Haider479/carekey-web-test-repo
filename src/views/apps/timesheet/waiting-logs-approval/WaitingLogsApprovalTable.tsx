@@ -7,6 +7,7 @@ import { CircularProgress, Typography } from '@mui/material'
 import DataTable from '@/@core/components/mui/DataTable'
 import { GridColDef } from '@mui/x-data-grid'
 import AdUnitsIcon from '@mui/icons-material/AdUnits'
+import { calculateHoursWorked } from '@/utils/helperFunctions'
 // Updated interfaces to match your data structure
 interface Caregiver {
   id: number
@@ -53,21 +54,6 @@ interface SignatureStatusTableProps {
 const WaitingLogsApprovalTable = ({ data, isLoading }: SignatureStatusTableProps) => {
   const [globalFilter, setGlobalFilter] = useState('')
   const [rowSelection, setRowSelection] = useState({})
-
-  const calculateHoursWorked = (clockIn: string, clockOut: string) => {
-    // Parse the clock-in and clock-out times
-    const clockInTime = new Date(clockIn)
-    const clockOutTime = new Date(clockOut)
-
-    // Calculate the difference in milliseconds
-    const differenceMs = clockOutTime.getTime() - clockInTime.getTime()
-
-    // Convert milliseconds to hours
-    const hours = differenceMs / (1000 * 60 * 60)
-
-    // Round to two decimal places
-    return hours.toFixed(2)
-  }
 
   const columns = useMemo<GridColDef[]>(
     () => [

@@ -192,6 +192,24 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
   const [globalFilter, setGlobalFilter] = useState('')
   const [isLoading, setIsLoading] = useState(true)
   const tenantStore = useSelector((state: { tenantReducer: any }) => state.tenantReducer)
+  const [tenantFilteredList, setTenantFilteredList] = useState<any>([])
+
+  const fetchInitialData = async () => {
+    try {
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/tenant`)
+      setTenantFilteredList(response.data)
+    } catch (error) {
+      console.error('Error fetching initial data:', error)
+    }
+  }
+
+  useEffect(() => {
+    fetchInitialData()
+  }, [])
+
+  const handleFilteredData = (filteredData: any) => {
+    setTenantFilteredList(filteredData)
+  }
 
   // Hooks
   const { lang: locale } = useParams()
@@ -386,7 +404,7 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
         <>
           <Card>
             <CardHeader title='Filters' className='pbe-4' />
-            <TenantTableFilters setData={setFilteredData} tableData={data} />
+            <TenantTableFilters setData={setFilteredData} tableData={data} onFilterApplied={handleFilteredData} />
             <div className='flex justify-between flex-col items-start md:flex-row md:items-center p-6 border-bs gap-4'>
               <Button
                 color='secondary'

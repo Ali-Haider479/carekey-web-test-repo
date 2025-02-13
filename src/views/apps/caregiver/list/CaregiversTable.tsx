@@ -32,9 +32,13 @@ type Caregiver = {
   caregiverUMPI: string
 }
 
-const CaregiverTable = () => {
+interface CaregiverTableProps {
+  data: []
+}
+
+const CaregiverTable = ({ data }: CaregiverTableProps) => {
   // State
-  const [data, setData] = useState<Caregiver[]>([])
+  // const [data, setData] = useState<Caregiver[]>([])
   const [search, setSearch] = useState('')
 
   const router = useRouter()
@@ -90,22 +94,22 @@ const CaregiverTable = () => {
     }
   ]
 
-  useEffect(() => {
-    // Fetch data from the backend API
-    const fetchData = async () => {
-      try {
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/caregivers/1/tenant`)
-        const fetchedData = response.data
-        console.log('Caregiver List ----> ', fetchedData)
+  // useEffect(() => {
+  //   // Fetch data from the backend API
+  //   const fetchData = async () => {
+  //     try {
+  //       const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/caregivers/1/tenant`)
+  //       const fetchedData = response.data
+  //       console.log('Caregiver List ----> ', fetchedData)
 
-        setData(fetchedData)
-      } catch (error) {
-        console.error('Error fetching data', error)
-      }
-    }
+  //       setData(fetchedData)
+  //     } catch (error) {
+  //       console.error('Error fetching data', error)
+  //     }
+  //   }
 
-    fetchData()
-  }, [])
+  //   fetchData()
+  // }, [])
 
   return (
     <Card sx={{ borderRadius: 1, boxShadow: 3, p: 0 }}>

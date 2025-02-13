@@ -14,6 +14,7 @@ import { GridColDef } from '@mui/x-data-grid'
 import DataTable from '@/@core/components/mui/DataTable'
 import { Typography } from '@mui/material'
 import AdUnitsIcon from '@mui/icons-material/AdUnits'
+import { calculateHoursWorked } from '@/utils/helperFunctions'
 
 const TimeLogTable = () => {
   const { id } = useParams()
@@ -35,20 +36,6 @@ const TimeLogTable = () => {
     fetchTimeLog()
   }, [])
 
-  const calculateHoursWorked = (clockIn: string, clockOut: string) => {
-    // Parse the clock-in and clock-out times
-    const clockInTime = new Date(clockIn)
-    const clockOutTime = new Date(clockOut)
-
-    // Calculate the difference in milliseconds
-    const differenceMs = clockOutTime.getTime() - clockInTime.getTime()
-
-    // Convert milliseconds to hours
-    const hours = differenceMs / (1000 * 60 * 60)
-
-    // Round to two decimal places
-    return hours.toFixed(2)
-  }
 
   const newColumns: GridColDef[] = [
     {

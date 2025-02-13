@@ -1,4 +1,4 @@
-import { useState, useEffect, forwardRef, useCallback } from 'react'
+import { useState, useEffect, forwardRef, useCallback, use } from 'react'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import MenuItem from '@mui/material/MenuItem'
@@ -11,6 +11,8 @@ import { addEvent, deleteEvent, filterEvents, selectedEvent, updateEvent } from 
 import axios from 'axios'
 import FormModal from '@/@core/components/mui/Modal'
 import { AddEventSidebarType, AddEventType } from '@/types/apps/calendarTypes'
+import { Grid2 as Grid } from '@mui/material'
+import { useParams } from 'next/navigation'
 
 interface PickerProps {
   label?: string
@@ -29,6 +31,8 @@ interface DefaultStateType {
   client: string
   service: string
   assignedHours: number
+  startTime: Date
+  endTime: Date
   notes: string
   location: string
 }
@@ -41,14 +45,86 @@ const defaultState: DefaultStateType = {
   endDate: new Date(),
   status: 'pending',
   startDate: new Date(),
+  startTime: new Date(),
+  endTime: new Date(),
   assignedHours: 0,
   notes: '',
   location: ''
 }
 
+/**
+ * Splits a time frame into 1 or 2 objects, depending on whether it crosses midnight.
+ *
+ * @param {Date} startDate - The starting date/time.
+ * @param {number} assignedHours - The total assigned hours (in decimal). e.g. 4 or 5.5
+ * @returns An array of one or two objects:
+ *          {
+ *            startDate: Date,
+ *            assignedHours: number,
+ *            endDate: Date
+ *          }
+ */
+function createTimeFrames(startDate: Date, assignedHours: number) {
+  // 1. Convert "assignedHours" to minutes (assuming standard decimal notation, e.g., 4.5 -> 4h 30m)
+  const assignedMinutes = Math.floor(assignedHours * 60)
+
+  // 2. Compute the naive end date by adding assignedMinutes to startDate
+  const endDate = new Date(startDate.getTime() + assignedMinutes * 60_000)
+
+  // 3. Calculate the "midnight boundary" of the start date (i.e., next midnight).
+  const midnight = new Date(startDate)
+  midnight.setHours(24, 0, 0, 0) // This sets hours to 24:00 of the same day => effectively midnight
+
+  // 4. Check if endDate crosses that midnight boundary
+  if (endDate <= midnight) {
+    // No crossing: Just return one object
+    return [
+      {
+        startDate: startDate,
+        assignedHours: assignedHours,
+        endDate: endDate
+      }
+    ]
+  } else {
+    // Crossing midnight, so split into two objects:
+
+    // (a) First chunk: from startDate until midnight
+    const firstChunkMinutes = (midnight.getTime() - startDate.getTime()) / 60_000
+    const firstEndDate = new Date(startDate.getTime() + firstChunkMinutes * 60_000)
+
+    // Convert chunk minutes to decimal hours
+    const firstAssignedHours = Number((firstChunkMinutes / 60).toFixed(2))
+
+    // (b) Second chunk: from midnight onward for the leftover
+    const secondChunkMinutes = assignedMinutes - firstChunkMinutes
+    const secondStartDate = new Date(midnight.getTime()) // same as firstEndDate
+    const secondEndDate = new Date(secondStartDate.getTime() + secondChunkMinutes * 60_000)
+
+    // Convert leftover minutes to decimal hours
+    const secondAssignedHours = Number((secondChunkMinutes / 60).toFixed(2))
+
+    return [
+      {
+        startDate: startDate,
+        assignedHours: firstAssignedHours,
+        endDate: firstEndDate
+      },
+      {
+        startDate: secondStartDate,
+        assignedHours: secondAssignedHours,
+        endDate: secondEndDate
+      }
+    ]
+  }
+}
+
 const AddEventModal = (props: AddEventSidebarType) => {
+  const { id } = useParams()
+  const [caregiver, setCaregiver] = useState<any>(null)
+  const [isLoading, setIsLoading] = useState(false)
   const { calendarStore, dispatch, addEventSidebarOpen, handleAddEventSidebarToggle } = props
   const [values, setValues] = useState<DefaultStateType>(defaultState)
+  console.log('STATE CAREGIVER', caregiver)
   const PickersComponent = forwardRef(({ ...props }: PickerProps, ref) => {
     return (
       <CustomTextField
@@ -79,6 +155,8 @@ const AddEventModal = (props: AddEventSidebarType) => {
         title: event.title || '',
         endDate: event.end !== null ? event.end : event.start,
         startDate: event.start !== null ? event.start : new Date(),
+        startTime: event.start !== null ? event.start : new Date(),
+        endTime: event.end !== null ? event.end : event.start,
         status: (event?.extendedProps?.status || 'waiting').toLowerCase(),
         caregiver: event?.extendedProps?.caregiver?.id || event?.extendedProps?.caregiver,
         client: event?.extendedProps?.client?.id || event?.extendedProps?.client,
@@ -103,32 +181,57 @@ const AddEventModal = (props: AddEventSidebarType) => {
   }
 
   const onSubmit = async (data: { title: string }) => {
-    const modifiedEvent: AddEventType = {
-      display: 'block',
-      title: data.title,
-      end: values.endDate,
-      start: values.startDate,
-      status: values.status,
-      caregiverId: values.caregiver,
-      clientId: values.client,
-      serviceId: values.service,
-      assignedHours: values.assignedHours,
-      notes: values.notes,
-      location: values.location
+    const startDate = values.startDate
+    const endDate = values.endDate
+    const assignedHours = values.assignedHours
+
+    const bulkEvents: AddEventType[] = []
+
+    // Calculate total days including cases where it crosses midnight
+    const totalDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (24 * 60 * 60 * 1000)) + 1
+
+    let currentDate = new Date(startDate)
+
+    for (let i = 0; i < totalDays; i++) {
+      const eventStartDate = new Date(currentDate)
+      const finalStartDate = mergeDateWithTime(eventStartDate, values.startTime)
+      const finalEndDate = new Date(finalStartDate.getTime() + assignedHours * 60 * 60 * 1000)
+
+      bulkEvents.push({
+        display: 'block',
+        title: data.title,
+        start: finalStartDate,
+        end: finalEndDate,
+        status: values.status,
+        caregiverId: values.caregiver,
+        clientId: values.client,
+        serviceId: values.service,
+        assignedHours: assignedHours,
+        notes: values.notes,
+        location: values.location
+      })
+
+      // Move to the next day without modifying endDate
+      currentDate.setDate(currentDate.getDate() + 1)
     }
-    if (calendarStore.selectedEvent === null || !calendarStore.selectedEvent.title.length) {
-      const createSchedule = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/schedule`, modifiedEvent)
+
+    // Make a single API call with bulk data
+    try {
+      const createSchedule = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/schedule`, bulkEvents)
+      console.log('Created schedule:', createSchedule.data)
       dispatch(addEvent(createSchedule.data))
-    } else {
-      const updateSchedule = await axios.patch(
-        `${process.env.NEXT_PUBLIC_API_URL}/schedule/${calendarStore.selectedEvent.id}`,
-        modifiedEvent
-      )
-      dispatch(updateEvent({ ...updateSchedule.data, id: calendarStore.selectedEvent.id }))
+    } catch (error) {
+      console.error('Error creating schedule:', error)
     }
 
     dispatch(filterEvents())
     handleModalClose()
+  }
+
+  const mergeDateWithTime = (date: Date, time: Date): Date => {
+    const mergedDate = new Date(date)
+    mergedDate.setHours(time.getHours(), time.getMinutes(), 0, 0)
+    return mergedDate
   }
 
   const handleDeleteButtonClick = () => {
@@ -144,6 +247,33 @@ const AddEventModal = (props: AddEventSidebarType) => {
       setValues({ ...values, startDate: new Date(date), endDate: new Date(date) })
     }
   }
+
+  const handleStartTime = (date: Date | null) => {
+    if (date && date > values.endTime) {
+      setValues({ ...values, startTime: new Date(date), endTime: new Date(date) })
+    }
+  }
+
+  const fetchData = async () => {
+    try {
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/caregivers/user/${id}`)
+      const caregiverData = response.data
+      console.log('Caregiver:', caregiverData)
+      setCaregiver(caregiverData)
+      const caregiverName = `${caregiverData?.firstName} ${caregiverData?.lastName}`
+      setValues(prevValues => ({
+        ...prevValues,
+        caregiver: caregiverData?.id, // Store caregiver ID for backend
+        caregiverName // This is only for display in the form
+      }))
+    } catch (error) {
+      console.error('Error fetching data', error)
+    }
+  }
+
+  useEffect(() => {
+    fetchData()
+  }, [])
 
   useEffect(() => {
     if (calendarStore.selectedEvent !== null) {
@@ -214,51 +344,131 @@ const AddEventModal = (props: AddEventSidebarType) => {
             ))}
           </CustomTextField>
 
-          <CustomTextField
-            select
-            fullWidth
-            className='mbe-3'
-            label='Caregiver'
-            value={values?.caregiver}
-            id='caregiver-schedule'
-            onChange={e => setValues({ ...values, caregiver: e.target.value })}
-          >
-            {props?.caregiverList.map((caregiver: any) => (
-              <MenuItem key={caregiver.id} value={caregiver.id}>
+          {caregiver && (
+            <CustomTextField
+              select
+              fullWidth
+              className='mbe-3'
+              label='Caregiver'
+              value={values?.caregiver}
+              id='caregiver-schedule'
+              onChange={e => setValues({ ...values, caregiver: e.target.value })}
+            >
+              <MenuItem key={caregiver?.id} value={caregiver?.id}>
                 {`${caregiver.firstName} ${caregiver.lastName}`}
               </MenuItem>
-            ))}
-          </CustomTextField>
+            </CustomTextField>
+          )}
+          <Grid container spacing={3}>
+            <Grid size={{ xs: 12, md: 6 }}>
+              <AppReactDatepicker
+                selectsStart
+                id='event-start-date'
+                endDate={values.endDate}
+                selected={values.startDate}
+                startDate={values.startDate}
+                showTimeSelect={!values.startDate}
+                dateFormat={!values.startDate ? 'yyyy-MM-dd hh:mm' : 'yyyy-MM-dd'}
+                customInput={
+                  <PickersComponent
+                    label='Start Date'
+                    registername='startDate'
+                    className='mbe-3'
+                    id='event-start-date'
+                  />
+                }
+                onChange={(date: Date | null) => {
+                  if (date !== null) {
+                    // Combine the selected start date with the selected start time
+                    setValues({
+                      ...values,
+                      startDate: mergeDateWithTime(date, values.startTime)
+                    })
+                  }
+                }}
+                onSelect={handleStartDate}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, md: 6 }}>
+              <AppReactDatepicker
+                showTimeSelect
+                onSelect={handleStartTime}
+                selected={values.startTime}
+                timeIntervals={1}
+                showTimeSelectOnly
+                dateFormat='hh:mm aa'
+                id='time-only-picker'
+                onChange={(date: Date | null) => {
+                  if (date !== null) {
+                    // Combine the selected start date with the selected start time
+                    setValues({
+                      ...values,
+                      startTime: date,
+                      startDate: mergeDateWithTime(values.startDate, date)
+                    })
+                  }
+                }}
+                customInput={
+                  <PickersComponent
+                    label='Start Time'
+                    registername='startTime'
+                    className='mbe-3'
+                    id='event-start-time'
+                  />
+                }
+              />
+            </Grid>
+            <Grid size={{ xs: 12, md: 6 }}>
+              <AppReactDatepicker
+                selectsEnd
+                id='event-end-date'
+                endDate={values.endDate}
+                selected={values.endDate}
+                minDate={values.startDate}
+                startDate={values.startDate}
+                showTimeSelect={!values.endDate}
+                dateFormat={!values.endDate ? 'yyyy-MM-dd hh:mm' : 'yyyy-MM-dd'}
+                customInput={
+                  <PickersComponent label='End Date' registername='endDate' className='mbe-3' id='event-end-date' />
+                }
+                onChange={(date: Date | null) => {
+                  if (date !== null) {
+                    // Combine the selected end date with the selected end time
+                    setValues({
+                      ...values,
+                      endDate: mergeDateWithTime(date, values.endTime)
+                    })
+                  }
+                }}
+              />
+            </Grid>
 
-          <AppReactDatepicker
-            selectsStart
-            id='event-start-date'
-            endDate={values.endDate}
-            selected={values.startDate}
-            startDate={values.startDate}
-            showTimeSelect={!values.startDate}
-            dateFormat={!values.startDate ? 'yyyy-MM-dd hh:mm' : 'yyyy-MM-dd'}
-            customInput={
-              <PickersComponent label='Start Date' registername='startDate' className='mbe-3' id='event-start-date' />
-            }
-            onChange={(date: Date | null) => date !== null && setValues({ ...values, startDate: new Date(date) })}
-            onSelect={handleStartDate}
-          />
-          <AppReactDatepicker
-            selectsEnd
-            id='event-end-date'
-            endDate={values.endDate}
-            selected={values.endDate}
-            minDate={values.startDate}
-            startDate={values.startDate}
-            showTimeSelect={!values.endDate}
-            dateFormat={!values.endDate ? 'yyyy-MM-dd hh:mm' : 'yyyy-MM-dd'}
-            customInput={
-              <PickersComponent label='End Date' registername='endDate' className='mbe-3' id='event-end-date' />
-            }
-            onChange={(date: Date | null) => date !== null && setValues({ ...values, endDate: new Date(date) })}
-          />
-
+            <Grid size={{ xs: 12, md: 6 }}>
+              <AppReactDatepicker
+                showTimeSelect
+                selected={values.endTime}
+                timeIntervals={1}
+                minDate={values.startTime}
+                startDate={values.startTime}
+                showTimeSelectOnly
+                dateFormat='hh:mm aa'
+                id='time-only-picker'
+                onChange={(date: Date | null) => {
+                  if (date !== null) {
+                    // Combine the selected end date with the selected end time
+                    setValues({
+                      ...values,
+                      endTime: date,
+                      endDate: mergeDateWithTime(values.endDate, date)
+                    })
+                  }
+                }}
+                customInput={
+                  <PickersComponent label='End Time' registername='endTime' className='mbe-3' id='event-end-time' />
+                }
+              />
+            </Grid>
+          </Grid>
           {/* <CustomTextField
             select
             fullWidth

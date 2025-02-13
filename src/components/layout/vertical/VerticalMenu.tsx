@@ -109,7 +109,7 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
           href={`/${locale}/apps/caregiver/list`}
           icon={<i className='bx-bxs-heart-circle' />}
           exactMatch={false}
-          activeUrl='/apps/caregiver/list'
+          activeUrl='/apps/caregiver'
         >
           {dictionary['navigation'].caregivers}
         </MenuItem>
@@ -117,7 +117,7 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
           href={`/${locale}/apps/client/list`}
           icon={<i className='bx-user' />}
           exactMatch={false}
-          activeUrl='/apps/client/list'
+          activeUrl='/apps/client'
         >
           {dictionary['navigation'].clients}
         </MenuItem>
@@ -176,6 +176,14 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
           activeUrl='/apps/advance'
         >
           {dictionary['navigation'].advance}
+        </MenuItem>
+        <MenuItem
+          href={`/${locale}/apps/user-management`}
+          icon={<i className='bx-user-circle' />}
+          exactMatch={false}
+          activeUrl='/apps/user-management'
+        >
+          {dictionary['navigation'].userManagement}
         </MenuItem>
         {/* <SubMenu
           label={dictionary['navigation'].dashboards}

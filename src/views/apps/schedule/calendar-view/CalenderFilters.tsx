@@ -3,8 +3,6 @@ import Dropdown from '@/@core/components/mui/DropDown'
 import { useAppDispatch } from '@/hooks/useDispatch'
 import { clearFilter, filterCaregiverSchedules } from '@/redux-store/slices/calendar'
 import { Grid2 as Grid, Typography } from '@mui/material'
-import Button from '@mui/material/Button'
-import MenuItem from '@mui/material/MenuItem'
 import axios from 'axios'
 import React, { useEffect, useState } from 'react'
 

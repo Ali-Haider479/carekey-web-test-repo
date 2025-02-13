@@ -50,10 +50,6 @@ const CaregiverDetails = ({ tabContentList }: BottomBodyProps) => {
     switch (tabKey) {
       case 'profile':
         return 'Caregiver - Profile'
-      case 'e-doc':
-        return 'Caregiver - Electronic Documents'
-      case 'forms':
-        return 'Caregiver - Submitted Form'
       case 'account-history':
         return 'Caregiver - Account History'
       case 'assigned-service':
@@ -88,8 +84,6 @@ const CaregiverDetails = ({ tabContentList }: BottomBodyProps) => {
           <Grid size={{ xs: 12 }}>
             <CustomTabList onChange={handleChange} variant='scrollable' pill='true'>
               <Tab value='profile' label='PROFILE' />
-              <Tab value='e-doc' label='E-DOC' />
-              <Tab value='forms' label='FORMS' />
               <Tab value='account-history' label='ACC HISTORY' />
               <Tab value='assigned-service' label='ASSIGNED SERVICE' />
               <Tab value='time-log' label='VIEW TIME LOG' />

@@ -211,13 +211,6 @@ const DocumentsSection = forwardRef<{ handleSubmit: any }, Props>(({ onFinish, d
 
               {/* Uploaded Files Section */}
               <h2 className='text-xl font-semibold mb-6'>Uploaded Files</h2>
-              {/* <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
-                {renderFileList(ssnFile, 'SSN Document')}
-                {renderFileList(adultFile, 'Vulnerable Adult Certificate')}
-                {renderFileList(umpiFile, 'UMPI Letter')}
-                {renderFileList(clearanceFile, 'Background Check Clearance')}
-              </div> */}
-
               {/* Service Type & Submit Button */}
               <div className='mt-5'>
                 <h2 className='text-xl font-semibold mb-4'>Service Type</h2>

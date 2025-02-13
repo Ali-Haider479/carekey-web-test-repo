@@ -55,7 +55,7 @@ export type Config = {
 
 const themeConfig: Config = {
   templateName: 'CareKey',
-  homePageUrl: '/dashboard',
+  homePageUrl: '/apps/dashboard',
   settingsCookieName: 'carekey-mui-next-demo',
   mode: 'system', // 'system', 'light', 'dark'
   skin: 'default', // 'default', 'bordered'

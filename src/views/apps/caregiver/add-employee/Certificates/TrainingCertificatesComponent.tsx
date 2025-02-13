@@ -8,21 +8,7 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
 import CustomDropDown from '@/@core/components/custom-inputs/CustomDropDown'
 import CustomTextField from '@/@core/components/custom-inputs/CustomTextField'
 
-// interface DisplayFile {
-//   id: number
-//   status: 'success' | 'error' | 'uploading'
-//   path: string // The full path of the file
-//   relativePath: string // The relative path of the file
-//   lastModified: number // The timestamp of the last modification
-//   lastModifiedDate: Date // The date object representing the last modification time
-//   name: string // The name of the file
-//   size: number // The size of the file in bytes
-//   type: string // The MIME type of the file
-//   webkitRelativePath: string // The webkit-specific relative path of the file
-// }
-
 type Props = {
-  // form?: any
   onFinish: any
   defaultValues: any
 }

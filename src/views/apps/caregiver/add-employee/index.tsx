@@ -26,6 +26,7 @@ import DocumentsSection from './Certificates/DocumentsSection'
 import { PersonalDetailsFormDataType } from './types'
 import { dark } from '@mui/material/styles/createPalette'
 import axios from 'axios'
+import DocumentsPage from './Certificates/Documents'
 
 // Vars
 const steps = [
@@ -39,36 +40,22 @@ const steps = [
   },
   {
     title: '03',
-    subtitle: 'PCA UMPI Information'
-  },
-  {
-    title: '04',
-    subtitle: 'Training Certificate & Driving License'
-  },
-  {
-    title: '05',
     subtitle: 'Documents'
   }
-  // {
-  //   title: '06',
-  //   subtitle: 'Submit'
-  // }
 ]
 
 const EmployeeStepper = () => {
   // States
   const [activeStep, setActiveStep] = useState(0)
-  const [caregiverData, setCaregiverData] = useState<any>([])
-  const [loginInfo, setLoginInfo] = useState<any>([])
-  const [certificatesData, setCertificatesData] = useState<any>([])
-  const [documentsData, setDocumentsData] = useState<any>([])
+  const [caregiverData, setCaregiverData] = useState<any>({})
+  const [loginInfo, setLoginInfo] = useState<any>({})
+  const [documentsData, setDocumentsData] = useState<any>({})
 
   const router = useRouter()
 
-  const personalDetailsFormRef = useRef<any>(null)
-  const certificatesFormRef = useRef<any>(null)
-  const loginInfoFormRef = useRef<any>(null)
-  const documentsFormRef = useRef<any>(null)
+  const personalDetailsFormRef = useRef<{ handleSubmit: any }>(null)
+  const loginInfoFormRef = useRef<{ handleSubmit: any }>(null)
+  const documentsFormRef = useRef<{ handleSubmit: any }>(null)
 
   const handleReset = () => {
     setActiveStep(0)
@@ -155,8 +142,8 @@ const EmployeeStepper = () => {
         mailingAddress: loginInfo.address,
         mailingAddressType: 'Mailing',
         userId: userResponse.data.id,
-        dlState: certificatesData.dlState,
-        additionalPayRate: Docs.additionalPayRate,
+        dlState: documentsData.dlState,
+        additionalPayRate: documentsData.additionalPayRate,
         tenantId: 1,
         clientId: loginInfo.clientId,
         assignmentDate: loginInfo.assignmentDate,
@@ -171,24 +158,24 @@ const EmployeeStepper = () => {
       const documentUploads = [
         // Training Certificates
         uploadDocuments(
-          certificatesData.trainingCertificateFiles,
+          documentsData.trainingCertificateFiles,
           'trainingCertificate',
-          certificatesData.trainingCertificateExpiryDate,
+          documentsData.trainingCertificateExpiryDate,
           caregiverId.toString(),
           {
-            trainingCertificateName: certificatesData.trainingCertificateName
+            trainingCertificateName: documentsData.trainingCertificateName
           }
         ),
 
         // Driving License
         uploadDocuments(
-          certificatesData.drivingCertificateFiles,
+          documentsData.drivingCertificateFiles,
           'drivingLicense',
-          certificatesData.drivingLicenseExpiryDate,
+          documentsData.drivingLicenseExpiryDate,
           caregiverId.toString(),
           {
-            drivingLicenseNumber: certificatesData.drivingLicenseNumber,
-            dlState: certificatesData.dlState
+            drivingLicenseNumber: documentsData.drivingLicenseNumber,
+            dlState: documentsData.dlState
           }
         ),
 
@@ -254,24 +241,11 @@ const EmployeeStepper = () => {
         })()
         break
       case 2:
-        setActiveStep(prevActiveStep => prevActiveStep + 1)
-        break
-      case 3:
-        certificatesFormRef.current?.handleSubmit((data: any) => {
-          setCertificatesData((prevData: any) => ({ ...prevData, ...data }))
-          setActiveStep(prevActiveStep => prevActiveStep + 1)
-        })()
-        break
-      case 4:
         documentsFormRef.current?.handleSubmit((data: any) => {
           setDocumentsData((prevData: any) => ({ ...prevData, ...data }))
           handleSave(data)
-          // setActiveStep(prevActiveStep => prevActiveStep + 1)
         })()
         break
-      // case 5: // New case for the final submit
-      //   handleSave()
-      //   break
     }
   }
 
@@ -285,9 +259,7 @@ const EmployeeStepper = () => {
 
   const onPersonalDetailsSubmit = (values: FormDataType, data: any) => {
     console.log('Personal Details in Parent:', values)
-    // setCaregiverData((prevData: any) => ({ ...prevData, ...data }))
-    // Optionally store values or perform next step logic
-    handleNext() // Move to next step
+    handleNext()
   }
 
   const onLoginInfoSubmit = (values: any, data: any) => {
@@ -296,22 +268,12 @@ const EmployeeStepper = () => {
     handleNext()
   }
 
-  const onPCAUMPISubmit = (values: any) => {
-    console.log('Personal Detail', values)
-  }
-
-  const onTrainingCertificatesSubmit = (values: any, data: any) => {
-    console.log('Personal Detail', values)
-    setCertificatesData((prevData: any) => ({ ...prevData, ...data }))
+  const onDocumentsSubmit = (data: any) => {
+    console.log('Documents Data:', data)
+    setDocumentsData((prevData: any) => ({ ...prevData, ...data }))
     handleNext()
   }
 
-  const onDocumentsSubmit = (values: any, data: any) => {
-    console.log('Personal Detail', values)
-    setCertificatesData((prevData: any) => ({ ...prevData, ...data }))
-    handleNext()
-  }
-  console.log('Certificares data', certificatesData)
   console.log('Caregiver data', caregiverData)
   console.log('Lofin data', loginInfo)
   console.log('Documents data', documentsData)
@@ -329,26 +291,7 @@ const EmployeeStepper = () => {
       case 1:
         return <LoginInfoComponent ref={loginInfoFormRef} onFinish={onLoginInfoSubmit} defaultValues={loginInfo} />
       case 2:
-        return <PCAUMPITable />
-      case 3:
-        return (
-          <TrainingCertificatesComponent
-            ref={certificatesFormRef}
-            onFinish={onTrainingCertificatesSubmit}
-            defaultValues={certificatesData}
-          />
-        )
-      case 4:
-        return <DocumentsSection ref={documentsFormRef} onFinish={onDocumentsSubmit} defaultValues={documentsData} />
-      // case 5:
-      //   return (
-      //     <div className='text-center p-6'>
-      //       <Typography variant='h5'>Ready to Submit</Typography>
-      //       <Typography className='mt-2'>
-      //         Please review your information and click Submit to complete the registration.
-      //       </Typography>
-      //     </div>
-      //   )
+        return <DocumentsPage ref={documentsFormRef} onFinish={onDocumentsSubmit} defaultValues={documentsData} />
       default:
         return 'Unknown step'
     }

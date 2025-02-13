@@ -5,8 +5,6 @@ import dynamic from 'next/dynamic'
 import CaregiverDetails from '@/views/apps/caregiver/view/details'
 
 const CaregiverProfileTab = dynamic(() => import('@/views/apps/caregiver/view/details/profile'))
-const CaregiverEDocTab = dynamic(() => import('@/views/apps/caregiver/view/details/e-doc'))
-const CaregiverFormsTab = dynamic(() => import('@/views/apps/caregiver/view/details/forms'))
 const CaregiverAccHistoryTab = dynamic(() => import('@/views/apps/caregiver/view/details/account-history'))
 const CaregiverAssignedServiceTab = dynamic(() => import('@/views/apps/caregiver/view/details/assigned-service'))
 const CaregiverTimeLogTab = dynamic(() => import('@/views/apps/caregiver/view/details/time-log'))
@@ -15,8 +13,6 @@ const CaregiverScheduleTab = dynamic(() => import('@/views/apps/caregiver/view/d
 // Vars
 const tabContentList = () => ({
   profile: <CaregiverProfileTab />,
-  'e-doc': <CaregiverEDocTab />,
-  forms: <CaregiverFormsTab />,
   'account-history': <CaregiverAccHistoryTab />,
   'assigned-service': <CaregiverAssignedServiceTab />,
   'time-log': <CaregiverTimeLogTab />,

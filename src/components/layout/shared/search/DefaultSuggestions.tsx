@@ -24,26 +24,26 @@ const defaultSuggestions: DefaultSuggestionsType[] = [
   {
     sectionLabel: 'Popular Searches',
     items: [
+      // {
+      //   label: 'Analytics',
+      //   href: '/dashboards/analytics',
+      //   icon: 'bx-bar-chart-alt-2'
+      // },
       {
-        label: 'Analytics',
-        href: '/dashboards/analytics',
-        icon: 'bx-bar-chart-alt-2'
-      },
-      {
-        label: 'CRM',
-        href: '/dashboards/crm',
+        label: 'Dashboard',
+        href: '/apps/dashboard',
         icon: 'bx-doughnut-chart'
-      },
-      {
-        label: 'eCommerce',
-        href: '/dashboards/ecommerce',
-        icon: 'bx-cart'
-      },
-      {
-        label: 'Logistics',
-        href: '/apps/logistics/dashboard',
-        icon: 'bx-car'
       }
+      // {
+      //   label: 'eCommerce',
+      //   href: '/dashboards/ecommerce',
+      //   icon: 'bx-cart'
+      // },
+      // {
+      //   label: 'Logistics',
+      //   href: '/apps/logistics/dashboard',
+      //   icon: 'bx-car'
+      // }
     ]
   },
   {

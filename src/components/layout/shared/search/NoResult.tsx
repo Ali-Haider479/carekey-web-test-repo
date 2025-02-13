@@ -18,19 +18,19 @@ type NoResultData = {
 }
 
 const noResultData: NoResultData[] = [
+  // {
+  //   label: 'Analytics',
+  //   href: '/dashboards/analytics',
+  //   icon: 'bx-bar-chart-alt-2'
+  // },
+  // {
+  //   label: 'User Profile',
+  //   href: '/pages/user-profile',
+  //   icon: 'bx-user'
+  // },
   {
-    label: 'Analytics',
-    href: '/dashboards/analytics',
-    icon: 'bx-bar-chart-alt-2'
-  },
-  {
-    label: 'User Profile',
-    href: '/pages/user-profile',
-    icon: 'bx-user'
-  },
-  {
-    label: 'CRM',
-    href: '/dashboards/crm',
+    label: 'Dashboard',
+    href: '/apps/dashboard',
     icon: 'bx-doughnut-chart'
   }
 ]

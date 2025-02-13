@@ -13,24 +13,24 @@ type DropDownProps = {
   options: OptionListType[]
   className?: string
   disabled?: boolean
-  onChange?: any
+  onChange?: (event: React.ChangeEvent<{ value: unknown }>) => void
+  size?: 'small' | 'medium'
 }
 
-const Dropdown = ({ value, setValue, options, className, disabled, onChange }: DropDownProps) => {
+const Dropdown = ({ value, setValue, options, className, disabled, onChange, size }: DropDownProps) => {
   return (
     <CustomTextField
       select
       id='select-item'
       placeholder='status'
-      className={className?.length ? className : 'w-full'}
+      className={className || 'w-full'}
       value={value}
-      onChange={onChange ? onChange : e => setValue(e.target.value)}
+      onChange={onChange || (e => setValue(e.target.value as string | number))}
       disabled={disabled}
-      slotProps={{
-        select: { displayEmpty: true }
-      }}
+      slotProps={{ select: { displayEmpty: true } }}
+      size={size || 'small'}
     >
-      {options?.map((item: OptionListType) => (
+      {options.map(item => (
         <MenuItem key={item.key} value={item.value}>
           {item.displayValue}
         </MenuItem>

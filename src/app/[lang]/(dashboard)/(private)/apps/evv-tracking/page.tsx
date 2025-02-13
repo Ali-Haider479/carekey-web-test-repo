@@ -1,19 +1,25 @@
-// MUI Imports
-import { Card, CardContent, CardHeader, TextField, Typography } from '@mui/material'
-import Grid from '@mui/material/Grid2'
+// React Imports
+import type { ReactElement } from 'react'
 
+// Next Imports
+import dynamic from 'next/dynamic'
 
+// Component Imports
+import EvvView from '@/views/apps/evv'
+
+const EvvCompletedShifts = dynamic(() => import('@/views/apps/evv/completed-shifts'))
+const EvvActiveUser = dynamic(() => import('@/views/apps/evv/active-user'))
+const EvvMissedShifts = dynamic(() => import('@/views/apps/evv/missed-shifts'))
+
+// Vars
+const tabContentList = (): { [key: string]: ReactElement } => ({
+  'completed-shifts': <EvvCompletedShifts />,
+  'active-users': <EvvActiveUser />,
+  'missed-shifts': <EvvMissedShifts />
+})
 
 const EvvTrackingViewApp = () => {
-    return (
-        <Grid container spacing={6}>
-            <Grid size={{ xs: 12 }}>
-                <Typography variant='h2'>
-                    EVV - Tracking
-                </Typography>
-            </Grid>
-        </Grid>
-    )
+  return <EvvView tabContentList={tabContentList()} />
 }
 
 export default EvvTrackingViewApp

@@ -41,21 +41,11 @@ const HorizontalWithBorder = (props: any) => {
   return (
     <Card color={color || 'primary'}>
       <CardContent className='flex flex-row gap-2 justify-between'>
-        {/* <div className='flex items-center gap-4'>
-          <CustomAvatar color={color} skin='light' variant='rounded' size={40}>
-            <i className={avatarIcon} />
-          </CustomAvatar>
-          <Typography variant='h4'>{stats}</Typography>
-        </div> */}
         <div className='flex flex-col gap-2'>
-          <Typography>{title}</Typography>
-          <Typography>{stats}</Typography>
-          {/* <div className='flex items-center gap-2'>
-            <Typography variant='h6'>{`${trendNumber > 0 ? '+' : ''}${trendNumber}%`}</Typography>
-            <Typography color='text.disabled'>than last week</Typography>
-          </div> */}
+          <Typography className='text-base'>{title}</Typography>
+          <Typography variant='h4'>{stats}</Typography>
         </div>
-        <PeopleAltIcon />
+        {avatarIcon}
       </CardContent>
     </Card>
   )

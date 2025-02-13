@@ -41,13 +41,13 @@ const FleetMap = (props: Props) => {
   }, [viewState])
 
   return (
-    <div className='is-full bs-full'>
+    <div className='is-full bs-full rounded-lg border-2 p-0.5'>
       <Map
         mapboxAccessToken={mapboxAccessToken}
         // eslint-disable-next-line lines-around-comment
         // @ts-ignore
         ref={mapRef}
-        initialViewState={{ longitude: -73.999024, latitude: 40.75249842, zoom: 12.5 }}
+        // initialViewState={{ longitude: -73.999024, latitude: 40.75249842, zoom: 12.5 }}
         mapStyle='mapbox://styles/mapbox/light-v9'
         attributionControl={false}
       >
@@ -59,14 +59,7 @@ const FleetMap = (props: Props) => {
               latitude={item.geometry.latitude}
               style={{ display: 'flex' }}
             >
-              <img
-                src='/images/apps/logistics/fleet-car.png'
-                height={42}
-                width={20}
-                {...(index === carIndex && {
-                  style: { filter: 'drop-shadow(0 0 7px var(--mui-palette-primary-main))' }
-                })}
-              />
+              <i className='bx-bxl-twitter text-gray-800' />
             </Marker>
           )
         })}
