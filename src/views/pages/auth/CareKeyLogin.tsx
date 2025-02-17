@@ -38,6 +38,7 @@ import CareKeyLogoDark from '@/@core/svg/LogoDark'
 import CareKeyLogoLight from '@/@core/svg/LogoLight'
 import { getSession, signIn } from 'next-auth/react'
 import { CircularProgress, Grid2 as Grid } from '@mui/material'
+import CustomAlert from '@/@core/components/mui/Alter'
 
 const CareKeyLogin = () => {
   const router = useRouter()
@@ -95,7 +96,7 @@ const CareKeyLogin = () => {
         password
       })
 
-      console.log(res)
+      console.log('Login Response:--------- ', res)
 
       if (res?.status === 200) {
         // Success Case
@@ -109,6 +110,7 @@ const CareKeyLogin = () => {
         console.log('Session Login', session)
 
         if (session?.user) {
+          localStorage.setItem('AuthUser', JSON.stringify(session?.user))
           router.push('/')
         }
       } else {
@@ -145,6 +147,7 @@ const CareKeyLogin = () => {
         )}
       >
         <LoginPageSVG />
+        <CustomAlert AlertProps={alertProps} openAlert={alertOpen} setOpenAlert={setAlertOpen} />
       </div>
       <div className='flex justify-center items-center bs-full bg-backgroundPaper !min-is-full p-6 md:!min-is-[unset] md:p-12 md:is-[480px]'>
         <div className='flex flex-col gap-6 is-full sm:is-auto md:is-full sm:max-is-[400px] md:max-is-[unset] mbs-11 sm:mbs-14 md:mbs-0'>

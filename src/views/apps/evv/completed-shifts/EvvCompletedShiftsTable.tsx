@@ -75,46 +75,49 @@ interface Props {
 const EvvCompletedShiftsTable = ({ timeLogData, isLoading }: Props) => {
   const columns = [
     {
-      accessorKey: 'caregiverName',
-      header: 'CAREGIVER NAME',
-      Cell: ({ row }: any) => (
-        <Typography>{`${row.original.caregiver.firstName} ${row.original.caregiver.lastName}`}</Typography>
+      id: 'caregiverName',
+      label: 'CAREGIVER NAME',
+      minWidth: 170,
+      editable: true,
+      sortable: true,
+      render: (user: any) => (
+        <Typography color='primary'>{`${user?.caregiver?.firstName} ${user?.caregiver?.lastName}`}</Typography>
       )
     },
     {
-      accessorKey: 'clientName',
-      header: 'CLIENT NAME',
-      Cell: ({ row }: any) => (
-        <Typography>{`${row.original.client.firstName} ${row.original.client.lastName}`}</Typography>
+      id: 'clientName',
+      label: 'CLIENT NAME',
+      minWidth: 170,
+      editable: true,
+      sortable: true,
+      render: (user: any) => (
+        <Typography color='primary'>{`${user?.client?.firstName} ${user?.client?.lastName}`}</Typography>
       )
     },
     {
-      accessorKey: 'pro',
-      header: 'PRO',
-      Cell: ({ row }: any) => <Typography>H2014</Typography>
+      id: 'pro',
+      label: 'PRO & MOD',
+      minWidth: 170,
+      editable: false,
+      sortable: true,
+      render: (user: any) => <Typography color='primary'>{user?.client?.authService[0]?.procedureAndModifier}</Typography>
     },
     {
-      accessorKey: 'mod',
-      header: 'MOD',
-      Cell: ({ row }: any) => <Typography>F.159</Typography>
-    },
-    { accessorKey: 'serviceName', header: 'SERVICE' },
-    {
-      accessorKey: 'clockIn',
-      header: 'CLOCK IN',
-      Cell: ({ row }: { row: { original: TimeLogData } }) => formattedDate(row.original.clockIn)
+      id: 'clockIn',
+      label: 'CLOCK IN',
+      minWidth: 170,
+      editable: false,
+      sortable: true,
+      render: (user: any) => <Typography color='primary'>{formattedDate(user?.clockIn)}</Typography>
     },
     {
-      accessorKey: 'clockOut',
-      header: 'CLOCK OUT',
-      Cell: ({ row }: { row: { original: TimeLogData } }) => formattedDate(row.original.clockOut)
+      id: 'clockOut',
+      label: 'CLOCK OUT',
+      minWidth: 170,
+      editable: false,
+      sortable: true,
+      render: (user: any) => <Typography color='primary'>{formattedDate(user?.clockOut)}</Typography>
     },
-    {
-      accessorKey: 'totalHrs',
-      header: 'TOTAL HRS',
-      Cell: ({ row }: any) => calculateHoursWorked(row.original.clockIn, row.original.clockOut)
-    },
-    { accessorKey: 'status', header: 'EVV STATUS', Cell: ({ row }: any) => <Typography>Accepted</Typography> }
   ]
 
   return (
@@ -127,7 +130,17 @@ const EvvCompletedShiftsTable = ({ timeLogData, isLoading }: Props) => {
           <CircularProgress />
         </div>
       ) : (
-        <ReactTable columns={columns} data={timeLogData} enableExpanding={false} enableExpandAll={false} />
+        <ReactTable
+          columns={columns}
+          data={timeLogData}
+          keyExtractor={user => user.id.toString()}
+          enableRowSelect
+          enablePagination
+          pageSize={5}
+          stickyHeader
+          maxHeight={600}
+          containerStyle={{ borderRadius: 2 }}
+        />
       )}
     </Card>
   )

@@ -84,6 +84,7 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                     type={'text'}
                     error={errors.middleName}
                     control={control}
+                    isRequired={false}
                   />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 4 }}>
@@ -241,7 +242,7 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                     label={'Pay Rate ($)'}
                     placeHolder={'Pay Rate ($)'}
                     name={'payRate'}
-                    defaultValue={23}
+                    defaultValue={10}
                     type={'number'}
                     error={errors.payRate}
                     control={control}
@@ -278,7 +279,7 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                     name='terminationDate'
                     control={control}
                     defaultValue={null} // Set the default value
-                    rules={{ required: 'Termination date is required' }} // Validation rules
+                    rules={{ required: false }} // Validation rules
                     render={({ field }) => (
                       <AppReactDatepicker
                         selected={field.value} // Bind value from react-hook-form
@@ -340,6 +341,7 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                     type={'text'}
                     error={errors.secondaryPhoneNumber}
                     control={control}
+                    isRequired={false}
                   />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 4 }}>
@@ -351,6 +353,7 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                     type={'text'}
                     error={errors.emergencyContactNumber}
                     control={control}
+                    isRequired={false}
                   />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 4 }}>
@@ -362,6 +365,7 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                     type={'email'}
                     error={errors.emergencyEmailId}
                     control={control}
+                    isRequired={false}
                   />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 4 }}>
@@ -371,10 +375,11 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                     error={errors.overtimeAgreement}
                     label={'Caregiver Overtime Agreement'}
                     optionList={[
-                      { key: true, value: true, optionString: 'Yes' },
-                      { key: false, value: false, optionString: 'No' }
+                      { key: 1, value: true, optionString: 'Yes' },
+                      { key: 2, value: false, optionString: 'No' }
                     ]}
-                    defaultValue={true}
+                    defaultValue={false}
+                    isRequired={false}
                   />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 4 }}>
@@ -384,8 +389,8 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                     error={errors.isLicensed245d}
                     label={'Is the Caregiver 245D Licensed'}
                     optionList={[
-                      { key: true, value: true, optionString: 'Yes' },
-                      { key: false, value: false, optionString: 'No' }
+                      { key: 1, value: true, optionString: 'Yes' },
+                      { key: 2, value: false, optionString: 'No' }
                     ]}
                     defaultValue={true}
                   />
@@ -419,6 +424,7 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                     type={'text'}
                     error={errors.specialRequests}
                     control={control}
+                    isRequired={false}
                   />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 4 }}>
@@ -430,6 +436,7 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                     type={'text'}
                     error={errors.comments}
                     control={control}
+                    isRequired={false}
                   />
                 </Grid>
               </Grid>

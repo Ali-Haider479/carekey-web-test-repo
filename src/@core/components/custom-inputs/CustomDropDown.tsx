@@ -14,20 +14,24 @@ type Option = {
 type Props = {
   name: string
   control: any
-  error: any
+  error?: any
   label: string
   optionList: Option[]
   defaultValue: any
   sx?: any
+  isRequired?: boolean
 }
 
 function CustomDropDown(props: Props) {
+  const { isRequired = true } = props;
   return (
     <Controller
       name={props.name}
       control={props.control}
       defaultValue={props.defaultValue}
-      rules={{ required: `${props.label} is required` }}
+      rules={{
+        required: isRequired ? `${props.label} is required` : false // Apply required rule conditionally
+      }}
       render={({ field }) => (
         <FormControl fullWidth error={!!props.error} className='relative' sx={props.sx}>
           <InputLabel size='small'>{props.label}</InputLabel>

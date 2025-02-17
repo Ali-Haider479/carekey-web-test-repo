@@ -18,7 +18,7 @@ import { useParams } from 'next/navigation'
 import axios from 'axios'
 
 interface BottomBodyProps {
-  tabContentList: Record<string, ReactElement>
+  tabContentList: Record<string, (props: { data: any }) => ReactElement>
 }
 
 const CaregiverDetails = ({ tabContentList }: BottomBodyProps) => {
@@ -92,7 +92,7 @@ const CaregiverDetails = ({ tabContentList }: BottomBodyProps) => {
           </Grid>
           <Grid size={{ xs: 12 }}>
             <TabPanel value={activeTab} className='p-0'>
-              {tabContentList[activeTab]}
+              {tabContentList[activeTab]({ data: data })}
             </TabPanel>
           </Grid>
         </Grid>

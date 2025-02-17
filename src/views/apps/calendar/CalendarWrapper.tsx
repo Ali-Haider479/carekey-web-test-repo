@@ -33,6 +33,7 @@ const AppCalendar = () => {
   const [calendarApi, setCalendarApi] = useState<null | any>(null)
   const [leftSidebarOpen, setLeftSidebarOpen] = useState<boolean>(false)
   const [addEventSidebarOpen, setAddEventSidebarOpen] = useState<boolean>(false)
+  const [isEdited, setIsEdited] = useState<boolean>(false)
 
   // Hooks
   const dispatch = useAppDispatch()
@@ -40,8 +41,12 @@ const AppCalendar = () => {
   const mdAbove = useMediaQuery((theme: Theme) => theme.breakpoints.up('md'))
 
   const handleLeftSidebarToggle = () => setLeftSidebarOpen(!leftSidebarOpen)
+  const isEditedOn = () => setIsEdited(true)
+  const isEditedOff = () => setIsEdited(false)
 
   const handleAddEventSidebarToggle = () => setAddEventSidebarOpen(!addEventSidebarOpen)
+
+  console.log('IS Edited:', isEdited)
 
   return (
     <>
@@ -64,6 +69,7 @@ const AppCalendar = () => {
           calendarsColor={calendarsColor}
           handleLeftSidebarToggle={handleLeftSidebarToggle}
           handleAddEventSidebarToggle={handleAddEventSidebarToggle}
+          handleIsEditedOn={isEditedOn}
         />
       </div>
       <AddEventSidebar
@@ -72,6 +78,8 @@ const AppCalendar = () => {
         calendarStore={calendarStore}
         addEventSidebarOpen={addEventSidebarOpen}
         handleAddEventSidebarToggle={handleAddEventSidebarToggle}
+        setIsEditedOff={isEditedOff}
+        isEdited={isEdited}
       />
     </>
   )

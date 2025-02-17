@@ -148,24 +148,44 @@ const SubmittedBatchTable = () => {
 
   const columns = [
     {
-      accessorKey: 'batchName',
-      header: 'BATCH NAME'
+      id: 'batchName',
+      label: 'BATCH NAME',
+      minWidth: 170,
+      editable: true,
+      sortable: true,
+      render: (user: any) => <Typography color='primary'>{user?.batchName}</Typography>
     },
     {
-      accessorKey: 'dateOfSubmission',
-      header: 'DATE OF SUBMISSION'
+      id: 'dateOfSubmission',
+      label: 'DATE OF SUBMISSION',
+      minWidth: 170,
+      editable: true,
+      sortable: true,
+      render: (user: any) => <Typography color='primary'>{user?.dateOfSubmission}</Typography>
     },
     {
-      accessorKey: 'submissionDate',
-      header: 'SUBMISSION DATE'
+      id: 'submissionDate',
+      label: 'SUBMISSION DATE',
+      minWidth: 170,
+      editable: false,
+      sortable: true,
+      render: (user: any) => <Typography color='primary'>{user?.submissionDate}</Typography>
     },
     {
-      accessorKey: 'remitanceStatus',
-      header: 'REMITANCE STATUS'
+      id: 'remitanceStatus',
+      label: 'REMITANCE STATUS',
+      minWidth: 170,
+      editable: false,
+      sortable: true,
+      render: (user: any) => <Typography color='primary'>{user?.remitanceStatus}</Typography>
     },
     {
-      accessorKey: 'finalStatus',
-      header: 'FINAL STATUS'
+      id: 'finalStatus',
+      label: 'FINAL STATUS',
+      minWidth: 170,
+      editable: false,
+      sortable: true,
+      render: (user: any) => <Typography color='primary'>{user?.finalStatus}</Typography>
     }
   ]
 
@@ -184,7 +204,17 @@ const SubmittedBatchTable = () => {
           <CircularProgress />
         </div>
       ) : (
-        <ReactTable columns={columns} data={dummyData} enableExpanding={true} enableExpandAll={false} />
+        <ReactTable
+          columns={columns}
+          data={dummyData}
+          keyExtractor={user => user.id.toString()}
+          enableRowSelect
+          enablePagination
+          pageSize={5}
+          stickyHeader
+          maxHeight={600}
+          containerStyle={{ borderRadius: 2 }}
+        />
       )}
     </Card>
   )

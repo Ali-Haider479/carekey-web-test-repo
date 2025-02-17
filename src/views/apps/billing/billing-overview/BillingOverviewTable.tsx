@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Card from '@mui/material/Card'
-import { CircularProgress } from '@mui/material'
+import { CircularProgress, Typography } from '@mui/material'
 import DataTable from '@/@core/components/mui/DataTable'
 import { GridColDef } from '@mui/x-data-grid'
 import Dropdown from '@/@core/components/mui/DropDown'
@@ -85,14 +85,70 @@ const BillingOverviewTable = () => {
   const [isLoading, setIsLoading] = useState(false)
 
   const columns = [
-    { accessorKey: 'clientName', header: 'Client Name' },
-    { accessorKey: 'caregiverName', header: 'Caregiver Name' },
-    { accessorKey: 'claimAmount', header: 'Claim Amount' },
-    { accessorKey: 'payer', header: 'Payer' },
-    { accessorKey: 'proCode', header: 'Procedure Code' },
-    { accessorKey: 'serviceDateRange', header: 'Service Date Range' },
-    { accessorKey: 'claimStatus', header: 'Claim Status' },
-    { accessorKey: 'scheduledHrs', header: 'SCHEDULED HRS' }
+    {
+      id: 'clientName',
+      label: 'CLIENT NAME',
+      minWidth: 170,
+      editable: true,
+      sortable: true,
+      render: (user: any) => <Typography color='primary'>{user?.clientName}</Typography>
+    },
+    {
+      id: 'caregiverName',
+      label: 'CAREGIVER NAME',
+      minWidth: 170,
+      editable: true,
+      sortable: true,
+      render: (user: any) => <Typography color='primary'>{user?.caregiverName}</Typography>
+    },
+    {
+      id: 'claimAmount',
+      label: 'CLAIM AMOUNT',
+      minWidth: 170,
+      editable: true,
+      sortable: true,
+      render: (user: any) => <Typography color='primary'>{user?.claimAmount}</Typography>
+    },
+    {
+      id: 'payer',
+      label: 'PAYER',
+      minWidth: 170,
+      editable: true,
+      sortable: true,
+      render: (user: any) => <Typography color='primary'>{user?.payer}</Typography>
+    },
+    {
+      id: 'proCode',
+      label: 'PROCEDURE CODE',
+      minWidth: 170,
+      editable: true,
+      sortable: true,
+      render: (user: any) => <Typography color='primary'>{user?.proCode}</Typography>
+    },
+    {
+      id: 'serviceDateRange',
+      label: 'SERVICE DATE RANGE',
+      minWidth: 170,
+      editable: true,
+      sortable: true,
+      render: (user: any) => <Typography color='primary'>{user?.serviceDateRange}</Typography>
+    },
+    {
+      id: 'claimStatus',
+      label: 'CLAIM STATUS',
+      minWidth: 170,
+      editable: true,
+      sortable: true,
+      render: (user: any) => <Typography color='primary'>{user?.claimStatus}</Typography>
+    },
+    {
+      id: 'scheduledHrs',
+      label: 'SCHEDULED HRS',
+      minWidth: 170,
+      editable: true,
+      sortable: true,
+      render: (user: any) => <Typography color='primary'>{user?.scheduledHrs}</Typography>
+    }
   ]
 
   useEffect(() => {
@@ -116,7 +172,17 @@ const BillingOverviewTable = () => {
           <CircularProgress />
         </div>
       ) : (
-        <ReactTable columns={columns} data={dummyData} enableExpanding={true} enableExpandAll={false} />
+        <ReactTable
+          columns={columns}
+          data={dummyData}
+          keyExtractor={user => user.id.toString()}
+          enableRowSelect
+          enablePagination
+          pageSize={5}
+          stickyHeader
+          maxHeight={600}
+          containerStyle={{ borderRadius: 2 }}
+        />
       )}
     </Card>
   )

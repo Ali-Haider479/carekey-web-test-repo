@@ -1,18 +1,22 @@
 'use client'
 // React Imports
-import { useState } from 'react'
+import { MouseEvent, useEffect, useState } from 'react'
 // MUI Imports
 import Card from '@mui/material/Card'
 import CardHeader from '@mui/material/CardHeader'
 import Chip from '@mui/material/Chip'
 import Avatar from '@mui/material/Avatar'
 // Third-party Imports
-import { Button, Typography } from '@mui/material'
+import { Button, IconButton, Menu, MenuItem, Typography } from '@mui/material'
 import { getLocalizedUrl } from '@/utils/i18n'
 import { Locale } from '@/configs/i18n'
 import { useParams } from 'next/navigation'
 import DataTable from '@/@core/components/mui/DataTable'
 import { GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
+import MoreVertIcon from '@mui/icons-material/MoreVert'
+import EditIcon from '@mui/icons-material/Edit'
+import { Delete } from '@mui/icons-material'
+import axios from 'axios'
 
 // Type Definitions
 type User = {
@@ -29,92 +33,151 @@ type User = {
   avatar: string
 }
 
-const newCols: GridColDef[] = [
-  { field: 'id', headerName: 'ID', flex: 0.5 },
-  {
-    field: 'firstName',
-    headerName: 'CLIENT NAME',
-    flex: 1.5,
-    renderCell: (params: GridRenderCellParams) => (
-      console.log('PARAMS', params),
-      (
-        <div style={{ height: '50px', display: 'flex', alignItems: 'center', gap: '8px', margin: 0, padding: 0 }}>
-          <Avatar alt={params.row.status} src={params.row.avatar} />
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <strong className='h-4'>{params.row.client.firstName}</strong>
-            <span style={{ fontSize: '12px', color: '#757575' }}>{params.row.client.emergencyEmailId}</span>
-          </div>
-        </div>
-      )
-    )
-  },
-  {
-    field: 'proMod',
-    headerName: 'PRO & MOD',
-    flex: 1,
-    renderCell: (params: any) => {
-      return <Typography className='font-normal text-base my-3'>N/A</Typography>
-    }
-  },
-  {
-    field: 'start',
-    headerName: 'Start Date',
-    flex: 0.75,
-    renderCell: (params: any) => {
-      const startDate = params?.row?.start
-      if (startDate) {
-        const date = new Date(startDate)
-        return (
-          <Typography className='font-normal text-base my-3'>
-            {`${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear().toString().slice(-2)}`}
-          </Typography>
-        )
-      }
-      return <Typography className='font-normal text-base my-3'>N/A</Typography>
-    }
-  },
-  {
-    field: 'end',
-    headerName: 'End Date',
-    flex: 0.75,
-    renderCell: (params: any) => {
-      const startDate = params?.row?.end
-      if (startDate) {
-        const date = new Date(startDate)
-        return (
-          <Typography className='font-normal text-base my-3'>
-            {`${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear().toString().slice(-2)}`}
-          </Typography>
-        )
-      }
-      return <Typography className='font-normal text-base my-3'>N/A</Typography>
-    }
-  },
-  {
-    field: 'status',
-    headerName: 'Status',
-    flex: 0.75,
-    renderCell: (params: GridRenderCellParams) => (
-      <Chip
-        label={params.value.includes('pending') ? 'PENDING' : 'WAITING'}
-        size='small'
-        sx={{
-          color: params.value === 'pending' ? '#4CAF50' : '#F44336',
-          backgroundColor: params.value === 'ACTIVE' ? '#E8F5E9' : '#FFEBEE',
-          fontWeight: 'bold'
-        }}
-      />
-    )
-  },
-  {
-    field: 'assignedHours',
-    headerName: 'Total Unit',
-    flex: 0.75
-  }
-]
-
 const ScheduleListTable = ({ events }: any) => {
   const { lang: locale } = useParams()
+  const [data, setData] = useState<any[]>([])
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
+  const [selectedRowId, setSelectedRowId] = useState<number | null>(null)
+
+  const handleActionClick = (event: React.MouseEvent<HTMLButtonElement>, rowId: number) => {
+    setAnchorEl(event.currentTarget)
+    setSelectedRowId(rowId)
+  }
+
+  const handleCloseMenu = () => {
+    setAnchorEl(null)
+    setSelectedRowId(null)
+  }
+
+  useEffect(() => {
+    setData(events.events)
+  }, [events.events])
+  console.log(events)
+
+  const newCols: GridColDef[] = [
+    { field: 'id', headerName: 'ID', flex: 0.5 },
+    {
+      field: 'firstName',
+      headerName: 'CLIENT NAME',
+      flex: 1.5,
+      renderCell: (params: GridRenderCellParams) => (
+        console.log('PARAMS', params),
+        (
+          <div style={{ height: '50px', display: 'flex', alignItems: 'center', gap: '8px', margin: 0, padding: 0 }}>
+            <Avatar alt={params.row.status} src={params.row.avatar} />
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <strong className='h-4'>{params.row.client?.firstName}</strong>
+              <span style={{ fontSize: '12px', color: '#757575' }}>{params.row?.client?.emergencyEmailId}</span>
+            </div>
+          </div>
+        )
+      )
+    },
+    {
+      field: 'proMod',
+      headerName: 'PRO & MOD',
+      flex: 1,
+      renderCell: (params: any) => {
+        return <Typography className='font-normal text-base my-3'>N/A</Typography>
+      }
+    },
+    {
+      field: 'start',
+      headerName: 'Start Date',
+      flex: 0.75,
+      renderCell: (params: any) => {
+        const startDate = params?.row?.start
+        if (startDate) {
+          const date = new Date(startDate)
+          return (
+            <Typography className='font-normal text-base my-3'>
+              {`${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear().toString().slice(-2)}`}
+            </Typography>
+          )
+        }
+        return <Typography className='font-normal text-base my-3'>N/A</Typography>
+      }
+    },
+    {
+      field: 'end',
+      headerName: 'End Date',
+      flex: 0.75,
+      renderCell: (params: any) => {
+        const startDate = params?.row?.end
+        if (startDate) {
+          const date = new Date(startDate)
+          return (
+            <Typography className='font-normal text-base my-3'>
+              {`${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear().toString().slice(-2)}`}
+            </Typography>
+          )
+        }
+        return <Typography className='font-normal text-base my-3'>N/A</Typography>
+      }
+    },
+    {
+      field: 'status',
+      headerName: 'Status',
+      flex: 0.75,
+      renderCell: (params: GridRenderCellParams) => (
+        <Chip
+          label={params?.value?.includes('pending') ? 'PENDING' : 'WAITING'}
+          size='small'
+          sx={{
+            color: params.value === 'pending' ? '#4CAF50' : '#F44336',
+            backgroundColor: params.value === 'ACTIVE' ? '#E8F5E9' : '#FFEBEE',
+            fontWeight: 'bold'
+          }}
+        />
+      )
+    },
+    {
+      field: 'assignedHours',
+      headerName: 'Total Unit',
+      flex: 0.75
+    },
+    {
+      field: 'actions',
+      headerName: 'ACTION',
+      renderCell: (params: GridRenderCellParams) => (
+        <>
+          <IconButton onClick={event => handleActionClick(event, params.row.id)} size='small'>
+            <MoreVertIcon />
+          </IconButton>
+
+          <Menu
+            open={selectedRowId === params.row.id && Boolean(anchorEl)}
+            anchorEl={anchorEl}
+            onClose={handleCloseMenu}
+          >
+            {/* <MenuItem onClick={() => {}}>
+                <EditIcon fontSize='small' sx={{ mr: 1 }} />
+                Edit
+              </MenuItem> */}
+            <MenuItem onClick={() => handleDeleteSchedule(params.row.id)}>
+              <Delete className='text-red-500' fontSize='small' sx={{ mr: 1 }} />
+              Delete
+            </MenuItem>
+          </Menu>
+        </>
+      )
+    }
+  ]
+
+  const handleDeleteSchedule = async (id: string) => {
+    console.log('handleDeleteSchedule Clicked', id)
+    try {
+      const deletionRes = await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/schedule/${id}`)
+      if (deletionRes) {
+        const updatedData = data.filter((item: any) => item.id !== id)
+        setData(updatedData)
+      }
+    } catch (error) {
+      console.log(`Error deleting schedule with ID ${id}`, error)
+    } finally {
+      handleCloseMenu
+    }
+  }
 
   return (
     <Card sx={{ borderRadius: 1, boxShadow: 3 }}>
@@ -132,7 +195,7 @@ const ScheduleListTable = ({ events }: any) => {
         }
       />
       <div style={{ overflowX: 'auto', padding: '0px' }}>
-        <DataTable data={events.events} columns={newCols} />
+        <DataTable data={data} columns={newCols} />
       </div>
     </Card>
   )

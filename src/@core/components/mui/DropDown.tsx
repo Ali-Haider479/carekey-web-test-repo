@@ -30,11 +30,15 @@ const Dropdown = ({ value, setValue, options, className, disabled, onChange, siz
       slotProps={{ select: { displayEmpty: true } }}
       size={size || 'small'}
     >
-      {options.map(item => (
-        <MenuItem key={item.key} value={item.value}>
-          {item.displayValue}
-        </MenuItem>
-      ))}
+      {options?.length > 0 ? (
+        options?.map(item => (
+          <MenuItem key={item.key} value={item.value}>
+            {item.displayValue}
+          </MenuItem>
+        ))
+      ) : (
+        <MenuItem disabled>No options available</MenuItem>
+      )}
     </CustomTextField>
   )
 }

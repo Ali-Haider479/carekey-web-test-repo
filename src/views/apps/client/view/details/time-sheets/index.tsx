@@ -85,6 +85,7 @@ const TimeSheets = () => {
   const fetchTimeLog = async () => {
     try {
       const fetchedTimeLog = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/time-log/client/${id}`)
+      console.log('fetchedTimeLog.data', fetchedTimeLog.data)
       setTimelogData(fetchedTimeLog.data)
     } catch (error) {
       console.error('Error fetching data: ', error)
@@ -348,12 +349,12 @@ const TimeSheets = () => {
         <div className='grid grid-cols-2 ml-4 mt-3 p-4 gap-y-4 gap-x-4'>
           <DetailItem
             label='Recipient Name:'
-            value={`${timelogData[0]?.client.firstName} ${timelogData[0]?.client.lastName}`}
+            value={`${timelogData[0]?.client?.firstName ? timelogData[0]?.client.firstName : ''} ${timelogData[0]?.client?.lastName ? timelogData[0]?.client.lastName : ''}`}
           />
           <DetailItem label='Week Duration:' value='4 September 2024 - 10 September 2024' />
           <DetailItem
             label='Caregiver Name:'
-            value={`${timelogData[0]?.caregiver.firstName} ${timelogData[0]?.caregiver.lastName}`}
+            value={`${timelogData[0]?.caregiver?.firstName ? timelogData[0]?.caregiver.firstName : ''} ${timelogData[0]?.caregiver?.lastName ? timelogData[0]?.caregiver.lastName : ''}`}
           />
         </div>
         <DataTable columns={newColumns} data={timelogData} />

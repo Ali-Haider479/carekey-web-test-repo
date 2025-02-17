@@ -24,7 +24,8 @@ const EvvCompletedShifts = () => {
 
   const fetchInitialData = async () => {
     try {
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/time-log/completed-timelogs`)
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/time-log/completed-timelogs`);
+      console.log(response)
       setTimeLogData(response.data)
       setIsLoading(false)
     } catch (error) {

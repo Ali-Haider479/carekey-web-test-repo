@@ -22,6 +22,7 @@ const ReceivedTimsesheetDetails = () => {
   const fetchInitialData = async () => {
     try {
       const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/time-log`)
+      console.log('timeLogData', response.data)
       setTimeLogData(response.data)
       setIsLoading(false)
     } catch (error) {
@@ -41,7 +42,7 @@ const ReceivedTimsesheetDetails = () => {
         <ReceivedTimesheetFilters onFilterApplied={handleFilteredData} />
       </Grid>
       <Grid size={{ xs: 12 }}>
-        <ReceivedTimesheetTable data={timeLogData} isLoading={isLoading} />
+        <ReceivedTimesheetTable data={timeLogData} isLoading={isLoading} fetchInitialData={fetchInitialData} />
       </Grid>
     </Grid>
   )

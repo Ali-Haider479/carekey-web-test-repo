@@ -66,6 +66,7 @@ const AddClientStepper = () => {
   const physicianAndCaseMangerFormRef = useRef<any>(null)
   const serviceActivitiesFormRef = useRef<any>(null)
   const documentsFormRef = useRef<any>(null)
+  const authUser: any = JSON.parse(localStorage.getItem('AuthUser') ?? '')
 
   const handleReset = () => {
     setActiveStep(0)
@@ -164,10 +165,17 @@ const AddClientStepper = () => {
         pcaChoice: personalDetails.pcaChoice,
         isClient: true,
         isSignatureDraw: false,
-        tenantId: 1
+        tenantId: authUser?.tenant?.id
       }
+      const filteredCreateClientBody = Object.fromEntries(
+        Object.entries(createClientBody).filter(([key, value]) => value !== undefined && value !== null && value !== '')
+      )
+      console.log('Filtered Client Body ---> ', filteredCreateClientBody)
 
-      const createClientResponse = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/client`, createClientBody)
+      const createClientResponse = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/client`,
+        filteredCreateClientBody
+      )
 
       console.log('Create Client Response ---> ', createClientResponse)
 
@@ -257,7 +265,7 @@ const AddClientStepper = () => {
       console.log('Case Manager Details --> ', createCaseManagerResponse)
 
       const assignCaregiverBody = {
-        tenantId: 1,
+        tenantId: authUser?.tenant?.id,
         clientId: clientId,
         userId: serviceActivities.caregiverId,
         assignmentDate: serviceActivities.assignmentDate,
@@ -266,9 +274,15 @@ const AddClientStepper = () => {
         scheduleHours: serviceActivities.scheduleHours
       }
 
+      const filteredAssignCaregiverBody = Object.fromEntries(
+        Object.entries(assignCaregiverBody).filter(
+          ([key, value]) => value !== undefined && value !== null && value !== ''
+        )
+      )
+
       const assignCaregiverResponse = await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/user/createClientUser`,
-        assignCaregiverBody
+        filteredAssignCaregiverBody
       )
       console.log('Assigned Caregiver Details --> ', assignCaregiverResponse)
 
@@ -291,11 +305,17 @@ const AddClientStepper = () => {
         notes: serviceActivities.notes
       }
 
+      const filteredCarePlanDueBody = Object.fromEntries(
+        Object.entries(createCarePlanDueBody).filter(
+          ([key, value]) => value !== undefined && value !== null && value !== ''
+        )
+      )
+
       const createCarePlanDueResponse = await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/client/careplan`,
         createCarePlanDueBody
       )
-      console.log('Create Care Plan Due Data --> ', createCarePlanDueResponse)
+      console.log('Create Care Plan Due Data --> ', filteredCarePlanDueBody)
 
       console.log('New Docs', Docs)
 
@@ -316,6 +336,7 @@ const AddClientStepper = () => {
   }
 
   const handleNext = () => {
+    console.log('Inside Handle Next')
     switch (activeStep) {
       case 0:
         personalDetailsFormRef.current?.handleSubmit((data: PersonalDetailsFormDataType) => {

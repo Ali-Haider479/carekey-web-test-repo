@@ -72,15 +72,15 @@ const CaregiverFilters = ({
     }
   }
 
-  useEffect(() => {
-    const filteredData = tableData?.filter(user => {
-      if (status && user.status !== status) return false
-      if (item && user.item !== item) return false
-      return true
-    })
+  // useEffect(() => {
+  //   const filteredData = tableData?.filter(user => {
+  //     if (status && user.status !== status) return false
+  //     if (item && user.item !== item) return false
+  //     return true
+  //   })
 
-    setData(filteredData || [])
-  }, [status, item, tableData, setData])
+  //   setData(filteredData || [])
+  // }, [status, item, tableData, setData])
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} autoComplete='off'>

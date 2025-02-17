@@ -20,6 +20,8 @@ type FormItems = {
 }
 
 const InfoCard = () => {
+  const authUser: any = JSON.parse(localStorage.getItem('AuthUser') ?? '')
+
   const clients = [
     {
       name: 'Shamso Abshir',
@@ -109,7 +111,7 @@ const InfoCard = () => {
     // reset() // Reset form after submission
     const assignClientBody = {
       userId: id,
-      tenantId: 1,
+      tenantId: authUser?.tenant?.id,
       clientId: data.clientId,
       assignmentDate: data.assignmentDate,
       unassignmentDate: data.unassignmentDate,
@@ -227,6 +229,7 @@ const InfoCard = () => {
                       error={errors.unassignmentDate}
                       label={'Unassignment Date'}
                       defaultValue={undefined}
+                      isRequired={false}
                     />
                   </Grid>
                   <Grid size={{ xs: 12, sm: 4 }}>

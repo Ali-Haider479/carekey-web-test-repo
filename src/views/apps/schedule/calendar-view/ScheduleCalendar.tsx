@@ -1,3 +1,4 @@
+'use client'
 // React Imports
 import { useEffect, useRef, useState } from 'react'
 
@@ -31,13 +32,14 @@ import { useSelector } from 'react-redux'
 import { boolean } from 'valibot'
 
 type CalenderProps = {
-  // calendarStore: CalendarType
+  calendarStore: CalendarType
   calendarApi: any
   setCalendarApi: (val: any) => void
   calendarsColor: CalendarColors
   dispatch: Dispatch
   handleLeftSidebarToggle: () => void
   handleAddEventSidebarToggle: () => void
+  handleIsEditedOn: () => void
 }
 
 const blankEvent: AddEventType = {
@@ -56,16 +58,17 @@ const blankEvent: AddEventType = {
 const ScheduleCalendar = (props: CalenderProps) => {
   // Props
   const {
-    // calendarStore,
+    calendarStore,
     calendarApi,
     setCalendarApi,
     calendarsColor,
     dispatch,
     handleAddEventSidebarToggle,
-    handleLeftSidebarToggle
+    handleLeftSidebarToggle,
+    handleIsEditedOn
   } = props
 
-  const calendarStore = useSelector((state: { calendarReducer: CalendarType }) => state.calendarReducer)
+  // const calendarStore = useSelector((state: { calendarReducer: CalendarType }) => state.calendarReducer)
 
   // Refs
   const calendarRef = useRef()
@@ -147,6 +150,8 @@ const ScheduleCalendar = (props: CalenderProps) => {
     eventClick({ event: clickedEvent }: any) {
       dispatch(selectedEvent(clickedEvent))
       handleAddEventSidebarToggle()
+      handleIsEditedOn()
+      console.log('Edit!!!')
 
       //* Only grab required field otherwise it goes in infinity loop
       //! Always grab all fields rendered by form (even if it get `undefined`)
@@ -169,7 +174,6 @@ const ScheduleCalendar = (props: CalenderProps) => {
       ev.start = info.date
       ev.end = info.date
       ev.allDay = true
-
       dispatch(selectedEvent(ev))
       handleAddEventSidebarToggle()
     },

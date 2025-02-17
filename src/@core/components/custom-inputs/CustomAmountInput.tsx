@@ -10,6 +10,7 @@ type Props = {
   placeHolder: string
   defaultValue: any
   type: any
+  error?: any
 }
 
 const CustomAmountInput = (props: Props) => {
@@ -29,7 +30,7 @@ const CustomAmountInput = (props: Props) => {
         render={({ field, fieldState: { error } }) => (
           <TextField
             {...field}
-            error={!!error} // Highlight the field if there's an error
+            error={!!props.error} // Highlight the field if there's an error
             helperText={error ? error.message : ''} // Show validation error message
             fullWidth
             size='small'

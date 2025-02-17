@@ -1,4 +1,5 @@
-import React, { forwardRef, useState } from 'react'
+'use client'
+import React, { forwardRef, useEffect, useState } from 'react'
 import {
   Card,
   CardHeader,
@@ -8,11 +9,11 @@ import {
   MenuItem,
   Select,
   Snackbar,
-  Alert
+  Alert,
+  TextField
 } from '@mui/material'
 import Button from '@mui/material/Button'
 import Grid from '@mui/material/Grid2'
-import CustomTextField from '@core/components/mui/TextField'
 import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
 import axios from 'axios'
 
@@ -59,12 +60,37 @@ interface PickerProps {
 const ManualTimesheet = ({ clientList, caregiverList, serviceList, payPeriod }: any) => {
   const [values, setValues] = useState<DefaultStateType>(defaultState)
   const [openSuccessSnackbar, setOpenSuccessSnackbar] = useState(false)
+  const [weekRange, setWeekRange] = useState<any>({})
+
+  useEffect(() => {
+    if (Object.keys(payPeriod).length > 0) {
+      const range = calculateStartAndEndDate(payPeriod)
+      setWeekRange(range)
+    }
+  }, [payPeriod])
+
+  const calculateStartAndEndDate = (range: any) => {
+    // Ensure correct parsing of the start date in UTC
+    const [year, month, day] = range?.startDate?.split('-')
+    const startDate = new Date(Date.UTC(year, month - 1, day)) // Use UTC to avoid time zone issues
+
+    const endDate = new Date(startDate)
+    endDate.setUTCDate(startDate.getUTCDate() + range.numberOfWeeks * 7) // Update in UTC as well
+
+    return {
+      startDate: startDate.toISOString().split('T')[0], // Get ISO date in YYYY-MM-DD format
+      endDate: endDate.toISOString().split('T')[0]
+    }
+  }
+
+  console.log(weekRange)
 
   const PickersComponent = forwardRef(({ ...props }: PickerProps, ref) => {
     return (
-      <CustomTextField
+      <TextField
         inputRef={ref}
         fullWidth
+        size='small'
         {...props}
         label={props.label || ''}
         className={props.className}
@@ -102,7 +128,6 @@ const ManualTimesheet = ({ clientList, caregiverList, serviceList, payPeriod }: 
       // Reset form and show success message
       setValues(defaultState)
       setOpenSuccessSnackbar(true)
-
     } catch (error) {
       console.log('Error:', error)
     }
@@ -128,12 +153,13 @@ const ManualTimesheet = ({ clientList, caregiverList, serviceList, payPeriod }: 
                   labelId='week-select-label'
                   value={values.currentWeek}
                   label='Current Week'
-                  onChange={e => setValues({ ...values, currentWeek: e.target.value })}
+                  onChange={e =>
+                    setValues({ ...values, currentWeek: `${weekRange.startDate} to ${weekRange.endDate}` })
+                  }
                 >
-                  <MenuItem value='Week 1'>Week 1</MenuItem>
-                  <MenuItem value='Week 2'>Week 2</MenuItem>
-                  <MenuItem value='Week 3'>Week 3</MenuItem>
-                  <MenuItem value='Week 4'>Week 4</MenuItem>
+                  <MenuItem
+                    value={`${weekRange.startDate} to ${weekRange.endDate}`}
+                  >{`${weekRange.startDate} to ${weekRange.endDate}`}</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
@@ -201,7 +227,11 @@ const ManualTimesheet = ({ clientList, caregiverList, serviceList, payPeriod }: 
                 startDate={values.dateOfService}
                 showTimeSelect={!values.dateOfService}
                 dateFormat={!values.dateOfService ? 'yyyy-MM-dd hh:mm' : 'yyyy-MM-dd'}
-                customInput={<PickersComponent registername='dateOfService' id='event-start-date' />}
+                minDate={weekRange.startDate} // Set the minimum selectable date
+                maxDate={weekRange.endDate}
+                customInput={
+                  <PickersComponent label='Date Of Service' registername='dateOfService' id='event-start-date' />
+                }
                 onChange={(date: Date | null) =>
                   date !== null && setValues({ ...values, dateOfService: new Date(date) })
                 }
@@ -214,8 +244,7 @@ const ManualTimesheet = ({ clientList, caregiverList, serviceList, payPeriod }: 
               sx={{
                 display: 'flex',
                 justifyContent: 'flex-end',
-                gap: 2,
-                mt: 2
+                gap: 2
               }}
             >
               <Button variant='outlined' color='secondary' onClick={onDiscard}>

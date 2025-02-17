@@ -22,12 +22,25 @@ const EvvView = ({ tabContentList }: { tabContentList: { [key: string]: ReactEle
     setActiveTab(value)
   }
 
+  const getTabHeading = (tabKey: string) => {
+    switch (tabKey) {
+      case 'active-users':
+        return '/ Active Users'
+      case 'missed-shifts':
+        return '/ Missed Shifts'
+      case 'completed-shifts':
+        return '/ Completed Shifts'
+      default:
+        return ''
+    }
+  }
+
   return (
     <TabContext value={activeTab}>
       <Grid container spacing={6}>
         <Grid size={{ xs: 12, md: 12 }}>
           <Typography variant='h3' className='mbe-4'>
-            EVV / Active User
+            {`Evv ${getTabHeading(activeTab)}`}
           </Typography>
           <CustomTabList orientation='horizontal' onChange={handleChange} className='is-fit' pill='true'>
             <Tab

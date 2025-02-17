@@ -1,5 +1,14 @@
 import React from 'react'
-import { Dialog, DialogTitle, DialogContent, IconButton, styled, DialogActions, Button } from '@mui/material'
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  IconButton,
+  styled,
+  DialogActions,
+  Button,
+  Typography
+} from '@mui/material'
 import CloseIcon from '@mui/icons-material/Close'
 
 interface FormModalProps {
@@ -108,7 +117,7 @@ const FormModal: React.FC<FormModalProps> = ({
   return (
     <StyledDialog open={isModalOpen} onClose={handleCancel || closeModalHandler} maxWidth={false}>
       <StyledDialogTitle>
-        <h3>{title}</h3>
+        <Typography className='font-bold'>{title}</Typography>
         <CloseButton
           aria-label='close'
           onClick={handleCancel || closeModalHandler}

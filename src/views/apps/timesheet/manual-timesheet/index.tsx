@@ -16,7 +16,7 @@ const ManualTimesheetPage = () => {
   const [serviceList, setServiceList] = useState<[] | any>([])
   const [payPeriod, setPayPeriod] = useState<[] | any>([])
   const dispatch = useAppDispatch()
-  const tenantId = 1
+  const authUser: any = JSON.parse(localStorage.getItem('AuthUser') ?? '')
 
   useEffect(() => {
     dispatch(fetchEvents())
@@ -29,7 +29,7 @@ const ManualTimesheetPage = () => {
           axios.get(`${process.env.NEXT_PUBLIC_API_URL}/caregivers`),
           axios.get(`${process.env.NEXT_PUBLIC_API_URL}/client`),
           axios.get(`${process.env.NEXT_PUBLIC_API_URL}/service`),
-          axios.get(`${process.env.NEXT_PUBLIC_API_URL}/pay-period/tenant/${tenantId}`)
+          axios.get(`${process.env.NEXT_PUBLIC_API_URL}/pay-period/tenant/${authUser?.tenant?.id}`)
         ])
         setCaregiverList(response[0].data)
         setClientList(response[1].data)

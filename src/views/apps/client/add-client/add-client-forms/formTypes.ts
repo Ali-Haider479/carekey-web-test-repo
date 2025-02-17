@@ -68,8 +68,8 @@ export type clientServiceFormDataType = {
   qpAssigned: string
   notes: string
   caregiverId?: number
-  assignmentDate: Date
-  unassignmentDate: Date
+  assignmentDate: Date | null
+  unassignmentDate: Date | null
   assignmentNotes: string
   scheduleHours: number
 }

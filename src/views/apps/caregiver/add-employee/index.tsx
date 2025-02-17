@@ -56,6 +56,7 @@ const EmployeeStepper = () => {
   const personalDetailsFormRef = useRef<{ handleSubmit: any }>(null)
   const loginInfoFormRef = useRef<{ handleSubmit: any }>(null)
   const documentsFormRef = useRef<{ handleSubmit: any }>(null)
+  const authUser: any = JSON.parse(localStorage.getItem('AuthUser') ?? '')
 
   const handleReset = () => {
     setActiveStep(0)
@@ -133,7 +134,8 @@ const EmployeeStepper = () => {
       }
       // Create User and Caregiver (as you've already done)
       const userResponse = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/user`, userPayload)
-      const caregiverResponse = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/caregivers`, {
+
+      const caregiverPayload = {
         ...caregiverData,
         mailingCity: loginInfo.city,
         mailingState: loginInfo.state,
@@ -144,13 +146,22 @@ const EmployeeStepper = () => {
         userId: userResponse.data.id,
         dlState: documentsData.dlState,
         additionalPayRate: documentsData.additionalPayRate,
-        tenantId: 1,
+        tenantId: authUser?.tenant?.id,
         clientId: loginInfo.clientId,
         assignmentDate: loginInfo.assignmentDate,
         unassignmentDate: loginInfo.unassignmentDate,
         notes: loginInfo.assignmentNotes,
         scheduleHours: loginInfo.scheduleHours
-      })
+      }
+
+      const filteredCaregiverPayload = Object.fromEntries(
+        Object.entries(caregiverPayload).filter(([key, value]) => value !== undefined && value !== null && value !== '')
+      )
+
+      const caregiverResponse = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/caregivers`,
+        filteredCaregiverPayload
+      )
 
       const caregiverId = caregiverResponse.data.id
 

@@ -1,8 +1,15 @@
 'use client'
 import DataTable from '@/@core/components/mui/DataTable'
 import { Add } from '@mui/icons-material'
-import { Autocomplete, Button, Card, CardContent, TextField } from '@mui/material'
-import { useState } from 'react'
+import { Autocomplete, Button, Card, Grid2 as Grid, TextField, Dialog, Typography } from '@mui/material'
+import { useEffect, useState } from 'react'
+import DialogCloseButton from '@/components/dialogs/DialogCloseButton'
+import { set, useForm } from 'react-hook-form'
+import CustomTextField from '@/@core/components/custom-inputs/CustomTextField'
+import ControlledDatePicker from '@/@core/components/custom-inputs/ControledDatePicker'
+import { useParams } from 'next/navigation'
+import axios from 'axios'
+import { GridRenderCellParams } from '@mui/x-data-grid'
 
 const options = [
   { label: 'Option 1', value: 'option1' },
@@ -10,8 +17,38 @@ const options = [
   { label: 'Option 3', value: 'option3' }
 ]
 
+interface ServiceAuthPayload {
+  payer: string
+  memberId: number
+  serviceAuthNumber: number
+  procedureAndModifier: string
+  startDate: Date
+  endDate: Date
+  serviceRate: number
+  units: number
+  clientId: number
+}
+
 const ServiceAuthorization = () => {
+  const { id } = useParams()
   const [selectedOption, setSelectedOption] = useState(null)
+  const [isModalShow, setIsModalShow] = useState(false)
+  const [serviceAuthData, setServiceAuthData] = useState<any[]>([])
+  const clientId = Number(id)
+
+  const handleModalClose = () => {
+    reset({
+      payer: '',
+      memberId: '',
+      serviceAuth: '',
+      procedureAndModifier: '',
+      startDate: undefined,
+      endDate: undefined,
+      serviceRate: '',
+      units: ''
+    })
+    setIsModalShow(false)
+  }
 
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
     console.log('Search query:', event.target.value)
@@ -21,6 +58,53 @@ const ServiceAuthorization = () => {
     setSelectedOption(newValue)
     console.log('Selected:', newValue)
   }
+
+  const {
+    control,
+    handleSubmit,
+    reset,
+    formState: { errors, isSubmitting }
+  } = useForm<any>()
+
+  const onSubmit = async (data: any) => {
+    console.log(data)
+    try {
+      const serviceAuthPayload: ServiceAuthPayload = {
+        payer: data.payer,
+        memberId: Number(data.memberId),
+        serviceAuthNumber: Number(data.serviceAuth),
+        procedureAndModifier: data.procedureAndModifier,
+        startDate: new Date(data.startDate),
+        endDate: new Date(data.endDate),
+        serviceRate: Number(data.serviceRate),
+        units: Number(data.units),
+        clientId: clientId
+      }
+
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/client/service-auth`, serviceAuthPayload)
+      console.log('Client Service Auth created successfully --> ', response)
+      setServiceAuthData([...serviceAuthData, response.data])
+      handleModalClose()
+    } catch (error) {
+      console.error('Error posting data: ', error)
+    }
+  }
+
+  const fetchClientServiceAuthData = async () => {
+    try {
+      const fetchedData = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/client/${clientId}/service-auth`)
+      console.log('Fetched Service auth data --> ', fetchedData)
+      setServiceAuthData(fetchedData?.data.length > 0 ? fetchedData?.data : [])
+    } catch (error) {
+      console.error('Error fetching data: ', error)
+    }
+  }
+
+  useEffect(() => {
+    fetchClientServiceAuthData()
+  }, [])
+
+  console.log(' Service Auth Data in state --> ', serviceAuthData)
 
   const data = [
     {
@@ -48,37 +132,70 @@ const ServiceAuthorization = () => {
   const columns = [
     {
       headerName: 'PAYER',
-      field: 'payor',
+      field: 'payer',
       flex: 0.75
     },
     {
-      headerName: 'PRO & MOD',
-      field: 'promod',
+      headerName: 'MEMBER ID',
+      field: 'memberId',
       flex: 0.75
     },
     {
-      headerName: 'SA NUMBER',
-      field: 'saNumber',
+      headerName: 'SERVICE AUTH',
+      field: 'serviceAuthNumber',
+      flex: 0.75
+    },
+    {
+      headerName: 'PROCEDURE & MODIFIER',
+      field: 'procedureAndModifier',
       flex: 0.75
     },
     {
       headerName: 'START DATE',
       field: 'startDate',
-      flex: 0.75
+      flex: 0.75,
+      renderCell: (params: GridRenderCellParams) => {
+        const formatDate = (dateString: string) => {
+          const date = new Date(dateString)
+          return date.toLocaleDateString('en-US', {
+            month: '2-digit',
+            day: '2-digit',
+            year: 'numeric'
+          })
+        }
+
+        const startDate = formatDate(params?.row?.startDate)
+        const endDate = formatDate(params?.row?.endDate)
+        return <span className=''>{startDate}</span>
+      }
     },
     {
       headerName: 'END DATE',
       field: 'endDate',
+      flex: 0.75,
+      renderCell: (params: GridRenderCellParams) => {
+        const formatDate = (dateString: string) => {
+          const date = new Date(dateString)
+          return date.toLocaleDateString('en-US', {
+            month: '2-digit',
+            day: '2-digit',
+            year: 'numeric'
+          })
+        }
+
+        const startDate = formatDate(params?.row?.startDate)
+        const endDate = formatDate(params?.row?.endDate)
+        return <span className=''>{endDate}</span>
+      }
+    },
+    {
+      headerName: 'SERVICE RATE',
+      field: 'serviceRate',
       flex: 0.75
     },
     {
-      headerName: 'UNIT/RATE',
-      field: 'unitRate',
-      flex: 0.75
-    },
-    {
-      headerName: 'TOTAL UNITS',
-      field: 'totalUnits',
+      headerName: 'UNITS',
+      field: 'units',
       flex: 0.75
     }
   ]
@@ -94,29 +211,141 @@ const ServiceAuthorization = () => {
               onInputChange={() => handleSearch}
               onChange={handleChange}
               renderInput={params => (
-                <TextField {...params} placeholder='Show All' variant='outlined' className='h-[56px]' />
+                <TextField {...params} placeholder='Show All' variant='outlined' size='small' className='h-[56px]' />
               )}
               filterOptions={x => x} // Keep all options (you can adjust filtering logic)
             />
           </div>
           <div className='flex justify-end'>
-            <Button startIcon={<Add />} className='w-[160px] bg-[#4B0082] text-white mt-4'>
+            {/* <Button startIcon={<Add />} className='w-[160px] bg-[#4B0082] text-white mt-4 h-10'>
               ADD SA LIST
-            </Button>
-            <Button startIcon={<Add />} className='bg-[#32475C99] bg-opacity-60 text-white mt-4 ml-4'>
+            </Button> */}
+            <Button
+              startIcon={<Add />}
+              className='bg-[#4B0082] text-white mt-4 ml-4 h-10'
+              onClick={() => setIsModalShow(true)}
+            >
               ADD SERVICE AUTHORIZATION
             </Button>
           </div>
         </div>
       </Card>
-      <Card className=' w-full  flex flex-col h-auto mt-3 shadow-md rounded-lg'>
-        <span className='p-6 text-xl '>IHS (With training)</span>
-        <DataTable columns={columns} data={data} />
+      <Card className=' w-full  flex flex-col h-auto mt-5 shadow-md rounded-lg'>
+        <DataTable columns={columns} data={serviceAuthData} />
       </Card>
-      <Card className=' w-full flex flex-col h-auto mt-3 shadow-md rounded-lg'>
-        <span className='p-6 text-xl '>Integrated Community Supports Daily</span>
-        <DataTable columns={columns} data={data} />
-      </Card>
+      <div>
+        <Dialog
+          open={isModalShow}
+          onClose={handleModalClose}
+          closeAfterTransition={false}
+          sx={{ '& .MuiDialog-paper': { overflow: 'visible' } }}
+        >
+          <DialogCloseButton onClick={() => setIsModalShow(false)} disableRipple>
+            <i className='bx-x' />
+          </DialogCloseButton>
+          <div className='flex items-center justify-center pt-[10px] pb-[5px] w-full px-5'>
+            <form onSubmit={handleSubmit(onSubmit)} autoComplete='off'>
+              <div>
+                <Typography className='text-xl font-semibold mt-10 mb-6'>Add Service Authorization</Typography>
+              </div>
+              <Grid container spacing={4}>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <CustomTextField
+                    label={'Payer'}
+                    placeHolder={'Payer'}
+                    name={'payer'}
+                    defaultValue={''}
+                    type={'text'}
+                    error={errors.payer}
+                    control={control}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <CustomTextField
+                    label={'Member Id'}
+                    placeHolder={'Member Id'}
+                    name={'memberId'}
+                    defaultValue={''}
+                    type={'number'}
+                    error={errors.memberId}
+                    control={control}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <CustomTextField
+                    label={'Service Auth'}
+                    placeHolder={'Service Auth'}
+                    name={'serviceAuth'}
+                    defaultValue={''}
+                    type={'number'}
+                    error={errors.serviceAuth}
+                    control={control}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <CustomTextField
+                    label={'Procedure & Modifier'}
+                    placeHolder={'Procedure & Modifier'}
+                    name={'procedureAndModifier'}
+                    defaultValue={''}
+                    type={'text'}
+                    error={errors.procedureAndModifier}
+                    control={control}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <ControlledDatePicker
+                    name={'startDate'}
+                    control={control}
+                    error={errors.startDate}
+                    label={'Start Date'}
+                    defaultValue={undefined}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <ControlledDatePicker
+                    name={'endDate'}
+                    control={control}
+                    error={errors.endDate}
+                    label={'End Date'}
+                    defaultValue={undefined}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <CustomTextField
+                    label={'Service Rate'}
+                    placeHolder={'Service Rate'}
+                    name={'serviceRate'}
+                    defaultValue={''}
+                    type={'number'}
+                    error={errors.serviceRate}
+                    control={control}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <CustomTextField
+                    label={'Units'}
+                    placeHolder={'Units'}
+                    name={'units'}
+                    defaultValue={''}
+                    type={'number'}
+                    error={errors.units}
+                    control={control}
+                  />
+                </Grid>
+              </Grid>
+              <div className='flex gap-4 justify-end mt-4 mb-4'>
+                <Button variant='outlined' color='secondary' onClick={handleModalClose}>
+                  CANCEL
+                </Button>
+                <Button type='submit' variant='contained' className='bg-[#4B0082]'>
+                  Save
+                </Button>
+              </div>
+            </form>
+          </div>
+        </Dialog>
+      </div>
     </>
   )
 }

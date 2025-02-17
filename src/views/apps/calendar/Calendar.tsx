@@ -29,6 +29,7 @@ type CalenderProps = {
   dispatch: Dispatch
   handleLeftSidebarToggle: () => void
   handleAddEventSidebarToggle: () => void
+  handleIsEditedOn?: () => void
 }
 
 const blankEvent: AddEventType = {
@@ -53,7 +54,8 @@ const Calendar = (props: CalenderProps) => {
     calendarsColor,
     dispatch,
     handleAddEventSidebarToggle,
-    handleLeftSidebarToggle
+    handleLeftSidebarToggle,
+    handleIsEditedOn
   } = props
 
   // Refs
@@ -124,8 +126,10 @@ const Calendar = (props: CalenderProps) => {
     },
 
     eventClick({ event: clickedEvent }: any) {
+      console.log('eventClick', 'Edit!!!')
       dispatch(selectedEvent(clickedEvent))
       handleAddEventSidebarToggle()
+      handleIsEditedOn
 
       //* Only grab required field otherwise it goes in infinity loop
       //! Always grab all fields rendered by form (even if it get `undefined`)

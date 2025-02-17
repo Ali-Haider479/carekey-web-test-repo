@@ -1,3 +1,4 @@
+'use client'
 import { useState, useEffect, forwardRef, useCallback } from 'react'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
@@ -7,11 +8,19 @@ import Typography from '@mui/material/Typography'
 import { useForm, Controller } from 'react-hook-form'
 import CustomTextField from '@core/components/mui/TextField'
 import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
-import { addEvent, deleteEvent, filterEvents, selectedEvent, updateEvent } from '@/redux-store/slices/calendar'
+import {
+  addEvent,
+  deleteEvent,
+  fetchEvents,
+  filterEvents,
+  selectedEvent,
+  updateEvent
+} from '@/redux-store/slices/calendar'
 import axios from 'axios'
 import FormModal from '@/@core/components/mui/Modal'
 import { AddEventSidebarType, AddEventType } from '@/types/apps/calendarTypes'
-import { Grid2 as Grid } from '@mui/material'
+import { Alert, Grid2 as Grid, patch, Snackbar } from '@mui/material'
+import CustomAlert from '@/@core/components/mui/Alter'
 
 interface PickerProps {
   label?: string
@@ -34,6 +43,7 @@ interface DefaultStateType {
   endTime: Date
   notes: string
   location: string
+  payPeriod: string
 }
 
 const defaultState: DefaultStateType = {
@@ -48,7 +58,8 @@ const defaultState: DefaultStateType = {
   endTime: new Date(),
   assignedHours: 0,
   notes: '',
-  location: ''
+  location: '',
+  payPeriod: ''
 }
 
 /**
@@ -118,8 +129,19 @@ function createTimeFrames(startDate: Date, assignedHours: number) {
 }
 
 const AddEventModal = (props: AddEventSidebarType) => {
-  const { calendarStore, dispatch, addEventSidebarOpen, handleAddEventSidebarToggle } = props
+  const {
+    calendarStore,
+    dispatch,
+    addEventSidebarOpen,
+    handleAddEventSidebarToggle,
+    isEdited,
+    setIsEditedOff,
+    handleAddEvent,
+    handleUpdateEvent
+  } = props
   const [values, setValues] = useState<DefaultStateType>(defaultState)
+  const [alertOpen, setAlertOpen] = useState<boolean>(false)
+  const [alertMessage, setAlertMessage] = useState<any>()
   const PickersComponent = forwardRef(({ ...props }: PickerProps, ref) => {
     return (
       <CustomTextField
@@ -158,7 +180,8 @@ const AddEventModal = (props: AddEventSidebarType) => {
         service: event?.extendedProps?.service?.id || event?.extendedProps?.service,
         assignedHours: event?.extendedProps?.assignedHours,
         notes: event?.extendedProps?.notes,
-        location: event?.extendedProps?.location
+        location: event?.extendedProps?.location,
+        payPeriod: props?.payPeriod?.id
       })
     }
   }, [setValue, calendarStore.selectedEvent])
@@ -175,7 +198,21 @@ const AddEventModal = (props: AddEventSidebarType) => {
     handleAddEventSidebarToggle()
   }
 
-  const onSubmit = async (data: { title: string }) => {
+  const calculateTotalDays = (startDate: Date, endDate: Date) => {
+    const start = new Date(startDate)
+    start.setHours(0, 0, 0, 0)
+
+    const end = new Date(endDate)
+    end.setHours(0, 0, 0, 0)
+
+    // Calculate the difference in days
+    const timeDifference = end.getTime() - start.getTime()
+    const totalDays = timeDifference / (24 * 60 * 60 * 1000) + 1
+
+    return Math.round(totalDays) // Use Math.round to handle any floating point inaccuracies
+  }
+
+  const onSubmit = async () => {
     const startDate = values.startDate
     const endDate = values.endDate
     const assignedHours = values.assignedHours
@@ -183,7 +220,7 @@ const AddEventModal = (props: AddEventSidebarType) => {
     const bulkEvents: AddEventType[] = []
 
     // Calculate total days including cases where it crosses midnight
-    const totalDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (24 * 60 * 60 * 1000)) + 1
+    const totalDays = calculateTotalDays(startDate, endDate)
 
     let currentDate = new Date(startDate)
 
@@ -194,7 +231,7 @@ const AddEventModal = (props: AddEventSidebarType) => {
 
       bulkEvents.push({
         display: 'block',
-        title: data.title,
+        title: values.title,
         start: finalStartDate,
         end: finalEndDate,
         status: values.status,
@@ -203,7 +240,8 @@ const AddEventModal = (props: AddEventSidebarType) => {
         serviceId: values.service,
         assignedHours: assignedHours,
         notes: values.notes,
-        location: values.location
+        location: values.location,
+        payPeriod: props?.payPeriod?.id
       })
 
       // Move to the next day without modifying endDate
@@ -211,12 +249,43 @@ const AddEventModal = (props: AddEventSidebarType) => {
     }
 
     // Make a single API call with bulk data
-    try {
-      const createSchedule = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/schedule`, bulkEvents)
-      console.log('Created schedule:', createSchedule.data)
-      dispatch(addEvent(createSchedule.data))
-    } catch (error) {
-      console.error('Error creating schedule:', error)
+    console.log('In add side bar', isEdited)
+    if (isEdited && calendarStore?.selectedEvent) {
+      // console.log('Editing Existing Event!!!!', calendarStore.selectedEvent.id)
+      // console.log('bulkEvents>>>>>', bulkEvents)
+      // console.log(startDate.getHours(), assignedHours)
+      if (startDate.getHours() + assignedHours > 24) {
+        setAlertMessage({
+          message: 'Please select hours with in the date',
+          severity: 'error'
+        })
+        setAlertOpen(true)
+        return
+      } else {
+        setAlertOpen(false)
+      }
+      try {
+        if (bulkEvents.length === 1) {
+          const eventId = calendarStore?.selectedEvent?.id
+          const patchBody = {
+            ...bulkEvents[0]
+          }
+          const updatedSchedule = await axios.patch(`${process.env.NEXT_PUBLIC_API_URL}/schedule/${eventId}`, patchBody)
+          // handleUpdateEvent(updatedSchedule.data)
+        }
+      } catch (error) {
+        console.error('Error updating schedule:', error)
+      } finally {
+        setIsEditedOff
+      }
+    } else {
+      try {
+        const createSchedule = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/schedule`, bulkEvents)
+        console.log('Created schedule:', createSchedule.data)
+        // handleAddEvent(createSchedule.data)
+      } catch (error) {
+        console.error('Error creating schedule:', error)
+      }
     }
 
     dispatch(filterEvents())
@@ -258,18 +327,24 @@ const AddEventModal = (props: AddEventSidebarType) => {
   }, [addEventSidebarOpen, resetToStoredValues, resetToEmptyValues, calendarStore.selectedEvent])
 
   return (
-    <FormModal
-      isModalOpen={addEventSidebarOpen}
-      setIsModalOpen={handleAddEventSidebarToggle}
-      title={
-        calendarStore.selectedEvent && calendarStore.selectedEvent.title.length ? 'Update Event' : 'Create an Event'
-      }
-      handleCancel={handleModalClose}
-      bodyStyle={{ padding: 0 }}
-    >
-      <div className='flex items-center justify-center pt-[20px] pb-[20px] w-full px-5'>
-        <form onSubmit={handleSubmit(onSubmit)} autoComplete='off'>
-          <Controller
+    <>
+      <FormModal
+        isModalOpen={addEventSidebarOpen}
+        setIsModalOpen={handleAddEventSidebarToggle}
+        title={
+          calendarStore.selectedEvent && calendarStore.selectedEvent.title.length ? 'Update Event' : 'Create an Event'
+        }
+        handleCancel={handleModalClose}
+        bodyStyle={{ padding: 0 }}
+      >
+        {alertOpen === true && (
+          <Alert onClose={() => setAlertOpen(false)} severity={alertMessage?.severity}>
+            {alertMessage?.message}
+          </Alert>
+        )}
+        <div className='flex items-center justify-center pt-[20px] pb-[20px] w-full px-5'>
+          <form onSubmit={handleSubmit(onSubmit)} autoComplete='off'>
+            {/* <Controller
             name='title'
             control={control}
             rules={{ required: true }}
@@ -284,141 +359,167 @@ const AddEventModal = (props: AddEventSidebarType) => {
                 {...(errors.title && { error: true, helperText: 'This field is required' })}
               />
             )}
-          />
+          /> */}
 
-          <CustomTextField
-            select
-            fullWidth
-            className='mbe-3'
-            label='Event type'
-            value={values?.service}
-            id='service-schedule'
-            onChange={e => setValues({ ...values, service: e.target.value })}
-          >
-            {props?.serviceList.map((service: any) => (
-              <MenuItem key={service.id} value={service.id}>
-                {service.name}
-              </MenuItem>
-            ))}
-          </CustomTextField>
+            <CustomTextField
+              fullWidth
+              className='mbe-3'
+              label='Event title'
+              value={values.title}
+              id='event-title'
+              onChange={e => setValues({ ...values, title: e.target.value })}
+            />
 
-          <CustomTextField
-            select
-            fullWidth
-            className='mbe-3'
-            label='Client'
-            value={values?.client}
-            id='client-schedule'
-            onChange={e => setValues({ ...values, client: e.target.value })}
-          >
-            {props?.clientList.map((client: any) => (
-              <MenuItem key={client.id} value={client.id}>
-                {`${client.firstName} ${client.lastName}`}
-              </MenuItem>
-            ))}
-          </CustomTextField>
+            <CustomTextField
+              select
+              fullWidth
+              className='mbe-3'
+              label='Event type'
+              value={values?.service}
+              id='service-schedule'
+              onChange={e => setValues({ ...values, service: e.target.value })}
+            >
+              {props?.serviceList?.length > 0 ? (
+                props.serviceList.map((service: any) => (
+                  <MenuItem key={service.id} value={service.id}>
+                    {service.name}
+                  </MenuItem>
+                ))
+              ) : (
+                <MenuItem disabled>No options available</MenuItem>
+              )}
+            </CustomTextField>
 
-          <CustomTextField
-            select
-            fullWidth
-            className='mbe-3'
-            label='Caregiver'
-            value={values?.caregiver}
-            id='caregiver-schedule'
-            onChange={e => setValues({ ...values, caregiver: e.target.value })}
-          >
-            {props?.caregiverList.map((caregiver: any) => (
-              <MenuItem key={caregiver.id} value={caregiver.id}>
-                {`${caregiver.firstName} ${caregiver.lastName}`}
-              </MenuItem>
-            ))}
-          </CustomTextField>
-          <Grid container spacing={3}>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <AppReactDatepicker
-                selectsStart
-                id='event-start-date'
-                endDate={values.endDate}
-                selected={values.startDate}
-                startDate={values.startDate}
-                showTimeSelect={!values.startDate}
-                dateFormat={!values.startDate ? 'yyyy-MM-dd hh:mm' : 'yyyy-MM-dd'}
-                customInput={
-                  <PickersComponent
-                    label='Start Date'
-                    registername='startDate'
-                    className='mbe-3'
-                    id='event-start-date'
-                  />
-                }
-                onChange={(date: Date | null) => {
-                  if (date !== null) {
-                    // Combine the selected start date with the selected start time
-                    setValues({
-                      ...values,
-                      startDate: mergeDateWithTime(date, values.startTime)
-                    })
+            <CustomTextField
+              select
+              fullWidth
+              className='mbe-3'
+              label='Client'
+              value={values?.client}
+              disabled={isEdited && calendarStore.selectedEvent}
+              id='client-schedule'
+              onChange={e => setValues({ ...values, client: e.target.value })}
+            >
+              {props?.clientList?.length > 0 ? (
+                props?.clientList.map((client: any) => (
+                  <MenuItem key={client.id} value={client.id}>
+                    {`${client.firstName} ${client.lastName}`}
+                  </MenuItem>
+                ))
+              ) : (
+                <MenuItem disabled>No options available</MenuItem>
+              )}
+            </CustomTextField>
+
+            <CustomTextField
+              select
+              fullWidth
+              className='mbe-3'
+              label='Caregiver'
+              disabled={isEdited && calendarStore.selectedEvent}
+              value={values?.caregiver}
+              id='caregiver-schedule'
+              onChange={e => setValues({ ...values, caregiver: e.target.value })}
+            >
+              {props?.caregiverList.length > 0 ? (
+                props?.caregiverList.map((caregiver: any) => (
+                  <MenuItem key={caregiver.id} value={caregiver.id}>
+                    {`${caregiver.firstName} ${caregiver.lastName}`}
+                  </MenuItem>
+                ))
+              ) : (
+                <MenuItem disabled>No options available</MenuItem>
+              )}
+            </CustomTextField>
+            <Grid container spacing={3}>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <AppReactDatepicker
+                  selectsStart
+                  id='event-start-date'
+                  endDate={values.endDate}
+                  selected={values.startDate}
+                  startDate={values.startDate}
+                  showTimeSelect={!values.startDate}
+                  dateFormat={!values.startDate ? 'yyyy-MM-dd hh:mm' : 'yyyy-MM-dd'}
+                  disabled={isEdited && calendarStore.selectedEvent}
+                  customInput={
+                    <PickersComponent
+                      label='Start Date'
+                      registername='startDate'
+                      className='mbe-3'
+                      id='event-start-date'
+                    />
                   }
-                }}
-                onSelect={handleStartDate}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <AppReactDatepicker
-                showTimeSelect
-                onSelect={handleStartTime}
-                selected={values.startTime}
-                timeIntervals={1}
-                showTimeSelectOnly
-                dateFormat='hh:mm aa'
-                id='time-only-picker'
-                onChange={(date: Date | null) => {
-                  if (date !== null) {
-                    // Combine the selected start date with the selected start time
-                    setValues({
-                      ...values,
-                      startTime: date,
-                      startDate: mergeDateWithTime(values.startDate, date)
-                    })
+                  onChange={(date: Date | null) => {
+                    if (date !== null) {
+                      // Combine the selected start date with the selected start time
+                      setValues({
+                        ...values,
+                        startDate: mergeDateWithTime(date, values.startTime)
+                      })
+                    }
+                  }}
+                  onSelect={handleStartDate}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <AppReactDatepicker
+                  showTimeSelect
+                  onSelect={handleStartTime}
+                  selected={values.startTime}
+                  timeIntervals={1}
+                  showTimeSelectOnly
+                  dateFormat='hh:mm aa'
+                  id='time-only-picker'
+                  disabled={isEdited && calendarStore.selectedEvent}
+                  onChange={(date: Date | null) => {
+                    if (date !== null) {
+                      // Combine the selected start date with the selected start time
+                      setValues({
+                        ...values,
+                        startTime: date,
+                        startDate: mergeDateWithTime(values.startDate, date)
+                      })
+                    }
+                  }}
+                  customInput={
+                    <PickersComponent
+                      label='Start Time'
+                      registername='startTime'
+                      className='mbe-3'
+                      id='event-start-time'
+                    />
                   }
-                }}
-                customInput={
-                  <PickersComponent
-                    label='Start Time'
-                    registername='startTime'
-                    className='mbe-3'
-                    id='event-start-time'
-                  />
-                }
-              />
-            </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <AppReactDatepicker
-                selectsEnd
-                id='event-end-date'
-                endDate={values.endDate}
-                selected={values.endDate}
-                minDate={values.startDate}
-                startDate={values.startDate}
-                showTimeSelect={!values.endDate}
-                dateFormat={!values.endDate ? 'yyyy-MM-dd hh:mm' : 'yyyy-MM-dd'}
-                customInput={
-                  <PickersComponent label='End Date' registername='endDate' className='mbe-3' id='event-end-date' />
-                }
-                onChange={(date: Date | null) => {
-                  if (date !== null) {
-                    // Combine the selected end date with the selected end time
-                    setValues({
-                      ...values,
-                      endDate: mergeDateWithTime(date, values.endTime)
-                    })
+                />
+              </Grid>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <AppReactDatepicker
+                  selectsEnd
+                  id='event-end-date'
+                  endDate={values.endDate}
+                  selected={values.endDate}
+                  minDate={values.startDate}
+                  startDate={values.startDate}
+                  showTimeSelect={!values.endDate}
+                  dateFormat={!values.endDate ? 'yyyy-MM-dd hh:mm' : 'yyyy-MM-dd'}
+                  customInput={
+                    <PickersComponent label='End Date' registername='endDate' className='mbe-3' id='event-end-date' />
                   }
-                }}
-              />
-            </Grid>
+                  disabled={isEdited && calendarStore.selectedEvent}
+                  onChange={(date: Date | null) => {
+                    if (date !== null) {
+                      // Combine the selected end date with the selected end time
+                      setValues({
+                        ...values,
+                        endDate: date
+                      })
+                    }
+                  }}
+                />
+              </Grid>
 
-            <Grid size={{ xs: 12, md: 6 }}>
-              <AppReactDatepicker
+              <Grid size={{ xs: 12, md: 6 }}>
+                {/* <AppReactDatepicker
                 showTimeSelect
                 selected={values.endTime}
                 timeIntervals={1}
@@ -440,10 +541,18 @@ const AddEventModal = (props: AddEventSidebarType) => {
                 customInput={
                   <PickersComponent label='End Time' registername='endTime' className='mbe-3' id='event-end-time' />
                 }
-              />
+              /> */}
+                <CustomTextField
+                  fullWidth
+                  className='mbe-3'
+                  label='Assigned Hours (Per Day)'
+                  value={values.assignedHours}
+                  id='event-assignedHours'
+                  onChange={e => setValues({ ...values, assignedHours: Number(e.target.value) })}
+                />
+              </Grid>
             </Grid>
-          </Grid>
-          {/* <CustomTextField
+            {/* <CustomTextField
             select
             fullWidth
            className='mbe-3'
@@ -455,61 +564,55 @@ const AddEventModal = (props: AddEventSidebarType) => {
             <MenuItem value='pending'>Pending</MenuItem>
             <MenuItem value='waiting'>Waiting</MenuItem>
           </CustomTextField> */}
-          <CustomTextField
-            fullWidth
-            className='mbe-3'
-            label='Assigned Hours'
-            value={values.assignedHours}
-            id='event-assignedHours'
-            onChange={e => setValues({ ...values, assignedHours: Number(e.target.value) })}
-          />
-          <CustomTextField
-            fullWidth
-            className='mbe-3'
-            label='Location'
-            value={values.location}
-            id='event-location'
-            onChange={e => setValues({ ...values, location: String(e.target.value) })}
-          />
-          <CustomTextField
-            label='Notes or instructions'
-            multiline={true}
-            value={values.notes}
-            onChange={e => setValues({ ...values, notes: e.target.value })}
-            fullWidth
-            className='mbe-3'
-            id='event-notes'
-          />
-          <div className='flex gap-4 justify-end'>
-            {calendarStore.selectedEvent && calendarStore.selectedEvent.title.length ? (
-              <>
-                <Button variant='outlined' color='secondary' onClick={handleModalClose}>
-                  CANCEL
-                </Button>
-                <Button type='submit' variant='contained' className='bg-[#4B0082]'>
-                  Update
-                </Button>
-                {/* <Button variant='outlined' color='secondary' onClick={resetToStoredValues}>
+
+            <CustomTextField
+              fullWidth
+              className='mbe-3'
+              label='Location'
+              value={values.location}
+              id='event-location'
+              onChange={e => setValues({ ...values, location: String(e.target.value) })}
+            />
+            <CustomTextField
+              label='Notes or instructions'
+              multiline={true}
+              value={values.notes}
+              onChange={e => setValues({ ...values, notes: e.target.value })}
+              fullWidth
+              className='mbe-3'
+              id='event-notes'
+            />
+            <div className='flex gap-4 justify-end'>
+              {calendarStore.selectedEvent && calendarStore.selectedEvent.title.length ? (
+                <>
+                  <Button variant='outlined' color='secondary' onClick={handleModalClose}>
+                    CANCEL
+                  </Button>
+                  <Button type='submit' variant='contained' className='bg-[#4B0082]'>
+                    Update
+                  </Button>
+                  {/* <Button variant='outlined' color='secondary' onClick={resetToStoredValues}>
                   Reset
                 </Button> */}
-                {/* <Button variant='outlined' color='error' onClick={handleDeleteButtonClick}>
+                  {/* <Button variant='outlined' color='error' onClick={handleDeleteButtonClick}>
                   Delete
                 </Button> */}
-              </>
-            ) : (
-              <>
-                <Button variant='outlined' color='secondary' onClick={handleModalClose}>
-                  CANCEL
-                </Button>
-                <Button type='submit' variant='contained' className='bg-[#4B0082]'>
-                  ADD EVENT
-                </Button>
-              </>
-            )}
-          </div>
-        </form>
-      </div>
-    </FormModal>
+                </>
+              ) : (
+                <>
+                  <Button variant='outlined' color='secondary' onClick={handleModalClose}>
+                    CANCEL
+                  </Button>
+                  <Button type='submit' variant='contained' className='bg-[#4B0082]'>
+                    ADD EVENT
+                  </Button>
+                </>
+              )}
+            </div>
+          </form>
+        </div>
+      </FormModal>
+    </>
   )
 }
 

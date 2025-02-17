@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import React, { useState, useMemo, useCallback, useEffect } from 'react'
 import Card from '@mui/material/Card'
 import CardHeader from '@mui/material/CardHeader'
 import { CircularProgress, Typography } from '@mui/material'
@@ -8,6 +8,7 @@ import DataTable from '@/@core/components/mui/DataTable'
 import { GridColDef } from '@mui/x-data-grid'
 import AdUnitsIcon from '@mui/icons-material/AdUnits'
 import { calculateHoursWorked } from '@/utils/helperFunctions'
+import ReactTable from '@/@core/components/mui/ReactTable'
 // Updated interfaces to match your data structure
 interface Caregiver {
   id: number
@@ -51,79 +52,204 @@ interface SignatureStatusTableProps {
   isLoading: boolean
 }
 
+interface Location {
+  latitude: number
+  longitude: number
+}
+
+interface LocationDetails {
+  city: string
+  country: string
+}
+
 const WaitingLogsApprovalTable = ({ data, isLoading }: SignatureStatusTableProps) => {
   const [globalFilter, setGlobalFilter] = useState('')
   const [rowSelection, setRowSelection] = useState({})
 
-  const columns = useMemo<GridColDef[]>(
-    () => [
-      {
-        field: 'clientName',
-        headerName: 'CLIENT NAME',
-        flex: 1.5,
-        renderCell: (params: any) => (
-          <Typography className='font-normal text-base my-3'>
-            {params?.row?.client?.firstName} {params?.row?.client?.lastName}
-          </Typography>
-        )
-      },
-      {
-        field: 'caregiverName',
-        headerName: 'CAREGIVER ASSIGNED',
-        flex: 1.5,
-        renderCell: (params: any) => (
-          <Typography className='font-normal text-base my-3'>
-            {params?.row?.caregiver?.firstName} {params?.row?.caregiver?.lastName}
-          </Typography>
-        )
-      },
-      {
-        field: 'payPeriod',
-        headerName: 'DATE',
-        flex: 1.5,
-        renderCell: (params: any) => {
-          const startDate = params?.row?.payPeriodHistory?.startDate
-          if (startDate) {
-            const date = new Date(startDate)
-            return (
-              <Typography className='font-normal text-base my-3'>
-                {`${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear().toString().slice(-2)}`}
-              </Typography>
-            )
-          }
-          return <Typography className='font-normal text-base my-3'>N/A</Typography>
-        }
-      },
-      {
-        field: 'hoursWorked',
-        headerName: 'TIME DURATION',
-        flex: 1,
-        renderCell: (params: any) => {
-          try {
-            const hoursWorked = calculateHoursWorked(params.row.clockIn, params.row.clockOut)
+  // Custom hook for location details
+  const useLocationDetails = (location: Location) => {
+    const [locationDetails, setLocationDetails] = useState<LocationDetails>({
+      city: 'Loading...',
+      country: 'Loading...'
+    })
 
-            return <Typography className='font-normal text-base my-3'>{hoursWorked} Hrs</Typography>
-          } catch (error) {
-            console.error('Error calculating hours worked:', error)
-            return <span>N/A</span>
-          }
+    const getLocationDetails = useCallback(async (latitude: number, longitude: number): Promise<LocationDetails> => {
+      try {
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10`
+        )
+        const data = await response.json()
+
+        return {
+          city:
+            data.address.city ||
+            data.address.town ||
+            data.address.village ||
+            (data.address.district ? data.address.district.split(' ')[0] : null) ||
+            'Unknown',
+          country: data.address.country || 'Unknown'
         }
-      },
-      {
-        field: 'logsVia',
-        headerName: 'LOGGED VIA',
-        flex: 1.5,
-        renderCell: (params: any) => <AdUnitsIcon className='my-3' />
-      },
-      {
-        field: 'approvedLoc',
-        headerName: 'CHECK-IN LOCATION',
-        flex: 1,
-        renderCell: (params: any) => <Typography className='font-normal text-base my-3'>183 Chatsworth</Typography>
+      } catch (error) {
+        console.error('Error fetching location details:', error)
+        return { city: 'Unknown', country: 'Unknown' }
       }
-    ],
-    []
-  )
+    }, [])
+
+    useEffect(() => {
+      let isMounted = true
+
+      const fetchLocationDetails = async () => {
+        const details = await getLocationDetails(location.latitude, location.longitude)
+        if (isMounted) {
+          setLocationDetails(details)
+        }
+      }
+
+      fetchLocationDetails()
+
+      return () => {
+        isMounted = false
+      }
+    }, [location.latitude, location.longitude, getLocationDetails])
+
+    return locationDetails
+  }
+
+  // Memoized components
+  const LocationCell = React.memo(({ location }: { location: Location }) => {
+    const locationDetails = useLocationDetails(location)
+
+    return (
+      <Typography color='primary'>
+        {locationDetails?.city ? `${locationDetails.city}, ` : ''}
+        {locationDetails?.country || 'Unknown Country'}
+      </Typography>
+    )
+  })
+
+  const columns = [
+    {
+      id: 'clientName',
+      label: 'CLIENT NAME',
+      minWidth: 170,
+      editable: false,
+      sortable: true,
+      render: (user: any) => (
+        <Typography color='primary'>{`${user?.client?.firstName} ${user?.client?.lastName}`}</Typography>
+      )
+    },
+    {
+      id: 'caregiverName',
+      label: 'CAREGIVER NAME',
+      minWidth: 170,
+      editable: false,
+      sortable: true,
+      render: (user: any) => (
+        <Typography
+          color='primary'
+          className='text-[#71DD37]'
+        >{`${user?.caregiver?.firstName} ${user?.caregiver?.lastName}`}</Typography>
+      )
+    },
+    {
+      id: 'dateOfService',
+      label: 'DATE',
+      minWidth: 170,
+      editable: false,
+      sortable: true,
+      render: (user: any) => {
+        const startDate = user?.dateOfService
+        if (startDate) {
+          const date = new Date(startDate)
+          return (
+            <Typography className='font-normal text-base my-3'>
+              {`${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear().toString().slice(-2)}`}
+            </Typography>
+          )
+        }
+        return <Typography className='font-normal text-base my-3'>N/A</Typography>
+      }
+    },
+    {
+      id: 'startDate',
+      label: 'START AND END TIME',
+      minWidth: 170,
+      editable: false,
+      sortable: true,
+      render: (user: any) => {
+        const startTime = user?.clockIn
+        const endTime = user?.clockOut
+        if (startTime) {
+          // Parse the date string into a Date object
+          const startDate = new Date(startTime)
+          const endDate = new Date(endTime)
+          // Format the time as "03:00:08 PM"
+          const formattedStartTime = startDate.toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: true
+          })
+          const formattedEndTime = endDate.toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: true
+          })
+          return (
+            <Typography className='font-normal text-base my-3'>
+              {formattedStartTime} - {formattedEndTime}
+            </Typography>
+          )
+        }
+
+        return <Typography className='font-normal text-base my-3'>N/A</Typography>
+      }
+    },
+    {
+      id: 'timeDuration',
+      label: 'TIME DURATION',
+      minWidth: 170,
+      editable: false,
+      sortable: true,
+      render: (user: any) => {
+        try {
+          const hoursWorked = calculateHoursWorked(user?.clockIn, user?.clockOut)
+
+          return <Typography className='font-normal text-base my-3'>{hoursWorked} Hrs</Typography>
+        } catch (error) {
+          console.error('Error calculating hours worked:', error)
+          return <span>N/A</span>
+        }
+      }
+    },
+    {
+      id: 'location',
+      label: 'CHECK LOCATION',
+      minWidth: 170,
+      editable: false,
+      sortable: true,
+      render: (user: any) => <LocationCell location={user?.startLocation} />
+    }
+    // {
+    //   id: 'actions',
+    //   label: 'ACTION',
+    //   editable: false,
+    //   render: (user: any) => (
+    //     <ActionButton
+    //       handleEdit={handleEdit}
+    //       handleSave={handleSave}
+    //       handleActionClick={handleActionClick}
+    //       handleCloseMenu={handleCloseMenu}
+    //       handleCancelEdit={handleCancelEdit}
+    //       isEditing={editingId !== null}
+    //       user={user}
+    //       selectedUser={selectedUser}
+    //       anchorEl={anchorEl}
+    //     />
+    //   )
+    // }
+  ]
 
   if (isLoading) {
     return (
@@ -139,7 +265,17 @@ const WaitingLogsApprovalTable = ({ data, isLoading }: SignatureStatusTableProps
     <Card sx={{ borderRadius: 1, boxShadow: 3 }}>
       <CardHeader title='Waiting Logs Approval' className='pb-4' />
       <div style={{ overflowX: 'auto', padding: '0px' }}>
-        <DataTable data={data} columns={columns} />
+        <ReactTable
+          columns={columns}
+          data={data}
+          keyExtractor={user => user.id.toString()}
+          enableRowSelect
+          enablePagination
+          pageSize={5}
+          stickyHeader
+          maxHeight={600}
+          containerStyle={{ borderRadius: 2 }}
+        />
       </div>
     </Card>
   )

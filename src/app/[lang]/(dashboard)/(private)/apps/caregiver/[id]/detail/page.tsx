@@ -1,3 +1,4 @@
+'use client'
 // Next Imports
 import dynamic from 'next/dynamic'
 
@@ -12,11 +13,11 @@ const CaregiverScheduleTab = dynamic(() => import('@/views/apps/caregiver/view/d
 
 // Vars
 const tabContentList = () => ({
-  profile: <CaregiverProfileTab />,
-  'account-history': <CaregiverAccHistoryTab />,
-  'assigned-service': <CaregiverAssignedServiceTab />,
-  'time-log': <CaregiverTimeLogTab />,
-  schedule: <CaregiverScheduleTab />
+  profile: (props: any) => <CaregiverProfileTab {...props} />,
+  'account-history': (props: any) => <CaregiverAccHistoryTab {...props} />,
+  'assigned-service': (props: any) => <CaregiverAssignedServiceTab {...props} />,
+  'time-log': (props: any) => <CaregiverTimeLogTab {...props} />,
+  schedule: (props: any) => <CaregiverScheduleTab {...props} />
 })
 
 const CareGiverViewTab = () => {

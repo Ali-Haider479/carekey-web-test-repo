@@ -20,8 +20,8 @@ const CustomRadioButton = (props: Props) => {
       name={props.name}
       rules={{ required: `${props.label} is required` }}
       render={({ field }) => (
-        <FormControl>
-          <FormLabel id={`${props.name}-radio-group-label`} className='ml-2'>
+        <FormControl className='!flex !flex-row items-center mt-1 ml-1'>
+          <FormLabel id={`${props.name}-radio-group-label`} className=''>
             {props.label}
           </FormLabel>
           <RadioGroup
@@ -29,15 +29,15 @@ const CustomRadioButton = (props: Props) => {
             value={field.value || props.radioOptions[0].value} // Ensure value is controlled
             aria-labelledby={`${props.name}-radio-group-label`}
             name={field.name}
-            className='text-gray-500 !flex !flex-row ml-3'
+            className='text-gray-500 !flex !flex-row ml-7'
           >
             {props.radioOptions.map((item: Options) => (
               <FormControlLabel
                 key={item.key}
                 value={item.value}
-                control={<Radio />}
+                control={<Radio size='small' />}
                 label={item.label}
-                className='w-24'
+                className='w-20'
               />
             ))}
           </RadioGroup>

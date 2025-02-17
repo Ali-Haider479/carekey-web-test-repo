@@ -123,11 +123,11 @@ const AddEventSidebar = (props: AddEventSidebarType) => {
     handleAddEventSidebarToggle()
   }
 
-  const onSubmit = (data: { title: string }) => {
+  const onSubmit = () => {
     const modifiedEvent: AddEventType = {
       url: values.url,
       display: 'block',
-      title: data.title,
+      title: values.title,
       end: values.endDate,
       allDay: values.allDay,
       start: values.startDate,
@@ -234,7 +234,7 @@ const AddEventSidebar = (props: AddEventSidebarType) => {
       </Box>
       <Box className='sidebar-body p-6'>
         <form onSubmit={handleSubmit(onSubmit)} autoComplete='off'>
-          <Controller
+          {/* <Controller
             name='title'
             control={control}
             rules={{ required: true }}
@@ -249,7 +249,16 @@ const AddEventSidebar = (props: AddEventSidebarType) => {
                 {...(errors.title && { error: true, helperText: 'This field is required' })}
               />
             )}
+          /> */}
+          <CustomTextField
+            fullWidth
+            type='text'
+            className='mbe-6'
+            label='Title'
+            value={values.title}
+            onChange={e => setValues({ ...values, title: e.target.value })}
           />
+
           <CustomTextField
             select
             fullWidth

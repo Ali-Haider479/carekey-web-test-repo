@@ -23,19 +23,31 @@ const TimesheetView = ({ tabContentList }: { tabContentList: { [key: string]: Re
     setActiveTab(value)
   }
 
+  const getTabHeading = (tabKey: string) => {
+    switch (tabKey) {
+      case 'received-timesheet':
+        return '/ Received Timesheet'
+      case 'signature-status':
+        return '/ Signature Status'
+      case 'waiting-admin-approval':
+        return '/ Waiting Approval'
+      case 'waiting-logs-approval':
+        return '/ Time Logs Approval'
+      case 'manual-timesheet':
+        return '/ Manual Timesheet'
+      default:
+        return ''
+    }
+  }
+
   return (
     <TabContext value={activeTab}>
       <Grid container spacing={6}>
         <Grid size={{ xs: 12, md: 12 }}>
           <Typography variant='h3' className='mbe-4'>
-            Timesheet / Timelogs Approval
+            {`Timesheet ${getTabHeading(activeTab)}`}
           </Typography>
-          <CustomTabList
-            orientation='horizontal'
-            onChange={handleChange}
-            className='is-fit'
-            pill='true'
-          >
+          <CustomTabList orientation='horizontal' onChange={handleChange} className='is-fit' pill='true'>
             <Tab
               label='RECEIVED TIMESHEET'
               // icon={<i className='bx-store-alt' />}

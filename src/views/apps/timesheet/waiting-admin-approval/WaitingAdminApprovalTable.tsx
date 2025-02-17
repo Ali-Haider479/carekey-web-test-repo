@@ -8,6 +8,7 @@ import axios from 'axios'
 import DataTable from '@/@core/components/mui/DataTable'
 import { GridColDef } from '@mui/x-data-grid'
 import AdUnitsIcon from '@mui/icons-material/AdUnits'
+import ReactTable from '@/@core/components/mui/ReactTable'
 // Updated interfaces to match your data structure
 interface Caregiver {
   id: number
@@ -69,71 +70,113 @@ const WaitingAdminApprovalTable = () => {
     fetchData()
   }, [])
 
+  const columns = [
+    {
+      id: 'clientName',
+      label: 'CLIENT NAME',
+      minWidth: 170,
+      editable: false,
+      sortable: true,
+      render: (user: any) => (
+        <Typography color='primary'>{`${user?.client?.firstName} ${user?.client?.lastName}`}</Typography>
+      )
+    },
+    {
+      id: 'caregiverName',
+      label: 'CAREGIVER NAME',
+      minWidth: 170,
+      editable: false,
+      sortable: true,
+      render: (user: any) => (
+        <Typography
+          color='primary'
+          className='text-[#71DD37]'
+        >{`${user?.caregiver?.firstName} ${user?.caregiver?.lastName}`}</Typography>
+      )
+    },
 
-  const columns = useMemo<GridColDef[]>(
-    () => [
-      {
-        field: 'clientName',
-        headerName: 'CLIENT NAME',
-        flex: 1.5,
-        renderCell: (params: any) => (
-          <Typography className='font-normal text-base my-3'>
-            {params?.row?.client?.firstName} {params?.row?.client?.lastName}
-          </Typography>
-        )
-      },
-      {
-        field: 'caregiverName',
-        headerName: 'CAREGIVER ASSIGNED',
-        flex: 1.5,
-        renderCell: (params: any) => (
-          <Typography className='font-normal text-base my-3'>
-            {params?.row?.caregiver?.firstName} {params?.row?.caregiver?.lastName}
-          </Typography>
-        )
-      },
-      {
-        field: 'serviceName',
-        headerName: 'SERVICE TAKEN',
-        flex: 1.5,
-        renderCell: (params: any) => (
-          <Typography className='font-normal text-base my-3'>{params?.row?.serviceName}</Typography>
-        )
-      },
-      {
-        field: 'payPeriod',
-        headerName: 'DATE',
-        flex: 1.5,
-        renderCell: (params: any) => {
-          const startDate = params?.row?.payPeriodHistory?.startDate
-          if (startDate) {
-            const date = new Date(startDate)
-            return (
-              <Typography className='font-normal text-base my-3'>
-                {`${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear().toString().slice(-2)}`}
-              </Typography>
-            )
-          }
-          return <Typography className='font-normal text-base my-3'>N/A</Typography>
+    {
+      id: 'serviceName',
+      label: 'SERVICE NAME',
+      minWidth: 170,
+      editable: false,
+      sortable: true,
+      render: (user: any) => <Typography color='primary'>{user?.serviceName}</Typography>
+    },
+    {
+      id: 'dateOfService',
+      label: 'DATE',
+      minWidth: 170,
+      editable: false,
+      sortable: true,
+      render: (user: any) => {
+        const startDate = user?.dateOfService
+        if (startDate) {
+          const date = new Date(startDate)
+          return (
+            <Typography className='font-normal text-base my-3'>
+              {`${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear().toString().slice(-2)}`}
+            </Typography>
+          )
         }
-      },
-      {
-        field: 'logsVia',
-        headerName: 'LOGS RECORDED',
-        flex: 1.5,
-        renderCell: (params: any) => <Typography className='font-normal text-base my-3'>Yes</Typography>
-      },
-      {
-        field: 'tsApprovalStatus',
-        headerName: 'SIGNATURE STATUS',
-        flex: 1,
-        renderCell: (params: any) => (
-          <Typography className='font-normal text-base my-3'>{params?.row?.signature?.tsApprovalStatus}</Typography>
-        )
+        return <Typography className='font-normal text-base my-3'>N/A</Typography>
       }
-    ],
-    []
-  )
+    },
+    {
+      id: 'tsApprovalStatus',
+      label: 'LOGS RECORDED',
+      minWidth: 170,
+      editable: true,
+      sortable: true,
+      render: (user: any) => (
+        <Typography
+          color='primary'
+          className={`${'YES' === 'YES' ? 'text-[#71DD37]' : 'NO' === 'NO' ? 'text-[#FF4C51]' : 'text-[#FFAB00]'}`}
+        >
+          YES
+        </Typography>
+      )
+    },
+    {
+      id: 'tsApprovalStatus',
+      label: 'SIGNATURE STATUS',
+      minWidth: 170,
+      editable: true,
+      sortable: true,
+      render: (user: any) => (
+        <Typography
+          color='primary'
+          className={`${
+            user?.tsApprovalStatus === 'Approved'
+              ? 'text-[#71DD37]'
+              : user?.tsApprovalStatus === 'Rejected'
+                ? 'text-[#FF4C51]'
+                : 'text-[#FFAB00]'
+          }`}
+        >
+          {user?.tsApprovalStatus || 'Active'}
+        </Typography>
+      )
+    }
+    // {
+    //   id: 'actions',
+    //   label: 'ACTION',
+    //   editable: false,
+    //   render: (user: any) => (
+    //     <ActionButton
+    //       handleEdit={handleEdit}
+    //       handleSave={handleSave}
+    //       handleActionClick={handleActionClick}
+    //       handleCloseMenu={handleCloseMenu}
+    //       handleCancelEdit={handleCancelEdit}
+    //       isEditing={editingId !== null}
+    //       user={user}
+    //       selectedUser={selectedUser}
+    //       anchorEl={anchorEl}
+    //     />
+    //   )
+    // }
+  ]
 
   console.log('Filtred data', filteredData[0]?.client?.firstName)
 
@@ -151,7 +194,17 @@ const WaitingAdminApprovalTable = () => {
     <Card sx={{ borderRadius: 1, boxShadow: 3 }}>
       <CardHeader title='Waiting Admin Approval' className='pb-4' />
       <div style={{ overflowX: 'auto', padding: '0px' }}>
-        <DataTable data={filteredData} columns={columns} />
+        <ReactTable
+          columns={columns}
+          data={filteredData}
+          keyExtractor={user => user.id.toString()}
+          enableRowSelect
+          enablePagination
+          pageSize={5}
+          stickyHeader
+          maxHeight={600}
+          containerStyle={{ borderRadius: 2 }}
+        />
       </div>
     </Card>
   )

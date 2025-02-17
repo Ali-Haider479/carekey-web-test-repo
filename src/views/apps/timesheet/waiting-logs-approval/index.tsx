@@ -21,7 +21,7 @@ const LogsApprovalDetails = () => {
 
   const fetchInitialData = async () => {
     try {
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/time-log`)
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/time-log/pending-approval-timelogs`)
       setTimeLogData(response.data)
       setIsLoading(false)
     } catch (error) {

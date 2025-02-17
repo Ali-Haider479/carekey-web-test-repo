@@ -40,14 +40,14 @@ const menuItemStyles = (verticalNavOptions: VerticalNavState, theme: Theme): Men
               // backgroundColor: 'var(--mui-palette-primary) !important',
               // color: 'var(--mui-palette-primary-main) !important',
               '&::after': {
-                content: '""',
-                position: 'absolute',
-                blockSize: '2.625rem',
-                inlineSize: 4,
-                backgroundColor: 'var(--mui-palette-primary-main)',
-                insetInlineEnd: 0,
-                borderStartStartRadius: 'var(--mui-shape-borderRadius)',
-                borderEndStartRadius: 'var(--mui-shape-borderRadius)'
+                // content: '""',
+                // position: 'absolute',
+                // blockSize: '2.625rem',
+                // inlineSize: 4,
+                // backgroundColor: 'var(--mui-palette-primary-main)',
+                // insetInlineEnd: 0,
+                // borderStartStartRadius: 'var(--mui-shape-borderRadius)',
+                // borderEndStartRadius: 'var(--mui-shape-borderRadius)'
               }
             }
           }

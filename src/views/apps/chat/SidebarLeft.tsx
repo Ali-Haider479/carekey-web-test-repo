@@ -170,14 +170,14 @@ const SidebarLeft = (props: Props) => {
   const [isModalShow, setIsModalShow] = useState(false)
   const [clients, setClients] = useState<any>([])
   const [caregivers, setCaregivers] = useState<any>([])
-  const { data: session } = useSession()
+  const authUser: any = JSON.parse(localStorage.getItem('AuthUser') ?? '')
 
   useEffect(() => {
     const fetchClients = async () => {
       try {
-        // const tenantId = session?.user?.tenant?.id
-        const tenantId = 1
-        const clientList: any = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/user/clientUsers/${tenantId}`)
+        const clientList: any = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/user/clientUsers/${authUser?.tenant?.id}`
+        )
 
         const formattedClients =
           clientList?.data?.map((item: any) => {
@@ -188,10 +188,11 @@ const SidebarLeft = (props: Props) => {
             }
           }) || []
 
-        const caregiverList: any = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/user/tenant/${tenantId}`)
-        console.log('LIST CG D', caregiverList.data, session?.user.id)
+        const caregiverList: any = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/user/tenant/${authUser?.tenant?.id}`
+        )
         const formattedCaregivers = caregiverList.data
-          .filter((item: any) => item !== null && item.id != session?.user?.id) // Filter out null and current user
+          .filter((item: any) => item !== null && item.id != authUser?.id) // Filter out null and current user
           ?.map((item: any) => ({
             key: `${item?.id}-${item?.userName}`,
             value: item?.id,
@@ -205,7 +206,7 @@ const SidebarLeft = (props: Props) => {
       }
     }
     fetchClients()
-  }, [session])
+  }, [])
 
   const handleChange = (
     event: SyntheticEvent<Element, Event>,
@@ -236,17 +237,17 @@ const SidebarLeft = (props: Props) => {
 
   const onSubmit = async (data: FormItems) => {
     const { caregiverId, clientId } = data
-    const chatRoomName = `chatroom-${Math.min(session?.user?.id, Number(caregiverId))}-${Math.max(session?.user?.id, Number(caregiverId))}-${clientId}`
+    const chatRoomName = `chatroom-${Math.min(authUser?.id, Number(caregiverId))}-${Math.max(authUser?.id, Number(caregiverId))}-${clientId}`
 
     dispatch(
       createChatRoom({
         chatRoomName,
-        caregiverId: session?.user?.id,
+        caregiverId: authUser?.id,
         clientId: Number(clientId),
         otherCaregiverId: Number(caregiverId)
       })
     )
-    dispatch(fetchChatRooms(session?.user?.id))
+    dispatch(fetchChatRooms(authUser?.id))
     handleModalClose()
   }
 

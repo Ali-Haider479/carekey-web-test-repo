@@ -4,11 +4,15 @@ import React, { forwardRef, useEffect, useImperativeHandle, useState } from 'rea
 import CustomTextField from '@core/components/custom-inputs/CustomTextField'
 import { FormProvider, useForm, useFormContext } from 'react-hook-form'
 import CustomDropDown from '@core/components/custom-inputs/CustomDropDown'
-import { Button, Card, CardContent, IconButton, InputAdornment } from '@mui/material'
+import { Button, Card, CardContent, IconButton, InputAdornment, InputLabel, Select } from '@mui/material'
 import Grid from '@mui/material/Grid2'
 import axios from 'axios'
 import ControlledDatePicker from '@/@core/components/custom-inputs/ControledDatePicker'
 import ControlledTextArea from '@/@core/components/custom-inputs/ControlledTextArea'
+import MenuItem from '@mui/material/MenuItem'
+import FormControl from '@mui/material/FormControl'
+import TextField from '@mui/material/TextField'
+import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
 
 type Props = {
   onFinish: any
@@ -26,10 +30,10 @@ interface FormDataType {
 
   // Assign Client
   clientId?: number
-  assignmentDate: Date
-  unassignmentDate: Date
-  assignmentNotes: string
-  scheduleHours: number
+  assignmentDate?: Date | null
+  unassignmentDate?: Date | null
+  assignmentNotes?: string
+  scheduleHours?: number
 
   // Mailing Address
   address?: string
@@ -48,6 +52,9 @@ const LoginInfoComponent = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
   const {
     control,
     formState: { errors },
+    register,
+    getValues,
+    setValue,
     handleSubmit // Add this if you want to use form submission
   } = methods // Use methods instead of useFormContext
 
@@ -63,6 +70,8 @@ const LoginInfoComponent = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
   const [clientList, setClientList] = useState<any>()
   const [isPasswordShown, setIsPasswordShown] = useState(false)
   const [isConfirmPasswordShown, setIsConfirmPasswordShown] = useState(false)
+  const [assignmentDate, setAssignmentDate] = useState<Date | null>(null)
+  const [unAssignmentDate, setUnAssignmentDate] = useState<Date | null>(null)
 
   const handleClickShowPassword = () => setIsPasswordShown(show => !show)
 
@@ -178,6 +187,7 @@ const LoginInfoComponent = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
                   type={'email'}
                   error={errors.additionalEmailAddress}
                   control={control}
+                  isRequired={false}
                 />
               </Grid>
 
@@ -201,66 +211,86 @@ const LoginInfoComponent = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
             <h2 className='text-xl font-semibold mt-10 mb-6'>Assign Client</h2>
             <Grid container spacing={4}>
               <Grid size={{ xs: 12, sm: 4 }}>
-                <CustomDropDown
-                  label='Select a client'
-                  optionList={
-                    clientList?.data?.map((item: any) => {
-                      return {
-                        key: `${item.id}-${item.firstName}`,
-                        value: item.id,
-                        optionString: `${item.firstName} ${item.lastName}`
-                      }
-                    }) || [
-                      {
-                        key: `1-Mudassir`,
-                        value: 1,
-                        optionString: `Mudassir Ahmad`
-                      }
-                    ]
+                <FormControl fullWidth className='relative' >
+                  <InputLabel size='small'>Client</InputLabel>
+                  <Select {...register('clientId', { required: false })} name='clientId' label='Client' size='small'>
+                    {clientList?.data?.map((item: any) => {
+                      return (
+                        <MenuItem key={item.id} value={item.id}>
+                          {item.firstName} {item.lastName}
+                        </MenuItem>
+                      )
+                    })}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid size={{ xs: 12, sm: 4 }}>
+                <AppReactDatepicker
+                  {...register('assignmentDate', { required: false })}
+                  selected={getValues('assignmentDate') || assignmentDate}
+                  onChange={date => {
+                    console.log('Date:', date)
+                    setValue('assignmentDate', date)
+                    setAssignmentDate(date)
+                  }} // Pass the date to react-hook-form
+                  placeholderText='MM/DD/YYYY'
+                  customInput={
+                    <TextField
+                      fullWidth
+                      size='small'
+                      name='assignmentDate'
+                      label='Assignment Date'
+                      placeholder='MM/DD/YYYY'
+                    />
                   }
-                  name={'clientId'}
-                  control={control}
-                  error={errors.clientId}
-                  defaultValue={''}
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 4 }}>
-                <ControlledDatePicker
-                  name={'assignmentDate'}
-                  control={control}
-                  error={errors.assignmentDate}
-                  label={'Assignment Date'}
-                  defaultValue={undefined}
+                <AppReactDatepicker
+                  {...register('unassignmentDate', { required: false })}
+                  selected={getValues('unassignmentDate') || unAssignmentDate}
+                  onChange={date => {
+                    console.log('Date:', date)
+                    setValue('unassignmentDate', date)
+                    setUnAssignmentDate(date)
+                  }} // Pass the date to react-hook-form
+                  placeholderText='MM/DD/YYYY'
+                  customInput={
+                    <TextField
+                      fullWidth
+                      size='small'
+                      name='unassignmentDate'
+                      label='Unassignment Date'
+                      placeholder='MM/DD/YYYY'
+                    />
+                  }
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 4 }}>
-                <ControlledDatePicker
-                  name={'unassignmentDate'}
-                  control={control}
-                  error={errors.unassignmentDate}
-                  label={'Unassignment Date'}
-                  defaultValue={undefined}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, sm: 4 }}>
-                <CustomTextField
+                <TextField
+                  {...register('scheduleHours', { required: false })}
                   label={'Scheduled Hours'}
-                  placeHolder={'Scheduled Hours'}
+                  placeholder={'Scheduled Hours'}
                   name={'scheduleHours'}
                   defaultValue={''}
                   type={'number'}
-                  error={errors.scheduleHours}
-                  control={control}
+                  size='small'
+                  fullWidth
                 />
               </Grid>
             </Grid>
             <Grid container spacing={4} sx={{ marginTop: 4 }}>
-              <ControlledTextArea
-                name={'assignmentNotes'}
-                control={control}
+              <TextField
+                {...register('assignmentNotes', { required: false })}
                 label={'Assignment Notes'}
-                placeHolder={'Assignment Notes'}
+                placeholder={'Assignment Notes'}
+                name={'assignmentNotes'}
                 defaultValue={''}
+                type={'text'}
+                size='small'
+                fullWidth
+                multiline
+                rows={4}
               />
             </Grid>
 

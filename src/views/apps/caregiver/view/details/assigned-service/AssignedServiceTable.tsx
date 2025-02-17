@@ -13,6 +13,7 @@ import { GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
 import DataTable from '@/@core/components/mui/DataTable'
 import { List, ListItem, Typography } from '@mui/material'
 import axios from 'axios'
+import { dark, light } from '@mui/material/styles/createPalette'
 
 // type AccountHistory = {
 //   key: number
@@ -163,7 +164,11 @@ const AssignedServiceTable = () => {
       renderCell: (params: GridRenderCellParams) => (
         <div className='flex flex-row gap-2 mt-2'>
           <div className='p-1 border border-[#666CFF] border-opacity-[50%] rounded-sm'>
-            <Typography className='text-[#4B0082]'>{params?.row?.service[0]?.name}</Typography>
+            <Typography
+              className={`${light ? 'text-[#4B0082]' : 'text-[#7013b7]'} ${dark ? 'text-[#7013b7]' : 'text-[#4B0082]'}`}
+            >
+              {params?.row?.service[0]?.name}
+            </Typography>
           </div>
         </div>
       )

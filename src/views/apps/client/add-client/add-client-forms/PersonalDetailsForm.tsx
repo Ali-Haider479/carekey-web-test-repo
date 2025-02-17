@@ -1,16 +1,17 @@
 'use client'
-import React, { forwardRef, useImperativeHandle } from 'react'
+import React, { forwardRef, useImperativeHandle, useState } from 'react'
 import Grid from '@mui/material/Grid2'
 import CustomTextField from '@core/components/custom-inputs/CustomTextField'
-import { Controller, FormProvider, useForm, useFormContext } from 'react-hook-form'
+import { FormProvider, useForm, useFormContext } from 'react-hook-form'
 // import AntdDatePickerFeatureMUI from "../shared/AntdDatePickerFeatureMUI";
 import CustomRadioButton from '@core/components/custom-inputs/CustomRadioButton'
-import CustomDropDown from '@core/components/custom-inputs/CustomDropDown'
-import CustomAmountInput from '@core/components/custom-inputs/CustomAmountInput'
-import { Card, CardContent, TextField, Typography } from '@mui/material'
+import { Card, CardContent, InputAdornment, InputLabel, Select, Typography } from '@mui/material'
 import ControlledDatePicker from '@/@core/components/custom-inputs/ControledDatePicker'
 import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
 import { PersonalDetailsFormDataType } from './formTypes'
+import TextField from '@mui/material/TextField'
+import MenuItem from '@mui/material/MenuItem'
+import FormControl from '@mui/material/FormControl'
 
 type Props = {
   form?: any
@@ -19,6 +20,8 @@ type Props = {
 }
 
 const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish, defaultValues }, ref) => {
+  const [dischargeDate, setDischargeDate] = useState<Date | null>(null)
+
   const methods = useForm<PersonalDetailsFormDataType>({
     mode: 'onSubmit',
     reValidateMode: 'onChange',
@@ -33,12 +36,15 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
   const {
     control,
     formState: { errors },
+    register,
+    getValues,
+    setValue,
     handleSubmit // Add this if you want to use form submission
   } = methods // Use methods instead of useFormContext
 
   const onSubmit = (data: PersonalDetailsFormDataType) => {
     console.log('Submitted Data:', data)
-    onFinish(data) // Pass form data to parent
+    onFinish({ ...data, dateOfDischarge: dischargeDate }) // Pass form data to parent
   }
   return (
     <FormProvider {...methods}>
@@ -60,14 +66,15 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
               </Grid>
 
               <Grid size={{ xs: 12, sm: 4 }}>
-                <CustomTextField
+                <TextField
+                  {...register('middleName', { required: false })}
                   label={'Middle Name'}
-                  placeHolder={'D'}
+                  placeholder={'D'}
                   name={'middleName'}
                   defaultValue={''}
                   type={'text'}
-                  error={errors.middleName}
-                  control={control}
+                  size='small'
+                  fullWidth
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 4 }}>
@@ -93,12 +100,24 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
               </Grid>
 
               <Grid size={{ xs: 12, sm: 4 }}>
-                <ControlledDatePicker
-                  name={'dateOfDischarge'}
-                  control={control}
-                  error={errors.dateOfDischarge}
-                  label={'Discharge Date'}
-                  defaultValue={undefined}
+                <AppReactDatepicker
+                  {...register('dateOfDischarge', { required: false })}
+                  selected={getValues('dateOfDischarge') || dischargeDate}
+                  onChange={date => {
+                    console.log('Date:', date)
+                    setValue('dateOfDischarge', date)
+                    setDischargeDate(date)
+                  }} // Pass the date to react-hook-form
+                  placeholderText='MM/DD/YYYY'
+                  customInput={
+                    <TextField
+                      fullWidth
+                      size='small'
+                      name='dateOfDischarge'
+                      label='Discharge Date'
+                      placeholder='MM/DD/YYYY'
+                    />
+                  }
                 />
               </Grid>
 
@@ -131,27 +150,28 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                   radioOptions={[
                     {
                       key: 1,
-                      value: 'female',
-                      label: 'Female'
+                      value: 'male',
+                      label: 'Male'
                     },
                     {
                       key: 2,
-                      value: 'male',
-                      label: 'Male'
+                      value: 'female',
+                      label: 'Female'
                     }
                   ]}
                 />
               </Grid>
 
               <Grid size={{ xs: 12, sm: 4 }}>
-                <CustomTextField
+                <TextField
+                  {...register('socialSecurity', { required: false })}
                   label={'Social Security'}
-                  placeHolder={'please enter Social Security'}
+                  placeholder={'please enter Social Security'}
                   name={'socialSecurity'}
-                  defaultValue={''}
+                  defaultValue={undefined}
                   type={'number'}
-                  error={errors.socialSecurity}
-                  control={control}
+                  size='small'
+                  fullWidth
                 />
               </Grid>
 
@@ -168,132 +188,160 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
               </Grid>
 
               <Grid size={{ xs: 12, sm: 4 }}>
-                <CustomTextField
+                <TextField
+                  {...register('additionalPhoneNumber', { required: false })}
                   label={'Additional Phone Number'}
-                  placeHolder={'please enter Additional Phone Number'}
+                  placeholder={'please enter Additional Phone Number'}
                   name={'additionalPhoneNumber'}
-                  defaultValue={''}
+                  defaultValue={undefined}
                   type={'number'}
-                  error={errors.additionalPhoneNumber}
-                  control={control}
+                  size='small'
+                  fullWidth
                 />
               </Grid>
 
               <Grid size={{ xs: 12, sm: 4 }}>
-                <CustomTextField
+                <TextField
+                  {...register('emergencyContactName', { required: false })}
                   label={'Emergency Contact Name'}
-                  placeHolder={'please enter Emergency Contact Name'}
+                  placeholder={'please enter Emergency Contact Name'}
                   name={'emergencyContactName'}
-                  defaultValue={''}
+                  defaultValue={undefined}
                   type={'text'}
-                  error={errors.emergencyContactName}
-                  control={control}
+                  size='small'
+                  fullWidth
                 />
               </Grid>
 
               <Grid size={{ xs: 12, sm: 4 }}>
-                <CustomTextField
+                <TextField
+                  {...register('emergencyContactNumber', { required: false })}
                   label={'Emergency Contact Number'}
-                  placeHolder={'please enter Emergency Contact Number'}
+                  placeholder={'please enter Emergency Contact Number'}
                   name={'emergencyContactNumber'}
-                  defaultValue={''}
+                  defaultValue={undefined}
                   type={'number'}
-                  error={errors.emergencyContactNumber}
-                  control={control}
+                  size='small'
+                  fullWidth
                 />
               </Grid>
 
               <Grid size={{ xs: 12, sm: 4 }}>
-                <CustomTextField
+                <TextField
+                  {...register('emergencyEmail', { required: false })}
                   label={'Emergency Email ID'}
-                  placeHolder={'please enter Emergency Email ID'}
+                  placeholder={'please enter Emergency Email ID'}
                   name={'emergencyEmail'}
                   defaultValue={''}
                   type={'email'}
-                  error={errors.emergencyEmail}
-                  control={control}
+                  size='small'
+                  fullWidth
                 />
               </Grid>
 
               <Grid size={{ xs: 12, sm: 4 }}>
-                <CustomDropDown
-                  name={'sharedCare'}
-                  control={control}
-                  error={errors.sharedCare}
-                  label={'Shared Care'}
-                  optionList={[{ key: 1, value: 'none', optionString: 'None' }]}
-                  defaultValue={''}
-                />
+                <FormControl fullWidth className='relative'>
+                  <InputLabel size='small'>Shared Care</InputLabel>
+                  <Select
+                    {...register('sharedCare', { required: false })}
+                    name='sharedCare'
+                    label='Shared Care'
+                    size='small'
+                  >
+                    <MenuItem value='none'>None</MenuItem>
+                  </Select>
+                </FormControl>
               </Grid>
 
               <Grid size={{ xs: 12, sm: 4 }}>
-                <CustomTextField
+                <TextField
+                  {...register('insuranceCode', { required: false })}
                   label={'Insurance Code'}
-                  placeHolder={'please enter Insurance Code'}
+                  placeholder={'please enter Insurance Code'}
                   name={'insuranceCode'}
-                  defaultValue={''}
+                  defaultValue={undefined}
                   type={'number'}
-                  error={errors.insuranceCode}
-                  control={control}
+                  size='small'
+                  fullWidth
                 />
               </Grid>
 
               <Grid size={{ xs: 12, sm: 4 }}>
-                <CustomTextField
+                <TextField
+                  {...register('clientCode', { required: false })}
                   label={'Client Code'}
-                  placeHolder={'please enter Client Code'}
+                  placeholder={'please enter Client Code'}
                   name={'clientCode'}
-                  defaultValue={''}
+                  defaultValue={undefined}
                   type={'number'}
-                  error={errors.clientCode}
-                  control={control}
+                  size='small'
+                  fullWidth
                 />
               </Grid>
 
               <Grid size={{ xs: 12, sm: 4 }}>
-                <CustomTextField
+                <TextField
+                  {...register('medicalSpendDown', { required: false })}
                   label={'Medical Spend Down'}
-                  placeHolder={'please enter Medical Spend Down'}
+                  placeholder={'please enter Medical Spend Down'}
                   name={'medicalSpendDown'}
-                  defaultValue={''}
-                  type={'text'}
-                  error={errors.medicalSpendDown}
-                  control={control}
+                  defaultValue={undefined}
+                  type={'number'}
+                  size='small'
+                  fullWidth
                 />
               </Grid>
 
               <Grid size={{ xs: 12, sm: 4 }}>
-                <CustomTextField
+                <TextField
+                  {...register('medicalSpendDown2', { required: false })}
                   label={'Medical Spend Down'}
-                  placeHolder={'please enter Medical Spend Down'}
+                  placeholder={'please enter Medical Spend Down'}
                   name={'medicalSpendDown2'}
-                  defaultValue={''}
-                  type={'text'}
-                  error={errors.medicalSpendDown2}
-                  control={control}
+                  defaultValue={undefined}
+                  type={'number'}
+                  size='small'
+                  fullWidth
                 />
               </Grid>
 
               <Grid size={{ xs: 12, sm: 4 }}>
-                <CustomAmountInput
-                  name={'amount'}
-                  control={control}
+                <TextField
+                  {...register('amount', {
+                    required: false,
+                    pattern: {
+                      value: /^\d*\.?\d{0,2}$/, // Allows numbers with up to 2 decimal places
+                      message: 'Please enter a valid amount'
+                    }
+                  })}
                   label={'Amount'}
-                  placeHolder={'12121'}
-                  defaultValue={''}
-                  type={Number}
+                  placeholder={'12121'}
+                  name={'amount'}
+                  defaultValue={undefined}
+                  itemType='number'
+                  type={'number'}
+                  size='small'
+                  fullWidth
+                  InputProps={{
+                    // Add dollar sign
+                    startAdornment: <InputAdornment position='start'>$</InputAdornment>,
+                    inputMode: 'decimal' // Use decimal keyboard on mobile
+                  }}
                 />
               </Grid>
 
               <Grid size={{ xs: 12, sm: 4 }}>
-                <CustomDropDown
-                  name={'pcaChoice'}
-                  control={control}
-                  error={errors.pcaChoice}
-                  label={'PCA Choice'}
-                  optionList={[{ key: 1, value: 'none', optionString: 'None' }]}
-                  defaultValue={''}
-                />
+                <FormControl fullWidth className='relative'>
+                  <InputLabel size='small'>PCA Choice</InputLabel>
+                  <Select
+                    {...register('pcaChoice', { required: false })}
+                    name='pcaChoice'
+                    label='PCA Choice'
+                    size='small'
+                  >
+                    <MenuItem value='none'>None</MenuItem>
+                  </Select>
+                </FormControl>
               </Grid>
             </Grid>
           </CardContent>
@@ -340,7 +388,7 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                   label={'ZIP Code'}
                   placeHolder={'please enter ZipCode'}
                   name={'primaryResidentialZipCode'}
-                  defaultValue={''}
+                  defaultValue={undefined}
                   type={'number'}
                   error={errors.primaryResidentialZipCode}
                   control={control}
@@ -401,47 +449,51 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
             <Typography className='text-xl font-semibold mb-4'>Secondary Residential Address</Typography>
             <Grid container spacing={4}>
               <Grid size={{ xs: 12, sm: 4 }}>
-                <CustomTextField
+                <TextField
+                  {...register('secondaryResidentialAddress', { required: false })}
                   label={'Address'}
-                  placeHolder={'please enter Address'}
+                  placeholder={'please enter Address'}
                   name={'secondaryResidentialAddress'}
                   defaultValue={''}
                   type={'text'}
-                  error={errors.secondaryResidentialAddress}
-                  control={control}
+                  size='small'
+                  fullWidth
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 4 }}>
-                <CustomTextField
+                <TextField
+                  {...register('secondaryResidentialCity', { required: false })}
                   label={'City'}
-                  placeHolder={'please enter City'}
+                  placeholder={'please enter City'}
                   name={'secondaryResidentialCity'}
                   defaultValue={''}
                   type={'text'}
-                  error={errors.secondaryResidentialCity}
-                  control={control}
+                  size='small'
+                  fullWidth
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 4 }}>
-                <CustomTextField
+                <TextField
+                  {...register('secondaryResidentialState', { required: false })}
                   label={'State'}
-                  placeHolder={'please enter State'}
+                  placeholder={'please enter State'}
                   name={'secondaryResidentialState'}
                   defaultValue={''}
                   type={'text'}
-                  error={errors.secondaryResidentialState}
-                  control={control}
+                  size='small'
+                  fullWidth
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 4 }}>
-                <CustomTextField
+                <TextField
+                  {...register('secondaryResidentialZipCode', { required: false })}
                   label={'Zip Code'}
-                  placeHolder={'please enter Zip Code'}
+                  placeholder={'please enter Zip Code'}
                   name={'secondaryResidentialZipCode'}
-                  defaultValue={''}
+                  defaultValue={undefined}
                   type={'number'}
-                  error={errors.secondaryResidentialZipCode}
-                  control={control}
+                  size='small'
+                  fullWidth
                 />
               </Grid>
             </Grid>
@@ -452,47 +504,51 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
             <Typography className='text-xl font-semibold mb-4'>Client / Responsible Party</Typography>
             <Grid container spacing={4}>
               <Grid size={{ xs: 12, sm: 4 }}>
-                <CustomTextField
+                <TextField
+                  {...register('clientResponsibilityPartyName', { required: false })}
                   label={'Name'}
-                  placeHolder={'please enter Name'}
+                  placeholder={'please enter Name'}
                   name={'clientResponsibilityPartyName'}
                   defaultValue={''}
                   type={'text'}
-                  error={errors.clientResponsibilityPartyName}
-                  control={control}
+                  size='small'
+                  fullWidth
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 4 }}>
-                <CustomTextField
+                <TextField
+                  {...register('clientResponsibilityPartyEmailAddress', { required: false })}
                   label={'Email Address'}
-                  placeHolder={'please enter Email Address'}
+                  placeholder={'please enter Email Address'}
                   name={'clientResponsibilityPartyEmailAddress'}
                   defaultValue={''}
-                  type={'text'}
-                  error={errors.clientResponsibilityPartyEmailAddress}
-                  control={control}
+                  type={'email'}
+                  size='small'
+                  fullWidth
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 4 }}>
-                <CustomTextField
+                <TextField
+                  {...register('clientResponsibilityPartyPhoneNumber', { required: false })}
                   label={'Phone Number'}
-                  placeHolder={'please enter Phone Number'}
+                  placeholder={'please enter Phone Number'}
                   name={'clientResponsibilityPartyPhoneNumber'}
-                  defaultValue={''}
-                  type={'text'}
-                  error={errors.clientResponsibilityPartyPhoneNumber}
-                  control={control}
+                  defaultValue={undefined}
+                  type={'number'}
+                  size='small'
+                  fullWidth
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 4 }}>
-                <CustomTextField
-                  label={'FAX Number'}
-                  placeHolder={'please enter Fax Number'}
+                <TextField
+                  {...register('clientResponsibilityPartyFaxNumber', { required: false })}
+                  label={'Fax Number'}
+                  placeholder={'please enter Fax Number'}
                   name={'clientResponsibilityPartyFaxNumber'}
-                  defaultValue={''}
-                  type={'text'}
-                  error={errors.clientResponsibilityPartyFaxNumber}
-                  control={control}
+                  defaultValue={undefined}
+                  type={'number'}
+                  size='small'
+                  fullWidth
                 />
               </Grid>
             </Grid>

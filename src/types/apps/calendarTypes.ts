@@ -46,4 +46,10 @@ export type AddEventSidebarType = {
   caregiverList?: any
   clientList?: any
   serviceList?: any
+  setIsEditedOff?: () => void
+  isEdited?: boolean
+  handleAddEvent?: (AddEvent: any) => void
+  handleUpdateEvent?: (updatedEvent: any) => void
+  payPeriod?: any
+  data?: any
 }

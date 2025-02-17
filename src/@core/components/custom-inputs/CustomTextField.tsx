@@ -9,20 +9,24 @@ type Props = {
   name: string
   defaultValue: any
   type: any
-  error: any
+  error?: any
   control: any
   slotProps?: any
   disabled?: boolean
+  isRequired?: boolean
 }
 
 const CustomTextField = (props: Props) => {
+  const { isRequired = true } = props;
   return (
     <div>
       <Controller
         name={props.name}
         control={props.control}
         defaultValue={props.defaultValue} // Set the default value
-        rules={{ required: `${props.label} is required` }} // Validation rules
+        rules={{
+          required: isRequired ? `${props.label} is required` : false // Apply required rule conditionally
+        }}
         render={({ field }) => (
           <TextField
             {...field}

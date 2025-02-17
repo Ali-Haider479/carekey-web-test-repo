@@ -6,12 +6,14 @@ import { TextField } from '@mui/material'
 type Props = {
   name: string
   control: any
-  error: any
+  error?: any
   label: string
   defaultValue: any
+  isRequired?: boolean
 }
 
 const ControlledDatePicker = (props: Props) => {
+  const { isRequired = true } = props
   const defaultDate = Date.now()
   let defaultFormattedDate: any = new Date(defaultDate)
 
@@ -26,7 +28,7 @@ const ControlledDatePicker = (props: Props) => {
       name={props.name}
       control={props.control}
       defaultValue={props.defaultValue}
-      rules={{ required: `${props.label} is required` }}
+      rules={{ required: isRequired ? `${props.label} is required` : false }}
       render={({ field }) => (
         <AppReactDatepicker
           selected={field.value}

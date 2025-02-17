@@ -90,10 +90,10 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
           {dictionary['navigation'].dashboard}
         </MenuItem>
         <MenuItem
-          href={`/${locale}/apps/email`}
+          href={`/${locale}/apps/rcm`}
           icon={<i className='bx-money' />}
           exactMatch={false}
-          activeUrl='/apps/email'
+          activeUrl='/apps/rcm'
         >
           {dictionary['navigation'].rcm}
         </MenuItem>

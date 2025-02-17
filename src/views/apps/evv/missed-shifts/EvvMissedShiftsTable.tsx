@@ -2,10 +2,11 @@
 
 import React, { useState, useEffect, useMemo } from 'react'
 import Card from '@mui/material/Card'
-import { CircularProgress, Typography } from '@mui/material'
+import { CircularProgress, IconButton, Typography } from '@mui/material'
 import ReactTable from '@/@core/components/mui/ReactTable'
 import { calculateHoursWorked, formattedDate } from '@/utils/helperFunctions'
 import EvvFilters from '../completed-shifts/EvvFilter'
+import MoreVertIcon from '@mui/icons-material/MoreVert'
 
 interface Caregiver {
   firstName: string
@@ -35,34 +36,53 @@ interface Props {
 const EvvMissedShiftsTable = ({ timeLogData, isLoading }: Props) => {
   const columns = [
     {
-      accessorKey: 'caregiverName',
-      header: 'CAREGIVER NAME',
-      Cell: ({ row }: any) => (
-        <Typography>{`${row.original.caregiver.firstName} ${row.original.caregiver.lastName}`}</Typography>
+      id: 'caregiverName',
+      label: 'CAREGIVER NAME',
+      minWidth: 200,
+      editable: true,
+      sortable: true,
+      render: (user: any) => (
+        <Typography color='primary'>{`${user?.caregiver?.firstName} ${user?.caregiver?.lastName}`}</Typography>
       )
     },
     {
-      accessorKey: 'clientName',
-      header: 'CLIENT NAME',
-      Cell: ({ row }: any) => (
-        <Typography>{`${row.original.client.firstName} ${row.original.client.lastName}`}</Typography>
+      id: 'clientName',
+      label: 'CLIENT NAME',
+      minWidth: 200,
+      editable: true,
+      sortable: true,
+      render: (user: any) => (
+        <Typography color='primary'>{`${user?.client?.firstName} ${user?.client?.lastName}`}</Typography>
       )
     },
     {
-      accessorKey: 'pro',
-      header: 'PRO',
-      Cell: ({ row }: any) => <Typography>H2014</Typography>
+      id: 'pro',
+      label: 'PRO & MOD',
+      minWidth: 200,
+      editable: false,
+      sortable: true,
+      render: (user: any) => <Typography color='primary'>{user?.client?.authService[0]?.procedureAndModifier}</Typography>
     },
     {
-      accessorKey: 'mod',
-      header: 'MOD',
-      Cell: ({ row }: any) => <Typography>F.159</Typography>
+      id: 'totalHrs',
+      label: 'LOG-IN DURATION',
+      minWidth: 200,
+      editable: false,
+      sortable: true,
+      render: (user: any) => (
+        <Typography color='primary'>{calculateHoursWorked(user?.clockIn, user?.clockOut)}</Typography>
+      )
     },
-    { accessorKey: 'serviceName', header: 'SERVICE' },
     {
-      accessorKey: 'totalHrs',
-      header: 'LOGGED-IN DURATION',
-      Cell: ({ row }: any) => calculateHoursWorked(row.original.clockIn, row.original.clockOut)
+      id: 'actions',
+      label: 'ACTION',
+      editable: false,
+      minWidth: 200,
+      render: (user: any) => (
+        <IconButton onClick={() => console.log('clicked')}>
+          <MoreVertIcon />
+        </IconButton>
+      )
     }
   ]
 
@@ -76,7 +96,17 @@ const EvvMissedShiftsTable = ({ timeLogData, isLoading }: Props) => {
           <CircularProgress />
         </div>
       ) : (
-        <ReactTable columns={columns} data={timeLogData} enableExpanding={false} enableExpandAll={false} />
+        <ReactTable
+          columns={columns}
+          data={timeLogData}
+          keyExtractor={user => user.id.toString()}
+          enableRowSelect
+          enablePagination
+          pageSize={5}
+          stickyHeader
+          maxHeight={600}
+          containerStyle={{ borderRadius: 2 }}
+        />
       )}
     </Card>
   )
