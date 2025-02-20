@@ -200,10 +200,8 @@ const AddEventModal = (props: AddEventSidebarType) => {
 
   const calculateTotalDays = (startDate: Date, endDate: Date) => {
     const start = new Date(startDate)
-    start.setHours(0, 0, 0, 0)
 
     const end = new Date(endDate)
-    end.setHours(0, 0, 0, 0)
 
     // Calculate the difference in days
     const timeDifference = end.getTime() - start.getTime()
@@ -213,9 +211,13 @@ const AddEventModal = (props: AddEventSidebarType) => {
   }
 
   const onSubmit = async () => {
+    console.log('In onSubmit--------------->')
     const startDate = values.startDate
-    const endDate = values.endDate
     const assignedHours = values.assignedHours
+    const endDate =
+      isEdited && calendarStore?.selectedEvent
+        ? new Date(startDate.getTime() + assignedHours * 60 * 60 * 1000)
+        : values.endDate
 
     const bulkEvents: AddEventType[] = []
 
@@ -249,12 +251,11 @@ const AddEventModal = (props: AddEventSidebarType) => {
     }
 
     // Make a single API call with bulk data
-    console.log('In add side bar', isEdited)
     if (isEdited && calendarStore?.selectedEvent) {
-      // console.log('Editing Existing Event!!!!', calendarStore.selectedEvent.id)
-      // console.log('bulkEvents>>>>>', bulkEvents)
-      // console.log(startDate.getHours(), assignedHours)
-      if (startDate.getHours() + assignedHours > 24) {
+      console.log('Editing Existing Event!!!!', calendarStore.selectedEvent.id)
+      console.log('bulkEvents>>>>>', bulkEvents)
+      console.log(startDate.getHours(), assignedHours)
+      if (startDate.getHours() + startDate.getMinutes() / 60 + assignedHours > 24) {
         setAlertMessage({
           message: 'Please select hours with in the date',
           severity: 'error'
@@ -271,7 +272,7 @@ const AddEventModal = (props: AddEventSidebarType) => {
             ...bulkEvents[0]
           }
           const updatedSchedule = await axios.patch(`${process.env.NEXT_PUBLIC_API_URL}/schedule/${eventId}`, patchBody)
-          // handleUpdateEvent(updatedSchedule.data)
+          handleUpdateEvent(updatedSchedule.data)
         }
       } catch (error) {
         console.error('Error updating schedule:', error)
@@ -282,7 +283,7 @@ const AddEventModal = (props: AddEventSidebarType) => {
       try {
         const createSchedule = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/schedule`, bulkEvents)
         console.log('Created schedule:', createSchedule.data)
-        // handleAddEvent(createSchedule.data)
+        handleAddEvent(createSchedule.data)
       } catch (error) {
         console.error('Error creating schedule:', error)
       }
@@ -467,7 +468,7 @@ const AddEventModal = (props: AddEventSidebarType) => {
                   showTimeSelect
                   onSelect={handleStartTime}
                   selected={values.startTime}
-                  timeIntervals={1}
+                  timeIntervals={15}
                   showTimeSelectOnly
                   dateFormat='hh:mm aa'
                   id='time-only-picker'

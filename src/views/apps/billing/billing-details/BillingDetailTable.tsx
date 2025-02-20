@@ -18,39 +18,50 @@ const BillingDetailTable = () => {
       id: 'clientName',
       label: 'CLIENT NAME',
       minWidth: 170,
-      render: (user: any) => (
-        <Typography className={`font-semibold ${dark ? 'text-[#7112B7]' : 'text-[#4B0082]'}`} color='primary'>
-          {`${user?.client.firstName} ${user?.client.lastName}`}
-        </Typography>
-      )
+      render: (item: any) => {
+        const client = item.timelog[0].client
+        console.log(client)
+        return (
+          <Typography className={`font-semibold ${dark ? 'text-[#7112B7]' : 'text-[#4B0082]'}`} color='primary'>
+            {`${client?.firstName} ${client?.lastName}`}
+          </Typography>
+        )
+      }
     },
     {
       id: 'caregiverName',
       label: 'CAREGIVER NAME',
       minWidth: 170,
-      render: (user: any) => (
-        <Typography color='primary'> {`${user?.caregiver.firstName} ${user?.caregiver.lastName}`}</Typography>
-      )
+      render: (item: any) => {
+        const caregiver = item.timelog[0].caregiver
+        return <Typography color='primary'> {`${caregiver.firstName} ${caregiver.lastName}`}</Typography>
+      }
     },
     {
       id: 'payer',
       label: 'PAYOR',
       minWidth: 170,
-      render: (user: any) => <Typography color='primary'>MA</Typography>
+      render: (item: any) => {
+        const payer = item.timelog[0].client.serviceAuth[0].payer
+        return <Typography color='primary'>{payer}</Typography>
+      }
     },
     {
-      id: 'proCode',
-      label: 'PRO CODE',
+      id: 'proMod',
+      label: 'PRO & MOD',
       minWidth: 170,
-      render: (user: any) => <Typography color='primary'>T1020</Typography>
+      render: (item: any) => {
+        const proMod = `${item.timelog[0].client.serviceAuth[0]?.procedureCode ?? ''}-${item.timelog[0].client.serviceAuth[0]?.modifierCode ?? ''}`
+        return <Typography color='primary'>{proMod}</Typography>
+      }
     },
     {
       id: 'serviceDateRange',
       label: 'SERVICE DATE',
       minWidth: 170,
-      render: (user: any) => {
-        const clockIn = user?.clockIn ? new Date(user?.clockIn) : new Date()
-        const clockOut = user?.clockOut ? new Date(user?.clockOut) : new Date()
+      render: (item: any) => {
+        const clockIn = item?.timelog[0].clockIn ? new Date(item?.timelog[0].clockIn) : new Date()
+        const clockOut = item?.timelog[0].clockOut ? new Date(item?.timelog[0].clockOut) : new Date()
         return (
           <Typography color='primary'>{`${clockIn.toLocaleDateString('en-US')} - ${clockOut.toLocaleDateString('en-US')}`}</Typography>
         )
@@ -60,31 +71,25 @@ const BillingDetailTable = () => {
       id: 'claimDate',
       label: 'CLAIM DATE',
       minWidth: 170,
-      render: (user: any) => {
-        const clockOut = user?.clockOut ? new Date(user?.clockOut) : new Date()
-        return <Typography color='primary'>{`${clockOut.toLocaleDateString('en-US')}`}</Typography>
+      render: (item: any) => {
+        const claimDate = item?.claimDate ? new Date(item?.claimDate) : new Date()
+        return <Typography color='primary'>{`${claimDate.toLocaleDateString('en-US')}`}</Typography>
       }
     },
     {
       id: 'billedAmount',
       label: 'BILLED AMT',
       minWidth: 170,
-      render: (user: any) => {
-        const hrs = calculateHoursWorked(user?.clockIn, user?.clockOut)
-        const amount = parseFloat(hrs) > 0 ? parseFloat(hrs) * 1000 : 10
-        const formattedAmount = amount.toFixed(2) // Format to 2 decimal places
-        return <Typography color='primary'>{`$ ${formattedAmount}`}</Typography>
+      render: (item: any) => {
+        return <Typography color='primary'>{`$ ${item.billedAmount}`}</Typography>
       }
     },
     {
       id: 'receivedAmount',
       label: 'RECEIVED AMT',
       minWidth: 170,
-      render: (user: any) => {
-        const hrs = calculateHoursWorked(user?.clockIn, user?.clockOut)
-        return (
-          <Typography color='primary'>{`$ ${parseFloat(hrs) > 0 ? parseFloat(hrs) * 1000 * 0.8 : 10 * 0.8}`}</Typography>
-        )
+      render: (item: any) => {
+        return <Typography color='primary'>{`$ ${item.receivedAmount}`}</Typography>
       }
     },
 
@@ -92,9 +97,11 @@ const BillingDetailTable = () => {
       id: 'claimStatus',
       label: 'CLAIM STATUS',
       minWidth: 170,
-      render: (user: any) => (
-        <Typography className={`bg-[#6062E8] bg-opacity-20 text-[#6062E8] rounded-2xl px-2 w-[fit-content]`}>
-          SCHEDULED
+      render: (item: any) => (
+        <Typography
+          className={`${item.claimStatus === 'Scheduled' ? 'bg-[#6062E8] text-[#6062E8]' : item.claimStatus === 'Approved' ? 'bg-[#72E1281F] text-[#67C932]' : item.claimStatus === 'Pending' ? 'bg-[#26C6F91F] text-[#21AEDB]' : 'bg-[#FF4D491F] text-[#E8381A]'}bg-opacity-20  rounded-2xl px-2 w-[fit-content]`}
+        >
+          {item.claimStatus}
         </Typography>
       )
     }

@@ -60,7 +60,13 @@ const AssignedServiceTable = () => {
   const fetchAssignClient = async () => {
     try {
       // Fetch assigned clients
-      const clientResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/user/clientUsers/${id}`)
+      const caregivers = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/caregivers/caregiver/${id}`)
+      console.log('CAREGIVER USER ', caregivers)
+      // setCurrentUser(caregivers?.data?.user)
+      console.log('url', `${process.env.NEXT_PUBLIC_API_URL}/user/clientUsers/${caregivers?.data?.user?.id}`)
+      const clientResponse = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_URL}/user/clientUsers/${caregivers?.data?.user?.id}`
+      )
       const fetchedClient = clientResponse.data
 
       console.log('Assigned Client --> ', fetchedClient)

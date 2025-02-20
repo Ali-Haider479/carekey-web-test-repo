@@ -1,26 +1,12 @@
 'use client'
-
-// React Imports
-import { useEffect, useState } from 'react'
-
-// MUI Imports
+import { useState } from 'react'
 import Card from '@mui/material/Card'
-import CardHeader from '@mui/material/CardHeader'
 import TextField from '@mui/material/TextField'
-import Chip from '@mui/material/Chip'
-import Avatar from '@mui/material/Avatar'
 import Button from '@mui/material/Button'
 import Grid from '@mui/material/Grid2'
-
-// Third-party Imports
-import { createColumnHelper, flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table'
-import axios from 'axios'
-
-// CSS Module Imports
-import styles from '../CaregiversTable.module.css'
 import { useRouter } from 'next/navigation'
-import { GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
-import DataTable from '@/@core/components/mui/DataTable'
+import ReactTable from '@/@core/components/mui/ReactTable'
+import { CircularProgress, Typography } from '@mui/material'
 
 type Caregiver = {
   itemNumber: number
@@ -34,20 +20,19 @@ type Caregiver = {
 
 interface CaregiverTableProps {
   data: []
+  isLoading: boolean
 }
 
-const CaregiverTable = ({ data }: CaregiverTableProps) => {
-  // State
-  // const [data, setData] = useState<Caregiver[]>([])
+const CaregiverTable = ({ data, isLoading }: CaregiverTableProps) => {
   const [search, setSearch] = useState('')
 
   const router = useRouter()
 
-  const handleNext = (record: any) => {
-    router.push(`/apps/caregiver/${record.id}/detail`)
+  const handleNext = (id: any) => {
+    router.push(`/apps/caregiver/${id}/detail`)
   }
 
-  const newColumns: GridColDef[] = [
+  const newColumns = [
     // {
     //   field: 'itemNumber',
     //   headerName: '#',
@@ -55,61 +40,79 @@ const CaregiverTable = ({ data }: CaregiverTableProps) => {
     //   renderCell: (params: GridRenderCellParams) => <span>{params.row.index + 1}</span>
     // },
     {
-      field: 'id',
-      headerName: 'CAREGIVER ID',
-      flex: 0.5
-    },
-    {
-      field: 'caregiverName',
-      headerName: 'CAREGIVER NAME',
-      flex: 0.5,
-      renderCell: (params: GridRenderCellParams) => {
+      id: 'id',
+      label: 'CAREGIVER ID',
+      minWidth: 200,
+      editable: true,
+      sortable: true,
+      render: (user: any) => {
         return (
-          <span
-            onClick={() => handleNext(params.row)}
-            className='text-[#67C932]'
-          >{`${params.row.firstName} ${params.row.lastName}`}</span>
+          <div className='w-full cursor-pointer' onClick={() => handleNext(user?.id)}>
+            <Typography color='primary'>{user?.id}</Typography>
+          </div>
         )
       }
     },
     {
-      field: 'firstName',
-      headerName: 'FIRST NAME',
-      flex: 0.5
+      id: 'caregiverName',
+      label: 'CAREGIVER NAME',
+      minWidth: 200,
+      editable: true,
+      sortable: true,
+      render: (user: any) => {
+        return (
+          <div className='w-full cursor-pointer' onClick={() => handleNext(user?.id)}>
+            <Typography
+              // onClick={() => handleNext(user?.id)}
+              className='text-[#67C932]'
+            >{`${user?.firstName} ${user?.lastName}`}</Typography>
+          </div>
+        )
+      }
     },
     {
-      field: 'middleName',
-      headerName: 'MIDDLE NAME',
-      flex: 0.5
+      id: 'firstName',
+      label: 'FIRST NAME',
+      minWidth: 200,
+      editable: true,
+      sortable: true,
+      render: (user: any) => {
+        return (
+          <div className='w-full cursor-pointer' onClick={() => handleNext(user?.id)}>
+            <Typography color='primary'>{user?.firstName}</Typography>
+          </div>
+        )
+      }
     },
     {
-      field: 'lastName',
-      headerName: 'LAST NAME',
-      flex: 0.5
+      id: 'lastName',
+      label: 'LAST NAME',
+      minWidth: 200,
+      editable: true,
+      sortable: true,
+      render: (user: any) => {
+        return (
+          <div className='w-full cursor-pointer' onClick={() => handleNext(user?.id)}>
+            <Typography color='primary'>{user?.lastName}</Typography>
+          </div>
+        )
+      }
     },
     {
-      field: 'caregiverUMPI',
-      headerName: 'CAREGIVER UMPI',
-      flex: 0.5
+      id: 'caregiverUMPI',
+      label: 'CAREGIVER UMPI',
+      minWidth: 200,
+      editable: true,
+      sortable: true,
+      render: (user: any) => {
+        return (
+          <div className='w-full cursor-pointer' onClick={() => handleNext(user?.id)}>
+            <Typography color='primary'>{user?.caregiverUMPI}</Typography>
+          </div>
+        )
+      }
     }
   ]
-
-  // useEffect(() => {
-  //   // Fetch data from the backend API
-  //   const fetchData = async () => {
-  //     try {
-  //       const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/caregivers/1/tenant`)
-  //       const fetchedData = response.data
-  //       console.log('Caregiver List ----> ', fetchedData)
-
-  //       setData(fetchedData)
-  //     } catch (error) {
-  //       console.error('Error fetching data', error)
-  //     }
-  //   }
-
-  //   fetchData()
-  // }, [])
 
   return (
     <Card sx={{ borderRadius: 1, boxShadow: 3, p: 0 }}>
@@ -146,7 +149,23 @@ const CaregiverTable = ({ data }: CaregiverTableProps) => {
 
       {/* Table */}
       <div style={{ overflowX: 'auto' }}>
-        <DataTable columns={newColumns} data={data} />
+        {/* <DataTable columns={newColumns} data={data} /> */}
+        {isLoading ? (
+          <div className='flex items-center justify-center p-10'>
+            <CircularProgress />
+          </div>
+        ) : (
+          <ReactTable
+            columns={newColumns}
+            data={data}
+            keyExtractor={user => user.id.toString()}
+            enablePagination
+            pageSize={5}
+            stickyHeader
+            maxHeight={600}
+            containerStyle={{ borderRadius: 2 }}
+          />
+        )}
       </div>
     </Card>
   )

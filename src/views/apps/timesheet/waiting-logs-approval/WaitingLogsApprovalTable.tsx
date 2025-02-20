@@ -9,6 +9,7 @@ import { GridColDef } from '@mui/x-data-grid'
 import AdUnitsIcon from '@mui/icons-material/AdUnits'
 import { calculateHoursWorked } from '@/utils/helperFunctions'
 import ReactTable from '@/@core/components/mui/ReactTable'
+import { dark } from '@mui/material/styles/createPalette'
 // Updated interfaces to match your data structure
 interface Caregiver {
   id: number
@@ -135,7 +136,9 @@ const WaitingLogsApprovalTable = ({ data, isLoading }: SignatureStatusTableProps
       editable: false,
       sortable: true,
       render: (user: any) => (
-        <Typography color='primary'>{`${user?.client?.firstName} ${user?.client?.lastName}`}</Typography>
+        <Typography className={`${dark ? 'text-[#8082FF]' : 'text-[#4B0082]'}`} color='primary'>
+          {`${user?.client?.firstName} ${user?.client?.lastName}`}
+        </Typography>
       )
     },
     {
@@ -172,7 +175,7 @@ const WaitingLogsApprovalTable = ({ data, isLoading }: SignatureStatusTableProps
     },
     {
       id: 'startDate',
-      label: 'START AND END TIME',
+      label: 'START & END TIME',
       minWidth: 170,
       editable: false,
       sortable: true,
@@ -222,6 +225,12 @@ const WaitingLogsApprovalTable = ({ data, isLoading }: SignatureStatusTableProps
           return <span>N/A</span>
         }
       }
+    },
+    {
+      id: 'logsVia',
+      label: 'LOGGED VIA',
+      minWidth: 170,
+      render: (params: any) => <AdUnitsIcon className='my-3 text-[#8082FF]' />
     },
     {
       id: 'location',

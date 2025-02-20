@@ -6,6 +6,7 @@ import SignatureStatusTable from './SignatureStatusTable'
 import SignatureStatusFilters from './SignatureStatusFilters'
 import { useState, useEffect } from 'react'
 import axios from 'axios'
+import transformToExpandableFormat from '@/utils/transformExpandableData'
 
 // Component Imports
 
@@ -22,7 +23,9 @@ const SignatureDetails = () => {
   const fetchInitialData = async () => {
     try {
       const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/time-log`)
-      setTimeLogData(response.data)
+      console.log('timeLogData', response.data)
+
+      setTimeLogData(response.data.filter((item: any) => item.clockOut != null))
       setIsLoading(false)
     } catch (error) {
       console.error('Error fetching initial data:', error)

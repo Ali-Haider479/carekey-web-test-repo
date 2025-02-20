@@ -17,13 +17,14 @@ type Props = {
   error?: any
   label: string
   optionList: Option[]
-  defaultValue: any
+  defaultValue?: any
   sx?: any
   isRequired?: boolean
+  disabled?: boolean
 }
 
 function CustomDropDown(props: Props) {
-  const { isRequired = true } = props;
+  const { isRequired = true } = props
   return (
     <Controller
       name={props.name}
@@ -39,6 +40,7 @@ function CustomDropDown(props: Props) {
             {...field} // Spread field to bind value and onChange
             label={props.label}
             size='small'
+            disabled={props.disabled}
           >
             {props?.optionList?.map((item: any) => (
               <MenuItem key={item.key} value={item.value}>

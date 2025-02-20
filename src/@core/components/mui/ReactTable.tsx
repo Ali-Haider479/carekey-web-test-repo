@@ -21,6 +21,7 @@ import {
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp'
 import { useTheme } from '@emotion/react'
+import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
 
 export interface Column<T> {
   id: string
@@ -130,7 +131,6 @@ function ReactTable<T extends { subRows?: T[] }>({
   }
 
   const renderCell = (item: T, column: Column<T>) => {
-    console.log('EDIT item', item, column)
     const id = Number(keyExtractor(item))
     const isRowEditing = editingId === id
     if (isRowEditing && column.editable) {
@@ -144,7 +144,8 @@ function ReactTable<T extends { subRows?: T[] }>({
             onChange={e => handleEditChange(id, column.id, e.target.value, item)}
             variant='standard'
             sx={{
-              minWidth: 120,
+              paddingLeft: 2,
+              minWidth: 115,
               '&:before': { borderBottomColor: 'rgba(0, 0, 0, 0.1)' },
               '&:hover:not(.Mui-disabled):before': { borderBottomColor: 'primary.main' }
             }}
@@ -155,6 +156,32 @@ function ReactTable<T extends { subRows?: T[] }>({
               </MenuItem>
             ))}
           </Select>
+        )
+      }
+
+      // Handle datetime fields
+      if (column.id === 'clockIn' || column.id === 'clockOut') {
+        return (
+          <AppReactDatepicker
+            selected={value ? new Date(value) : null}
+            onChange={(date: Date | null) => {
+              handleEditChange(id, column.id, date?.toISOString(), item)
+            }}
+            showTimeSelect
+            timeFormat='HH:mm'
+            timeIntervals={15}
+            dateFormat='MM/dd/yyyy h:mm aa'
+            customInput={
+              <TextField
+                variant='standard'
+                fullWidth
+                sx={{
+                  '& .MuiInput-underline:before': { borderBottomColor: 'rgba(0, 0, 0, 0.1)' },
+                  '& .MuiInput-underline:hover:not(.Mui-disabled):before': { borderBottomColor: 'primary.main' }
+                }}
+              />
+            }
+          />
         )
       }
 

@@ -9,6 +9,8 @@ import DataTable from '@/@core/components/mui/DataTable'
 import { GridColDef } from '@mui/x-data-grid'
 import AdUnitsIcon from '@mui/icons-material/AdUnits'
 import ReactTable from '@/@core/components/mui/ReactTable'
+import { dark } from '@mui/material/styles/createPalette'
+import transformToExpandableFormat from '@/utils/transformExpandableData'
 // Updated interfaces to match your data structure
 interface Caregiver {
   id: number
@@ -59,8 +61,7 @@ const WaitingAdminApprovalTable = () => {
       try {
         // const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/signatures`)
         const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/time-log`)
-        console.log('DATA RECEIVED TIMSEHEET PAGE', response.data)
-        setFilteredData(response.data)
+        setFilteredData(response.data.filter((item: any) => item.clockOut != null))
         setIsLoading(false)
       } catch (error) {
         console.error('Error fetching signatures:', error)
@@ -78,7 +79,9 @@ const WaitingAdminApprovalTable = () => {
       editable: false,
       sortable: true,
       render: (user: any) => (
-        <Typography color='primary'>{`${user?.client?.firstName} ${user?.client?.lastName}`}</Typography>
+        <Typography className={`${dark ? 'text-[#8082FF]' : 'text-[#4B0082]'}`} color='primary'>
+          {`${user?.client?.firstName} ${user?.client?.lastName}`}
+        </Typography>
       )
     },
     {
@@ -97,7 +100,7 @@ const WaitingAdminApprovalTable = () => {
 
     {
       id: 'serviceName',
-      label: 'SERVICE NAME',
+      label: 'SERVICE TAKEN',
       minWidth: 170,
       editable: false,
       sortable: true,
@@ -138,7 +141,7 @@ const WaitingAdminApprovalTable = () => {
       )
     },
     {
-      id: 'tsApprovalStatus',
+      id: 'signatureStatus',
       label: 'SIGNATURE STATUS',
       minWidth: 170,
       editable: true,
@@ -147,14 +150,14 @@ const WaitingAdminApprovalTable = () => {
         <Typography
           color='primary'
           className={`${
-            user?.tsApprovalStatus === 'Approved'
+            user?.signature?.signatureStatus === 'Taken'
               ? 'text-[#71DD37]'
-              : user?.tsApprovalStatus === 'Rejected'
+              : user?.signature?.signatureStatus === 'Missed'
                 ? 'text-[#FF4C51]'
                 : 'text-[#FFAB00]'
           }`}
         >
-          {user?.tsApprovalStatus || 'Active'}
+          {user?.signature?.signatureStatus || 'Pending'}
         </Typography>
       )
     }
@@ -177,8 +180,6 @@ const WaitingAdminApprovalTable = () => {
     //   )
     // }
   ]
-
-  console.log('Filtred data', filteredData[0]?.client?.firstName)
 
   if (isLoading) {
     return (

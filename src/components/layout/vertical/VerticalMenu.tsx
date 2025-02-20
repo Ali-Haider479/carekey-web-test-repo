@@ -51,13 +51,12 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
   const theme = useTheme()
   const params = useParams()
   const verticalNavOptions = useVerticalNav()
-
+  const authUser: any = JSON.parse(localStorage.getItem('AuthUser') ?? '')
   // Vars
   const { transitionDuration, isBreakpointReached } = verticalNavOptions
   const { lang: locale } = params
 
   const ScrollWrapper = isBreakpointReached ? 'div' : PerfectScrollbar
-
   return (
     // eslint-disable-next-line lines-around-comment
     /* Custom scrollbar instead of browser scroll, remove if you want browser scroll only */
@@ -122,13 +121,18 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
           {dictionary['navigation'].clients}
         </MenuItem>
         <MenuItem
-          href={`/${locale}/apps/accounts/tenant-list`}
+          href={
+            authUser?.userRoles[0]?.role?.title === 'Tenant Admin'
+              ? `/${locale}/apps/accounts/${authUser?.tenant?.id}/detail`
+              : `/${locale}/apps/accounts/tenant-list`
+          }
           icon={<i className='bx-user-circle' />}
           exactMatch={false}
           activeUrl='/apps/accounts'
         >
-          {dictionary['navigation'].accounts}
+          {authUser?.userRoles[0]?.role?.title === 'Tenant Admin' ? 'Account' : dictionary['navigation'].accounts}
         </MenuItem>
+
         <MenuItem
           href={`/${locale}/apps/schedules/list`}
           icon={<i className='bx-calendar-alt' />}
@@ -177,14 +181,14 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
         >
           {dictionary['navigation'].advance}
         </MenuItem>
-        <MenuItem
+        {/* <MenuItem
           href={`/${locale}/apps/user-management`}
           icon={<i className='bx-user-circle' />}
           exactMatch={false}
           activeUrl='/apps/user-management'
         >
           {dictionary['navigation'].userManagement}
-        </MenuItem>
+        </MenuItem> */}
         {/* <SubMenu
           label={dictionary['navigation'].dashboards}
           icon={<i className='bx-home-smile' />}

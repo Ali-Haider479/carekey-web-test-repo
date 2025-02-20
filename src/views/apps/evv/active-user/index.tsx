@@ -12,6 +12,7 @@ import { useEffect, useState } from 'react'
 const EvvActiveUser = () => {
   // Shared state for the filtered data
   const [timeLogData, setTimeLogData] = useState<any>([])
+  const [payPeriod, setPayperiod] = useState<any>([])
   const [isLoading, setIsLoading] = useState(true)
 
   // // Initial data fetch
@@ -23,6 +24,8 @@ const EvvActiveUser = () => {
     try {
       const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/time-log/active-timelogs`)
       setTimeLogData(response.data)
+      console.log('DATAA RESPONSE------------->', response.data[0].payPeriodHistory)
+      setPayperiod(response?.data[0]?.payPeriodHistory)
       setIsLoading(false)
     } catch (error) {
       console.error('Error fetching initial data:', error)
@@ -41,7 +44,7 @@ const EvvActiveUser = () => {
         <ActiveUserMapView timeLogData={timeLogData} />
       </Grid>
       <Grid size={{ xs: 12 }}>
-        <EvvActiveUserTable timeLogData={timeLogData} isLoading={isLoading} />
+        <EvvActiveUserTable timeLogData={timeLogData} isLoading={isLoading} payPeriod={payPeriod} />
       </Grid>
     </Grid>
   )

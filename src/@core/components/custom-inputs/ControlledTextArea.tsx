@@ -9,6 +9,8 @@ type Props = {
   label: any
   placeHolder: string
   defaultValue: any
+  disabled?: boolean
+  isRequired?: boolean
 }
 
 const ControlledTextArea = (props: Props) => {
@@ -18,7 +20,7 @@ const ControlledTextArea = (props: Props) => {
       control={props.control}
       defaultValue={props.defaultValue} // Set the default value
       rules={{
-        required: `${props.label} is required`, // Required validation
+        required: props.isRequired ? `${props.label} is required` : false, // Required validation
         minLength: {
           value: 10,
           message: `Please provide at least 10 characters for ${props.label}`
@@ -27,6 +29,7 @@ const ControlledTextArea = (props: Props) => {
       render={({ field, fieldState: { error } }) => (
         <TextField
           {...field}
+          disabled={props.disabled}
           error={!!error} // Highlight the field if there's an error
           helperText={error ? error.message : ''} // Show validation error message
           fullWidth

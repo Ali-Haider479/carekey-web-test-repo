@@ -14,10 +14,12 @@ type Props = {
   slotProps?: any
   disabled?: boolean
   isRequired?: boolean
+  minLength?: number
+  maxLength?: number
 }
 
 const CustomTextField = (props: Props) => {
-  const { isRequired = true } = props;
+  const { isRequired = true } = props
   return (
     <div>
       <Controller
@@ -25,7 +27,15 @@ const CustomTextField = (props: Props) => {
         control={props.control}
         defaultValue={props.defaultValue} // Set the default value
         rules={{
-          required: isRequired ? `${props.label} is required` : false // Apply required rule conditionally
+          required: isRequired ? `${props.label} is required` : false, // Apply required rule conditionally
+          minLength: {
+            value: props.minLength || 1,
+            message: `${props.label} should be atleast ${props.minLength} characters`
+          },
+          maxLength: {
+            value: props.maxLength || 30,
+            message: `${props.label} cannot exceed ${props.maxLength} characters`
+          }
         }}
         render={({ field }) => (
           <TextField

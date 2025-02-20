@@ -17,7 +17,13 @@ import type { CalendarColors, CalendarType } from '@/types/apps/calendarTypes'
 import ScheduleCalendar from './ScheduleCalendar'
 import ScheduleSidebarLeft from './ScheduleSidebarLeft'
 import AddScheduleSidebar from './AddScheduleSidebar'
-import { addEvent, fetchEvents, filterCaregiverSchedules, updateEvent } from '@/redux-store/slices/calendar'
+import {
+  addEvent,
+  fetchEvents,
+  filterCaregiverSchedules,
+  filterEvents,
+  updateEvent
+} from '@/redux-store/slices/calendar'
 import axios from 'axios'
 import { useParams } from 'next/navigation'
 import { useAppDispatch } from '@/hooks/useDispatch'
@@ -35,6 +41,7 @@ const AppCalendar = () => {
   const { id } = useParams()
   // States
   const [calendarApi, setCalendarApi] = useState<null | any>(null)
+  const [currentCaregiverData, setCurrentCaregiverData] = useState<any>()
   const [caregiverList, setCaregiverList] = useState<[] | any>([])
   const [clientList, setClientList] = useState<[] | any>([])
   const [serviceList, setServiceList] = useState<[] | any>([])
@@ -43,7 +50,6 @@ const AppCalendar = () => {
   const [isEdited, setIsEdited] = useState<boolean>(false)
   const [localEvents, setLocalEvents] = useState<any[]>([])
   const [filteredEvents, setFilteredEvents] = useState<any>([])
-  const [loading, setLoading] = useState(false)
   const [payPeriod, setPayPeriod] = useState<[] | any>([])
 
   // Hooks
@@ -59,38 +65,6 @@ const AppCalendar = () => {
   const isEditedOn = () => setIsEdited(true)
   const isEditedOff = () => setIsEdited(false)
 
-  console.log('IS Edited Caregiver Calendar Wrapper:', isEdited)
-
-  console.log('Caregiver CalenderStoreItems', calendarStore)
-
-  useEffect(() => {
-    setLocalEvents(calendarStore.events)
-  }, [calendarStore.events])
-
-  // Fetch events on component mount
-  useEffect(() => {
-    if (isEdited === false) {
-      console.log('Flag', isEdited)
-      dispatch(fetchEvents())
-    }
-  }, [dispatch, isEdited])
-
-  // Filter caregiver events after events are fetched
-  useEffect(() => {
-    if (calendarStore.events.length > 0) {
-      setLoading(true) // Start loading
-      dispatch(filterCaregiverSchedules(id))
-      setLoading(false) // Stop loading after filtering is done
-    }
-  }, [id, isEdited, calendarStore.events])
-
-  useEffect(() => {
-    console.log(calendarStore.caregiverEvents)
-    if (calendarStore.caregiverEvents.length > 0) {
-      setFilteredEvents({ caregiverEvents: calendarStore.caregiverEvents })
-    }
-  }, [calendarStore.caregiverEvents, dispatch])
-
   useEffect(() => {
     const authUser: any = JSON.parse(localStorage.getItem('AuthUser') ?? '')
     ;(async () => {
@@ -99,25 +73,40 @@ const AppCalendar = () => {
           axios.get(`${process.env.NEXT_PUBLIC_API_URL}/caregivers`),
           axios.get(`${process.env.NEXT_PUBLIC_API_URL}/client`),
           axios.get(`${process.env.NEXT_PUBLIC_API_URL}/service`),
-          axios.get(`${process.env.NEXT_PUBLIC_API_URL}/pay-period/tenant/${authUser?.tenant?.id}`)
+          axios.get(`${process.env.NEXT_PUBLIC_API_URL}/pay-period/tenant/${authUser?.tenant?.id}`),
+          axios.get(`${process.env.NEXT_PUBLIC_API_URL}/caregivers/${id}`)
         ])
         setCaregiverList(response[0].data)
         setClientList(response[1].data)
         setServiceList(response[2].data)
         setPayPeriod(response[3].data)
+        setCurrentCaregiverData(response[4].data)
       } catch (error) {
         console.log('ERROR', error)
       }
     })()
   }, [])
 
-  const handleAddEvent = (newEvent: any) => {
-    setLocalEvents(prevEvents => [...prevEvents, ...newEvent])
+  useEffect(() => {
+    if (calendarStore.events.length > 0 && localEvents.length < calendarStore.events.length) {
+      setLocalEvents(calendarStore.events)
+      const filteredEvents = calendarStore.events.filter((item: any) => item.caregiver?.id == id)
+      setFilteredEvents({ caregiverEvents: filteredEvents })
+    }
+  }, [calendarStore.events])
 
-    setFilteredEvents((prevFilteredEvents: { caregiverEvents: any }) => ({
-      ...prevFilteredEvents,
-      caregiverEvents: [...prevFilteredEvents.caregiverEvents, ...newEvent]
-    }))
+  const handleAddEvent = (newEvent: any[]) => {
+    if (!Array.isArray(newEvent)) {
+      return
+    }
+    setLocalEvents(prevEvents => [...(prevEvents || []), ...newEvent])
+
+    setFilteredEvents((prevFilteredEvents: { caregiverEvents: any[] }) => {
+      return {
+        ...prevFilteredEvents,
+        caregiverEvents: [...(prevFilteredEvents.caregiverEvents || []), ...newEvent]
+      }
+    })
 
     dispatch(addEvent(newEvent))
   }
@@ -135,6 +124,12 @@ const AppCalendar = () => {
     dispatch(updateEvent(updatedEvent))
   }
 
+  useEffect(() => {
+    if (isEdited === false) {
+      dispatch(fetchEvents())
+    }
+  }, [isEdited])
+
   return (
     <>
       <ScheduleSidebarLeft
@@ -144,7 +139,7 @@ const AppCalendar = () => {
         calendarStore={{
           ...calendarStore,
           events: localEvents,
-          caregiverEvents: filteredEvents.caregiverEvents || calendarStore.caregiverEvents
+          caregiverEvents: filteredEvents.caregiverEvents
         }}
         calendarsColor={calendarsColor}
         leftSidebarOpen={leftSidebarOpen}
@@ -152,24 +147,20 @@ const AppCalendar = () => {
         handleAddEventSidebarToggle={handleAddEventSidebarToggle}
       />
       <div className='p-6 pbe-0 flex-grow overflow-visible bg-backgroundPaper rounded'>
-        {loading ? (
-          <div>Loading events...</div>
-        ) : (
-          <ScheduleCalendar
-            dispatch={dispatch}
-            calendarApi={calendarApi}
-            calendarStore={{
-              ...calendarStore,
-              events: localEvents,
-              caregiverEvents: filteredEvents.caregiverEvents || calendarStore.caregiverEvents
-            }}
-            setCalendarApi={setCalendarApi}
-            calendarsColor={calendarsColor}
-            handleLeftSidebarToggle={handleLeftSidebarToggle}
-            handleAddEventSidebarToggle={handleAddEventSidebarToggle}
-            handleIsEditedOn={isEditedOn}
-          />
-        )}
+        <ScheduleCalendar
+          dispatch={dispatch}
+          calendarApi={calendarApi}
+          calendarStore={{
+            ...calendarStore,
+            events: localEvents,
+            caregiverEvents: filteredEvents.caregiverEvents
+          }}
+          setCalendarApi={setCalendarApi}
+          calendarsColor={calendarsColor}
+          handleLeftSidebarToggle={handleLeftSidebarToggle}
+          handleAddEventSidebarToggle={handleAddEventSidebarToggle}
+          handleIsEditedOn={isEditedOn}
+        />
       </div>
       <AddScheduleSidebar
         dispatch={dispatch}
@@ -177,7 +168,7 @@ const AppCalendar = () => {
         calendarStore={{
           ...calendarStore,
           events: localEvents,
-          caregiverEvents: filteredEvents.caregiverEvents || calendarStore.caregiverEvents
+          caregiverEvents: filteredEvents.caregiverEvents
         }}
         addEventSidebarOpen={addEventSidebarOpen}
         handleAddEventSidebarToggle={handleAddEventSidebarToggle}
@@ -189,6 +180,7 @@ const AppCalendar = () => {
         handleAddEvent={handleAddEvent}
         handleUpdateEvent={handleUpdateEvent}
         payPeriod={payPeriod}
+        data={currentCaregiverData}
       />
     </>
   )

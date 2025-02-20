@@ -20,31 +20,13 @@ type FormItems = {
 }
 
 const InfoCard = () => {
-  const authUser: any = JSON.parse(localStorage.getItem('AuthUser') ?? '')
-
-  const clients = [
-    {
-      name: 'Shamso Abshir',
-      service: 'IHS (with training',
-      image: '/images/avatars/17.png'
-    },
-    { name: 'Alia Khan', service: 'IHS (with training', image: '/images/avatars/13.png' },
-    {
-      name: 'Alonso James',
-      service: 'EMPL Development',
-      image: '/images/avatars/16.png'
-    },
-    {
-      name: 'Alisha Lehman',
-      service: 'IHS (with training',
-      image: '/images/avatars/8.png'
-    }
-  ]
   const { id } = useParams()
   const [data, setData] = useState<any>()
   const [assignedClients, setAssignedClients] = useState<any>()
+  const [currentUser, setCurrentUser] = useState<any>(null)
   const [clientList, setClientList] = useState<any>()
   const [isModalShow, setIsModalShow] = useState(false)
+  const authUser: any = JSON.parse(localStorage.getItem('AuthUser') ?? '')
   const [formData, setFormData] = useState<FormItems>()
 
   const {
@@ -65,9 +47,28 @@ const InfoCard = () => {
     }
   }
 
+  console.log('assigned clients --> ', currentUser)
+
+  const fetchData = async () => {
+    try {
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/caregivers/user/${id}`)
+      const fetchedData = response.data
+      const caregivers = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/caregivers/caregiver/${id}`)
+      console.log('CAREGIVER USER ', caregivers)
+      setCurrentUser(caregivers?.data?.user)
+      console.log('Caregiver Profile Data ----> ', fetchedData)
+      setData(fetchedData)
+    } catch (error) {
+      console.error('Error fetching data', error)
+    }
+  }
+
   const fetchAssignClient = async () => {
     try {
-      const { data: fetchedClient } = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/user/clientUsers/${id}`)
+      const { data: fetchedClient } = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_URL}/user/clientUsers/${currentUser?.id}`
+      )
+      console.log('fetched client', { data: fetchedClient })
       const fetchedClientsWithPhotos = await Promise.all(
         fetchedClient.map(async (item: any) => {
           const profileImgUrl = item?.client?.profileImgUrl
@@ -82,35 +83,54 @@ const InfoCard = () => {
     }
   }
 
-  const fetchData = async () => {
+  const fetchClients = async () => {
     try {
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/caregivers/user/${id}`)
-      const fetchedData = response.data
-      console.log('Caregiver Profile Data ----> ', fetchedData)
-      setData(fetchedData)
+      const { data: fetchedClients } = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/client`)
+
+      // Get array of assigned client IDs
+      const assignedClientIds = assignedClients?.map((assigned: any) => assigned.client.id) || []
+
+      // Filter out clients that are already assigned
+      const availableClients = fetchedClients.filter((client: any) => !assignedClientIds.includes(client.id))
+
+      console.log('List of available clients --> ', availableClients)
+      setClientList(availableClients)
     } catch (error) {
-      console.error('Error fetching data', error)
+      console.error('Error fetching clients:', error)
     }
   }
 
-  const fetchClients = async () => {
-    const fetchedClients = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/client`)
-    console.log('List of all clients --> ', fetchedClients)
-    setClientList(fetchedClients)
-  }
+  console.log('available client list', clientList)
 
   useEffect(() => {
-    fetchData()
-    fetchAssignClient()
-    fetchClients()
+    const fetchAllData = async () => {
+      try {
+        await fetchData()
+      } catch (error) {
+        console.error('Error fetching data:', error)
+      }
+    }
+
+    fetchAllData()
   }, [id])
 
+  useEffect(() => {
+    if (currentUser?.id) {
+      fetchAssignClient()
+    }
+  }, [currentUser])
+
+  useEffect(() => {
+    fetchClients()
+  }, [assignedClients])
+
   const onSubmit = async (data: FormItems) => {
-    console.log('Form Data:', data)
+    console.log('Form Data:', data, id)
     // await new Promise(resolve => setTimeout(resolve, 1000)) // Simulate API request
     // reset() // Reset form after submission
+
     const assignClientBody = {
-      userId: id,
+      userId: currentUser?.id,
       tenantId: authUser?.tenant?.id,
       clientId: data.clientId,
       assignmentDate: data.assignmentDate,
@@ -118,9 +138,11 @@ const InfoCard = () => {
       notes: data.assignmentNotes,
       scheduleHours: data.scheduleHours
     }
+    console.log('assignClientBody---------------', assignClientBody)
     const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/user/createClientUser`, assignClientBody)
-    console.log('Assigning Client --> ', response)
+    // console.log('Assigning Client --> ', response)
     fetchAssignClient()
+    reset()
     handleModalClose()
   }
 
@@ -199,9 +221,9 @@ const InfoCard = () => {
                     <CustomDropDown
                       label='Select a client'
                       optionList={
-                        clientList?.data?.map((item: any) => {
+                        clientList?.map((item: any) => {
                           return {
-                            key: `${item.id}-${item.firstName}`,
+                            key: `${item?.id}-${item.firstName}`,
                             value: item.id,
                             optionString: `${item.firstName} ${item.lastName}`
                           }

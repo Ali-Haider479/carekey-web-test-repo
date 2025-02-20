@@ -155,6 +155,9 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                         selected={field.value} // Bind value from react-hook-form
                         onChange={(date: Date | null) => field.onChange(date)} // Update react-hook-form on change
                         placeholderText='MM/DD/YYYY'
+                        showYearDropdown
+                        yearDropdownItemNumber={5}
+                        showMonthDropdown
                         customInput={
                           <TextField
                             fullWidth
@@ -221,9 +224,10 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                     placeHolder={'Zip Code'}
                     name={'zipCode'}
                     defaultValue={''}
-                    type={'text'}
-                    error={errors.zip}
+                    type={'number'}
+                    error={errors.zipCode}
                     control={control}
+                    maxLength={5}
                   />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 4 }}>
@@ -233,7 +237,7 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                     name={'ssn'}
                     defaultValue={''}
                     type={'text'}
-                    error={errors.SSN}
+                    error={errors.ssn}
                     control={control}
                   />
                 </Grid>
@@ -260,6 +264,8 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                         selected={field.value} // Bind value from react-hook-form
                         onChange={(date: Date | null) => field.onChange(date)} // Update react-hook-form on change
                         placeholderText='MM/DD/YYYY'
+                        showYearDropdown
+                        showMonthDropdown
                         customInput={
                           <TextField
                             fullWidth
@@ -285,6 +291,8 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                         selected={field.value} // Bind value from react-hook-form
                         onChange={(date: Date | null) => field.onChange(date)} // Update form state on change
                         placeholderText='MM/DD/YYYY'
+                        showYearDropdown
+                        showMonthDropdown
                         customInput={
                           <TextField
                             fullWidth
@@ -375,11 +383,10 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                     error={errors.overtimeAgreement}
                     label={'Caregiver Overtime Agreement'}
                     optionList={[
-                      { key: 1, value: true, optionString: 'Yes' },
-                      { key: 2, value: false, optionString: 'No' }
+                      { key: 1, value: 'yes', optionString: 'Yes' },
+                      { key: 2, value: 'no', optionString: 'No' }
                     ]}
-                    defaultValue={false}
-                    isRequired={false}
+                    defaultValue={''}
                   />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 4 }}>
@@ -389,10 +396,11 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                     error={errors.isLicensed245d}
                     label={'Is the Caregiver 245D Licensed'}
                     optionList={[
-                      { key: 1, value: true, optionString: 'Yes' },
-                      { key: 2, value: false, optionString: 'No' }
+                      { key: 1, value: 'yes', optionString: 'Yes' },
+                      { key: 2, value: 'no', optionString: 'No' }
                     ]}
-                    defaultValue={true}
+                    defaultValue={''}
+                    isRequired={true}
                   />
                 </Grid>
               </Grid>
@@ -413,6 +421,7 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                     type={'text'}
                     error={errors.allergies}
                     control={control}
+                    isRequired={false}
                   />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 4 }}>

@@ -267,15 +267,17 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
               </Grid>
 
               <Grid size={{ xs: 12, sm: 4 }}>
-                <TextField
-                  {...register('clientCode', { required: false })}
+                <CustomTextField
                   label={'Client Code'}
-                  placeholder={'please enter Client Code'}
+                  placeHolder={'please enter Primary Client Code'}
                   name={'clientCode'}
-                  defaultValue={undefined}
+                  defaultValue={''}
                   type={'number'}
-                  size='small'
-                  fullWidth
+                  error={errors.clientCode}
+                  control={control}
+                  isRequired={false}
+                  minLength={4}
+                  maxLength={4}
                 />
               </Grid>
 
@@ -392,6 +394,7 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                   type={'number'}
                   error={errors.primaryResidentialZipCode}
                   control={control}
+                  maxLength={5}
                 />
               </Grid>
             </Grid>
@@ -441,6 +444,7 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                   type={'number'}
                   error={errors.mailingZipCode}
                   control={control}
+                  maxLength={5}
                 />
               </Grid>
             </Grid>
@@ -485,15 +489,16 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 4 }}>
-                <TextField
-                  {...register('secondaryResidentialZipCode', { required: false })}
-                  label={'Zip Code'}
-                  placeholder={'please enter Zip Code'}
+                <CustomTextField
+                  label={'ZIP Code'}
+                  placeHolder={'please enter ZipCode'}
                   name={'secondaryResidentialZipCode'}
-                  defaultValue={undefined}
+                  defaultValue={''}
                   type={'number'}
-                  size='small'
-                  fullWidth
+                  error={errors.secondaryResidentialZipCode}
+                  control={control}
+                  isRequired={false}
+                  maxLength={5}
                 />
               </Grid>
             </Grid>

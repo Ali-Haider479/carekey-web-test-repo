@@ -8,7 +8,7 @@ import { Card, useMediaQuery } from '@mui/material'
 import type { Theme } from '@mui/material/styles'
 
 // Third-party Imports
-import { useDispatch, useSelector } from 'react-redux'
+import { useSelector } from 'react-redux'
 
 // Type Imports
 import type { CalendarColors, CalendarType } from '@/types/apps/calendarTypes'
@@ -17,13 +17,7 @@ import type { CalendarColors, CalendarType } from '@/types/apps/calendarTypes'
 import ScheduleCalendar from './ScheduleCalendar'
 import ScheduleSidebarLeft from './ScheduleSidebarLeft'
 import AddScheduleSidebar from './AddScheduleSidebar'
-import {
-  addEvent,
-  fetchEvents,
-  filterCaregiverSchedules,
-  filterClientSchedules,
-  updateEvent
-} from '@/redux-store/slices/calendar'
+import { addEvent, fetchEvents, updateEvent } from '@/redux-store/slices/calendar'
 import axios from 'axios'
 import { useAppDispatch } from '@/hooks/useDispatch'
 import CalenderFilters from './CalenderFilters'

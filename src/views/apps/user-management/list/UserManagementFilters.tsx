@@ -56,7 +56,7 @@ const UserManagementFilters = () => {
         </Grid>
         <Grid size={{ sm: 12, md: 4 }}>
           <Button variant='outlined' className='mt-1 p-1'>
-            Apply
+            Apply Filter
           </Button>
         </Grid>
       </Grid>

@@ -3,13 +3,18 @@
 import { useState, useMemo } from 'react'
 import Card from '@mui/material/Card'
 import CardHeader from '@mui/material/CardHeader'
-import { CircularProgress, IconButton, Typography } from '@mui/material'
+import { Alert, CircularProgress, IconButton, Typography } from '@mui/material'
 import DataTable from '@/@core/components/mui/DataTable'
 import { GridColDef } from '@mui/x-data-grid'
 import LaunchIcon from '@mui/icons-material/Launch'
 import ActionButton from '@/@core/components/mui/ActionButton'
 import ReactTable from '@/@core/components/mui/ReactTable'
 import axios from 'axios'
+import transformToExpandableFormat from '@/utils/transformExpandableData'
+import { transformTimesheetData } from '@/utils/transform'
+import { calculateHoursWorked, formatDate, formatDateTime } from '@/utils/helperFunctions'
+import { dark } from '@mui/material/styles/createPalette'
+import CustomAlert from '@/@core/components/mui/Alter'
 // Updated interfaces to match your data structure
 interface Caregiver {
   id: number
@@ -63,6 +68,8 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
   const [editingId, setEditingId] = useState<string | number | null>(null)
   const [editedValues, setEditedValues] = useState<{ [key: string]: any }>({})
   const [currentEditedData, setCurrentEditedData] = useState<any>(null)
+  const [alertOpen, setAlertOpen] = useState(false)
+  const [alertProps, setAlertProps] = useState<any>()
 
   const handleActionClick = (event: React.MouseEvent<HTMLElement>, user: any) => {
     event.stopPropagation()
@@ -87,24 +94,73 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
   }
 
   const handleSave = async (user: any) => {
-    console.log('UPDATED DATA AFTER SAVE', currentEditedData)
+    console.log('USER TWO', currentEditedData)
+    console.log('USER ONE', data)
+
+    const currentUser: any = data.find((item: any) => item.id === currentEditedData.id)
+    console.log('USER THREE', currentUser)
+
+    // Check if signatureStatus is Pending
+    if (currentUser.signature.signatureStatus === 'Pending') {
+      setAlertOpen(true)
+      setAlertProps({
+        message: 'Please approve the signature before editing.',
+        severity: 'error'
+      })
+      return
+    }
+
+    // Check if serviceAuth exists
+    if (currentUser.client.serviceAuth.length === 0) {
+      setAlertOpen(true)
+      setAlertProps({
+        message: 'Please complete the service authorization before editing.',
+        severity: 'error'
+      })
+      return
+    }
 
     try {
       // Reset states
       const payload = {
         id: currentEditedData.id,
-        tsApprovalStatus: currentEditedData.tsApprovalStatus
+        tsApprovalStatus: currentEditedData.tsApprovalStatus,
+        clockIn: currentEditedData.clockIn,
+        clockOut: currentEditedData.clockOut
       }
 
       const res = await axios.patch(`${process.env.NEXT_PUBLIC_API_URL}/time-log/update-ts-approval`, payload)
-      console.log('Response', res)
+      if (currentEditedData.tsApprovalStatus === 'Approved') {
+        // const { data: timeLog } = await axios.get(
+        //   `${process.env.NEXT_PUBLIC_API_URL}/time-log/ts-approved/${res.data.id}`
+        // )
+        // const timeLogForPayload = timeLog[0]
+        // console.log('timeLogForPayload', timeLog)
+        const hrs = calculateHoursWorked(currentUser?.clockIn, currentUser?.clockOut)
+        const billedAmount = parseFloat(hrs) * currentUser?.client?.serviceAuth[0]?.serviceRate
+
+        const billingPayload = {
+          timeLogId: currentUser.id,
+          claimDate: null,
+          billedAmount: Number(billedAmount.toFixed(2)),
+          receivedAmount: 0,
+          claimStatus: 'Pending',
+          billedStatus: 'Pending'
+        }
+        const createBilling = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/time-log/billing`, billingPayload)
+        console.log('createBilling', createBilling)
+      } else if (
+        currentEditedData.tsApprovalStatus === 'Rejected' ||
+        currentEditedData.tsApprovalStatus === 'Pending'
+      ) {
+        console.log('Timesheet is Rejected')
+      }
       await fetchInitialData()
       setEditingId(null)
       setSelectedUser(null)
       setEditedValues({})
 
       // Optionally refresh the whole data
-      // await getBillingDetails();
     } catch (error) {
       console.error('Error saving data', error)
     }
@@ -124,7 +180,9 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
       editable: false,
       sortable: true,
       render: (user: any) => (
-        <Typography color='primary'>{`${user?.client?.firstName} ${user?.client?.lastName}`}</Typography>
+        <Typography className={`${dark ? 'text-[#8082FF]' : 'text-[#4B0082]'}`} color='primary'>
+          {`${user?.client?.firstName} ${user?.client?.lastName}`}
+        </Typography>
       )
     },
     {
@@ -140,7 +198,6 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
         >{`${user?.caregiver?.firstName} ${user?.caregiver?.lastName}`}</Typography>
       )
     },
-
     {
       id: 'serviceName',
       label: 'SERVICE',
@@ -148,6 +205,22 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
       editable: false,
       sortable: true,
       render: (user: any) => <Typography color='primary'>{user?.serviceName}</Typography>
+    },
+    {
+      id: 'clockIn',
+      label: 'CLOCK IN',
+      minWidth: 170,
+      editable: true,
+      sortable: true,
+      render: (user: any) => <Typography color='primary'>{formatDateTime(user?.clockIn)}</Typography>
+    },
+    {
+      id: 'clockOut',
+      label: 'CLOCK OUT',
+      minWidth: 170,
+      editable: true,
+      sortable: true,
+      render: (user: any) => <Typography color='primary'>{formatDateTime(user?.clockOut)}</Typography>
     },
     {
       id: 'payPeriod',
@@ -159,11 +232,7 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
         const startDate = user?.payPeriodHistory?.startDate
         if (startDate) {
           const date = new Date(startDate)
-          return (
-            <Typography className='font-normal text-base my-3'>
-              {`${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear().toString().slice(-2)}`}
-            </Typography>
-          )
+          return <Typography className='font-normal text-base my-3'>{formatDate(user.dateOfService)}</Typography>
         }
         return <Typography className='font-normal text-base my-3'>N/A</Typography>
       }
@@ -185,20 +254,20 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
                 : 'text-[#FFAB00]'
           }`}
         >
-          {user?.tsApprovalStatus || 'Active'}
+          {user?.tsApprovalStatus || 'Pending'}
         </Typography>
       )
     },
-    {
-      id: 'timesheet',
-      label: 'TIMESHEET',
-      editable: false,
-      render: (user: any) => (
-        <IconButton onClick={() => console.log(user)}>
-          <LaunchIcon />
-        </IconButton>
-      )
-    },
+    // {
+    //   id: 'timesheet',
+    //   label: 'TIMESHEET',
+    //   editable: false,
+    //   render: (user: any) => (
+    //     <IconButton onClick={() => console.log(user)}>
+    //       <LaunchIcon />
+    //     </IconButton>
+    //   )
+    // },
     {
       id: 'actions',
       label: 'ACTION',
@@ -233,9 +302,15 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
     setCurrentEditedData(updatedRow)
   }
 
+  // Assuming your first file data is in originalTimeEntries
+  // const transformedData = transformTimesheetData(data)
+  // console.log('Date timesheet,data', transformedData)
+
   return (
     <Card sx={{ borderRadius: 1, boxShadow: 3 }}>
       <CardHeader title='Received Timesheet' className='pb-4' />
+      <CustomAlert AlertProps={alertProps} openAlert={alertOpen} setOpenAlert={setAlertOpen} />
+
       <div style={{ overflowX: 'auto', padding: '0px' }}>
         <ReactTable
           columns={columns}

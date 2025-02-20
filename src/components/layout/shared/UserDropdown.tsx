@@ -33,6 +33,7 @@ import { useSettings } from '@core/hooks/useSettings'
 
 // Util Imports
 import { getLocalizedUrl } from '@/utils/i18n'
+import { Avatar } from '@mui/material'
 
 // Styled component for badge content
 const BadgeContentSpan = styled('span')({
@@ -94,7 +95,7 @@ const UserDropdown = () => {
         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
         className='mis-2.5'
       >
-        <CustomAvatar
+        <Avatar
           ref={anchorRef}
           alt={session?.user?.name || ''}
           src={session?.user?.image || ''}
@@ -121,30 +122,23 @@ const UserDropdown = () => {
               <ClickAwayListener onClickAway={e => handleDropdownClose(e as MouseEvent | TouchEvent)}>
                 <MenuList>
                   <div className='flex items-center plb-2 pli-5 gap-2' tabIndex={-1}>
-                    <CustomAvatar size={40} alt={session?.user?.name || ''} src={session?.user?.image || ''} />
+                    <CustomAvatar size={40} alt={session?.user?.userName || ''} src={session?.user?.image || ''} />
                     <div className='flex items-start flex-col'>
-                      <Typography variant='h6'>{session?.user?.name || ''}</Typography>
+                      <Typography variant='h6'>{session?.user?.userName || ''}</Typography>
                       <Typography variant='body2' color='text.disabled'>
-                        {session?.user?.email || ''}
+                        {session?.user?.emailAddress || ''}
                       </Typography>
                     </div>
                   </div>
                   <Divider className='mlb-1' />
-                  <MenuItem className='gap-3' onClick={e => handleDropdownClose(e, '/pages/user-profile')}>
+                  {/* onClick={e => handleDropdownClose(e, '/pages/user-profile')} */}
+                  <MenuItem className='gap-3'>
                     <i className='bx-user' />
                     <Typography color='text.primary'>My Profile</Typography>
                   </MenuItem>
-                  <MenuItem className='gap-3' onClick={e => handleDropdownClose(e, '/pages/account-settings')}>
+                  <MenuItem className='gap-3' onClick={e => handleDropdownClose(e, '/apps/user-management')}>
                     <i className='bx-cog' />
-                    <Typography color='text.primary'>Settings</Typography>
-                  </MenuItem>
-                  <MenuItem className='gap-3' onClick={e => handleDropdownClose(e, '/pages/pricing')}>
-                    <i className='bx-dollar' />
-                    <Typography color='text.primary'>Pricing</Typography>
-                  </MenuItem>
-                  <MenuItem className='gap-3' onClick={e => handleDropdownClose(e, '/pages/faq')}>
-                    <i className='bx-help-circle' />
-                    <Typography color='text.primary'>FAQ</Typography>
+                    <Typography color='text.primary'>User Management</Typography>
                   </MenuItem>
                   <Divider className='mlb-1' />
                   <MenuItem className='gap-3' onClick={handleUserLogout}>

@@ -59,7 +59,7 @@ function CaregiverAboutCard() {
   const fetchData = async () => {
     try {
       setIsLoading(true)
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/caregivers/user/${id}`)
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/caregivers/caregiver/${id}`)
       setData(response.data)
     } catch (error) {
       console.error('Error fetching data', error)

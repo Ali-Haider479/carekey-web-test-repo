@@ -100,7 +100,9 @@ const EvvCompletedShiftsTable = ({ timeLogData, isLoading }: Props) => {
       minWidth: 170,
       editable: false,
       sortable: true,
-      render: (user: any) => <Typography color='primary'>{user?.client?.authService[0]?.procedureAndModifier}</Typography>
+      render: (user: any) => (
+        <Typography color='primary'>{`${user?.client?.authService[0]?.procedureCode ?? ''}-${user?.client?.authService[0]?.modifierCode ?? ''}`}</Typography>
+      )
     },
     {
       id: 'clockIn',
@@ -117,7 +119,7 @@ const EvvCompletedShiftsTable = ({ timeLogData, isLoading }: Props) => {
       editable: false,
       sortable: true,
       render: (user: any) => <Typography color='primary'>{formattedDate(user?.clockOut)}</Typography>
-    },
+    }
   ]
 
   return (

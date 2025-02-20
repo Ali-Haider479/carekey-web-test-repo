@@ -10,6 +10,7 @@ type Props = {
   label: string
   defaultValue: any
   isRequired?: boolean
+  disabled?: boolean
 }
 
 const ControlledDatePicker = (props: Props) => {
@@ -34,6 +35,9 @@ const ControlledDatePicker = (props: Props) => {
           selected={field.value}
           onChange={date => field.onChange(date)} // Pass the date to react-hook-form
           placeholderText='MM/DD/YYYY'
+          disabled={props.disabled}
+          showYearDropdown
+          showMonthDropdown
           customInput={
             <TextField
               fullWidth

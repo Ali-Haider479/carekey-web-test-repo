@@ -4,11 +4,11 @@ import { useState, useMemo } from 'react'
 import Card from '@mui/material/Card'
 import CardHeader from '@mui/material/CardHeader'
 import { CircularProgress, Typography } from '@mui/material'
-import DataTable from '@/@core/components/mui/DataTable'
-import { GridColDef } from '@mui/x-data-grid'
-import AdUnitsIcon from '@mui/icons-material/AdUnits'
 import { calculateHoursWorked } from '@/utils/helperFunctions'
 import ReactTable from '@/@core/components/mui/ReactTable'
+import AdUnitsIcon from '@mui/icons-material/AdUnits'
+import { dark } from '@mui/material/styles/createPalette'
+
 // Updated interfaces to match your data structure
 interface Caregiver {
   id: number
@@ -52,7 +52,9 @@ const SignatureStatusTable = ({ data, isLoading }: SignatureStatusTableProps) =>
       editable: false,
       sortable: true,
       render: (user: any) => (
-        <Typography color='primary'>{`${user?.client?.firstName} ${user?.client?.lastName}`}</Typography>
+        <Typography className={`${dark ? 'text-[#8082FF]' : 'text-[#4B0082]'}`} color='primary'>
+          {`${user?.client?.firstName} ${user?.client?.lastName}`}
+        </Typography>
       )
     },
     {
@@ -64,7 +66,7 @@ const SignatureStatusTable = ({ data, isLoading }: SignatureStatusTableProps) =>
       render: (user: any) => (
         <Typography
           color='primary'
-          className='text-[#71DD37]'
+          className='text-[#67C932]'
         >{`${user?.caregiver?.firstName} ${user?.caregiver?.lastName}`}</Typography>
       )
     },
@@ -113,9 +115,14 @@ const SignatureStatusTable = ({ data, isLoading }: SignatureStatusTableProps) =>
         }
       }
     },
-
     {
-      id: 'tsApprovalLoc',
+      id: 'logsVia',
+      label: 'LOGGED VIA',
+      minWidth: 170,
+      render: (params: any) => <AdUnitsIcon className='my-3 text-[#8082FF]' />
+    },
+    {
+      id: 'tsApprovalStatus',
       label: 'APPROVED LOC',
       minWidth: 170,
       editable: true,
@@ -123,15 +130,21 @@ const SignatureStatusTable = ({ data, isLoading }: SignatureStatusTableProps) =>
       render: (user: any) => (
         <Typography
           color='primary'
-          className={`${'YES' === 'YES' ? 'text-[#71DD37]' : 'NO' === 'NO' ? 'text-[#FF4C51]' : 'text-[#FFAB00]'}`}
+          className={`${
+            user?.tsApprovalStatus === 'Approved'
+              ? 'text-[#71DD37]'
+              : user?.tsApprovalStatus === 'Rejected'
+                ? 'text-[#FF4C51]'
+                : 'text-[#FFAB00]'
+          }`}
         >
-          YES
+          {user?.tsApprovalStatus || 'Pending'}
         </Typography>
       )
     },
 
     {
-      id: 'tsApprovalStatus',
+      id: 'signatureStatus',
       label: 'SIGNATURE STATUS',
       minWidth: 170,
       editable: true,
@@ -139,14 +152,15 @@ const SignatureStatusTable = ({ data, isLoading }: SignatureStatusTableProps) =>
       render: (user: any) => (
         <Typography
           color='primary'
-          className={`${user?.tsApprovalStatus === 'Approved'
-            ? 'text-[#71DD37]'
-            : user?.tsApprovalStatus === 'Rejected'
-              ? 'text-[#FF4C51]'
-              : 'text-[#FFAB00]'
-            }`}
+          className={`${
+            user?.signature?.signatureStatus === 'Taken'
+              ? 'text-[#71DD37]'
+              : user?.signature?.signatureStatus === 'Missed'
+                ? 'text-[#FF4C51]'
+                : 'text-[#FFAB00]'
+          }`}
         >
-          {user?.tsApprovalStatus || 'Active'}
+          {user?.signature?.signatureStatus || 'Pending'}
         </Typography>
       )
     }
@@ -180,6 +194,7 @@ const SignatureStatusTable = ({ data, isLoading }: SignatureStatusTableProps) =>
     )
   }
 
+  console.log('DATA SINATURE STATUS TABLE', data)
   return (
     <Card sx={{ borderRadius: 1, boxShadow: 3 }}>
       <CardHeader title='Signatures Status' className='pb-4' />

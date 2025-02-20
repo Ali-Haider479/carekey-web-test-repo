@@ -30,7 +30,7 @@ const CaregiverDetails = ({ tabContentList }: BottomBodyProps) => {
     // Fetch data from the backend API
     const fetchData = async () => {
       try {
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/caregivers/user/${id}`)
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/caregivers/caregiver/${id}`)
         const fetchedData = response.data
         console.log('Caregiver Profile Data ----> ', fetchedData)
         setData(fetchedData)
@@ -64,6 +64,8 @@ const CaregiverDetails = ({ tabContentList }: BottomBodyProps) => {
   }
 
   const fullName = [data?.firstName || '', data?.middleName || '', data?.lastName || ''].filter(Boolean).join(' ')
+
+  console.log(data)
 
   return (
     <>

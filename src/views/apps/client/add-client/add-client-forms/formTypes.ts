@@ -68,8 +68,9 @@ export type clientServiceFormDataType = {
   qpAssigned: string
   notes: string
   caregiverId?: number
-  assignmentDate: Date | null
-  unassignmentDate: Date | null
-  assignmentNotes: string
-  scheduleHours: number
+  assignmentDate?: Date | null
+  unassignmentDate?: Date | null
+  assignmentNotes?: string
+  scheduleHours?: number
+  enableAssignCaregiver: boolean
 }

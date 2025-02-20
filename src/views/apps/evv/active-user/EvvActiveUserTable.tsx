@@ -1,14 +1,15 @@
 'use client'
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react'
+import React, { useState, useEffect, useMemo, useCallback, forwardRef } from 'react'
 import Card from '@mui/material/Card'
 import { Button, CircularProgress, Dialog, Grid2 as Grid, IconButton, TextField, Typography } from '@mui/material'
 import ReactTable from '@/@core/components/mui/ReactTable'
-import { formattedDate } from '@/utils/helperFunctions'
+import { combineDateAndTime, formattedDate } from '@/utils/helperFunctions'
 import EvvFilters from '../completed-shifts/EvvFilter'
 import DialogCloseButton from '@/components/dialogs/DialogCloseButton'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
 import axios from 'axios'
+import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
 
 // Types
 interface Location {
@@ -43,6 +44,7 @@ interface TimeLogData {
 interface Props {
   timeLogData: TimeLogData[]
   isLoading: boolean
+  payPeriod: any
 }
 
 // Custom hook for location details
@@ -106,10 +108,12 @@ const LocationCell = React.memo(({ location }: { location: Location }) => {
   )
 })
 
-const EvvActiveUserTable = ({ timeLogData, isLoading }: Props) => {
+const EvvActiveUserTable = ({ timeLogData, isLoading, payPeriod }: Props) => {
   const [selectedUser, setSelectedUser] = useState<any | null>(null)
   const [isModalShow, setIsModalShow] = useState(false)
   const [clockOutReason, setClockOutReason] = useState('')
+  const [values, setValues] = useState<any>()
+  const [weekRange, setWeekRange] = useState<any>({})
 
   const handleModalClose = () => {
     setIsModalShow(false)
@@ -120,12 +124,35 @@ const EvvActiveUserTable = ({ timeLogData, isLoading }: Props) => {
     setSelectedUser(user)
   }
 
+  const calculateStartAndEndDate = (range: any) => {
+    // Ensure correct parsing of the start date in UTC
+    const [year, month, day] = range?.startDate?.split('-')
+    const startDate = new Date(Date.UTC(year, month - 1, day)) // Use UTC to avoid time zone issues
+
+    const endDate = new Date(startDate)
+    endDate.setUTCDate(startDate.getUTCDate() + range.numberOfWeeks * 7) // Update in UTC as well
+
+    return {
+      startDate: startDate.toISOString().split('T')[0], // Get ISO date in YYYY-MM-DD format
+      endDate: endDate.toISOString().split('T')[0]
+    }
+  }
+
+  console.log('Tg data-------------------', payPeriod)
+
+  useEffect(() => {
+    if (Object?.keys(payPeriod).length > 0) {
+      const range = calculateStartAndEndDate(payPeriod)
+      setWeekRange(range)
+    }
+  }, [payPeriod])
+
   const handleSave = async () => {
     try {
       const payload = {
         id: selectedUser.id,
         notes: clockOutReason,
-        clockOut: new Date().toISOString()
+        clockOut: combineDateAndTime(values?.dateOfService, values?.clockIn)
       }
       console.log('UPDATED DATA AFTER SAVE', payload)
       const res = await axios.patch(`${process.env.NEXT_PUBLIC_API_URL}/time-log`, payload)
@@ -208,6 +235,23 @@ const EvvActiveUserTable = ({ timeLogData, isLoading }: Props) => {
     }
   ]
 
+  const PickersComponent = forwardRef(({ ...props }: any, ref) => {
+    return (
+      <TextField
+        inputRef={ref}
+        fullWidth
+        size='small'
+        {...props}
+        label={props.label || ''}
+        className={props.className}
+        placeholder={props.placeholder}
+        id={props.id}
+        error={props.error}
+      />
+    )
+  })
+
+  console.log('Updated values', values)
   return (
     <Card sx={{ borderRadius: 1, boxShadow: 3 }}>
       <div className='p-4 my-2'>
@@ -245,6 +289,55 @@ const EvvActiveUserTable = ({ timeLogData, isLoading }: Props) => {
               <div>
                 <h2 className='text-xl font-semibold mt-10 mb-6'>Clock-out User</h2>
                 <Grid container spacing={4}>
+                  <Grid sx={{ pb: 2 }} size={{ xs: 12, md: 3 }}>
+                    <AppReactDatepicker
+                      selectsStart
+                      id='event-start-date'
+                      endDate={values?.dateOfService !== null ? values?.dateOfService : weekRange.endDate}
+                      selected={values?.dateOfService}
+                      startDate={values?.dateOfService !== null ? values?.dateOfService : weekRange.startDate}
+                      showTimeSelect={!values?.dateOfService}
+                      dateFormat={!values?.dateOfService ? 'yyyy-MM-dd hh:mm' : 'yyyy-MM-dd'}
+                      minDate={weekRange.startDate} // Set the minimum selectable date
+                      maxDate={weekRange.endDate}
+                      customInput={
+                        <PickersComponent label='Date Of Clockout' registername='dateOfService' id='event-start-date' />
+                      }
+                      onChange={(date: Date | null) =>
+                        date !== null && setValues({ ...values, dateOfService: new Date(date) })
+                      }
+                    />
+                  </Grid>
+
+                  <Grid size={{ xs: 6, md: 3 }}>
+                    <AppReactDatepicker
+                      showTimeSelect
+                      selected={values?.clockIn}
+                      timeIntervals={15}
+                      minDate={new Date()}
+                      startDate={new Date()}
+                      showTimeSelectOnly
+                      dateFormat='hh:mm aa'
+                      id='time-only-picker'
+                      onChange={(date: Date | null) => {
+                        if (date !== null) {
+                          // Combine the selected end date with the selected end time
+                          setValues({
+                            ...values,
+                            clockIn: date
+                          })
+                        }
+                      }}
+                      customInput={
+                        <PickersComponent
+                          label='Clock-out Time'
+                          registername='clockIn'
+                          className='mbe-3'
+                          id='event-end-time'
+                        />
+                      }
+                    />
+                  </Grid>
                   <Grid size={{ xs: 12, sm: 12 }}>
                     <TextField
                       label='Reason for manual clock out'

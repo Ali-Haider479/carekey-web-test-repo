@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react'
 import axios from 'axios'
 import LogsApprovalFilters from './LogsApprovalFilters'
 import WaitingLogsApprovalTable from './WaitingLogsApprovalTable'
+import transformToExpandableFormat from '@/utils/transformExpandableData'
 
 // Component Imports
 
@@ -21,8 +22,10 @@ const LogsApprovalDetails = () => {
 
   const fetchInitialData = async () => {
     try {
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/time-log/pending-approval-timelogs`)
-      setTimeLogData(response.data)
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/time-log`)
+      console.log('timeLogData', response.data)
+
+      setTimeLogData(response.data.filter((item: any) => item.clockOut != null))
       setIsLoading(false)
     } catch (error) {
       console.error('Error fetching initial data:', error)

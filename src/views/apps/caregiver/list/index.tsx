@@ -11,13 +11,16 @@ import axios from 'axios'
 
 const CaregiverList = () => {
   const [caregiverData, setCaregiverData] = useState<any>([])
+  const [isLoading, setIsLoading] = useState(true)
 
   const fetchInitialData = async () => {
     try {
       const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/caregivers`)
       setCaregiverData(response.data)
+      setIsLoading(false)
     } catch (error) {
       console.error('Error fetching initial data:', error)
+      setIsLoading(false)
     }
   }
 
@@ -35,7 +38,7 @@ const CaregiverList = () => {
         <CaregiverFilters setData={() => {}} onFilterApplied={handleFilteredData} />
       </Grid>
       <Grid size={{ xs: 12 }}>
-        <CaregiverTable data={caregiverData} />
+        <CaregiverTable isLoading={isLoading} data={caregiverData} />
       </Grid>
     </Grid>
   )

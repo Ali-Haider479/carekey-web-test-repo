@@ -30,7 +30,7 @@ import {
 } from './add-client-forms/formTypes'
 import DocumentsForm from './add-client-forms/DocumentsForm'
 import axios from 'axios'
-import { CardContent } from '@mui/material'
+import { CardContent, CircularProgress } from '@mui/material'
 import { useRouter } from 'next/navigation'
 
 // Vars
@@ -61,6 +61,7 @@ const AddClientStepper = () => {
   const [physicianDetails, setPhysicianDetails] = useState<any>()
   const [serviceActivities, setServiceActivities] = useState<any>()
   const [documents, setDocuments] = useState<any>()
+  const [isLoading, setIsLoading] = useState<boolean>(false)
 
   const personalDetailsFormRef = useRef<any>(null)
   const physicianAndCaseMangerFormRef = useRef<any>(null)
@@ -142,6 +143,7 @@ const AddClientStepper = () => {
 
   const handleSave = async (Docs: any) => {
     try {
+      setIsLoading(true)
       const createClientBody = {
         firstName: personalDetails.firstName,
         middleName: personalDetails.middleName,
@@ -164,7 +166,7 @@ const AddClientStepper = () => {
         sharedCare: personalDetails.sharedCare,
         pcaChoice: personalDetails.pcaChoice,
         isClient: true,
-        isSignatureDraw: false,
+        isSignatureDraw: true,
         tenantId: authUser?.tenant?.id
       }
       const filteredCreateClientBody = Object.fromEntries(
@@ -326,6 +328,8 @@ const AddClientStepper = () => {
       const successfulUploads = uploadResponses.filter(response => response !== null)
 
       console.log('Successful document uploads:', successfulUploads)
+
+      setIsLoading(false)
 
       // console.log('Client Body ---> ', createClientBody, clientPrimaryAddressBody)
 
@@ -494,9 +498,16 @@ const AddClientStepper = () => {
                   >
                     Back
                   </Button>
-                  <Button variant='contained' onClick={handleNext}>
+                  {isLoading === true ? (
+                    <CircularProgress size={25} />
+                  ) : (
+                    <Button variant='contained' onClick={handleNext}>
+                      {activeStep === steps.length - 1 ? 'Submit' : 'Next'}
+                    </Button>
+                  )}
+                  {/* <Button variant='contained' onClick={handleNext}>
                     {activeStep === steps.length - 1 ? 'Submit' : 'Next'}
-                  </Button>
+                  </Button> */}
                 </div>
               </Grid>
             </CardContent>

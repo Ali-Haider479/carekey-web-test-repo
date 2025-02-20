@@ -4,6 +4,7 @@ import DataTable from '@/@core/components/mui/DataTable'
 import DialogCloseButton from '@/components/dialogs/DialogCloseButton'
 import { MoreVert } from '@mui/icons-material'
 import { Button, Card, Dialog, Grid2 as Grid, IconButton, TextField, Typography } from '@mui/material'
+import { dark } from '@mui/material/styles/createPalette'
 import { GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
 import { useRouter } from 'next/navigation'
 import React, { useState } from 'react'
@@ -102,7 +103,13 @@ const UserManagementList = () => {
       headerName: 'ADMIN NAME',
       flex: 0.5,
       renderCell: (params: GridRenderCellParams) => {
-        return <Typography className='text-[#4B0082] text-sm cursor-pointer mt-3'>{params.row.adminName}</Typography>
+        return (
+          <Typography
+            className={`${dark ? 'text-[#7112B7]' : 'text-[#4B0082]'} text-sm font-normal cursor-pointer mt-3`}
+          >
+            {params.row.adminName}
+          </Typography>
+        )
       }
     },
     {
@@ -121,15 +128,16 @@ const UserManagementList = () => {
       flex: 0.5,
       renderCell: (params: GridRenderCellParams) => {
         return (
-          <div key={1} className='flex flex-row gap-2 mt-2'>
+          <Grid key={`privileges-${params.row.id}`} className='flex flex-row gap-2 mt-2'>
             {params.row.privileges.map((privilege: any, index: any) => (
-              <div className='px-1 border border-[#666CFF] border-opacity-[50%] rounded-sm'>
-                <Typography key={index} className='text-[#4B0082]'>
-                  {privilege}
-                </Typography>
+              <div
+                key={`privilege-${index}-${privilege}`}
+                className='px-1 border border-[#666CFF] border-opacity-[50%] rounded-sm'
+              >
+                <Typography className={`${dark ? 'text-[#7112B7]' : 'text-[#4B0082]'}`}>{privilege}</Typography>
               </div>
             ))}
-          </div>
+          </Grid>
         )
       }
     },
@@ -140,7 +148,7 @@ const UserManagementList = () => {
       renderCell: (params: GridRenderCellParams) => {
         return (
           <Typography
-            className={`${params.row.status === 'Active' ? 'bg-green-200 text-green-600' : 'bg-red-200 text-red-600'} rounded-2xl px-2 mt-3 w-[fit-content]`}
+            className={`${params.row.status === 'Active' ? 'bg-[#72E1281F] text-[#67C932]' : 'bg-[#FF4D491F] text-[#E8381A]'} rounded-2xl px-2 mt-3 w-[fit-content]`}
           >
             {params.row.status}
           </Typography>

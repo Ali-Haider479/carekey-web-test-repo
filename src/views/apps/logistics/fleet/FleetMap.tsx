@@ -59,7 +59,7 @@ const FleetMap = (props: Props) => {
               latitude={item.geometry.latitude}
               style={{ display: 'flex' }}
             >
-              <i className='bx-bxl-twitter text-gray-800' />
+              <i className='bx-target-lock text-gray-800' />
             </Marker>
           )
         })}

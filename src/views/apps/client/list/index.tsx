@@ -100,11 +100,11 @@ const ClientListApps = () => {
       }
     },
     { field: 'firstName', headerName: 'FIRST NAME', flex: 1 },
-    {
-      field: 'middleName',
-      headerName: 'MIDDLE NAME',
-      flex: 0.75
-    },
+    // {
+    //   field: 'middleName',
+    //   headerName: 'MIDDLE NAME',
+    //   flex: 0.75
+    // },
     {
       field: 'lastName',
       headerName: 'LAST NAME',

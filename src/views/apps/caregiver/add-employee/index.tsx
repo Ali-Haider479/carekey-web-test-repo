@@ -27,6 +27,7 @@ import { PersonalDetailsFormDataType } from './types'
 import { dark } from '@mui/material/styles/createPalette'
 import axios from 'axios'
 import DocumentsPage from './Certificates/Documents'
+import { CircularProgress } from '@mui/material'
 
 // Vars
 const steps = [
@@ -50,6 +51,7 @@ const EmployeeStepper = () => {
   const [caregiverData, setCaregiverData] = useState<any>({})
   const [loginInfo, setLoginInfo] = useState<any>({})
   const [documentsData, setDocumentsData] = useState<any>({})
+  const [isLoading, setIsLoading] = useState<boolean>(false)
 
   const router = useRouter()
 
@@ -124,6 +126,7 @@ const EmployeeStepper = () => {
 
   const handleSave = async (Docs: any) => {
     try {
+      setIsLoading(true)
       const userPayload = {
         userName: loginInfo.userName,
         emailAddress: loginInfo.emailAddress,
@@ -134,7 +137,7 @@ const EmployeeStepper = () => {
       }
       // Create User and Caregiver (as you've already done)
       const userResponse = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/user`, userPayload)
-
+      console.log('USER CREATE -------', userResponse)
       const caregiverPayload = {
         ...caregiverData,
         mailingCity: loginInfo.city,
@@ -151,12 +154,16 @@ const EmployeeStepper = () => {
         assignmentDate: loginInfo.assignmentDate,
         unassignmentDate: loginInfo.unassignmentDate,
         notes: loginInfo.assignmentNotes,
-        scheduleHours: loginInfo.scheduleHours
+        scheduleHours: loginInfo.scheduleHours,
+        overtimeAgreement: caregiverData.overtimeAgreement === 'yes' ? true : false,
+        isLicensed245d: caregiverData.isLicensed245d === 'yes' ? true : false
       }
+      console.log('USER CLIENT PAYLKOAD -------', caregiverPayload)
 
       const filteredCaregiverPayload = Object.fromEntries(
         Object.entries(caregiverPayload).filter(([key, value]) => value !== undefined && value !== null && value !== '')
       )
+      console.log('USER CLIENT FILTRED PAYLKOAD -------', filteredCaregiverPayload)
 
       const caregiverResponse = await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/caregivers`,
@@ -230,6 +237,8 @@ const EmployeeStepper = () => {
       const successfulUploads = uploadResponses.filter(response => response !== null)
 
       console.log('Successful document uploads:', successfulUploads)
+
+      setIsLoading(false)
 
       router.replace('/apps/caregiver/list')
     } catch (error) {
@@ -367,9 +376,13 @@ const EmployeeStepper = () => {
                 >
                   Back
                 </Button>
-                <Button variant='contained' onClick={handleNext}>
-                  {activeStep === steps.length - 1 ? 'Submit' : 'Next'}
-                </Button>
+                {isLoading === true ? (
+                  <CircularProgress size={25} />
+                ) : (
+                  <Button variant='contained' onClick={handleNext}>
+                    {activeStep === steps.length - 1 ? 'Submit' : 'Next'}
+                  </Button>
+                )}
               </div>
             </Grid>
           </CardContent>

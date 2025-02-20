@@ -1,7 +1,7 @@
 'use client'
 
 // React Imports
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState } from 'react'
 
 // Next Imports
 import Link from 'next/link'
@@ -13,70 +13,35 @@ import CardHeader from '@mui/material/CardHeader'
 import Button from '@mui/material/Button'
 import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
-import Chip from '@mui/material/Chip'
-import Checkbox from '@mui/material/Checkbox'
-import IconButton from '@mui/material/IconButton'
-import MenuItem from '@mui/material/MenuItem'
+
 import { styled } from '@mui/material/styles'
-import TablePagination from '@mui/material/TablePagination'
 import type { TextFieldProps } from '@mui/material/TextField'
 
 // Third-party Imports
-import classnames from 'classnames'
 import { rankItem } from '@tanstack/match-sorter-utils'
-import {
-  createColumnHelper,
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-  getFilteredRowModel,
-  getFacetedRowModel,
-  getFacetedUniqueValues,
-  getFacetedMinMaxValues,
-  getPaginationRowModel,
-  getSortedRowModel
-} from '@tanstack/react-table'
+import { createColumnHelper } from '@tanstack/react-table'
 import type { ColumnDef, FilterFn } from '@tanstack/react-table'
-import type { RankingInfo } from '@tanstack/match-sorter-utils'
 
-// Type Imports
+import { CircularProgress } from '@mui/material'
+
+import { useSelector } from 'react-redux'
+
+import { dark } from '@mui/material/styles/createPalette'
+
 import type { ThemeColor } from '@core/types'
 import type { UsersType } from '@/types/apps/userTypes'
 import type { Locale } from '@configs/i18n'
 
 // Component Imports
 import TenantTableFilters from './TenantTableFilters'
-import OptionMenu from '@core/components/option-menu'
-import CustomTextField from '@core/components/mui/TextField'
-import CustomAvatar from '@core/components/mui/Avatar'
-import TablePaginationComponent from '@components/TablePaginationComponent'
-
-// Util Imports
-import { getInitials } from '@/utils/getInitials'
 import { getLocalizedUrl } from '@/utils/i18n'
 
 // Style Imports
-import tableStyles from '@core/styles/table.module.css'
-import axios from 'axios'
-import DropdownMenu from '@/components/layout/front-pages/DropdownMenu'
-import { CircularProgress } from '@mui/material'
-import { useDispatch, useSelector } from 'react-redux'
-import { fetchTenants, setCurrentViewTenant } from '@/redux-store/slices/tenant'
+import { fetchTenants } from '@/redux-store/slices/tenant'
 import { useAppDispatch } from '@/hooks/useDispatch'
-import { dark, light } from '@mui/material/styles/createPalette'
-
-declare module '@tanstack/table-core' {
-  interface FilterFns {
-    fuzzy: FilterFn<unknown>
-  }
-  interface FilterMeta {
-    itemRank: RankingInfo
-  }
-}
-
-type UsersTypeWithAction = UsersType & {
-  action?: string
-}
+import ReactTable from '@/@core/components/mui/ReactTable'
+import TenantActionButton from '@/@core/components/mui/TenantActionButton'
+import axios from 'axios'
 
 type UserRoleType = {
   [key: string]: { icon: string; color: string }
@@ -197,7 +162,9 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
   const fetchInitialData = async () => {
     try {
       const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/tenant`)
+
       setTenantFilteredList(response.data)
+      setIsLoading(false)
     } catch (error) {
       console.error('Error fetching initial data:', error)
     }
@@ -226,151 +193,87 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
     }
   }, [tenantStore.tenants]) // Add dependency on tenantStore.tenants
 
-  const columns = useMemo<ColumnDef<TenantWithAction, any>[]>(
-    () => [
-      columnHelper.accessor('companyName', {
-        header: 'Company Name'
-      }),
-      columnHelper.accessor('users', {
-        header: 'Admin User',
-        cell: ({ row }) => {
-          const userName = row?.original?.users[0]?.userName
-          return userName
-        }
-      }),
-      columnHelper.accessor('plan', {
-        header: 'Current Plan',
-        cell: ({ row }) => {
-          return 'Free tier'
-        }
-      }),
-      columnHelper.accessor('billingEmail', {
-        header: 'Billing Email'
-      }),
-      columnHelper.accessor('contactNumber', {
-        header: 'Contact Number'
-      }),
-      // columnHelper.accessor('country', {
-      //   header: 'Country'
-      // }),
-      columnHelper.accessor('status', {
-        header: 'Status',
-        cell: ({ row }) => (
-          <div className='flex items-center'>
-            <span
-              className={`px-2 py-1 rounded-full text-xs ${
-                row.original.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-              }`}
-            >
-              {row.original.status}
-            </span>
-          </div>
-        )
-      }),
-      // columnHelper.accessor('subscriptionRenewalDate', {
-      //   header: 'Renewal Date',
-      //   cell: ({ row }) => {
-      //     const date = new Date(row.original.subscriptionRenewalDate)
-      //     return date.toLocaleDateString()
-      //   }
-      // }),
-      columnHelper.accessor('action', {
-        header: 'Action',
-        cell: ({ row }) => {
-          const dispatch = useDispatch()
-          const handleViewClick = () => {
-            // dispatch(setCurrentViewTenant(row.original))
-            localStorage.setItem('view-tenant', JSON.stringify(row.original))
-          }
+  console.log('Filtreddata', filteredData)
 
-          return (
-            <div className='flex items-center'>
-              <IconButton onClick={() => setData(data?.filter((product: any) => product.id !== row.original.id))}>
-                <i className='bx-trash text-textSecondary text-[22px]' />
-              </IconButton>
-              <IconButton>
-                <Link
-                  href={getLocalizedUrl(`/apps/accounts/${row.original.id}/detail`, locale as Locale)}
-                  className='flex'
-                  onClick={handleViewClick}
-                >
-                  <i className='bx-show text-textSecondary text-[22px]' />
-                </Link>
-              </IconButton>
-              <OptionMenu
-                iconButtonProps={{ size: 'medium' }}
-                iconClassName='text-textSecondary'
-                options={[
-                  {
-                    text: 'Download',
-                    icon: 'bx-download text-[22px]',
-                    menuItemProps: { className: 'flex items-center gap-2 text-textSecondary' }
-                  },
-                  {
-                    text: 'Edit',
-                    icon: 'bx-edit text-[22px]',
-                    menuItemProps: { className: 'flex items-center gap-2 text-textSecondary' }
-                  }
-                ]}
-              />
-            </div>
-          )
-        },
-        enableSorting: false
-      })
-    ],
-    [data, setData, locale]
-  )
-
-  const table = useReactTable({
-    data: filteredData as unknown as TenantWithAction[],
-    columns,
-    filterFns: {
-      fuzzy: fuzzyFilter
-    },
-    state: {
-      rowSelection,
-      globalFilter
-    },
-    initialState: {
-      pagination: {
-        pageSize: 10
-      }
-    },
-    enableRowSelection: true,
-    globalFilterFn: fuzzyFilter,
-    onRowSelectionChange: setRowSelection,
-    getCoreRowModel: getCoreRowModel(),
-    onGlobalFilterChange: setGlobalFilter,
-    getFilteredRowModel: getFilteredRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getFacetedRowModel: getFacetedRowModel(),
-    getFacetedUniqueValues: getFacetedUniqueValues(),
-    getFacetedMinMaxValues: getFacetedMinMaxValues()
-  })
-
-  // const getAvatar = (params: Pick<UsersType, 'avatar' | 'fullName'>) => {
-  //   const { avatar, fullName } = params
-
-  //   if (avatar) {
-  //     return <CustomAvatar src={avatar} size={34} />
-  //   } else {
-  //     return <CustomAvatar size={34}>{getInitials(fullName as string)}</CustomAvatar>
-  //   }
-  // }
-
-  // Update loading state
-  useEffect(() => {
-    if (data && data.length > 0) {
-      setIsLoading(false)
-    }
-  }, [data])
-
-  const handleClick = () => {
-    const localizedUrl = getLocalizedUrl('/apps/user/view', locale as Locale) // Adjust based on how your localization works
-    // router.push(localizedUrl) // Use router.push for navigation
+  const handleEdit = () => {
+    console.log(' CLICKED EDIT')
   }
+
+  const handleDownload = () => {
+    console.log(' CLICKED DOWNLOAD')
+  }
+
+  const columns = [
+    {
+      id: 'companyName',
+      label: 'COMPANY NAME',
+      minWidth: 170,
+      render: (user: any) => (
+        <Typography className={`font-semibold ${dark ? 'text-[#7112B7]' : 'text-[#4B0082]'}`} color='primary'>
+          {user?.companyName}
+        </Typography>
+      )
+    },
+    {
+      id: 'caregiverName',
+      label: 'CONTACT',
+      minWidth: 170,
+      render: (user: any) => <Typography color='primary'> {user?.users[0].userName}</Typography>
+    },
+    {
+      id: 'plan',
+      label: 'PLAN',
+      minWidth: 170,
+      render: (user: any) => <Typography color='primary'>Enterpries</Typography>
+    },
+    {
+      id: 'contactNumber',
+      label: 'PHONE NUMBER',
+      minWidth: 170,
+      render: (user: any) => <Typography color='primary'>{user?.contactNumber}</Typography>
+    },
+    {
+      id: 'claimStatus',
+      label: 'STATUS',
+      minWidth: 170,
+      render: (user: any) => (
+        <Typography
+          color='primary'
+          className={`${
+            user?.tsApprovalStatus === 'Pending'
+              ? 'text-[#FFAB00]'
+              : user?.tsApprovalStatus === 'Inactive'
+                ? 'text-[#FF4C51]'
+                : 'text-[#71DD37]'
+          }`}
+        >
+          {user?.tsApprovalStatus || 'Active'}
+        </Typography>
+      )
+    },
+    {
+      id: 'actions',
+      label: 'ACTION',
+      editable: false,
+      render: (row: any) => (
+        <TenantActionButton
+          actions={['view', 'delete', 'download', 'edit']}
+          row={row}
+          locale={locale as any}
+          getLocalizedUrl={getLocalizedUrl}
+          onDelete={row => setData(data?.filter((product: any) => product.id !== row.id))}
+          onEdit={handleEdit}
+          onDownload={handleDownload}
+          showEdit={false}
+          showDelete={true}
+          showDownload={true}
+          onViewClick={row => {
+            localStorage.setItem('view-tenant', JSON.stringify(row))
+          }}
+        />
+      )
+    }
+  ]
 
   return (
     <>
@@ -386,7 +289,7 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
             <Icon className='bx-folder-open text-6xl text-textSecondary' />
             <Typography variant='h6'>No Data Available</Typography>
             <Typography variant='body2' className='text-textSecondary'>
-              No records found. Click 'Add New User' to create one.
+              No records found. Click 'Add New Tenant' to create one.
             </Typography>
             <Button
               variant='contained'
@@ -396,7 +299,7 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
               className='mt-4'
               sx={{ backgroundColor: '#4B0082' }}
             >
-              Add New User
+              Add New Tenant
             </Button>
           </div>
         </Card>
@@ -429,82 +332,27 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
                   className='max-sm:is-full'
                   sx={{ backgroundColor: '#4B0082' }}
                 >
-                  Add New User
+                  Add New Tenant
                 </Button>
               </div>
             </div>
-            <div className='overflow-x-auto'>
-              <table className={tableStyles.table}>
-                <thead>
-                  {table?.getHeaderGroups?.()?.map(headerGroup => (
-                    <tr
-                      key={headerGroup.id}
-                      style={{
-                        backgroundColor: `${dark ? '#2b2c3f' : '#f5f5f5'} ${light ? '#f5f5f5' : '#2b2c3f'}`, // Explicitly set gray background
-                        borderBottom: `1px solid ${dark ? '#36374a' : '#E0E0E0'} ${light ? '#E0E0E0' : '#36374a'}`
-                      }}
-                    >
-                      {headerGroup.headers.map(header => (
-                        <th key={header.id}>
-                          {header.isPlaceholder ? null : (
-                            <>
-                              <div
-                                className={classnames({
-                                  'flex items-center': header.column.getIsSorted(),
-                                  'cursor-pointer select-none': header.column.getCanSort()
-                                })}
-                                onClick={header.column.getToggleSortingHandler()}
-                              >
-                                {flexRender(header.column.columnDef.header, header.getContext())}
-                                {{
-                                  asc: <i className='bx-chevron-up text-xl' />,
-                                  desc: <i className='bx-chevron-down text-xl' />
-                                }[header.column.getIsSorted() as 'asc' | 'desc'] ?? null}
-                              </div>
-                            </>
-                          )}
-                        </th>
-                      ))}
-                    </tr>
-                  ))}
-                </thead>
-                <tbody>
-                  {!table?.getRowModel?.() ? (
-                    <tr>
-                      <td colSpan={table?.getAllColumns?.()?.length ?? 1} className='text-center p-4'>
-                        Loading...
-                      </td>
-                    </tr>
-                  ) : table.getRowModel().rows.length === 0 ? (
-                    <tr>
-                      <td colSpan={table.getAllColumns().length} className='text-center p-4'>
-                        No data available
-                      </td>
-                    </tr>
-                  ) : (
-                    table
-                      .getRowModel()
-                      .rows.slice(0, table.getState().pagination.pageSize)
-                      .map(row => (
-                        <tr key={row.id} className={classnames({ selected: row.getIsSelected() })}>
-                          {row.getVisibleCells().map(cell => (
-                            <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
-                          ))}
-                        </tr>
-                      ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-            <TablePagination
-              component={() => <TablePaginationComponent table={table} />}
-              count={table.getFilteredRowModel().rows.length}
-              rowsPerPage={table.getState().pagination.pageSize}
-              page={table.getState().pagination.pageIndex}
-              onPageChange={(_, page) => {
-                table.setPageIndex(page)
-              }}
-            />
+            {isLoading ? (
+              <div className='flex items-center justify-center p-10'>
+                <CircularProgress />
+              </div>
+            ) : (
+              <ReactTable
+                columns={columns}
+                data={filteredData}
+                keyExtractor={user => user.id.toString()}
+                enableRowSelect
+                enablePagination
+                pageSize={5}
+                stickyHeader
+                maxHeight={600}
+                containerStyle={{ borderRadius: 2 }}
+              />
+            )}
           </Card>
         </>
       )}

@@ -7,6 +7,8 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
 import CustomDropDown from '@/@core/components/custom-inputs/CustomDropDown'
 import CustomTextField from '@/@core/components/custom-inputs/CustomTextField'
 import PCAUMPITable from '../PcaUmpi/PCAUMPITable'
+import USStates from '@/utils/constants'
+import ControlledDatePicker from '@/@core/components/custom-inputs/ControledDatePicker'
 
 type Props = {
   onFinish: (data: any) => void
@@ -54,7 +56,9 @@ const DocumentsPage = forwardRef<{ handleSubmit: any }, Props>(({ onFinish, defa
     formState: { errors },
     handleSubmit,
     register,
-    setValue
+    setValue,
+    setError,
+    clearErrors
   } = methods
 
   // Expose handleSubmit to parent via ref
@@ -64,15 +68,141 @@ const DocumentsPage = forwardRef<{ handleSubmit: any }, Props>(({ onFinish, defa
 
   // Update form values when files are selected
   useEffect(() => {
+    // Training Certificates validation
+    if (trainingCertificates.length === 0) {
+      setError('trainingCertificateFiles', {
+        type: 'required',
+        message: 'Training certificate is required'
+      })
+    } else {
+      clearErrors('trainingCertificateFiles')
+    }
+
+    // Driving Certificates validation
+    if (drivingCertificates.length === 0) {
+      setError('drivingCertificateFiles', {
+        type: 'required',
+        message: 'Driving license document is required'
+      })
+    } else {
+      clearErrors('drivingCertificateFiles')
+    }
+
+    // SSN File validation
+    if (ssnFile.length === 0) {
+      setError('ssnFileObject', {
+        type: 'required',
+        message: 'SSN document is required'
+      })
+    } else {
+      clearErrors('ssnFileObject')
+    }
+
+    // Adult File validation
+    if (adultFile.length === 0) {
+      setError('adultFileObject', {
+        type: 'required',
+        message: 'Vulnerable Adult Certificate is required'
+      })
+    } else {
+      clearErrors('adultFileObject')
+    }
+
+    // UMPI File validation
+    if (umpiFile.length === 0) {
+      setError('umpiFileObject', {
+        type: 'required',
+        message: 'UMPI Letter is required'
+      })
+    } else {
+      clearErrors('umpiFileObject')
+    }
+
+    // Clearance File validation
+    if (clearanceFile.length === 0) {
+      setError('clearanceFileObject', {
+        type: 'required',
+        message: 'Background Check Clearance is required'
+      })
+    } else {
+      clearErrors('clearanceFileObject')
+    }
+
+    // Update form values
     setValue('trainingCertificateFiles', trainingCertificates)
     setValue('drivingCertificateFiles', drivingCertificates)
     setValue('ssnFileObject', ssnFile)
     setValue('adultFileObject', adultFile)
     setValue('umpiFileObject', umpiFile)
     setValue('clearanceFileObject', clearanceFile)
-  }, [trainingCertificates, drivingCertificates, ssnFile, adultFile, umpiFile, clearanceFile, setValue])
+  }, [
+    trainingCertificates,
+    drivingCertificates,
+    ssnFile,
+    adultFile,
+    umpiFile,
+    clearanceFile,
+    setValue,
+    setError,
+    clearErrors
+  ])
 
   const onSubmit = (data: any) => {
+    // Validate all required documents
+    let hasError = false
+
+    if (trainingCertificates.length === 0) {
+      setError('trainingCertificateFiles', {
+        type: 'required',
+        message: 'Training certificate is required'
+      })
+      hasError = true
+    }
+
+    if (drivingCertificates.length === 0) {
+      setError('drivingCertificateFiles', {
+        type: 'required',
+        message: 'Driving license document is required'
+      })
+      hasError = true
+    }
+
+    if (ssnFile.length === 0) {
+      setError('ssnFileObject', {
+        type: 'required',
+        message: 'SSN document is required'
+      })
+      hasError = true
+    }
+
+    if (adultFile.length === 0) {
+      setError('adultFileObject', {
+        type: 'required',
+        message: 'Vulnerable Adult Certificate is required'
+      })
+      hasError = true
+    }
+
+    if (umpiFile.length === 0) {
+      setError('umpiFileObject', {
+        type: 'required',
+        message: 'UMPI Letter is required'
+      })
+      hasError = true
+    }
+
+    if (clearanceFile.length === 0) {
+      setError('clearanceFileObject', {
+        type: 'required',
+        message: 'Background Check Clearance is required'
+      })
+      hasError = true
+    }
+
+    if (hasError) {
+      return
+    }
+
     const formData = {
       trainingCertificates: {
         files: data.trainingCertificateFiles || [],
@@ -152,6 +282,11 @@ const DocumentsPage = forwardRef<{ handleSubmit: any }, Props>(({ onFinish, defa
                   fileSize={25 * 1024 * 1024}
                   title='Choose Files'
                 />
+                {errors.trainingCertificateFiles && (
+                  <Typography className='text-red-500 text-sm mt-2'>
+                    {errors.trainingCertificateFiles.message as string}
+                  </Typography>
+                )}
               </div>
               <div className='col-span-2'>
                 <h3 className='text-lg font-semibold mb-4'>Uploading Files</h3>
@@ -177,7 +312,7 @@ const DocumentsPage = forwardRef<{ handleSubmit: any }, Props>(({ onFinish, defa
                   />
                 )}
               />
-              <Controller
+              {/* <Controller
                 name='trainingCertificateExpiryDate'
                 control={control}
                 rules={{ required: 'Expiry date is required' }}
@@ -189,6 +324,13 @@ const DocumentsPage = forwardRef<{ handleSubmit: any }, Props>(({ onFinish, defa
                     customInput={<TextField fullWidth size='small' placeholder='Expiry Date' label='Expiry Date' />}
                   />
                 )}
+              /> */}
+              <ControlledDatePicker
+                name={'trainingCertificateExpiryDate'}
+                control={control}
+                label={'Expiry Date'}
+                defaultValue={undefined}
+                error={errors.trainingCertificateExpiryDate}
               />
             </div>
           </CardContent>
@@ -209,6 +351,11 @@ const DocumentsPage = forwardRef<{ handleSubmit: any }, Props>(({ onFinish, defa
                   fileCount={3}
                   fileSize={25 * 1024 * 1024} // 25MB
                 />
+                {errors.drivingCertificateFiles && (
+                  <Typography className='text-red-500 text-sm mt-2'>
+                    {errors.drivingCertificateFiles.message as string}
+                  </Typography>
+                )}
               </div>
 
               {/* Uploading Files Section */}
@@ -260,14 +407,18 @@ const DocumentsPage = forwardRef<{ handleSubmit: any }, Props>(({ onFinish, defa
                 control={control}
                 error={errors.dlState}
                 label='DL State'
-                optionList={[{ key: 1, value: 'caregiver', optionString: 'Caregiver' }]}
+                optionList={USStates.map((state: any) => ({
+                  key: state.key,
+                  value: state.value,
+                  optionString: state.optionString
+                }))}
                 defaultValue={''}
               />
-              <Controller
+              {/* <Controller
                 name='drivingLicenseExpiryDate'
                 control={control}
                 // defaultValue={null} // Set the default value
-                rules={{ required: 'Date of birth is required' }} // Validation rules
+                rules={{ required: false }} // Validation rules
                 render={({ field }) => (
                   <AppReactDatepicker
                     selected={field.value} // Bind value from react-hook-form
@@ -286,6 +437,13 @@ const DocumentsPage = forwardRef<{ handleSubmit: any }, Props>(({ onFinish, defa
                     }
                   />
                 )}
+              /> */}
+              <ControlledDatePicker
+                name={'drivingLicenseExpiryDate'}
+                control={control}
+                label={'Expiry Date'}
+                defaultValue={undefined}
+                error={errors.drivingLicenseExpiryDate}
               />
             </div>
           </CardContent>
@@ -314,6 +472,7 @@ const DocumentsPage = forwardRef<{ handleSubmit: any }, Props>(({ onFinish, defa
                   type={'number'}
                   error={errors.additionalPayRate}
                   control={control}
+                  isRequired={false}
                 />
               </div>
 
@@ -331,6 +490,11 @@ const DocumentsPage = forwardRef<{ handleSubmit: any }, Props>(({ onFinish, defa
                     fileSize={25 * 1024 * 1024}
                     title='Upload SSN'
                   />
+                  {errors.ssnFileObject && (
+                    <Typography className='text-red-500 text-sm mt-2'>
+                      {errors.ssnFileObject.message as string}
+                    </Typography>
+                  )}
                 </div>
                 <div className='p-4 rounded-lg border'>
                   <FileUploaderRestrictions
@@ -342,6 +506,11 @@ const DocumentsPage = forwardRef<{ handleSubmit: any }, Props>(({ onFinish, defa
                     fileSize={25 * 1024 * 1024}
                     title='Vulnerable Adult Mandated Certificate'
                   />
+                  {errors.adultFileObject && (
+                    <Typography className='text-red-500 text-sm mt-2'>
+                      {errors.adultFileObject.message as string}
+                    </Typography>
+                  )}
                 </div>
                 <div className='p-4 rounded-lg border'>
                   <FileUploaderRestrictions
@@ -353,6 +522,11 @@ const DocumentsPage = forwardRef<{ handleSubmit: any }, Props>(({ onFinish, defa
                     fileSize={25 * 1024 * 1024}
                     title='UMPI Letter'
                   />
+                  {errors.umpiFileObject && (
+                    <Typography className='text-red-500 text-sm mt-2'>
+                      {errors.umpiFileObject.message as string}
+                    </Typography>
+                  )}
                 </div>
                 <div className='p-4 rounded-lg border'>
                   <FileUploaderRestrictions
@@ -364,6 +538,11 @@ const DocumentsPage = forwardRef<{ handleSubmit: any }, Props>(({ onFinish, defa
                     fileSize={25 * 1024 * 1024}
                     title='Background Check Clearance'
                   />
+                  {errors.clearanceFileObject && (
+                    <Typography className='text-red-500 text-sm mt-2'>
+                      {errors.clearanceFileObject.message as string}
+                    </Typography>
+                  )}
                 </div>
                 <div className='col-span-2'>
                   <h2 className='text-base font-semibold mb-3'>Uploading Files</h2>
@@ -376,8 +555,6 @@ const DocumentsPage = forwardRef<{ handleSubmit: any }, Props>(({ onFinish, defa
                 </div>
               </div>
 
-              {/* Uploaded Files Section */}
-              <h2 className='text-xl font-semibold mb-6'>Uploaded Files</h2>
               {/* Service Type & Submit Button */}
               <div className='mt-5'>
                 <h2 className='text-xl font-semibold mb-4'>Service Type</h2>
@@ -388,8 +565,8 @@ const DocumentsPage = forwardRef<{ handleSubmit: any }, Props>(({ onFinish, defa
                       label='Service Type'
                       optionList={[
                         { key: 1, value: 'All', optionString: 'All' },
-                        { key: 2, value: 'Type 1', optionString: 'Type 1' },
-                        { key: 3, value: 'Type 2', optionString: 'Type 2' }
+                        { key: 2, value: 'PCA', optionString: 'PCA' },
+                        { key: 3, value: 'IHS', optionString: 'IHS' }
                       ]}
                       name={'serviceType'}
                       control={control}
@@ -397,8 +574,6 @@ const DocumentsPage = forwardRef<{ handleSubmit: any }, Props>(({ onFinish, defa
                       defaultValue={''}
                     />
                   </div>
-
-                  <Button className='!bg-[#4B0082] !text-white hover:!bg-[#4B0082] w-[20%]'>CREATE NEW ACCOUNT</Button>
                 </div>
               </div>
             </div>

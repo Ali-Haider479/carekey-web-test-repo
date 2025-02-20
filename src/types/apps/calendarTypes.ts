@@ -48,8 +48,8 @@ export type AddEventSidebarType = {
   serviceList?: any
   setIsEditedOff?: () => void
   isEdited?: boolean
-  handleAddEvent?: (AddEvent: any) => void
-  handleUpdateEvent?: (updatedEvent: any) => void
+  handleAddEvent: (AddEvent: any) => void
+  handleUpdateEvent: (updatedEvent: any) => void
   payPeriod?: any
   data?: any
 }

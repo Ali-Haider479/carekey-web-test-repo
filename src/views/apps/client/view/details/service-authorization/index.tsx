@@ -10,6 +10,7 @@ import ControlledDatePicker from '@/@core/components/custom-inputs/ControledDate
 import { useParams } from 'next/navigation'
 import axios from 'axios'
 import { GridRenderCellParams } from '@mui/x-data-grid'
+import CustomDropDown from '@/@core/components/custom-inputs/CustomDropDown'
 
 const options = [
   { label: 'Option 1', value: 'option1' },
@@ -21,11 +22,17 @@ interface ServiceAuthPayload {
   payer: string
   memberId: number
   serviceAuthNumber: number
-  procedureAndModifier: string
+  procedureCode: string
+  modifierCode: string
   startDate: Date
   endDate: Date
   serviceRate: number
   units: number
+  diagnosisCode: number
+  umpiNumber: number
+  reimbursementType: string
+  taxonomy: number
+  frequency: string
   clientId: number
 }
 
@@ -40,7 +47,7 @@ const ServiceAuthorization = () => {
     reset({
       payer: '',
       memberId: '',
-      serviceAuth: '',
+      serviceAuthNumber: '',
       procedureAndModifier: '',
       startDate: undefined,
       endDate: undefined,
@@ -72,12 +79,18 @@ const ServiceAuthorization = () => {
       const serviceAuthPayload: ServiceAuthPayload = {
         payer: data.payer,
         memberId: Number(data.memberId),
-        serviceAuthNumber: Number(data.serviceAuth),
-        procedureAndModifier: data.procedureAndModifier,
+        serviceAuthNumber: Number(data.serviceAuthNumber),
+        procedureCode: data.procedureCode,
+        modifierCode: data.modifierCode,
         startDate: new Date(data.startDate),
         endDate: new Date(data.endDate),
         serviceRate: Number(data.serviceRate),
         units: Number(data.units),
+        diagnosisCode: Number(data.diagnosisCode),
+        umpiNumber: Number(data.umpiNumber),
+        reimbursementType: data.reimbursementType,
+        taxonomy: Number(data.taxonomy),
+        frequency: data.frequency,
         clientId: clientId
       }
 
@@ -146,9 +159,18 @@ const ServiceAuthorization = () => {
       flex: 0.75
     },
     {
-      headerName: 'PROCEDURE & MODIFIER',
+      headerName: 'PRO & MOD',
       field: 'procedureAndModifier',
-      flex: 0.75
+      flex: 0.75,
+      renderCell: (params: GridRenderCellParams) => {
+        return (
+          <div className='flex h-full items-center'>
+            <Typography className='text-xs text-gray-800'>
+              {params?.row?.procedureCode}, {params?.row?.modifierCode}
+            </Typography>
+          </div>
+        )
+      }
     },
     {
       headerName: 'START DATE',
@@ -273,23 +295,23 @@ const ServiceAuthorization = () => {
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <CustomTextField
-                    label={'Service Auth'}
-                    placeHolder={'Service Auth'}
-                    name={'serviceAuth'}
+                    label={'Service Auth Number'}
+                    placeHolder={'Service Auth Number'}
+                    name={'serviceAuthNumber'}
                     defaultValue={''}
                     type={'number'}
-                    error={errors.serviceAuth}
+                    error={errors.serviceAuthNumber}
                     control={control}
                   />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <CustomTextField
-                    label={'Procedure & Modifier'}
-                    placeHolder={'Procedure & Modifier'}
-                    name={'procedureAndModifier'}
+                    label={'Service Rate'}
+                    placeHolder={'Service Rate'}
+                    name={'serviceRate'}
                     defaultValue={''}
-                    type={'text'}
-                    error={errors.procedureAndModifier}
+                    type={'number'}
+                    error={errors.serviceRate}
                     control={control}
                   />
                 </Grid>
@@ -313,12 +335,23 @@ const ServiceAuthorization = () => {
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <CustomTextField
-                    label={'Service Rate'}
-                    placeHolder={'Service Rate'}
-                    name={'serviceRate'}
+                    label={'Procedure Code'}
+                    placeHolder={'Procedure Code'}
+                    name={'procedureCode'}
                     defaultValue={''}
-                    type={'number'}
-                    error={errors.serviceRate}
+                    type={'text'}
+                    error={errors.procedureCode}
+                    control={control}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <CustomTextField
+                    label={'Modifier Code'}
+                    placeHolder={'Modifier Code'}
+                    name={'modifierCode'}
+                    defaultValue={''}
+                    type={'text'}
+                    error={errors.modifierCode}
                     control={control}
                   />
                 </Grid>
@@ -331,6 +364,64 @@ const ServiceAuthorization = () => {
                     type={'number'}
                     error={errors.units}
                     control={control}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <CustomTextField
+                    label={'Diagnosis Code'}
+                    placeHolder={'Diagnosis Code'}
+                    name={'diagnosisCode'}
+                    defaultValue={''}
+                    type={'number'}
+                    error={errors.diagnosisCode}
+                    control={control}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <CustomTextField
+                    label={'NPI/UMPI'}
+                    placeHolder={'NPI/UMPI'}
+                    name={'umpiNumber'}
+                    defaultValue={''}
+                    type={'number'}
+                    error={errors.umpiNumber}
+                    control={control}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <CustomDropDown
+                    name={'reimbursementType'}
+                    control={control}
+                    label={'Reimburrsement Type'}
+                    error={errors.reimbursementType}
+                    optionList={[
+                      { key: 1, value: 'per unit', optionString: 'Per Unit' },
+                      { key: 2, value: 'per diem', optionString: 'Per Diem' }
+                    ]}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <CustomTextField
+                    label={'Taxonomy'}
+                    placeHolder={'Taxonomy'}
+                    name={'taxonomy'}
+                    defaultValue={''}
+                    type={'number'}
+                    error={errors.taxonomy}
+                    control={control}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <CustomDropDown
+                    name={'frequency'}
+                    control={control}
+                    label={'Frequency'}
+                    error={errors.frequency}
+                    optionList={[
+                      { key: 1, value: 'daily', optionString: 'Daily' },
+                      { key: 2, value: 'weekly', optionString: 'Weekly' },
+                      { key: 3, value: 'monthly', optionString: 'Monthly' }
+                    ]}
                   />
                 </Grid>
               </Grid>

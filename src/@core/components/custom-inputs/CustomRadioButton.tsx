@@ -19,6 +19,7 @@ const CustomRadioButton = (props: Props) => {
     <Controller
       name={props.name}
       rules={{ required: `${props.label} is required` }}
+      defaultValue={props.radioOptions[0].value}
       render={({ field }) => (
         <FormControl className='!flex !flex-row items-center mt-1 ml-1'>
           <FormLabel id={`${props.name}-radio-group-label`} className=''>

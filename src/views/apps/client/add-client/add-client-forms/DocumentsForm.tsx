@@ -5,26 +5,11 @@ import { Controller, FormProvider, useForm } from 'react-hook-form'
 import FileUploaderRestrictions from '@/@core/components/mui/FileUploader'
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf'
 
-// interface DisplayFile {
-//   id: number
-//   status: 'success' | 'error' | 'uploading'
-//   path: string // The full path of the file
-//   relativePath: string // The relative path of the file
-//   lastModified: number // The timestamp of the last modification
-//   lastModifiedDate: Date // The date object representing the last modification time
-//   name: string // The name of the file
-//   size: number // The size of the file in bytes
-//   type: string // The MIME type of the file
-//   webkitRelativePath: string // The webkit-specific relative path of the file
-// }
-
 type Props = {
-  // form?: any
   onFinish: any
   defaultValues: any
 }
 
-// const TrainingCertificatesComponent = () => {
 const DocumentsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish, defaultValues }, ref) => {
   const [documents, setDocuments] = useState<any>([])
 
@@ -34,7 +19,6 @@ const DocumentsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish, defa
     defaultValues: defaultValues || []
   })
 
-  // Expose handleSubmit to parent via ref
   useImperativeHandle(ref, () => ({
     handleSubmit: (onValid: (data: any) => void) => handleSubmit(onValid)
   }))
@@ -44,16 +28,34 @@ const DocumentsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish, defa
     formState: { errors },
     handleSubmit,
     register,
-    setValue
+    setValue,
+    setError,
+    clearErrors
   } = methods
 
-  // Update form values when files are selected
   useEffect(() => {
     setValue('documentFiles', documents)
-  }, [documents, setValue])
+
+    // Add validation logic
+    if (documents.length === 0) {
+      setError('documentFiles', {
+        type: 'required',
+        message: 'At least one document is required'
+      })
+    } else {
+      clearErrors('documentFiles')
+    }
+  }, [documents, setValue, setError, clearErrors])
 
   const onSubmit = (data: any) => {
-    // Combine files and form data
+    if (documents.length === 0) {
+      setError('documentFiles', {
+        type: 'required',
+        message: 'At least one document is required'
+      })
+      return
+    }
+
     const formData = {
       documents: {
         files: data.documentFiles || []
@@ -61,7 +63,7 @@ const DocumentsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish, defa
     }
 
     console.log('Submitted Documents Data:', formData)
-    onFinish(formData) // Pass comprehensive form data to parent
+    onFinish(formData)
   }
 
   return (
@@ -71,7 +73,6 @@ const DocumentsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish, defa
           <CardContent>
             <Typography className='text-xl font-semibold mb-4'>Documents</Typography>
             <div className='grid grid-cols-1 md:grid-cols-3 gap-6'>
-              {/* File Upload Section */}
               <div className='col-span-1 p-3 rounded-lg border'>
                 <FileUploaderRestrictions
                   onFilesSelected={selectedFiles => {
@@ -79,12 +80,16 @@ const DocumentsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish, defa
                   }}
                   mimeType={['application/pdf']}
                   fileCount={3}
-                  fileSize={25 * 1024 * 1024} // 25MB
+                  fileSize={25 * 1024 * 1024}
                   title='Choose Files'
                 />
+                {errors.documentFiles && (
+                  <Typography className='text-red-500 text-sm mt-2 text-center'>
+                    {errors.documentFiles.message as string}
+                  </Typography>
+                )}
               </div>
 
-              {/* Uploading Files Section */}
               <div className='col-span-2'>
                 <h3 className='text-lg font-semibold mb-4'>Uploading Files</h3>
                 <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>

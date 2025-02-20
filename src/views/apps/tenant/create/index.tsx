@@ -16,15 +16,7 @@ const CreateTenantView = () => {
         <CardHeader title='Adding a new Tenant' titleTypographyProps={{ sx: { fontSize: '24px' } }} />
       </Card>
       <Grid size={{ xs: 12 }}>
-        <CreateTenant
-          open={false}
-          handleClose={function (): void {
-            throw new Error('Function not implemented.')
-          }}
-          setData={function (data: TenantType[]): void {
-            throw new Error('Function not implemented.')
-          }}
-        />
+        <CreateTenant open={false} />
       </Grid>
     </Grid>
   )

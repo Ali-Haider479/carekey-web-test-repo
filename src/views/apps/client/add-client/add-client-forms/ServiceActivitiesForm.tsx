@@ -8,6 +8,7 @@ import {
   Checkbox,
   FormControlLabel,
   FormGroup,
+  FormLabel,
   InputLabel,
   Select,
   Typography
@@ -49,6 +50,7 @@ const ServiceActivitiesForm = forwardRef<{ handleSubmit: any }, Props>(({ onFini
     register,
     getValues,
     setValue,
+    watch,
     handleSubmit // Add this if you want to use form submission
   } = methods // Use methods instead of useFormContext
 
@@ -64,6 +66,21 @@ const ServiceActivitiesForm = forwardRef<{ handleSubmit: any }, Props>(({ onFini
   const [unAssignmentDate, setUnAssignmentDate] = useState<Date | null>(null)
   const [lastCompletedDate, setLastCompletedDate] = useState<Date | null>(null)
   const [dueDate, setDueDate] = useState<Date | null>(null)
+
+  const assignCaregiverEnabled = watch('enableAssignCaregiver')
+
+  const handleEnableChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setValue('enableAssignCaregiver', event.target.checked)
+
+    // If disabling, clear all client-related fields
+    if (!event.target.checked) {
+      setValue('caregiverId', undefined)
+      setValue('assignmentDate', undefined)
+      setValue('unassignmentDate', undefined)
+      setValue('scheduleHours', undefined)
+      setValue('assignmentNotes', '')
+    }
+  }
 
   const getAvailableServices = async () => {
     try {
@@ -105,84 +122,77 @@ const ServiceActivitiesForm = forwardRef<{ handleSubmit: any }, Props>(({ onFini
       <form onSubmit={handleSubmit(onSubmit)} className='w-full'>
         <Card>
           <CardContent>
-            <Typography className='text-xl font-semibold mb-4'>Assign Caregiver</Typography>
+            <div className='flex flex-row justify-between'>
+              <div>
+                <h2 className='text-xl font-semibold mb-6'>Assign Caregiver</h2>
+              </div>
+              <div>
+                <FormLabel>Enable</FormLabel>
+                <Checkbox
+                  {...register('enableAssignCaregiver')}
+                  checked={assignCaregiverEnabled}
+                  onChange={handleEnableChange}
+                />
+              </div>
+            </div>
             <Grid container spacing={4}>
               <Grid size={{ xs: 12, sm: 4 }}>
-                <FormControl fullWidth className='relative'>
-                  <InputLabel size='small'>Caregiver</InputLabel>
-                  <Select
-                    {...register('caregiverId', { required: false })}
-                    name='caregiverId'
-                    label='Caregiver'
-                    size='small'
-                  >
-                    {caregiversList?.data?.map((item: any) => {
-                      return (
-                        <MenuItem key={item.id} value={item.id}>
-                          {item.firstName} {item.lastName}
-                        </MenuItem>
-                      )
-                    })}
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid size={{ xs: 12, sm: 4 }}>
-                <AppReactDatepicker
-                  {...register('assignmentDate', { required: false })}
-                  selected={getValues('assignmentDate') || assignmentDate}
-                  onChange={date => {
-                    console.log('Date:', date)
-                    setValue('assignmentDate', date)
-                    setAssignmentDate(date)
-                  }} // Pass the date to react-hook-form
-                  placeholderText='MM/DD/YYYY'
-                  customInput={
-                    <TextField
-                      fullWidth
-                      size='small'
-                      name='assignmentDate'
-                      label='Assignment Date'
-                      placeholder='MM/DD/YYYY'
-                    />
+                <CustomDropDown
+                  name={'caregiverId'}
+                  control={control}
+                  label={'Caregiver'}
+                  error={errors.caregiverId}
+                  optionList={
+                    caregiversList?.data?.map((item: any) => {
+                      return {
+                        key: `${item?.user?.id}-${item.firstName}`,
+                        value: item?.user?.id,
+                        optionString: `${item.firstName} ${item.lastName}`
+                      }
+                    }) || []
                   }
+                  disabled={!assignCaregiverEnabled}
+                  isRequired={!assignCaregiverEnabled ? false : true}
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 4 }}>
-                <AppReactDatepicker
-                  {...register('unassignmentDate', { required: false })}
-                  selected={getValues('unassignmentDate') || unAssignmentDate}
-                  onChange={date => {
-                    console.log('Date:', date)
-                    setValue('unassignmentDate', date)
-                    setUnAssignmentDate(date)
-                  }} // Pass the date to react-hook-form
-                  placeholderText='MM/DD/YYYY'
-                  customInput={
-                    <TextField
-                      fullWidth
-                      size='small'
-                      name='unassignmentDate'
-                      label='Unassignment Date'
-                      placeholder='MM/DD/YYYY'
-                    />
-                  }
+                <ControlledDatePicker
+                  name={'assignmentDate'}
+                  control={control}
+                  label={'Assignment Date'}
+                  defaultValue={undefined}
+                  error={errors.assignmentDate}
+                  disabled={!assignCaregiverEnabled}
+                  isRequired={!assignCaregiverEnabled ? false : true}
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 4 }}>
-                <TextField
-                  {...register('scheduleHours', { required: false })}
+                <ControlledDatePicker
+                  name={'unassignmentDate'}
+                  control={control}
+                  label={'Unassignment Date'}
+                  defaultValue={undefined}
+                  error={errors.unassignmentDate}
+                  disabled={!assignCaregiverEnabled}
+                  isRequired={!assignCaregiverEnabled ? false : true}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 4 }}>
+                <CustomTextField
                   label={'Scheduled Hours'}
-                  placeholder={'Scheduled Hours'}
+                  placeHolder={'Scheduled Hours'}
                   name={'scheduleHours'}
                   defaultValue={''}
                   type={'number'}
-                  size='small'
-                  fullWidth
+                  error={errors.scheduleHours}
+                  control={control}
+                  disabled={!assignCaregiverEnabled}
+                  isRequired={!assignCaregiverEnabled ? false : true}
                 />
               </Grid>
             </Grid>
             <Grid container spacing={4} sx={{ marginTop: 4 }}>
-              <TextField
+              {/* <TextField
                 {...register('assignmentNotes', { required: false })}
                 label={'Assignment Notes'}
                 placeholder={'Assignment Notes'}
@@ -193,6 +203,15 @@ const ServiceActivitiesForm = forwardRef<{ handleSubmit: any }, Props>(({ onFini
                 fullWidth
                 multiline
                 rows={4}
+              /> */}
+              <ControlledTextArea
+                name={'assignmentNotes'}
+                control={control}
+                label={'Assignment Notes'}
+                placeHolder={'Assignment Notes'}
+                defaultValue={''}
+                disabled={!assignCaregiverEnabled}
+                isRequired={!assignCaregiverEnabled ? false : true}
               />
             </Grid>
           </CardContent>
@@ -318,13 +337,11 @@ const ServiceActivitiesForm = forwardRef<{ handleSubmit: any }, Props>(({ onFini
             <div className='flex space-x-4'>
               <FormGroup row>
                 <FormControlLabel control={<Checkbox onChange={() => {}} />} label='All' />
-                <FormControlLabel control={<Checkbox onChange={() => {}} />} label='HSS' />
+                <FormControlLabel control={<Checkbox onChange={() => {}} />} label='PCA Choice' />
+                <FormControlLabel control={<Checkbox onChange={() => {}} />} label='Shared Care' />
                 <FormControlLabel control={<Checkbox onChange={() => {}} />} label='Waivered' />
               </FormGroup>
             </div>
-            <Button className='mt-3' variant='contained'>
-              CREATE NEW ACCOUNT
-            </Button>
           </CardContent>
         </Card>
       </form>

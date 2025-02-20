@@ -9,8 +9,8 @@ export type PersonalDetailsFormDataType = {
   address: string
   city: string
   state: string
-  zip: number | null
-  SSN: string
+  zipCode: number | null
+  ssn: string
   payRate: number | null
   dateOfHire: Date | null
   terminationDate: Date | null

@@ -22,12 +22,16 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import axios from 'axios'
 import { CircularProgress } from '@mui/material'
+import ProfileAvatar from '@/@core/components/mui/ProfileAvatar'
 
 const TenantDetails = () => {
   const { id } = useParams()
   const [tenantData, setTenantData] = useState<any>([])
+  const [adminUserName, setAdminUserName] = useState<string>('')
   const [fileUrl, setFileUrl] = useState<string>('')
   const [loading, setLoading] = useState<boolean>(true)
+  const [refreshTrigger, setRefreshTrigger] = useState<number>(0)
+
   // Vars
   const buttonProps = (
     children: string,
@@ -41,19 +45,35 @@ const TenantDetails = () => {
     sx: { backgroundColor: overRideColor }
   })
 
+  const updateImageUrl = (profileImageUrl: string) => {
+    if (profileImageUrl) {
+      const imageUrl = `https://${process.env.NEXT_PUBLIC_AWS_S3_PROFILE_BUCKET}.s3.amazonaws.com/${profileImageUrl}`
+      setFileUrl(imageUrl)
+    }
+  }
+
+  // Fetch tenant data
   useEffect(() => {
     const fetchTenantData = async () => {
       try {
         setLoading(true)
         const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/tenant/${id}`)
         const data = response.data
-
-        // Update both states at once
+        console.log('DATATATATATAT', data)
         setTenantData(data)
-        if (data?.users?.[3]?.profileImageUrl) {
-          const imageUrl = `https://${process.env.NEXT_PUBLIC_AWS_S3_PROFILE_BUCKET}.s3.amazonaws.com/${data.users[3].profileImageUrl}`
-          setFileUrl(imageUrl)
-          console.log('Img Url', imageUrl)
+
+        const admin = data?.users?.find((user: any) =>
+          user.userRoles.some((userRole: any) => userRole.role.title === 'Tenant Admin')
+        )
+        console.log(admin)
+
+        if (admin?.userName) {
+          setAdminUserName(admin.userName)
+        }
+
+        // Update image URL if available
+        if (admin?.profileImageUrl) {
+          updateImageUrl(admin.profileImageUrl)
         }
       } catch (error) {
         console.error('Error fetching tenant data:', error)
@@ -63,7 +83,7 @@ const TenantDetails = () => {
     }
 
     fetchTenantData()
-  }, [id])
+  }, [id, refreshTrigger])
 
   const handleImageChange = async (file: File) => {
     try {
@@ -80,21 +100,23 @@ const TenantDetails = () => {
           }
         }
       )
-      console.log('UPDATE RESPONSE', response.data)
-      // Update the fileUrl state with the new image URL after successful upload
+
+      console.log('Tenant Data', tenantData)
+
       if (response.data?.profileImageUrl) {
-        setFileUrl(response.data.profileImageUrl)
+        // Update the image URL immediately
+        updateImageUrl(response.data.profileImageUrl)
+
+        // Trigger a refresh of tenant data
+        setRefreshTrigger(prev => prev + 1)
       }
-      setLoading(false)
     } catch (error) {
       console.error('Update image error:', error)
+    } finally {
       setLoading(false)
     }
   }
 
-  console.log('FILE KA URL', fileUrl)
-
-  // Show loading state while data is being fetched
   if (loading) {
     return (
       <Card>
@@ -112,14 +134,15 @@ const TenantDetails = () => {
           <div className='flex flex-col gap-6'>
             <div className='flex items-center justify-center flex-col gap-4'>
               <div className='flex flex-col items-center gap-4'>
-                <CustomAvatar
-                  alt='user-profile'
-                  src={fileUrl || '/images/avatars/1.png'}
+                <ProfileAvatar
+                  alt={adminUserName}
+                  src={fileUrl}
                   variant='rounded'
                   size={120}
                   onImageChange={handleImageChange}
+                  allowupdate={'true'}
                 />
-                <Typography variant='h5'>{tenantData.users && tenantData?.users[0]?.userName}</Typography>
+                <Typography variant='h5'>{adminUserName}</Typography>
               </div>
               <Chip label='Admin' color='error' size='small' variant='tonal' />
             </div>

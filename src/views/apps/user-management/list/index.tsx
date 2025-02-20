@@ -1,3 +1,4 @@
+'use client'
 import React from 'react'
 import UserManagementList from './UserManagementTable'
 import UserManagementFilters from './UserManagementFilters'
