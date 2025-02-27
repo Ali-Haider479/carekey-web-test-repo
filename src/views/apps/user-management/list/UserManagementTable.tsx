@@ -96,8 +96,15 @@ const UserManagementList = () => {
       const userData = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/user`)
       const roleData = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/role`)
       const permission = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/permission`)
-      setUsersData(userData.data)
-      setRolesData(roleData.data)
+      setUsersData(userData.data.filter((item: any) => {
+        const roleTitle = item?.role?.title;
+        return roleTitle !== 'Caregiver' && roleTitle !== 'Super Admin';
+      }));
+
+      setRolesData(roleData.data.filter((item: any) => {
+        const roleTitle = item?.title;
+        return roleTitle !== 'Caregiver' && roleTitle !== 'Super Admin';
+      }));
       setPermissionData(permission.data)
     } catch (error) {
       console.error('Error fetching roles:', error)
@@ -388,7 +395,7 @@ const UserManagementList = () => {
                 onDelete={() => handleRemovePermission(permission.id)}
                 deleteIcon={<CloseIcon className='text-sm text-[#4B0082] border-[1px] border-[#4B0082] rounded' />}
                 className='mt-2 text-[#4B0082] bg-[#e3e4fb] text-sm py-1'
-                // aria-label={`Remove ${selectedActivity?.title}`}
+              // aria-label={`Remove ${selectedActivity?.title}`}
               />
             ))}
           </Box>
