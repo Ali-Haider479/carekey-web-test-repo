@@ -18,16 +18,14 @@ import StepperWrapper from '@core/styles/stepper'
 import StepperCustomDot from '@components/stepper-dot'
 import PersonalDetailsForm from './PersonalDetailsAndNotes/PersonalDetailsForm'
 import LoginInfoComponent from './LoginInfoAndMailingAddress/LoginInfoComponent'
-import PCAUMPITable from './PcaUmpi/PCAUMPITable'
 import { FormDataType } from '../../invoice/add/AddCustomerDrawer'
 import { useRouter } from 'next/navigation'
-import TrainingCertificatesComponent from './Certificates/TrainingCertificatesComponent'
-import DocumentsSection from './Certificates/DocumentsSection'
 import { PersonalDetailsFormDataType } from './types'
 import { dark } from '@mui/material/styles/createPalette'
 import axios from 'axios'
 import DocumentsPage from './Certificates/Documents'
 import { CircularProgress } from '@mui/material'
+import CustomAlert from '@/@core/components/mui/Alter'
 
 // Vars
 const steps = [
@@ -52,13 +50,15 @@ const EmployeeStepper = () => {
   const [loginInfo, setLoginInfo] = useState<any>({})
   const [documentsData, setDocumentsData] = useState<any>({})
   const [isLoading, setIsLoading] = useState<boolean>(false)
+  const [alertOpen, setAlertOpen] = useState(false)
+  const [alertProps, setAlertProps] = useState<any>()
 
   const router = useRouter()
 
   const personalDetailsFormRef = useRef<{ handleSubmit: any }>(null)
   const loginInfoFormRef = useRef<{ handleSubmit: any }>(null)
   const documentsFormRef = useRef<{ handleSubmit: any }>(null)
-  const authUser: any = JSON.parse(localStorage.getItem('AuthUser') ?? '')
+  const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
 
   const handleReset = () => {
     setActiveStep(0)
@@ -133,7 +133,8 @@ const EmployeeStepper = () => {
         password: loginInfo.password,
         additionalEmailAddress: loginInfo.additionalEmailAddress,
         accountStatus: loginInfo.accountStatus,
-        joinDate: new Date()
+        joinDate: new Date(),
+        roleId: 3
       }
       // Create User and Caregiver (as you've already done)
       const userResponse = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/user`, userPayload)
@@ -238,11 +239,24 @@ const EmployeeStepper = () => {
 
       console.log('Successful document uploads:', successfulUploads)
 
-      setIsLoading(false)
+      setAlertOpen(true)
 
-      router.replace('/apps/caregiver/list')
+      setAlertProps({
+        message: 'Caregiver created successfully.',
+        severity: 'success'
+      })
     } catch (error) {
+      setAlertOpen(true)
+      setAlertProps({
+        message: 'An unexpected error occurred. Please try again later.',
+        severity: 'error'
+      })
       console.error('Error in document upload process:', error)
+    } finally {
+      setTimeout(() => {
+        setIsLoading(false)
+        router.replace('/apps/caregiver/list')
+      }, 3000)
     }
   }
 
@@ -320,6 +334,7 @@ const EmployeeStepper = () => {
   return (
     <>
       <Card className='w-full px-6 py-3'>
+        <CustomAlert AlertProps={alertProps} openAlert={alertOpen} setOpenAlert={setAlertOpen} />
         <Typography variant='h4' className='p-4 mb-3'>
           Adding an Employee / {steps[activeStep]?.subtitle}
         </Typography>
@@ -333,7 +348,7 @@ const EmployeeStepper = () => {
                       stepIcon: StepperCustomDot
                     }}
                   >
-                    <div className='step-label -mt-[110px]'>
+                    <div className='step-label -mt-[100px]'>
                       <div>
                         <Typography
                           className={`step-title text-base ${activeStep === steps.indexOf(label) ? (dark ? 'text-[#7112B7]' : 'text-[#4B0082]') : ''}`}
@@ -376,13 +391,14 @@ const EmployeeStepper = () => {
                 >
                   Back
                 </Button>
-                {isLoading === true ? (
-                  <CircularProgress size={25} />
-                ) : (
-                  <Button variant='contained' onClick={handleNext}>
-                    {activeStep === steps.length - 1 ? 'Submit' : 'Next'}
-                  </Button>
-                )}
+                <Button
+                  startIcon={isLoading ? <CircularProgress size={20} color='info' /> : null}
+                  disabled={isLoading === true}
+                  variant={'contained'}
+                  onClick={handleNext}
+                >
+                  {activeStep === steps.length - 1 ? 'Submit' : 'Next'}
+                </Button>
               </div>
             </Grid>
           </CardContent>

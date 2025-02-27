@@ -4,14 +4,9 @@ import { useState, useMemo } from 'react'
 import Card from '@mui/material/Card'
 import CardHeader from '@mui/material/CardHeader'
 import { Alert, CircularProgress, IconButton, Typography } from '@mui/material'
-import DataTable from '@/@core/components/mui/DataTable'
-import { GridColDef } from '@mui/x-data-grid'
-import LaunchIcon from '@mui/icons-material/Launch'
 import ActionButton from '@/@core/components/mui/ActionButton'
 import ReactTable from '@/@core/components/mui/ReactTable'
 import axios from 'axios'
-import transformToExpandableFormat from '@/utils/transformExpandableData'
-import { transformTimesheetData } from '@/utils/transform'
 import { calculateHoursWorked, formatDate, formatDateTime } from '@/utils/helperFunctions'
 import { dark } from '@mui/material/styles/createPalette'
 import CustomAlert from '@/@core/components/mui/Alter'
@@ -97,11 +92,44 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
     console.log('USER TWO', currentEditedData)
     console.log('USER ONE', data)
 
-    const currentUser: any = data.find((item: any) => item.id === currentEditedData.id)
+    // Function to find user in main array or subRows
+    const findUser = (data: any[], targetId: number | string): any => {
+      // First check main level
+      let currentUser = data.find((item: any) => item.id === targetId)
+
+      if (currentUser) {
+        return currentUser
+      }
+
+      // If not found in main level, search in subRows
+      for (const item of data) {
+        if (item.subRows && Array.isArray(item.subRows)) {
+          currentUser = item.subRows.find((subItem: any) => subItem.id === targetId)
+          if (currentUser) {
+            return currentUser
+          }
+        }
+      }
+
+      return null
+    }
+
+    const currentUser = findUser(data, currentEditedData.id)
     console.log('USER THREE', currentUser)
 
+    // If user not found, handle the error
+    if (!currentUser) {
+      setAlertOpen(true)
+      setAlertProps({
+        message: 'User not found in the data.',
+        severity: 'error'
+      })
+      return
+    }
+
     // Check if signatureStatus is Pending
-    if (currentUser.signature.signatureStatus === 'Pending') {
+    if (currentUser?.signature?.signatureStatus === 'Pending') {
+      console.log('INSIDE IF SP')
       setAlertOpen(true)
       setAlertProps({
         message: 'Please approve the signature before editing.',
@@ -111,7 +139,8 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
     }
 
     // Check if serviceAuth exists
-    if (currentUser.client.serviceAuth.length === 0) {
+    if (currentUser?.client?.serviceAuth?.length === 0) {
+      console.log('INSIDE IF SA')
       setAlertOpen(true)
       setAlertProps({
         message: 'Please complete the service authorization before editing.',
@@ -125,17 +154,14 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
       const payload = {
         id: currentEditedData.id,
         tsApprovalStatus: currentEditedData.tsApprovalStatus,
-        clockIn: currentEditedData.clockIn,
-        clockOut: currentEditedData.clockOut
+        // clockIn: currentEditedData.clockIn,
+        // clockOut: currentEditedData.clockOut
       }
-
+      console.log('PAYLOAD UPDATE TS', payload)
       const res = await axios.patch(`${process.env.NEXT_PUBLIC_API_URL}/time-log/update-ts-approval`, payload)
+
       if (currentEditedData.tsApprovalStatus === 'Approved') {
-        // const { data: timeLog } = await axios.get(
-        //   `${process.env.NEXT_PUBLIC_API_URL}/time-log/ts-approved/${res.data.id}`
-        // )
-        // const timeLogForPayload = timeLog[0]
-        // console.log('timeLogForPayload', timeLog)
+        console.log('CURRENT EDITED DATA ONE', currentEditedData)
         const hrs = calculateHoursWorked(currentUser?.clockIn, currentUser?.clockOut)
         const billedAmount = parseFloat(hrs) * currentUser?.client?.serviceAuth[0]?.serviceRate
 
@@ -147,20 +173,20 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
           claimStatus: 'Pending',
           billedStatus: 'Pending'
         }
+        console.log('BILLING PP ONE', billingPayload)
         const createBilling = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/time-log/billing`, billingPayload)
         console.log('createBilling', createBilling)
       } else if (
         currentEditedData.tsApprovalStatus === 'Rejected' ||
         currentEditedData.tsApprovalStatus === 'Pending'
       ) {
-        console.log('Timesheet is Rejected')
+        console.log('Timesheet is Rejected ONE')
       }
+
       await fetchInitialData()
       setEditingId(null)
       setSelectedUser(null)
       setEditedValues({})
-
-      // Optionally refresh the whole data
     } catch (error) {
       console.error('Error saving data', error)
     }
@@ -206,34 +232,60 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
       sortable: true,
       render: (user: any) => <Typography color='primary'>{user?.serviceName}</Typography>
     },
+    // {
+    //   id: 'clockIn',
+    //   label: 'CLOCK IN',
+    //   minWidth: 170,
+    //   editable: true,
+    //   sortable: true,
+    //   render: (user: any) => <Typography color='primary'>{formatDateTime(user?.clockIn)}</Typography>
+    // },
+    // {
+    //   id: 'clockOut',
+    //   label: 'CLOCK OUT',
+    //   minWidth: 170,
+    //   editable: true,
+    //   sortable: true,
+    //   render: (user: any) => <Typography color='primary'>{formatDateTime(user?.clockOut)}</Typography>
+    // },
+    // {
+    //   id: 'payPeriod',
+    //   label: 'PAY PERIOD',
+    //   minWidth: 170,
+    //   editable: false,
+    //   sortable: true,
+    //   render: (user: any) => {
+    //     const startDate = user?.payPeriodHistory?.startDate
+    //     if (startDate) {
+    //       const date = new Date(startDate)
+    //       return <Typography className='font-normal text-base my-3'>{formatDate(user.dateOfService)}</Typography>
+    //     }
+    //     return <Typography className='font-normal text-base my-3'>N/A</Typography>
+    //   }
+    // },
     {
-      id: 'clockIn',
-      label: 'CLOCK IN',
-      minWidth: 170,
-      editable: true,
-      sortable: true,
-      render: (user: any) => <Typography color='primary'>{formatDateTime(user?.clockIn)}</Typography>
-    },
-    {
-      id: 'clockOut',
-      label: 'CLOCK OUT',
-      minWidth: 170,
-      editable: true,
-      sortable: true,
-      render: (user: any) => <Typography color='primary'>{formatDateTime(user?.clockOut)}</Typography>
-    },
-    {
-      id: 'payPeriod',
-      label: 'PAY PERIOD',
+      id: 'dateOfService',
+      label: 'DATE OF SERVICE',
       minWidth: 170,
       editable: false,
       sortable: true,
       render: (user: any) => {
-        const startDate = user?.payPeriodHistory?.startDate
-        if (startDate) {
-          const date = new Date(startDate)
-          return <Typography className='font-normal text-base my-3'>{formatDate(user.dateOfService)}</Typography>
+        const dateOfService = user?.dateOfService
+
+        if (dateOfService) {
+          // Try to parse it as a timestamp
+          const parsedDate = new Date(dateOfService)
+
+          // Check if the parsed date is valid (not "Invalid Date")
+          if (!isNaN(parsedDate.getTime())) {
+            return <Typography className='font-normal text-base my-3'>{formatDate(user.dateOfService)}</Typography>
+          }
+
+          // If it's not a valid timestamp, return the raw string as is
+          return <Typography className='font-normal text-base my-3'>{dateOfService}</Typography>
         }
+
+        // If dateOfService is null/undefined, return N/A
         return <Typography className='font-normal text-base my-3'>N/A</Typography>
       }
     },
@@ -283,6 +335,7 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
           user={user}
           selectedUser={selectedUser}
           anchorEl={anchorEl}
+          disabled={!!user.subRows && user.subRows.length > 0} // Disable if subRows exist
         />
       )
     }
@@ -305,7 +358,7 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
   // Assuming your first file data is in originalTimeEntries
   // const transformedData = transformTimesheetData(data)
   // console.log('Date timesheet,data', transformedData)
-
+  console.log('DATE AFTER SUBROWS', data)
   return (
     <Card sx={{ borderRadius: 1, boxShadow: 3 }}>
       <CardHeader title='Received Timesheet' className='pb-4' />
@@ -317,8 +370,6 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
           data={data}
           keyExtractor={user => user.id.toString()}
           enableRowSelect
-          enablePagination
-          pageSize={5}
           stickyHeader
           maxHeight={600}
           containerStyle={{ borderRadius: 2 }}

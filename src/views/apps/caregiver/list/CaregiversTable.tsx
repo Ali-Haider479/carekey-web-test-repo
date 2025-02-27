@@ -4,9 +4,9 @@ import Card from '@mui/material/Card'
 import TextField from '@mui/material/TextField'
 import Button from '@mui/material/Button'
 import Grid from '@mui/material/Grid2'
-import { useRouter } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import ReactTable from '@/@core/components/mui/ReactTable'
-import { CircularProgress, Typography } from '@mui/material'
+import { CircularProgress, Icon, Typography } from '@mui/material'
 
 type Caregiver = {
   itemNumber: number
@@ -29,7 +29,7 @@ const CaregiverTable = ({ data, isLoading }: CaregiverTableProps) => {
   const router = useRouter()
 
   const handleNext = (id: any) => {
-    router.push(`/apps/caregiver/${id}/detail`)
+    router.push(`/en/apps/caregiver/${id}/detail`)
   }
 
   const newColumns = [
@@ -138,7 +138,7 @@ const CaregiverTable = ({ data, isLoading }: CaregiverTableProps) => {
         </Grid>
         <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
           <Button
-            onClick={() => router.push('/apps/caregiver/add-employee')}
+            onClick={() => router.push('/en/apps/caregiver/add-employee')}
             variant='contained'
             sx={{ backgroundColor: '#4B0082', color: '#fff', fontWeight: 'bold' }}
           >
@@ -154,6 +154,27 @@ const CaregiverTable = ({ data, isLoading }: CaregiverTableProps) => {
           <div className='flex items-center justify-center p-10'>
             <CircularProgress />
           </div>
+        ) : !data?.length ? (
+          <Card>
+            <div className='flex flex-col items-center justify-center p-10 gap-2'>
+              <Icon className='bx-folder-open text-6xl text-textSecondary' />
+              <Typography variant='h6'>No Data Available</Typography>
+              <Typography variant='body2' className='text-textSecondary'>
+                No records found. Click 'Add New Caegiver' to create one.
+              </Typography>
+              <Button
+                variant='contained'
+                startIcon={<i className='bx-plus' />}
+                onClick={() => {
+                  router.push('/en/apps/caregiver/add-employee')
+                }}
+                className='mt-4'
+                sx={{ backgroundColor: '#4B0082' }}
+              >
+                Add New Caregiver
+              </Button>
+            </div>
+          </Card>
         ) : (
           <ReactTable
             columns={newColumns}

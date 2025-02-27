@@ -32,6 +32,7 @@ import DocumentsForm from './add-client-forms/DocumentsForm'
 import axios from 'axios'
 import { CardContent, CircularProgress } from '@mui/material'
 import { useRouter } from 'next/navigation'
+import CustomAlert from '@/@core/components/mui/Alter'
 
 // Vars
 const steps = [
@@ -62,12 +63,14 @@ const AddClientStepper = () => {
   const [serviceActivities, setServiceActivities] = useState<any>()
   const [documents, setDocuments] = useState<any>()
   const [isLoading, setIsLoading] = useState<boolean>(false)
+  const [alertOpen, setAlertOpen] = useState(false)
+  const [alertProps, setAlertProps] = useState<any>()
 
   const personalDetailsFormRef = useRef<any>(null)
   const physicianAndCaseMangerFormRef = useRef<any>(null)
   const serviceActivitiesFormRef = useRef<any>(null)
   const documentsFormRef = useRef<any>(null)
-  const authUser: any = JSON.parse(localStorage.getItem('AuthUser') ?? '')
+  const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
 
   const handleReset = () => {
     setActiveStep(0)
@@ -153,6 +156,7 @@ const AddClientStepper = () => {
         dateOfBirth: personalDetails.dateOfBirth,
         pmiNumber: personalDetails.pmiNumber,
         gender: personalDetails.gender,
+        emailId: personalDetails.emailId,
         primaryPhoneNumber: personalDetails.primaryPhoneNumber,
         primaryCellNumber: personalDetails.primaryPhoneNumber,
         additionalPhoneNumber: personalDetails.additionalPhoneNumber,
@@ -329,13 +333,24 @@ const AddClientStepper = () => {
 
       console.log('Successful document uploads:', successfulUploads)
 
-      setIsLoading(false)
+      setAlertOpen(true)
 
-      // console.log('Client Body ---> ', createClientBody, clientPrimaryAddressBody)
-
-      router.replace('/apps/client/list')
+      setAlertProps({
+        message: 'Client created successfully.',
+        severity: 'success'
+      })
     } catch (error) {
+      setAlertOpen(true)
+      setAlertProps({
+        message: 'An unexpected error occurred. Please try again later.',
+        severity: 'error'
+      })
       console.error('Error saving data: ', error)
+    } finally {
+      setTimeout(() => {
+        setIsLoading(false)
+        router.replace('/apps/client/list')
+      }, 3000)
     }
   }
 
@@ -442,6 +457,7 @@ const AddClientStepper = () => {
   return (
     <>
       <Card className='p-2'>
+        <CustomAlert AlertProps={alertProps} openAlert={alertOpen} setOpenAlert={setAlertOpen} />
         <Typography variant='h4' className='p-4'>
           Adding a Client / Assign Caregiver
         </Typography>
@@ -498,13 +514,14 @@ const AddClientStepper = () => {
                   >
                     Back
                   </Button>
-                  {isLoading === true ? (
-                    <CircularProgress size={25} />
-                  ) : (
-                    <Button variant='contained' onClick={handleNext}>
-                      {activeStep === steps.length - 1 ? 'Submit' : 'Next'}
-                    </Button>
-                  )}
+                  <Button
+                    startIcon={isLoading ? <CircularProgress size={20} color='info' /> : null}
+                    disabled={isLoading === true}
+                    variant='contained'
+                    onClick={handleNext}
+                  >
+                    {activeStep === steps.length - 1 ? 'Submit' : 'Next'}
+                  </Button>
                   {/* <Button variant='contained' onClick={handleNext}>
                     {activeStep === steps.length - 1 ? 'Submit' : 'Next'}
                   </Button> */}

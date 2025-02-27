@@ -170,7 +170,7 @@ const SidebarLeft = (props: Props) => {
   const [isModalShow, setIsModalShow] = useState(false)
   const [clients, setClients] = useState<any>([])
   const [caregivers, setCaregivers] = useState<any>([])
-  const authUser: any = JSON.parse(localStorage.getItem('AuthUser') ?? '')
+  const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
 
   useEffect(() => {
     const fetchClients = async () => {

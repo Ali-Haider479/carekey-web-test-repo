@@ -3,7 +3,7 @@ import React, { useState } from 'react'
 import { Controller } from 'react-hook-form'
 import MenuItem from '@mui/material/MenuItem'
 import FormControl from '@mui/material/FormControl'
-import { FormHelperText, InputLabel, Select } from '@mui/material'
+import { FormHelperText, InputLabel, Select, Typography } from '@mui/material'
 
 type Option = {
   key: any
@@ -38,7 +38,16 @@ function CustomDropDown(props: Props) {
           <InputLabel size='small'>{props.label}</InputLabel>
           <Select
             {...field} // Spread field to bind value and onChange
-            label={props.label}
+            label={
+              isRequired === true ? (
+                <div className='flex flex-row'>
+                  <Typography>{props.label}</Typography>
+                  <Typography className='text-red-500 ml-1'>*</Typography>
+                </div>
+              ) : (
+                props.label
+              )
+            }
             size='small'
             disabled={props.disabled}
           >

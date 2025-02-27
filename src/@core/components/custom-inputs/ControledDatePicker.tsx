@@ -1,7 +1,7 @@
 'use client'
 import { Controller } from 'react-hook-form'
 import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
-import { TextField } from '@mui/material'
+import { TextField, Typography } from '@mui/material'
 
 type Props = {
   name: string
@@ -11,6 +11,8 @@ type Props = {
   defaultValue: any
   isRequired?: boolean
   disabled?: boolean
+  minDate?: Date
+  maxDate?: Date
 }
 
 const ControlledDatePicker = (props: Props) => {
@@ -38,13 +40,24 @@ const ControlledDatePicker = (props: Props) => {
           disabled={props.disabled}
           showYearDropdown
           showMonthDropdown
+          minDate={props.minDate}
+          maxDate={props.maxDate}
           customInput={
             <TextField
               fullWidth
               error={props.error}
               helperText={props.error && 'please select a date'}
               size='small'
-              label={props.label}
+              label={
+                isRequired === true ? (
+                  <div className='flex flex-row'>
+                    <Typography>{props.label}</Typography>
+                    <Typography className='text-red-500 ml-1'>*</Typography>
+                  </div>
+                ) : (
+                  props.label
+                )
+              }
               placeholder='MM/DD/YYYY'
             />
           }

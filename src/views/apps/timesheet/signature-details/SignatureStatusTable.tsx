@@ -86,15 +86,26 @@ const SignatureStatusTable = ({ data, isLoading }: SignatureStatusTableProps) =>
       editable: false,
       sortable: true,
       render: (user: any) => {
-        const startDate = user?.dateOfService
-        if (startDate) {
-          const date = new Date(startDate)
-          return (
-            <Typography className='font-normal text-base my-3'>
-              {`${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear().toString().slice(-2)}`}
-            </Typography>
-          )
+        const dateOfService = user?.dateOfService
+
+        if (dateOfService) {
+          // Try to parse it as a timestamp
+          const parsedDate = new Date(dateOfService)
+
+          // Check if the parsed date is valid (not "Invalid Date")
+          if (!isNaN(parsedDate.getTime())) {
+            return (
+              <Typography className='font-normal text-base my-3'>
+                {`${parsedDate.getMonth() + 1}/${parsedDate.getDate()}/${parsedDate.getFullYear().toString().slice(-2)}`}
+              </Typography>
+            )
+          }
+
+          // If it's not a valid timestamp, return the raw string as is
+          return <Typography className='font-normal text-base my-3'>{dateOfService}</Typography>
         }
+
+        // If dateOfService is null/undefined, return N/A
         return <Typography className='font-normal text-base my-3'>N/A</Typography>
       }
     },

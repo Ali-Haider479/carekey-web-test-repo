@@ -1,78 +1,62 @@
 'use client'
 import CustomCheckList from '@/@core/components/mui/CustomChecklist'
-import { Button, Card, CardContent, Menu, MenuItem } from '@mui/material'
+import { Button, ButtonGroup, Card, CardContent, Menu, MenuItem, Tab } from '@mui/material'
 import Grid from '@mui/material/Grid2'
 import React, { useState } from 'react'
 import InfoCard from '../../../components/InfoCard'
+import CustomTabList from '@/@core/components/mui/TabList'
+import AllFilesTab from './AllFilesTab'
+import SentFilesTab from './SentFilesTab'
+import RecievedFilesTab from './RecievedFilesTab'
+import TabPanel from '@mui/lab/TabPanel'
+import TabContext from '@mui/lab/TabContext'
 
 const E_Document = () => {
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
-  const [selectedDoc, setSelectedDoc] = useState<string | null>(null)
+  const [activeTab, setActiveTab] = useState('allFilesTab')
 
-  const handleMenuClick = (event: React.MouseEvent<HTMLElement>, doc: string) => {
-    setAnchorEl(event.currentTarget)
-    setSelectedDoc(doc)
+  const handleTabChange = (_event: React.SyntheticEvent, newValue: string) => {
+    setActiveTab(newValue)
   }
 
-  const handleMenuClose = () => {
-    setAnchorEl(null)
-    setSelectedDoc(null)
-  }
-
-  const handleEdit = () => {
-    console.log(`Edit action for ${selectedDoc}`)
-    handleMenuClose()
-  }
-
-  const handleDelete = () => {
-    console.log(`Delete action for ${selectedDoc}`)
-    handleMenuClose()
-  }
-
-  const documents = [
-    'PCA Emergency backup plan',
-    'PCA Emergency backup plan',
-    'RN Home visit charting sheet',
-    'RN Home visit charting sheet',
-    'Home making care plan',
-    'Home making care plan'
-  ]
-  const renderMenu = () => (
-    <Menu
-      anchorEl={anchorEl}
-      open={Boolean(anchorEl)}
-      onClose={handleMenuClose}
-      anchorOrigin={{
-        vertical: 'bottom',
-        horizontal: 'right'
-      }}
-      transformOrigin={{
-        vertical: 'top',
-        horizontal: 'right'
-      }}
-    >
-      <MenuItem onClick={handleEdit}>Edit</MenuItem>
-      <MenuItem onClick={handleDelete}>Delete</MenuItem>
-    </Menu>
-  )
   return (
-    <Grid container spacing={0}>
-      <Grid size={{ xs: 12, sm: 4, md: 4 }}>
-        <InfoCard />
+    <TabContext value={activeTab}>
+      <Grid container spacing={0}>
+        <Grid size={{ xs: 12, sm: 4, md: 4 }}>
+          <InfoCard />
+        </Grid>
+        <Grid size={{ xs: 12, sm: 6, md: 8 }}>
+          <Card className='rounded-lg shadow-md'>
+            {/* Header */}
+            <div className='flex justify-center'>
+              <div className='border-2 rounded-md w-[98%] mt-5 p-2'>
+                <CustomTabList onChange={handleTabChange} className='w-full' pill='true'>
+                  <Tab value={'allFilesTab'} label={'ALL FILES'} className='w-1/3' />
+                  <Tab value={'sentFilesTab'} label={'SENT FILES'} className='w-1/3' />
+                  <Tab value={'recievedFilesTab'} label={'RECIEVED FILES'} className='w-1/3' />
+                </CustomTabList>
+              </div>
+            </div>
+            <CardContent className='flex justify-between items-center mb-4'>
+              <h2 className='text-xl font-semibold'>Electronic Documentation</h2>
+              <Button variant='contained'>+ Create Folder</Button>
+            </CardContent>
+            <CardContent>
+              <div>
+                <TabPanel value='allFilesTab'>
+                  <AllFilesTab />
+                </TabPanel>
+                <TabPanel value='sentFilesTab'>
+                  <SentFilesTab />
+                </TabPanel>
+                <TabPanel value='recievedFilesTab'>
+                  <RecievedFilesTab />
+                </TabPanel>
+              </div>
+            </CardContent>
+          </Card>
+        </Grid>
       </Grid>
-      <Grid size={{ xs: 12, sm: 6, md: 8 }}>
-        <Card className='rounded-lg shadow-md'>
-          {/* Header */}
-          <CardContent className='flex justify-between items-center mb-4'>
-            <h2 className='text-xl font-semibold'>Electronic Documentation</h2>
-            <Button variant='contained'>+ Create Folder</Button>
-          </CardContent>
-          <CardContent>
-            <CustomCheckList documents={documents} menu={renderMenu} />
-          </CardContent>
-        </Card>
-      </Grid>
-    </Grid>
+    </TabContext>
   )
 }
 

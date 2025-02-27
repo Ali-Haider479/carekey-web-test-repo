@@ -2,27 +2,14 @@
 
 import React, { forwardRef, useEffect, useImperativeHandle, useState } from 'react'
 import CustomTextField from '@core/components/custom-inputs/CustomTextField'
-import { FormProvider, useForm, useFormContext } from 'react-hook-form'
+import { FormProvider, useForm } from 'react-hook-form'
 import CustomDropDown from '@core/components/custom-inputs/CustomDropDown'
-import {
-  Button,
-  Card,
-  CardContent,
-  Checkbox,
-  FormLabel,
-  IconButton,
-  InputAdornment,
-  InputLabel,
-  Select
-} from '@mui/material'
+import { Card, CardContent, Checkbox, FormLabel, IconButton, InputAdornment } from '@mui/material'
 import Grid from '@mui/material/Grid2'
 import axios from 'axios'
 import ControlledDatePicker from '@/@core/components/custom-inputs/ControledDatePicker'
 import ControlledTextArea from '@/@core/components/custom-inputs/ControlledTextArea'
-import MenuItem from '@mui/material/MenuItem'
-import FormControl from '@mui/material/FormControl'
-import TextField from '@mui/material/TextField'
-import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
+import USStates from '@/utils/constants'
 
 type Props = {
   onFinish: any
@@ -84,9 +71,13 @@ const LoginInfoComponent = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
   const [assignmentDate, setAssignmentDate] = useState<Date | null>(null)
   const [unAssignmentDate, setUnAssignmentDate] = useState<Date | null>(null)
 
-  const selectedClient = watch('clientId')
-
   const assignClientEnabled = watch('enableAssignClient')
+
+  const passwordCheck = watch('password')
+
+  const confirmPasswordCheck = watch('confirmPassword')
+
+  console.log('Passwords comparison', passwordCheck, confirmPasswordCheck)
 
   const handleClickShowPassword = () => setIsPasswordShown(show => !show)
 
@@ -157,6 +148,7 @@ const LoginInfoComponent = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
                   name={'password'}
                   defaultValue={''}
                   type={isPasswordShown ? 'text' : 'password'}
+                  minLength={8}
                   error={errors.password}
                   control={control}
                   slotProps={{
@@ -289,6 +281,7 @@ const LoginInfoComponent = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
                   defaultValue={undefined}
                   error={errors.unassignmentDate}
                   disabled={!assignClientEnabled}
+                  minDate={watch('assignmentDate') || undefined}
                   isRequired={!assignClientEnabled ? false : true}
                 />
               </Grid>
@@ -349,14 +342,17 @@ const LoginInfoComponent = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
 
               <Grid size={{ xs: 12, sm: 4 }}>
                 {/* State */}
-                <CustomTextField
-                  label={'State'}
-                  placeHolder={'Enter State'}
-                  name={'state'}
-                  defaultValue={''}
-                  type={'text'}
-                  error={errors.state}
+                <CustomDropDown
+                  name='state'
                   control={control}
+                  error={errors.state}
+                  label='State'
+                  optionList={USStates.map((state: any) => ({
+                    key: state.key,
+                    value: state.value,
+                    optionString: state.optionString
+                  }))}
+                  defaultValue={''}
                 />
               </Grid>
 

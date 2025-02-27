@@ -19,6 +19,28 @@ function CaregiverAboutCard() {
   const [isLoading, setIsLoading] = useState(false)
   const [isEdit, setIsEdit] = useState(true)
   const [formData, setFormData] = useState<any>({})
+  const [originalFormData, setOriginalFormData] = useState<any>({})
+  const [emailError, setEmailError] = useState<boolean>(false)
+  const [emergencyEmailError, setEmergencyEmailError] = useState<boolean>(false)
+  const [phoneNumberError, setPhoneNumberError] = useState<boolean>(false)
+  const [emergencyPhoneNumberError, setEmergencyPhoneNumberError] = useState<boolean>(false)
+
+  const formatPhoneNumber = (value: string = '') => {
+    // Remove all non-digits
+    const numbers = value.replace(/\D/g, '')
+
+    // Early return if empty
+    if (!numbers) return ''
+
+    // Apply mask according to input length
+    if (numbers.length <= 3) {
+      return `(${numbers}`
+    } else if (numbers.length <= 6) {
+      return `(${numbers.slice(0, 3)}) ${numbers.slice(3)}`
+    } else {
+      return `(${numbers.slice(0, 3)}) ${numbers.slice(3, 6)}-${numbers.slice(6, 10)}`
+    }
+  }
 
   useEffect(() => {
     fetchData()
@@ -27,11 +49,12 @@ function CaregiverAboutCard() {
   // Initialize form data when data is fetched
   useEffect(() => {
     if (data) {
-      setFormData({
+      const formattedData = {
         firstName: data.firstName,
         middleName: data.middleName,
         lastName: data.lastName,
         primaryPhoneNumber: data.primaryPhoneNumber,
+        gender: data.gender,
         dateOfBirth: data.dateOfBirth,
         emailAddress: data.user?.emailAddress,
         secondaryPhoneNumber: data.secondaryPhoneNumber,
@@ -52,9 +75,20 @@ function CaregiverAboutCard() {
         specialRequests: data.caregiverNotes?.specialRequests,
         comments: data.caregiverNotes?.comments,
         allergies: data.caregiverNotes?.allergies
-      })
+      }
+      setFormData(formattedData)
+      setOriginalFormData(formattedData)
     }
   }, [data])
+
+  const handleCancel = () => {
+    setFormData({ ...originalFormData }) // Reset form data to original values
+    setEmailError(false)
+    setEmergencyEmailError(false)
+    setPhoneNumberError(false)
+    setEmergencyPhoneNumberError(false)
+    setIsEdit(true) // Switch back to view mode
+  }
 
   const fetchData = async () => {
     try {
@@ -69,6 +103,45 @@ function CaregiverAboutCard() {
   }
 
   const handleFieldChange = (name: string, value: any) => {
+    // Handle email validation
+    const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
+    if (name === 'emailAddress' && !emailPattern.test(value)) {
+      setEmailError(true)
+    } else if (name === 'emergencyEmailId' && !emailPattern.test(value)) {
+      setEmergencyEmailError(true)
+    } else {
+      setEmailError(false)
+      setEmergencyEmailError(false)
+    }
+
+    // Apply phone number formatting for specific fields
+    if (['primaryPhoneNumber', 'secondaryPhoneNumber'].includes(name)) {
+      const digits = value.replace(/\D/g, '')
+      const formattedNumber = formatPhoneNumber(digits)
+
+      setPhoneNumberError(digits.length !== 10)
+
+      setFormData((prev: any) => ({
+        ...prev,
+        [name]: formattedNumber // Store formatted number in state
+      }))
+      return
+    }
+
+    if (name === 'emergencyContactNumber') {
+      const digits = value.replace(/\D/g, '')
+      const formattedNumber = formatPhoneNumber(digits)
+
+      setEmergencyPhoneNumberError(digits.length !== 10)
+
+      setFormData((prev: any) => ({
+        ...prev,
+        [name]: formattedNumber // Store formatted number in state
+      }))
+      return
+    }
+
+    // Handle all other fields normally
     setFormData((prev: any) => ({
       ...prev,
       [name]: value
@@ -95,8 +168,9 @@ function CaregiverAboutCard() {
     { label: 'Last Name', name: 'lastName', value: formData.lastName },
     { label: 'Phone Number', name: 'primaryPhoneNumber', value: formData.primaryPhoneNumber },
     { label: 'Date of Birth', name: 'dateOfBirth', value: formData.dateOfBirth },
-    { label: 'Email Address', name: 'emergencyEmailId', value: formData.emergencyEmailId },
-    { label: 'Cell Phone Number', name: 'secondaryPhoneNumber', value: formData.secondaryPhoneNumber }
+    { label: 'Email Address', name: 'emailAddress', value: formData.emailAddress },
+    { label: 'Cell Phone Number', name: 'secondaryPhoneNumber', value: formData.secondaryPhoneNumber },
+    { label: 'Gender', name: 'gender', value: formData.gender }
   ]
 
   const emergencyFields = [
@@ -145,7 +219,7 @@ function CaregiverAboutCard() {
                     variant='contained'
                     startIcon={<CloseIcon />}
                     className='text-white hover:bg-indigo-800'
-                    onClick={() => setIsEdit(true)}
+                    onClick={handleCancel}
                   >
                     Cancel
                   </Button>
@@ -155,6 +229,17 @@ function CaregiverAboutCard() {
                   startIcon={isEdit ? <EditOutlined /> : <SaveOutlined />}
                   className='bg-indigo-900 text-white hover:bg-indigo-800'
                   onClick={isEdit ? () => setIsEdit(false) : handleSave}
+                  disabled={
+                    emailError
+                      ? true
+                      : emergencyEmailError
+                        ? true
+                        : phoneNumberError
+                          ? true
+                          : emergencyPhoneNumberError
+                            ? true
+                            : false
+                  }
                 >
                   {isEdit ? 'Edit' : 'Update'}
                 </Button>
@@ -175,9 +260,11 @@ function CaregiverAboutCard() {
                     isEdit={isEdit}
                     onChange={handleFieldChange}
                     name={field.name}
+                    disabled={['emailAddress', 'gender'].includes(field.name) ? true : false}
                   />
                 ))}
               </div>
+              {phoneNumberError && <Typography className='text-error'>Please enter a valid 10 digit number</Typography>}
             </div>
 
             {/* Emergency Details Section */}
@@ -194,6 +281,12 @@ function CaregiverAboutCard() {
                   />
                 ))}
               </div>
+              {emergencyEmailError && (
+                <Typography className='text-error'>Please enter a valid email address</Typography>
+              )}
+              {emergencyPhoneNumberError && (
+                <Typography className='text-error'>Please enter a valid 10 digit number</Typography>
+              )}
             </div>
 
             {/* Additional Details Section */}

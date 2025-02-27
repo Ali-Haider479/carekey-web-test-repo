@@ -110,8 +110,10 @@ const CareKeyLogin = () => {
         console.log('Session Login', session)
 
         if (session?.user) {
+          const role = session?.user?.userRoles?.title
           localStorage.setItem('AuthUser', JSON.stringify(session?.user))
-          router.push('/')
+          console.log('SESSION ROLEE', session?.user?.userRoles?.title)
+          role.includes('Super Admin') || role.includes('Tenant Admin') ? router.push('/') : router.push('/en/apps/rcm')
         }
       } else {
         // Error Case

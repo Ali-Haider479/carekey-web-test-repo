@@ -27,35 +27,14 @@ const DocumentsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish, defa
     control,
     formState: { errors },
     handleSubmit,
-    register,
-    setValue,
-    setError,
-    clearErrors
+    setValue
   } = methods
 
   useEffect(() => {
     setValue('documentFiles', documents)
-
-    // Add validation logic
-    if (documents.length === 0) {
-      setError('documentFiles', {
-        type: 'required',
-        message: 'At least one document is required'
-      })
-    } else {
-      clearErrors('documentFiles')
-    }
-  }, [documents, setValue, setError, clearErrors])
+  }, [documents])
 
   const onSubmit = (data: any) => {
-    if (documents.length === 0) {
-      setError('documentFiles', {
-        type: 'required',
-        message: 'At least one document is required'
-      })
-      return
-    }
-
     const formData = {
       documents: {
         files: data.documentFiles || []
@@ -83,11 +62,6 @@ const DocumentsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish, defa
                   fileSize={25 * 1024 * 1024}
                   title='Choose Files'
                 />
-                {errors.documentFiles && (
-                  <Typography className='text-red-500 text-sm mt-2 text-center'>
-                    {errors.documentFiles.message as string}
-                  </Typography>
-                )}
               </div>
 
               <div className='col-span-2'>

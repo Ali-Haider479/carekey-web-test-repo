@@ -1,6 +1,6 @@
 import { TextField, Typography } from '@mui/material'
 
-export const EditableField = ({ label, value, isEdit, onChange, name }: any) => {
+export const EditableField = ({ label, value, isEdit, onChange, name, disabled }: any) => {
   const handleChange = (e: any) => {
     onChange(name, e.target.value)
   }
@@ -16,6 +16,7 @@ export const EditableField = ({ label, value, isEdit, onChange, name }: any) => 
           variant='standard'
           className='outline-none'
           onChange={handleChange}
+          disabled={disabled}
         />
       )}
     </div>

@@ -1,7 +1,7 @@
 'use client'
 
 // React Imports
-import { forwardRef, useEffect, useImperativeHandle } from 'react'
+import { forwardRef, useEffect, useImperativeHandle, useState } from 'react'
 
 // MUI Imports
 import Card from '@mui/material/Card'
@@ -24,6 +24,8 @@ import { Controller, FormProvider, useForm } from 'react-hook-form'
 import CustomTextField from '@core/components/custom-inputs/CustomTextField'
 import CustomDropDown from '@core/components/custom-inputs/CustomDropDown'
 import { PersonalDetailsFormDataType } from '../types'
+import ControlledDatePicker from '@/@core/components/custom-inputs/ControledDatePicker'
+import USStates from '@/utils/constants'
 
 type Props = {
   // form?: any
@@ -41,7 +43,8 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
   const {
     control,
     formState: { errors },
-    handleSubmit // Add this if you want to use form submission
+    handleSubmit, // Add this if you want to use form submission
+    watch
   } = methods
 
   // Expose handleSubmit to parent via ref
@@ -49,7 +52,18 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
     handleSubmit: (onValid: (data: PersonalDetailsFormDataType) => void) => handleSubmit(onValid)
   }))
 
-  // Use methods instead of useFormContext
+  const [error, setError] = useState('')
+
+  const emergencyEmailValidation = watch('emergencyEmailId')
+
+  const validateEmail = () => {
+    const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
+    if (!emailPattern.test(emergencyEmailValidation)) {
+      setError('Please enter a valid email address!.')
+    } else {
+      setError('')
+    }
+  }
 
   const onSubmit = (data: PersonalDetailsFormDataType) => {
     console.log('Submitted Data:', data)
@@ -145,31 +159,13 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                   />
                 </Grid> */}
                 <Grid size={{ xs: 12, sm: 4 }}>
-                  <Controller
-                    name='dateOfBirth'
+                  <ControlledDatePicker
+                    name={'dateOfBirth'}
                     control={control}
-                    defaultValue={null} // Set the default value
-                    rules={{ required: 'Date of birth is required' }} // Validation rules
-                    render={({ field }) => (
-                      <AppReactDatepicker
-                        selected={field.value} // Bind value from react-hook-form
-                        onChange={(date: Date | null) => field.onChange(date)} // Update react-hook-form on change
-                        placeholderText='MM/DD/YYYY'
-                        showYearDropdown
-                        yearDropdownItemNumber={5}
-                        showMonthDropdown
-                        customInput={
-                          <TextField
-                            fullWidth
-                            error={!!errors.dateOfBirth}
-                            helperText={errors.dateOfBirth && 'please select a date'}
-                            size='small'
-                            label='Date of Birth'
-                            placeholder='MM-DD-YYYY'
-                          />
-                        }
-                      />
-                    )}
+                    error={errors.dateOfBirth}
+                    label={'Date of Birth'}
+                    defaultValue={undefined}
+                    maxDate={new Date()}
                   />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 4 }}>
@@ -208,14 +204,17 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                   />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 4 }}>
-                  <CustomTextField
-                    label={'State'}
-                    placeHolder={'State'}
-                    name={'state'}
-                    defaultValue={''}
-                    type={'text'}
-                    error={errors.state}
+                  <CustomDropDown
+                    name='state'
                     control={control}
+                    error={errors.state}
+                    label='State'
+                    optionList={USStates.map((state: any) => ({
+                      key: state.key,
+                      value: state.value,
+                      optionString: state.optionString
+                    }))}
+                    defaultValue={''}
                   />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 4 }}>
@@ -253,58 +252,23 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                   />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 4 }}>
-                  <Controller
-                    name='dateOfHire'
+                  <ControlledDatePicker
+                    name={'dateOfHire'}
                     control={control}
-                    defaultValue={null} // Set the default value
-                    rules={{ required: 'Date of hire is required' }} // Validation rules
-                    render={({ field }) => (
-                      <AppReactDatepicker
-                        // className="z-10"
-                        selected={field.value} // Bind value from react-hook-form
-                        onChange={(date: Date | null) => field.onChange(date)} // Update react-hook-form on change
-                        placeholderText='MM/DD/YYYY'
-                        showYearDropdown
-                        showMonthDropdown
-                        customInput={
-                          <TextField
-                            fullWidth
-                            error={!!errors.dateOfHire}
-                            helperText={errors.dateOfHire && 'please select a date'}
-                            size='small'
-                            label='Date of Hire'
-                            placeholder='MM-DD-YYYY'
-                          />
-                        }
-                      />
-                    )}
+                    error={errors.dateOfHire}
+                    label={'Date of Hire'}
+                    defaultValue={undefined}
                   />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 4 }}>
-                  <Controller
-                    name='terminationDate'
+                  <ControlledDatePicker
+                    name={'terminationDate'}
                     control={control}
-                    defaultValue={null} // Set the default value
-                    rules={{ required: false }} // Validation rules
-                    render={({ field }) => (
-                      <AppReactDatepicker
-                        selected={field.value} // Bind value from react-hook-form
-                        onChange={(date: Date | null) => field.onChange(date)} // Update form state on change
-                        placeholderText='MM/DD/YYYY'
-                        showYearDropdown
-                        showMonthDropdown
-                        customInput={
-                          <TextField
-                            fullWidth
-                            error={!!errors.terminationDate}
-                            helperText={errors.terminationDate?.message}
-                            size='small'
-                            label='Termination Date'
-                            placeholder='MM-DD-YYYY'
-                          />
-                        }
-                      />
-                    )}
+                    error={errors.terminationDate}
+                    label={'Termination Date'}
+                    defaultValue={undefined}
+                    isRequired={false}
+                    minDate={watch('dateOfHire') || undefined}
                   />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 4 }}>
@@ -335,7 +299,8 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                     placeHolder={'Phone Number'}
                     name={'primaryPhoneNumber'}
                     defaultValue={''}
-                    type={'text'}
+                    isPhoneNumber={true}
+                    type={'number'}
                     error={errors.primaryPhoneNumber}
                     control={control}
                   />
@@ -346,7 +311,8 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                     placeHolder={'Secondary Phone NUmber'}
                     name={'secondaryPhoneNumber'}
                     defaultValue={''}
-                    type={'text'}
+                    isPhoneNumber={true}
+                    type={'number'}
                     error={errors.secondaryPhoneNumber}
                     control={control}
                     isRequired={false}
@@ -358,7 +324,8 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                     placeHolder={'Emergency Contact Number'}
                     name={'emergencyContactNumber'}
                     defaultValue={''}
-                    type={'text'}
+                    isPhoneNumber={true}
+                    type={'number'}
                     error={errors.emergencyContactNumber}
                     control={control}
                     isRequired={false}
@@ -374,6 +341,7 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                     error={errors.emergencyEmailId}
                     control={control}
                     isRequired={false}
+                    onBlur={validateEmail}
                   />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 4 }}>

@@ -3,14 +3,11 @@
 import { useEffect, useState, useMemo } from 'react'
 import Card from '@mui/material/Card'
 import CardHeader from '@mui/material/CardHeader'
-import { Avatar, CircularProgress, Typography } from '@mui/material'
+import { CircularProgress, Typography } from '@mui/material'
 import axios from 'axios'
-import DataTable from '@/@core/components/mui/DataTable'
-import { GridColDef } from '@mui/x-data-grid'
-import AdUnitsIcon from '@mui/icons-material/AdUnits'
 import ReactTable from '@/@core/components/mui/ReactTable'
 import { dark } from '@mui/material/styles/createPalette'
-import transformToExpandableFormat from '@/utils/transformExpandableData'
+import { transformTimesheetDataTwo } from '@/utils/transform'
 // Updated interfaces to match your data structure
 interface Caregiver {
   id: number
@@ -50,7 +47,7 @@ interface Signature {
 }
 
 const WaitingAdminApprovalTable = () => {
-  const [filteredData, setFilteredData] = useState<Signature[]>([])
+  const [filteredData, setFilteredData] = useState<any>([])
   const [globalFilter, setGlobalFilter] = useState('')
   const [rowSelection, setRowSelection] = useState({})
   const [isLoading, setIsLoading] = useState(true)
@@ -61,7 +58,8 @@ const WaitingAdminApprovalTable = () => {
       try {
         // const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/signatures`)
         const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/time-log`)
-        setFilteredData(response.data.filter((item: any) => item.clockOut != null))
+        // setFilteredData(response.data.filter((item: any) => item.clockOut != null))
+        setFilteredData(transformTimesheetDataTwo(response.data.filter((item: any) => item.clockOut != null)))
         setIsLoading(false)
       } catch (error) {
         console.error('Error fetching signatures:', error)
@@ -113,15 +111,26 @@ const WaitingAdminApprovalTable = () => {
       editable: false,
       sortable: true,
       render: (user: any) => {
-        const startDate = user?.dateOfService
-        if (startDate) {
-          const date = new Date(startDate)
-          return (
-            <Typography className='font-normal text-base my-3'>
-              {`${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear().toString().slice(-2)}`}
-            </Typography>
-          )
+        const dateOfService = user?.dateOfService
+
+        if (dateOfService) {
+          // Try to parse it as a timestamp
+          const parsedDate = new Date(dateOfService)
+
+          // Check if the parsed date is valid (not "Invalid Date")
+          if (!isNaN(parsedDate.getTime())) {
+            return (
+              <Typography className='font-normal text-base my-3'>
+                {`${parsedDate.getMonth() + 1}/${parsedDate.getDate()}/${parsedDate.getFullYear().toString().slice(-2)}`}
+              </Typography>
+            )
+          }
+
+          // If it's not a valid timestamp, return the raw string as is
+          return <Typography className='font-normal text-base my-3'>{dateOfService}</Typography>
         }
+
+        // If dateOfService is null/undefined, return N/A
         return <Typography className='font-normal text-base my-3'>N/A</Typography>
       }
     },

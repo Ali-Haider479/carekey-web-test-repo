@@ -62,10 +62,8 @@ const TenantDetails = () => {
         console.log('DATATATATATAT', data)
         setTenantData(data)
 
-        const admin = data?.users?.find((user: any) =>
-          user.userRoles.some((userRole: any) => userRole.role.title === 'Tenant Admin')
-        )
-        console.log(admin)
+        const admin = data?.users?.find((user: any) => user.role.title === 'Tenant Admin')
+        console.log('ADMIN', admin)
 
         if (admin?.userName) {
           setAdminUserName(admin.userName)

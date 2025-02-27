@@ -39,7 +39,7 @@ const TabList = styled(MuiTabList)<CustomTabListProps>(({ color, theme, pill, or
       gap: theme.spacing(3)
     },
     '& .Mui-selected': {
-      backgroundColor: overridecolor || `${dark ? '#7112B7' : '#4B0082'} !important`,
+      backgroundColor: overridecolor || `${light ? '#4B0082' : dark ? '#7112B7' : '#4B0082'} !important`,
       color: `var(--mui-palette-${color}-contrastText) !important`,
       boxShadow: overridecolor ? `0px 3px 5px rgba(0, 0, 0, 0.2)` : `var(--mui-customShadows-${color}-sm)`,
       // Prevent hover effect on active tab

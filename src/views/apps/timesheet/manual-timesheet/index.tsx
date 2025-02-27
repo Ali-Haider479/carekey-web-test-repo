@@ -16,7 +16,7 @@ const ManualTimesheetPage = () => {
   const [serviceList, setServiceList] = useState<[] | any>([])
   const [payPeriod, setPayPeriod] = useState<[] | any>([])
   const dispatch = useAppDispatch()
-  const authUser: any = JSON.parse(localStorage.getItem('AuthUser') ?? '')
+  const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
 
   useEffect(() => {
     dispatch(fetchEvents())

@@ -1,8 +1,6 @@
 'use client'
 import React, { useEffect, useState } from 'react'
-import { Button, Card, CardContent, Divider, Typography } from '@mui/material'
-import Grid from '@mui/material/Grid2'
-import ModeEditOutlineOutlinedIcon from '@mui/icons-material/ModeEditOutlineOutlined'
+import { Button, Card, CardContent, Typography } from '@mui/material'
 import { useParams } from 'next/navigation'
 import axios from 'axios'
 import { EditOutlined, SaveOutlined } from '@mui/icons-material'
@@ -15,6 +13,28 @@ function ClientAboutCard() {
   const [isLoading, setIsLoading] = useState(false)
   const [isEdit, setIsEdit] = useState(true)
   const [formData, setFormData] = useState<any>({})
+  const [originalFormData, setOriginalFormData] = useState<any>({})
+  const [emailError, setEmailError] = useState<boolean>(false)
+  const [emergencyEmailError, setEmergencyEmailError] = useState<boolean>(false)
+  const [phoneNumberError, setPhoneNumberError] = useState<boolean>(false)
+  const [emergencyPhoneNumberError, setEmergencyPhoneNumberError] = useState<boolean>(false)
+
+  const formatPhoneNumber = (value: string = '') => {
+    // Remove all non-digits
+    const numbers = value.replace(/\D/g, '')
+
+    // Early return if empty
+    if (!numbers) return ''
+
+    // Apply mask according to input length
+    if (numbers.length <= 3) {
+      return `(${numbers}`
+    } else if (numbers.length <= 6) {
+      return `(${numbers.slice(0, 3)}) ${numbers.slice(3)}`
+    } else {
+      return `(${numbers.slice(0, 3)}) ${numbers.slice(3, 6)}-${numbers.slice(6, 10)}`
+    }
+  }
 
   useEffect(() => {
     fetchData()
@@ -35,7 +55,7 @@ function ClientAboutCard() {
 
   useEffect(() => {
     if (data) {
-      setFormData({
+      const formattedData = {
         firstName: data.firstName,
         middleName: data.middleName,
         lastName: data.lastName,
@@ -43,7 +63,7 @@ function ClientAboutCard() {
         clientCode: data.clientCode,
         primaryPhoneNumber: data.primaryPhoneNumber,
         dateOfBirth: data.dateOfBirth,
-        email: data.email,
+        emailId: data.emailId,
         sharedCare: data.sharedCare,
         primaryCellNumber: data.primaryCellNumber,
         emergencyContactName: data.emergencyContactName,
@@ -74,11 +94,60 @@ function ClientAboutCard() {
         'responsibleParty.phoneNumber': data.clientResponsibilityParty?.phoneNumber,
         'responsibleParty.faxNumber': data.clientResponsibilityParty?.faxNumber,
         'responsibleParty.emailAddress': data.clientResponsibilityParty?.emailAddress
-      })
+      }
+      setFormData(formattedData)
+      setOriginalFormData(formattedData)
     }
   }, [data])
 
+  const handleCancel = () => {
+    setFormData({ ...originalFormData }) // Reset form data to original values
+    setEmailError(false)
+    setEmergencyEmailError(false)
+    setPhoneNumberError(false)
+    setEmergencyPhoneNumberError(false)
+    setIsEdit(true) // Switch back to view mode
+  }
+
   const handleFieldChange = (name: string, value: any) => {
+    const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
+    if (!emailPattern.test(formData.emailId)) {
+      setEmailError(true)
+    } else if (!emailPattern.test(formData.emergencyEmailId)) {
+      setEmergencyEmailError(true)
+    } else {
+      setEmailError(false)
+      setEmergencyEmailError(false)
+    }
+
+    // Apply phone number formatting for specific fields
+    if (['primaryPhoneNumber', 'primaryCellNumber'].includes(name)) {
+      const digits = value.replace(/\D/g, '')
+      const formattedNumber = formatPhoneNumber(digits)
+
+      setPhoneNumberError(digits.length !== 10)
+
+      setFormData((prev: any) => ({
+        ...prev,
+        [name]: formattedNumber // Store formatted number in state
+      }))
+      return
+    }
+
+    if (name === 'emergencyContactNumber') {
+      const digits = value.replace(/\D/g, '')
+      const formattedNumber = formatPhoneNumber(digits)
+
+      setEmergencyPhoneNumberError(digits.length !== 10)
+
+      setFormData((prev: any) => ({
+        ...prev,
+        [name]: formattedNumber // Store formatted number in state
+      }))
+      return
+    }
+
+    // Handle all other fields normally
     setFormData((prev: any) => ({
       ...prev,
       [name]: value
@@ -108,7 +177,7 @@ function ClientAboutCard() {
     { label: 'Client Code', name: 'clientCode', value: formData.clientCode },
     { label: 'Phone Number', name: 'primaryPhoneNumber', value: formData.primaryPhoneNumber },
     { label: 'Date of Birth', name: 'dateOfBirth', value: formData.dateOfBirth },
-    { label: 'Email', name: 'email', value: formData.email },
+    { label: 'Email', name: 'emailId', value: formData.emailId },
     { label: 'Cell Phone Number', name: 'primaryCellNumber', value: formData.primaryCellNumber },
     { label: 'Gender', name: 'gender', value: formData.gender }
   ]
@@ -170,7 +239,7 @@ function ClientAboutCard() {
               variant='contained'
               startIcon={<CloseIcon />}
               className='text-white hover:bg-indigo-800'
-              onClick={() => setIsEdit(true)}
+              onClick={handleCancel}
             >
               Cancel
             </Button>
@@ -180,6 +249,17 @@ function ClientAboutCard() {
             startIcon={isEdit ? <EditOutlined /> : <SaveOutlined />}
             className='bg-indigo-900 text-white hover:bg-indigo-800'
             onClick={isEdit ? () => setIsEdit(false) : handleSave}
+            disabled={
+              emailError
+                ? true
+                : emergencyEmailError
+                  ? true
+                  : phoneNumberError
+                    ? true
+                    : emergencyPhoneNumberError
+                      ? true
+                      : false
+            }
           >
             {isEdit ? 'Edit' : 'Update'}
           </Button>
@@ -198,8 +278,11 @@ function ClientAboutCard() {
               isEdit={isEdit}
               onChange={handleFieldChange}
               name={field.name}
+              disabled={field.name === 'gender'}
             />
           ))}
+          {emailError && <Typography className='text-error'>Please enter a valid email</Typography>}
+          {phoneNumberError && <Typography className='text-error'>Please enter a valid 10 digit number</Typography>}
         </div>
       </CardContent>
 
@@ -218,6 +301,10 @@ function ClientAboutCard() {
             />
           ))}
         </div>
+        {emergencyEmailError && <Typography className='text-error'>Please enter a valid email</Typography>}
+        {emergencyPhoneNumberError && (
+          <Typography className='text-error'>Please enter a valid 10 digit number</Typography>
+        )}
       </CardContent>
 
       {/* Address Section */}

@@ -13,7 +13,6 @@ import type { ThemeColor } from '@core/types'
 import type { CardStatsHorizontalWithBorderProps } from '@/types/pages/widgetTypes'
 
 //Component Imports
-import CustomAvatar from '@core/components/mui/Avatar'
 
 type Props = CardProps & {
   color: ThemeColor

@@ -14,7 +14,8 @@ const ActionButton = ({
   user,
   selectedUser,
   anchorEl,
-  isEditing
+  isEditing,
+  disabled // Add this prop
 }: any) => {
   const isCurrentRowEditing = isEditing && selectedUser?.id === user.id
 
@@ -51,7 +52,7 @@ const ActionButton = ({
 
   return (
     <>
-      <IconButton onClick={e => handleActionClick(e, user)} size='small'>
+      <IconButton onClick={e => handleActionClick(e, user)} size='small' disabled={disabled}>
         <MoreVertIcon />
       </IconButton>
       <Menu
@@ -61,7 +62,6 @@ const ActionButton = ({
       >
         <MenuItem onClick={() => handleEdit(user)}>
           <EditIcon fontSize='small' sx={{ mr: 1 }} />
-          Edit
         </MenuItem>
       </Menu>
     </>

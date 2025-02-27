@@ -68,66 +68,6 @@ const DocumentsPage = forwardRef<{ handleSubmit: any }, Props>(({ onFinish, defa
 
   // Update form values when files are selected
   useEffect(() => {
-    // Training Certificates validation
-    if (trainingCertificates.length === 0) {
-      setError('trainingCertificateFiles', {
-        type: 'required',
-        message: 'Training certificate is required'
-      })
-    } else {
-      clearErrors('trainingCertificateFiles')
-    }
-
-    // Driving Certificates validation
-    if (drivingCertificates.length === 0) {
-      setError('drivingCertificateFiles', {
-        type: 'required',
-        message: 'Driving license document is required'
-      })
-    } else {
-      clearErrors('drivingCertificateFiles')
-    }
-
-    // SSN File validation
-    if (ssnFile.length === 0) {
-      setError('ssnFileObject', {
-        type: 'required',
-        message: 'SSN document is required'
-      })
-    } else {
-      clearErrors('ssnFileObject')
-    }
-
-    // Adult File validation
-    if (adultFile.length === 0) {
-      setError('adultFileObject', {
-        type: 'required',
-        message: 'Vulnerable Adult Certificate is required'
-      })
-    } else {
-      clearErrors('adultFileObject')
-    }
-
-    // UMPI File validation
-    if (umpiFile.length === 0) {
-      setError('umpiFileObject', {
-        type: 'required',
-        message: 'UMPI Letter is required'
-      })
-    } else {
-      clearErrors('umpiFileObject')
-    }
-
-    // Clearance File validation
-    if (clearanceFile.length === 0) {
-      setError('clearanceFileObject', {
-        type: 'required',
-        message: 'Background Check Clearance is required'
-      })
-    } else {
-      clearErrors('clearanceFileObject')
-    }
-
     // Update form values
     setValue('trainingCertificateFiles', trainingCertificates)
     setValue('drivingCertificateFiles', drivingCertificates)
@@ -135,74 +75,9 @@ const DocumentsPage = forwardRef<{ handleSubmit: any }, Props>(({ onFinish, defa
     setValue('adultFileObject', adultFile)
     setValue('umpiFileObject', umpiFile)
     setValue('clearanceFileObject', clearanceFile)
-  }, [
-    trainingCertificates,
-    drivingCertificates,
-    ssnFile,
-    adultFile,
-    umpiFile,
-    clearanceFile,
-    setValue,
-    setError,
-    clearErrors
-  ])
+  }, [trainingCertificates, drivingCertificates, ssnFile, adultFile, umpiFile, clearanceFile, setValue])
 
   const onSubmit = (data: any) => {
-    // Validate all required documents
-    let hasError = false
-
-    if (trainingCertificates.length === 0) {
-      setError('trainingCertificateFiles', {
-        type: 'required',
-        message: 'Training certificate is required'
-      })
-      hasError = true
-    }
-
-    if (drivingCertificates.length === 0) {
-      setError('drivingCertificateFiles', {
-        type: 'required',
-        message: 'Driving license document is required'
-      })
-      hasError = true
-    }
-
-    if (ssnFile.length === 0) {
-      setError('ssnFileObject', {
-        type: 'required',
-        message: 'SSN document is required'
-      })
-      hasError = true
-    }
-
-    if (adultFile.length === 0) {
-      setError('adultFileObject', {
-        type: 'required',
-        message: 'Vulnerable Adult Certificate is required'
-      })
-      hasError = true
-    }
-
-    if (umpiFile.length === 0) {
-      setError('umpiFileObject', {
-        type: 'required',
-        message: 'UMPI Letter is required'
-      })
-      hasError = true
-    }
-
-    if (clearanceFile.length === 0) {
-      setError('clearanceFileObject', {
-        type: 'required',
-        message: 'Background Check Clearance is required'
-      })
-      hasError = true
-    }
-
-    if (hasError) {
-      return
-    }
-
     const formData = {
       trainingCertificates: {
         files: data.trainingCertificateFiles || [],
@@ -282,11 +157,6 @@ const DocumentsPage = forwardRef<{ handleSubmit: any }, Props>(({ onFinish, defa
                   fileSize={25 * 1024 * 1024}
                   title='Choose Files'
                 />
-                {errors.trainingCertificateFiles && (
-                  <Typography className='text-red-500 text-sm mt-2'>
-                    {errors.trainingCertificateFiles.message as string}
-                  </Typography>
-                )}
               </div>
               <div className='col-span-2'>
                 <h3 className='text-lg font-semibold mb-4'>Uploading Files</h3>
@@ -296,41 +166,23 @@ const DocumentsPage = forwardRef<{ handleSubmit: any }, Props>(({ onFinish, defa
 
             {/* Certificate Details */}
             <div className='grid grid-cols-1 md:grid-cols-2 gap-6 mt-6'>
-              <Controller
-                name='trainingCertificateName'
-                control={control}
-                render={({ field }) => (
-                  <CustomTextField
-                    {...register(`trainingCertificateName`)}
-                    label={'Certificate Name'}
-                    placeHolder={'123ABC'}
-                    name={'trainingCertificateName'}
-                    defaultValue={'123ABC'}
-                    type={'text'}
-                    error={!!errors?.trainingCertificateName}
-                    control={control} // Pass the control property from the Controller component
-                  />
-                )}
+              <CustomTextField
+                label={'Certificate Name'}
+                placeHolder={'123ABC'}
+                name={'trainingCertificateName'}
+                defaultValue={'123ABC'}
+                type={'text'}
+                error={!!errors?.trainingCertificateName}
+                isRequired={false}
+                control={control} // Pass the control property from the Controller component
               />
-              {/* <Controller
-                name='trainingCertificateExpiryDate'
-                control={control}
-                rules={{ required: 'Expiry date is required' }}
-                render={({ field }) => (
-                  <AppReactDatepicker
-                    selected={field.value}
-                    onChange={(date: Date | null) => field.onChange(date)}
-                    placeholderText='MM/DD/YYYY'
-                    customInput={<TextField fullWidth size='small' placeholder='Expiry Date' label='Expiry Date' />}
-                  />
-                )}
-              /> */}
               <ControlledDatePicker
                 name={'trainingCertificateExpiryDate'}
                 control={control}
                 label={'Expiry Date'}
                 defaultValue={undefined}
                 error={errors.trainingCertificateExpiryDate}
+                isRequired={false}
               />
             </div>
           </CardContent>
@@ -351,11 +203,6 @@ const DocumentsPage = forwardRef<{ handleSubmit: any }, Props>(({ onFinish, defa
                   fileCount={3}
                   fileSize={25 * 1024 * 1024} // 25MB
                 />
-                {errors.drivingCertificateFiles && (
-                  <Typography className='text-red-500 text-sm mt-2'>
-                    {errors.drivingCertificateFiles.message as string}
-                  </Typography>
-                )}
               </div>
 
               {/* Uploading Files Section */}
@@ -385,28 +232,22 @@ const DocumentsPage = forwardRef<{ handleSubmit: any }, Props>(({ onFinish, defa
             </div>
 
             <div className='grid grid-cols-1 md:grid-cols-2 gap-6 mt-6'>
-              <Controller
-                name='drivingLicenseNumber'
-                control={control}
-                render={({ field }) => (
-                  <CustomTextField
-                    {...register(`drivingLicenseNumber`)}
-                    label={'Driving Licensed Number'}
-                    placeHolder={'123ABC'}
-                    name={'drivingLicenseNumber'}
-                    defaultValue={'123ABC'}
-                    type={'text'}
-                    error={!!errors?.drivingLicenseNumber}
-                    control={control} // Pass the control property from the Controller component
-                  />
-                )}
+              <CustomTextField
+                label={'Driving Licensed Number'}
+                placeHolder={'123ABC'}
+                name={'drivingLicenseNumber'}
+                defaultValue={'123ABC'}
+                type={'text'}
+                error={!!errors?.drivingLicenseNumber}
+                isRequired={false}
+                control={control} // Pass the control property from the Controller component
               />
               <CustomDropDown
-                {...register(`dlState`)}
                 name='dlState'
                 control={control}
                 error={errors.dlState}
                 label='DL State'
+                isRequired={false}
                 optionList={USStates.map((state: any) => ({
                   key: state.key,
                   value: state.value,
@@ -414,36 +255,13 @@ const DocumentsPage = forwardRef<{ handleSubmit: any }, Props>(({ onFinish, defa
                 }))}
                 defaultValue={''}
               />
-              {/* <Controller
-                name='drivingLicenseExpiryDate'
-                control={control}
-                // defaultValue={null} // Set the default value
-                rules={{ required: false }} // Validation rules
-                render={({ field }) => (
-                  <AppReactDatepicker
-                    selected={field.value} // Bind value from react-hook-form
-                    onChange={(date: Date | null) => field.onChange(date)} // Update react-hook-form on change
-                    placeholderText='MM/DD/YYYY'
-                    customInput={
-                      <TextField
-                        {...register(`drivingLicenseExpiryDate`)}
-                        fullWidth
-                        // error={!!errors.dateOfBirth}
-                        // helperText={errors.dateOfBirth && 'please select a date'}
-                        size='small'
-                        placeholder='Expiry Date'
-                        label='Expiry Date'
-                      />
-                    }
-                  />
-                )}
-              /> */}
               <ControlledDatePicker
                 name={'drivingLicenseExpiryDate'}
                 control={control}
                 label={'Expiry Date'}
                 defaultValue={undefined}
                 error={errors.drivingLicenseExpiryDate}
+                isRequired={false}
               />
             </div>
           </CardContent>
@@ -463,6 +281,7 @@ const DocumentsPage = forwardRef<{ handleSubmit: any }, Props>(({ onFinish, defa
                   type={'number'}
                   error={!!errors?.employeeNumber}
                   control={control}
+                  isRequired={false}
                 />
                 <CustomTextField
                   label={'Additional Pay Rate'}
@@ -490,11 +309,6 @@ const DocumentsPage = forwardRef<{ handleSubmit: any }, Props>(({ onFinish, defa
                     fileSize={25 * 1024 * 1024}
                     title='Upload SSN'
                   />
-                  {errors.ssnFileObject && (
-                    <Typography className='text-red-500 text-sm mt-2'>
-                      {errors.ssnFileObject.message as string}
-                    </Typography>
-                  )}
                 </div>
                 <div className='p-4 rounded-lg border'>
                   <FileUploaderRestrictions
@@ -506,11 +320,6 @@ const DocumentsPage = forwardRef<{ handleSubmit: any }, Props>(({ onFinish, defa
                     fileSize={25 * 1024 * 1024}
                     title='Vulnerable Adult Mandated Certificate'
                   />
-                  {errors.adultFileObject && (
-                    <Typography className='text-red-500 text-sm mt-2'>
-                      {errors.adultFileObject.message as string}
-                    </Typography>
-                  )}
                 </div>
                 <div className='p-4 rounded-lg border'>
                   <FileUploaderRestrictions
@@ -522,11 +331,6 @@ const DocumentsPage = forwardRef<{ handleSubmit: any }, Props>(({ onFinish, defa
                     fileSize={25 * 1024 * 1024}
                     title='UMPI Letter'
                   />
-                  {errors.umpiFileObject && (
-                    <Typography className='text-red-500 text-sm mt-2'>
-                      {errors.umpiFileObject.message as string}
-                    </Typography>
-                  )}
                 </div>
                 <div className='p-4 rounded-lg border'>
                   <FileUploaderRestrictions
@@ -538,11 +342,6 @@ const DocumentsPage = forwardRef<{ handleSubmit: any }, Props>(({ onFinish, defa
                     fileSize={25 * 1024 * 1024}
                     title='Background Check Clearance'
                   />
-                  {errors.clearanceFileObject && (
-                    <Typography className='text-red-500 text-sm mt-2'>
-                      {errors.clearanceFileObject.message as string}
-                    </Typography>
-                  )}
                 </div>
                 <div className='col-span-2'>
                   <h2 className='text-base font-semibold mb-3'>Uploading Files</h2>
@@ -569,6 +368,7 @@ const DocumentsPage = forwardRef<{ handleSubmit: any }, Props>(({ onFinish, defa
                         { key: 3, value: 'IHS', optionString: 'IHS' }
                       ]}
                       name={'serviceType'}
+                      isRequired={false}
                       control={control}
                       error={errors.serviceType}
                       defaultValue={''}

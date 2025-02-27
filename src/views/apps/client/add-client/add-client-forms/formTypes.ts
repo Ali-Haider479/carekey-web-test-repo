@@ -8,6 +8,7 @@ export type PersonalDetailsFormDataType = {
   pmiNumber: number | null
   gender: string
   socialSecurity: number | null
+  emailId: string
   primaryPhoneNumber: string
   additionalPhoneNumber: string
   emergencyContactName: string

@@ -282,6 +282,7 @@ const CreateTenant = (props: Props) => {
                 <TextField
                   fullWidth
                   required
+                  type='number'
                   label='NPI/UMPI Number'
                   placeholder='123456789'
                   value={formData.npiUmpiNumber}
@@ -299,6 +300,7 @@ const CreateTenant = (props: Props) => {
                   fullWidth
                   required
                   label='Taxonomy'
+                  type='number'
                   placeholder='123456789'
                   value={formData.taxonomyNumber}
                   onChange={handleChange('taxonomyNumber')}
@@ -314,7 +316,7 @@ const CreateTenant = (props: Props) => {
                 <TextField
                   fullWidth
                   required
-                  label='EIN'
+                  type='number'
                   placeholder='123456789'
                   value={formData.einNumber}
                   onChange={handleChange('einNumber')}
@@ -347,6 +349,7 @@ const CreateTenant = (props: Props) => {
                 <TextField
                   fullWidth
                   required
+                  type='number'
                   label='Company Phone Number'
                   placeholder='+1 202 555 0111'
                   value={formData.contactNumber}
@@ -365,6 +368,7 @@ const CreateTenant = (props: Props) => {
                   required
                   label='Company FAX Number'
                   placeholder='+1 555 0111'
+                  type='number'
                   value={formData.faxNumber}
                   onChange={handleChange('faxNumber')}
                   onBlur={handleBlur('faxNumber')}

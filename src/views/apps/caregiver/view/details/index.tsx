@@ -79,7 +79,7 @@ const CaregiverDetails = ({ tabContentList }: BottomBodyProps) => {
             coverImg: '/images/pages/profile-banner.png',
             location: data?.addresses[0]?.address?.state ? data?.addresses[0]?.address?.state : '---',
             profileImg: data?.user?.profileImageUrl,
-            status: data?.user?.accountStatus ? data?.user?.accountStatus : '---'
+            status: 'CAREGIVER'
           }}
         />
         <Grid container spacing={6}>

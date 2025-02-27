@@ -57,7 +57,8 @@ const UserDropdown = () => {
   const { data: session } = useSession()
   const { settings } = useSettings()
   const { lang: locale } = useParams()
-
+  const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
+  const role = authUser?.userRoles?.title
   const handleDropdownOpen = () => {
     !open ? setOpen(true) : setOpen(false)
   }
@@ -136,10 +137,13 @@ const UserDropdown = () => {
                     <i className='bx-user' />
                     <Typography color='text.primary'>My Profile</Typography>
                   </MenuItem>
-                  <MenuItem className='gap-3' onClick={e => handleDropdownClose(e, '/apps/user-management')}>
-                    <i className='bx-cog' />
-                    <Typography color='text.primary'>User Management</Typography>
-                  </MenuItem>
+                  {role.includes('Tenant Admin') && (
+                    <MenuItem className='gap-3' onClick={e => handleDropdownClose(e, '/apps/user-management')}>
+                      <i className='bx-cog' />
+                      <Typography color='text.primary'>User Management</Typography>
+                    </MenuItem>
+                  )}
+
                   <Divider className='mlb-1' />
                   <MenuItem className='gap-3' onClick={handleUserLogout}>
                     <i className='bx-power-off' />

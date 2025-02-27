@@ -6,7 +6,8 @@ import ReceivedTimesheetTable from './ReceivedTimesheetTable'
 import ReceivedTimesheetFilters from './ReceivedTimesheetFilters'
 import { useState, useEffect } from 'react'
 import axios from 'axios'
-import transformToExpandableFormat from '@/utils/transformExpandableData'
+import { transformTimesheetData } from '@/utils/transformExpandableData'
+import { transformTimesheetDataTwo } from '@/utils/transform'
 
 // Component Imports
 
@@ -25,7 +26,7 @@ const ReceivedTimsesheetDetails = () => {
       const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/time-log`)
       console.log('timeLogData', response.data)
 
-      setTimeLogData(response.data.filter((item: any) => item.clockOut != null))
+      setTimeLogData(transformTimesheetDataTwo(response.data.filter((item: any) => item.clockOut != null)))
       setIsLoading(false)
     } catch (error) {
       console.error('Error fetching initial data:', error)
@@ -37,7 +38,7 @@ const ReceivedTimsesheetDetails = () => {
   const handleFilteredData = (filteredData: any) => {
     setTimeLogData(filteredData)
   }
-
+  console.log('TIMELOG DATA', timeLogData)
   return (
     <Grid container spacing={6}>
       <Grid size={{ xs: 12 }}>

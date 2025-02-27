@@ -7,7 +7,7 @@ import { forwardRef, useRef, useState } from 'react'
 import MuiAvatar from '@mui/material/Avatar'
 import { lighten, styled } from '@mui/material/styles'
 import type { AvatarProps } from '@mui/material/Avatar'
-import IconButton from '@mui/material/IconButton'
+// import IconButton from '@mui/material/IconButton'
 import Box from '@mui/material/Box'
 
 // Type Imports
@@ -56,57 +56,57 @@ const AvatarWrapper = styled(Box)<{ size?: number }>(({ size }) => ({
   })
 }))
 
-const UploadOverlay = styled(Box)(({ theme }) => ({
-  position: 'absolute',
-  top: 0,
-  left: 0,
-  right: 0,
-  bottom: 0,
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  borderRadius: '50%',
-  opacity: 0,
-  transition: theme.transitions.create('opacity', {
-    duration: theme.transitions.duration.shorter
-  }),
-  cursor: 'pointer'
-}))
+// const UploadOverlay = styled(Box)(({ theme }) => ({
+//   position: 'absolute',
+//   top: 0,
+//   left: 0,
+//   right: 0,
+//   bottom: 0,
+//   display: 'flex',
+//   alignItems: 'center',
+//   justifyContent: 'center',
+//   backgroundColor: 'rgba(0, 0, 0, 0.5)',
+//   borderRadius: '50%',
+//   opacity: 0,
+//   transition: theme.transitions.create('opacity', {
+//     duration: theme.transitions.duration.shorter
+//   }),
+//   cursor: 'pointer'
+// }))
 
 const CustomAvatar = forwardRef<HTMLDivElement, CustomAvatarProps>((props: CustomAvatarProps, ref) => {
   // Props
   const { color, skin = 'filled', size, onImageChange, ...rest } = props
 
   // Refs
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  // const fileInputRef = useRef<HTMLInputElement>(null)
 
   // States
   const [previewUrl, setPreviewUrl] = useState<string | undefined>(rest.src?.toString())
 
-  const handleClick = () => {
-    fileInputRef.current?.click()
-  }
+  // const handleClick = () => {
+  //   fileInputRef.current?.click()
+  // }
 
-  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (file) {
-      // Create preview URL
-      const objectUrl = URL.createObjectURL(file)
-      setPreviewUrl(objectUrl)
+  // const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  //   const file = event.target.files?.[0]
+  //   if (file) {
+  //     // Create preview URL
+  //     const objectUrl = URL.createObjectURL(file)
+  //     setPreviewUrl(objectUrl)
 
-      // Call the callback with the selected file
-      if (onImageChange) {
-        try {
-          await onImageChange(file)
-        } catch (error) {
-          console.error('Error uploading image:', error)
-          // Revert preview on error
-          setPreviewUrl(rest.src?.toString())
-        }
-      }
-    }
-  }
+  //     // Call the callback with the selected file
+  //     if (onImageChange) {
+  //       try {
+  //         await onImageChange(file)
+  //       } catch (error) {
+  //         console.error('Error uploading image:', error)
+  //         // Revert preview on error
+  //         setPreviewUrl(rest.src?.toString())
+  //       }
+  //     }
+  //   }
+  // }
 
   return (
     <AvatarWrapper size={size}>
@@ -118,7 +118,7 @@ const CustomAvatar = forwardRef<HTMLDivElement, CustomAvatarProps>((props: Custo
         skin={skin}
         sx={{ ...rest.sx, width: size, height: size }}
       />
-      <UploadOverlay onClick={handleClick} />
+      {/* <UploadOverlay onClick={handleClick} /> */}
       {/* <IconButton
           sx={{
             color: 'white',
@@ -128,14 +128,14 @@ const CustomAvatar = forwardRef<HTMLDivElement, CustomAvatarProps>((props: Custo
           Change
         </IconButton>
       </UploadOverlay> */}
-      <input
+      {/* <input
         type='file'
         ref={fileInputRef}
         hidden
         accept='image/*'
         onChange={handleFileChange}
         onClick={e => e.stopPropagation()}
-      />
+      /> */}
     </AvatarWrapper>
   )
 })

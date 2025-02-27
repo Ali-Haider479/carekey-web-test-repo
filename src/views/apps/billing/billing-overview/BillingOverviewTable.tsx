@@ -3,95 +3,36 @@
 import { useEffect, useState } from 'react'
 import Card from '@mui/material/Card'
 import { CircularProgress, Typography } from '@mui/material'
-import DataTable from '@/@core/components/mui/DataTable'
-import { GridColDef } from '@mui/x-data-grid'
 import Dropdown from '@/@core/components/mui/DropDown'
 import { dark } from '@mui/material/styles/createPalette'
 import ReactTable from '@/@core/components/mui/ReactTable'
-
-const dummyData = [
-  {
-    id: 1,
-    clientName: 'Cody Fisher',
-    caregiverName: 'Kathryn Murphy',
-    claimAmount: '$214.31',
-    payer: 'MA',
-    proCode: 'T1020',
-    serviceDateRange: '04/15/2024 - 04/15/2024',
-    claimStatus: 'Completed',
-    scheduledHrs: '0.25 Hrs',
-    subRows: [
-      {
-        id: 21,
-        clientName: 'Robert Fox',
-        caregiverName: 'Mark Smith',
-        claimAmount: '$120.00',
-        payer: 'MA',
-        proCode: 'T1005',
-        serviceDateRange: '04/12/2024 - 04/12/2024',
-        claimStatus: 'Completed'
-      }
-    ]
-  },
-  {
-    id: 2,
-    clientName: 'Robert Fox',
-    caregiverName: 'Leslie Alexander',
-    claimAmount: '$214.31',
-    payer: 'MA',
-    proCode: 'T1020',
-    serviceDateRange: '04/15/2024 - 04/15/2024',
-    claimStatus: 'Pending',
-    scheduledHrs: '0.25 Hrs'
-  },
-  {
-    id: 3,
-    clientName: 'Esther Howard',
-    caregiverName: 'Courtney Henry',
-    claimAmount: '$214.31',
-    payer: 'MA',
-    proCode: 'T1020',
-    serviceDateRange: '04/15/2024 - 04/15/2024',
-    claimStatus: 'Completed',
-    scheduledHrs: '0.25 Hrs',
-    subRows: [
-      {
-        id: 21,
-        clientName: 'Robert Fox',
-        caregiverName: 'Mark Smith',
-        claimAmount: '$120.00',
-        payer: 'MA',
-        proCode: 'T1005',
-        serviceDateRange: '04/12/2024 - 04/12/2024',
-        claimStatus: 'Completed'
-      }
-    ]
-  },
-  {
-    id: 4,
-    clientName: 'Jenny Wilson',
-    caregiverName: 'Kristin Watson',
-    claimAmount: '$214.31',
-    payer: 'MA',
-    proCode: 'T1020',
-    serviceDateRange: '04/15/2024 - 04/15/2024',
-    claimStatus: 'Pending',
-    scheduledHrs: '0.25 Hrs'
-  }
-]
+import { transformBillingData } from '@/utils/transformBillingData'
+import axios from 'axios'
 
 const BillingOverviewTable = () => {
-  const [filteredData, setFilteredData] = useState(dummyData)
+  const [filteredData, setFilteredData] = useState<any>([])
   const [isLoading, setIsLoading] = useState(false)
 
-  const columns = [
+  interface Column {
+    id: string
+    label: string
+    minWidth: number
+    editable: boolean
+    sortable: boolean
+    render: (item: any) => JSX.Element
+  }
+
+  const columns: Column[] = [
     {
       id: 'clientName',
       label: 'CLIENT NAME',
       minWidth: 170,
       editable: true,
       sortable: true,
-      render: (user: any) => <Typography color='primary'>{user?.clientName}</Typography>
+      render: item => {
+        const client = item.subRows ? item.subRows[0].timelog![0].client : item.timelog![0].client
+        return <Typography color='primary'>{`${client.firstName} ${client.lastName}`}</Typography>
+      }
     },
     {
       id: 'caregiverName',
@@ -99,7 +40,10 @@ const BillingOverviewTable = () => {
       minWidth: 170,
       editable: true,
       sortable: true,
-      render: (user: any) => <Typography color='primary'>{user?.caregiverName}</Typography>
+      render: item => {
+        const caregiver = item.subRows ? item.subRows[0].timelog![0].caregiver : item.timelog![0].caregiver
+        return <Typography color='primary'>{`${caregiver.firstName} ${caregiver.lastName}`}</Typography>
+      }
     },
     {
       id: 'claimAmount',
@@ -107,7 +51,7 @@ const BillingOverviewTable = () => {
       minWidth: 170,
       editable: true,
       sortable: true,
-      render: (user: any) => <Typography color='primary'>{user?.claimAmount}</Typography>
+      render: item => <Typography color='primary'>{item.billedAmount}</Typography> // Using billedAmount as claimAmount
     },
     {
       id: 'payer',
@@ -115,7 +59,12 @@ const BillingOverviewTable = () => {
       minWidth: 170,
       editable: true,
       sortable: true,
-      render: (user: any) => <Typography color='primary'>{user?.payer}</Typography>
+      render: item => {
+        const payer = item.subRows
+          ? item.subRows[0].timelog![0].client.serviceAuth[0].payer
+          : item.timelog![0].client.serviceAuth[0].payer
+        return <Typography color='primary'>{payer}</Typography>
+      }
     },
     {
       id: 'proCode',
@@ -123,7 +72,12 @@ const BillingOverviewTable = () => {
       minWidth: 170,
       editable: true,
       sortable: true,
-      render: (user: any) => <Typography color='primary'>{user?.proCode}</Typography>
+      render: item => {
+        const serviceAuth = item.subRows
+          ? item.subRows[0].timelog![0].client.serviceAuth[0]
+          : item.timelog![0].client.serviceAuth[0]
+        return <Typography color='primary'>{serviceAuth?.procedureCode ?? ''}</Typography>
+      }
     },
     {
       id: 'serviceDateRange',
@@ -131,7 +85,7 @@ const BillingOverviewTable = () => {
       minWidth: 170,
       editable: true,
       sortable: true,
-      render: (user: any) => <Typography color='primary'>{user?.serviceDateRange}</Typography>
+      render: item => <Typography color='primary'>{item.serviceDateRange || '-'}</Typography>
     },
     {
       id: 'claimStatus',
@@ -139,7 +93,7 @@ const BillingOverviewTable = () => {
       minWidth: 170,
       editable: true,
       sortable: true,
-      render: (user: any) => <Typography color='primary'>{user?.claimStatus}</Typography>
+      render: item => <Typography color='primary'>{item.claimStatus}</Typography>
     },
     {
       id: 'scheduledHrs',
@@ -147,7 +101,7 @@ const BillingOverviewTable = () => {
       minWidth: 170,
       editable: true,
       sortable: true,
-      render: (user: any) => <Typography color='primary'>{user?.scheduledHrs}</Typography>
+      render: item => <Typography color='primary'>{item.scheduledHrs}</Typography>
     }
   ]
 
@@ -159,6 +113,24 @@ const BillingOverviewTable = () => {
     return () => clearTimeout(timer)
   }, [])
 
+  const getBillingDetails = async () => {
+    try {
+      setIsLoading(true)
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/time-log/billing`)
+      setFilteredData(transformBillingData(response.data))
+      // setFilteredData(transformTimesheetDataTwo(response.data))
+    } catch (error) {
+      console.error('Error fetching data', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    getBillingDetails()
+  }, [])
+
+  console.log('BILL OVERVIEW', filteredData)
   return (
     <Card sx={{ borderRadius: 1, boxShadow: 3 }}>
       <Dropdown
@@ -174,7 +146,7 @@ const BillingOverviewTable = () => {
       ) : (
         <ReactTable
           columns={columns}
-          data={dummyData}
+          data={filteredData}
           keyExtractor={user => user.id.toString()}
           enableRowSelect
           enablePagination

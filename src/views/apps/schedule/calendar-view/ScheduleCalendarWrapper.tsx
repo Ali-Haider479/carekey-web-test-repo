@@ -113,7 +113,7 @@ const AppCalendar = () => {
   }
 
   useEffect(() => {
-    const authUser: any = JSON.parse(localStorage.getItem('AuthUser') ?? '')
+    const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
     console.log('LOGGED USER', authUser)
     ;(async () => {
       try {

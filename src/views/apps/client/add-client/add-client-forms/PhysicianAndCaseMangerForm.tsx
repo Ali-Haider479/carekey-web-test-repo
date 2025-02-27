@@ -71,6 +71,7 @@ const PhysicianAndCaseMangerForm = forwardRef<{ handleSubmit: any }, Props>(({ o
                   name={'phoneNumber'}
                   defaultValue={''}
                   type={'number'}
+                  isPhoneNumber={true}
                   error={errors.phoneNumber}
                   control={control}
                 />
@@ -82,6 +83,7 @@ const PhysicianAndCaseMangerForm = forwardRef<{ handleSubmit: any }, Props>(({ o
                   name={'faxNumber'}
                   defaultValue={''}
                   type={'number'}
+                  isPhoneNumber={true}
                   error={errors.faxNumber}
                   control={control}
                 />
@@ -130,6 +132,7 @@ const PhysicianAndCaseMangerForm = forwardRef<{ handleSubmit: any }, Props>(({ o
                   type={'number'}
                   error={errors.physicianZipCode}
                   control={control}
+                  maxLength={5}
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 4 }}>
@@ -139,6 +142,7 @@ const PhysicianAndCaseMangerForm = forwardRef<{ handleSubmit: any }, Props>(({ o
                   name={'primaryPhoneNumber'}
                   defaultValue={''}
                   type={'number'}
+                  isPhoneNumber={true}
                   error={errors.primaryPhoneNumber}
                   control={control}
                 />
@@ -180,6 +184,7 @@ const PhysicianAndCaseMangerForm = forwardRef<{ handleSubmit: any }, Props>(({ o
                   name={'caseMangerPhoneNumber'}
                   defaultValue={''}
                   type={'number'}
+                  isPhoneNumber={true}
                   error={errors.caseMangerPhoneNumber}
                   control={control}
                 />
@@ -191,6 +196,7 @@ const PhysicianAndCaseMangerForm = forwardRef<{ handleSubmit: any }, Props>(({ o
                   name={'caseManagerFaxNumber'}
                   defaultValue={''}
                   type={'number'}
+                  isPhoneNumber={true}
                   error={errors.caseManagerFaxNumber}
                   control={control}
                 />

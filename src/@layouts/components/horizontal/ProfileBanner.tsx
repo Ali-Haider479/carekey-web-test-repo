@@ -2,7 +2,6 @@
 import React, { useEffect, useState } from 'react'
 import { Box, Card, CardContent, CardMedia, styled, Typography } from '@mui/material'
 import type { ProfileHeaderType } from '@/types/pages/profileTypes'
-import CustomAvatar from '@/@core/components/mui/Avatar'
 import axios from 'axios'
 import { useParams } from 'next/navigation'
 import ProfileAvatar from '@/@core/components/mui/ProfileAvatar'
@@ -94,8 +93,10 @@ const ProfileBanner = ({ props }: { props: ProfileHeaderType }) => {
               <div>
                 <Typography variant='h4'>{props.fullName}</Typography>
               </div>
-              <div className='py-2 px-4 bg-[#4B0082] rounded-4xl'>
-                <Typography className='text-white'>{props.status}</Typography>
+              <div
+                className={`py-2 px-4 ${props.status === 'CAREGIVER' ? 'bg-[#02c3eb]' : 'bg-[#4B0082]'} rounded-4xl`}
+              >
+                <Typography className='text-white font-bold'>{props.status}</Typography>
               </div>
             </div>
             <div className='flex flex-wrap gap-0 justify-center sm:justify-normal'>

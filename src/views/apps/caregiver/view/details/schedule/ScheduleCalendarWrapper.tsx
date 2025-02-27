@@ -66,7 +66,7 @@ const AppCalendar = () => {
   const isEditedOff = () => setIsEdited(false)
 
   useEffect(() => {
-    const authUser: any = JSON.parse(localStorage.getItem('AuthUser') ?? '')
+    const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
     ;(async () => {
       try {
         const response = await Promise.all([

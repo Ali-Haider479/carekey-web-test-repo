@@ -4,7 +4,7 @@ import { Add } from '@mui/icons-material'
 import { Autocomplete, Button, Card, Grid2 as Grid, TextField, Dialog, Typography } from '@mui/material'
 import { useEffect, useState } from 'react'
 import DialogCloseButton from '@/components/dialogs/DialogCloseButton'
-import { set, useForm } from 'react-hook-form'
+import { FormProvider, set, useForm } from 'react-hook-form'
 import CustomTextField from '@/@core/components/custom-inputs/CustomTextField'
 import ControlledDatePicker from '@/@core/components/custom-inputs/ControledDatePicker'
 import { useParams } from 'next/navigation'
@@ -66,13 +66,17 @@ const ServiceAuthorization = () => {
     console.log('Selected:', newValue)
   }
 
+  const methods = useForm<any>({
+    mode: 'onSubmit',
+    reValidateMode: 'onChange'
+  })
+
   const {
     control,
     handleSubmit,
     reset,
-    formState: { errors, isSubmitting }
-  } = useForm<any>()
-
+    formState: { errors }
+  } = methods
   const onSubmit = async (data: any) => {
     console.log(data)
     try {
@@ -223,220 +227,222 @@ const ServiceAuthorization = () => {
   ]
   return (
     <>
-      <Card className=' w-full flex flex-col h-36 p-4 shadow-md rounded-lg'>
-        <span className='ml-2 text-2xl font-bold '>Filters</span>
-        <div className='flex justify-between'>
-          <div className='w-[530px] mt-4'>
-            <Autocomplete
-              options={options}
-              getOptionLabel={option => option.label}
-              onInputChange={() => handleSearch}
-              onChange={handleChange}
-              renderInput={params => (
-                <TextField {...params} placeholder='Show All' variant='outlined' size='small' className='h-[56px]' />
-              )}
-              filterOptions={x => x} // Keep all options (you can adjust filtering logic)
-            />
-          </div>
-          <div className='flex justify-end'>
-            {/* <Button startIcon={<Add />} className='w-[160px] bg-[#4B0082] text-white mt-4 h-10'>
+      <FormProvider {...methods}>
+        <Card className=' w-full flex flex-col h-36 p-4 shadow-md rounded-lg'>
+          <span className='ml-2 text-2xl font-bold '>Filters</span>
+          <div className='flex justify-between'>
+            <div className='w-[530px] mt-4'>
+              <Autocomplete
+                options={options}
+                getOptionLabel={option => option.label}
+                onInputChange={() => handleSearch}
+                onChange={handleChange}
+                renderInput={params => (
+                  <TextField {...params} placeholder='Show All' variant='outlined' size='small' className='h-[56px]' />
+                )}
+                filterOptions={x => x} // Keep all options (you can adjust filtering logic)
+              />
+            </div>
+            <div className='flex justify-end'>
+              {/* <Button startIcon={<Add />} className='w-[160px] bg-[#4B0082] text-white mt-4 h-10'>
               ADD SA LIST
             </Button> */}
-            <Button
-              startIcon={<Add />}
-              className='bg-[#4B0082] text-white mt-4 ml-4 h-10'
-              onClick={() => setIsModalShow(true)}
-            >
-              ADD SERVICE AUTHORIZATION
-            </Button>
+              <Button
+                startIcon={<Add />}
+                className='bg-[#4B0082] text-white mt-4 ml-4 h-10'
+                onClick={() => setIsModalShow(true)}
+              >
+                ADD SERVICE AUTHORIZATION
+              </Button>
+            </div>
           </div>
+        </Card>
+        <Card className=' w-full  flex flex-col h-auto mt-5 shadow-md rounded-lg'>
+          <DataTable columns={columns} data={serviceAuthData} />
+        </Card>
+        <div>
+          <Dialog
+            open={isModalShow}
+            onClose={handleModalClose}
+            closeAfterTransition={false}
+            sx={{ '& .MuiDialog-paper': { overflow: 'visible' } }}
+          >
+            <DialogCloseButton onClick={() => setIsModalShow(false)} disableRipple>
+              <i className='bx-x' />
+            </DialogCloseButton>
+            <div className='flex items-center justify-center pt-[10px] pb-[5px] w-full px-5'>
+              <form onSubmit={handleSubmit(onSubmit)} autoComplete='off'>
+                <div>
+                  <Typography className='text-xl font-semibold mt-10 mb-6'>Add Service Authorization</Typography>
+                </div>
+                <Grid container spacing={4}>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <CustomTextField
+                      label={'Payer'}
+                      placeHolder={'Payer'}
+                      name={'payer'}
+                      defaultValue={''}
+                      type={'text'}
+                      error={errors.payer}
+                      control={control}
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <CustomTextField
+                      label={'Member Id'}
+                      placeHolder={'Member Id'}
+                      name={'memberId'}
+                      defaultValue={''}
+                      type={'number'}
+                      error={errors.memberId}
+                      control={control}
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <CustomTextField
+                      label={'Service Auth Number'}
+                      placeHolder={'Service Auth Number'}
+                      name={'serviceAuthNumber'}
+                      defaultValue={''}
+                      type={'number'}
+                      error={errors.serviceAuthNumber}
+                      control={control}
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <CustomTextField
+                      label={'Service Rate'}
+                      placeHolder={'Service Rate'}
+                      name={'serviceRate'}
+                      defaultValue={''}
+                      type={'number'}
+                      error={errors.serviceRate}
+                      control={control}
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <ControlledDatePicker
+                      name={'startDate'}
+                      control={control}
+                      error={errors.startDate}
+                      label={'Start Date'}
+                      defaultValue={undefined}
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <ControlledDatePicker
+                      name={'endDate'}
+                      control={control}
+                      error={errors.endDate}
+                      label={'End Date'}
+                      defaultValue={undefined}
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <CustomTextField
+                      label={'Procedure Code'}
+                      placeHolder={'Procedure Code'}
+                      name={'procedureCode'}
+                      defaultValue={''}
+                      type={'text'}
+                      error={errors.procedureCode}
+                      control={control}
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <CustomTextField
+                      label={'Modifier Code'}
+                      placeHolder={'Modifier Code'}
+                      name={'modifierCode'}
+                      defaultValue={''}
+                      type={'text'}
+                      error={errors.modifierCode}
+                      control={control}
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <CustomTextField
+                      label={'Units'}
+                      placeHolder={'Units'}
+                      name={'units'}
+                      defaultValue={''}
+                      type={'number'}
+                      error={errors.units}
+                      control={control}
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <CustomTextField
+                      label={'Diagnosis Code'}
+                      placeHolder={'Diagnosis Code'}
+                      name={'diagnosisCode'}
+                      defaultValue={''}
+                      type={'number'}
+                      error={errors.diagnosisCode}
+                      control={control}
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <CustomTextField
+                      label={'NPI/UMPI'}
+                      placeHolder={'NPI/UMPI'}
+                      name={'umpiNumber'}
+                      defaultValue={''}
+                      type={'number'}
+                      error={errors.umpiNumber}
+                      control={control}
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <CustomDropDown
+                      name={'reimbursementType'}
+                      control={control}
+                      label={'Reimburrsement Type'}
+                      error={errors.reimbursementType}
+                      optionList={[
+                        { key: 1, value: 'per unit', optionString: 'Per Unit' },
+                        { key: 2, value: 'per diem', optionString: 'Per Diem' }
+                      ]}
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <CustomTextField
+                      label={'Taxonomy'}
+                      placeHolder={'Taxonomy'}
+                      name={'taxonomy'}
+                      defaultValue={''}
+                      type={'number'}
+                      error={errors.taxonomy}
+                      control={control}
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <CustomDropDown
+                      name={'frequency'}
+                      control={control}
+                      label={'Frequency'}
+                      error={errors.frequency}
+                      optionList={[
+                        { key: 1, value: 'daily', optionString: 'Daily' },
+                        { key: 2, value: 'weekly', optionString: 'Weekly' },
+                        { key: 3, value: 'monthly', optionString: 'Monthly' }
+                      ]}
+                    />
+                  </Grid>
+                </Grid>
+                <div className='flex gap-4 justify-end mt-4 mb-4'>
+                  <Button variant='outlined' color='secondary' onClick={handleModalClose}>
+                    CANCEL
+                  </Button>
+                  <Button type='submit' variant='contained' className='bg-[#4B0082]'>
+                    Save
+                  </Button>
+                </div>
+              </form>
+            </div>
+          </Dialog>
         </div>
-      </Card>
-      <Card className=' w-full  flex flex-col h-auto mt-5 shadow-md rounded-lg'>
-        <DataTable columns={columns} data={serviceAuthData} />
-      </Card>
-      <div>
-        <Dialog
-          open={isModalShow}
-          onClose={handleModalClose}
-          closeAfterTransition={false}
-          sx={{ '& .MuiDialog-paper': { overflow: 'visible' } }}
-        >
-          <DialogCloseButton onClick={() => setIsModalShow(false)} disableRipple>
-            <i className='bx-x' />
-          </DialogCloseButton>
-          <div className='flex items-center justify-center pt-[10px] pb-[5px] w-full px-5'>
-            <form onSubmit={handleSubmit(onSubmit)} autoComplete='off'>
-              <div>
-                <Typography className='text-xl font-semibold mt-10 mb-6'>Add Service Authorization</Typography>
-              </div>
-              <Grid container spacing={4}>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <CustomTextField
-                    label={'Payer'}
-                    placeHolder={'Payer'}
-                    name={'payer'}
-                    defaultValue={''}
-                    type={'text'}
-                    error={errors.payer}
-                    control={control}
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <CustomTextField
-                    label={'Member Id'}
-                    placeHolder={'Member Id'}
-                    name={'memberId'}
-                    defaultValue={''}
-                    type={'number'}
-                    error={errors.memberId}
-                    control={control}
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <CustomTextField
-                    label={'Service Auth Number'}
-                    placeHolder={'Service Auth Number'}
-                    name={'serviceAuthNumber'}
-                    defaultValue={''}
-                    type={'number'}
-                    error={errors.serviceAuthNumber}
-                    control={control}
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <CustomTextField
-                    label={'Service Rate'}
-                    placeHolder={'Service Rate'}
-                    name={'serviceRate'}
-                    defaultValue={''}
-                    type={'number'}
-                    error={errors.serviceRate}
-                    control={control}
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <ControlledDatePicker
-                    name={'startDate'}
-                    control={control}
-                    error={errors.startDate}
-                    label={'Start Date'}
-                    defaultValue={undefined}
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <ControlledDatePicker
-                    name={'endDate'}
-                    control={control}
-                    error={errors.endDate}
-                    label={'End Date'}
-                    defaultValue={undefined}
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <CustomTextField
-                    label={'Procedure Code'}
-                    placeHolder={'Procedure Code'}
-                    name={'procedureCode'}
-                    defaultValue={''}
-                    type={'text'}
-                    error={errors.procedureCode}
-                    control={control}
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <CustomTextField
-                    label={'Modifier Code'}
-                    placeHolder={'Modifier Code'}
-                    name={'modifierCode'}
-                    defaultValue={''}
-                    type={'text'}
-                    error={errors.modifierCode}
-                    control={control}
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <CustomTextField
-                    label={'Units'}
-                    placeHolder={'Units'}
-                    name={'units'}
-                    defaultValue={''}
-                    type={'number'}
-                    error={errors.units}
-                    control={control}
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <CustomTextField
-                    label={'Diagnosis Code'}
-                    placeHolder={'Diagnosis Code'}
-                    name={'diagnosisCode'}
-                    defaultValue={''}
-                    type={'number'}
-                    error={errors.diagnosisCode}
-                    control={control}
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <CustomTextField
-                    label={'NPI/UMPI'}
-                    placeHolder={'NPI/UMPI'}
-                    name={'umpiNumber'}
-                    defaultValue={''}
-                    type={'number'}
-                    error={errors.umpiNumber}
-                    control={control}
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <CustomDropDown
-                    name={'reimbursementType'}
-                    control={control}
-                    label={'Reimburrsement Type'}
-                    error={errors.reimbursementType}
-                    optionList={[
-                      { key: 1, value: 'per unit', optionString: 'Per Unit' },
-                      { key: 2, value: 'per diem', optionString: 'Per Diem' }
-                    ]}
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <CustomTextField
-                    label={'Taxonomy'}
-                    placeHolder={'Taxonomy'}
-                    name={'taxonomy'}
-                    defaultValue={''}
-                    type={'number'}
-                    error={errors.taxonomy}
-                    control={control}
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <CustomDropDown
-                    name={'frequency'}
-                    control={control}
-                    label={'Frequency'}
-                    error={errors.frequency}
-                    optionList={[
-                      { key: 1, value: 'daily', optionString: 'Daily' },
-                      { key: 2, value: 'weekly', optionString: 'Weekly' },
-                      { key: 3, value: 'monthly', optionString: 'Monthly' }
-                    ]}
-                  />
-                </Grid>
-              </Grid>
-              <div className='flex gap-4 justify-end mt-4 mb-4'>
-                <Button variant='outlined' color='secondary' onClick={handleModalClose}>
-                  CANCEL
-                </Button>
-                <Button type='submit' variant='contained' className='bg-[#4B0082]'>
-                  Save
-                </Button>
-              </div>
-            </form>
-          </div>
-        </Dialog>
-      </div>
+      </FormProvider>
     </>
   )
 }
