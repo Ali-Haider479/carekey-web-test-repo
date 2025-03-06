@@ -50,7 +50,7 @@ interface TimeEntry {
   signature: Signature
   caregiver: Caregiver
   client: Client
-  checkedActivity: { id: number }
+  checkedActivity: any
 }
 
 interface GroupedTimeEntry {
@@ -81,6 +81,31 @@ export function transformTimesheetDataTwo(entries: TimeEntry[]): GroupedTimeEntr
     groupedByPair[key].push(entry)
   })
 
+  // Function to calculate hours worked between clockIn and clockOut
+  const calculateHoursWorked = (clockIn: string, clockOut: string): string => {
+    const start = new Date(clockIn).getTime()
+    const end = new Date(clockOut).getTime()
+    const diffInMs = end - start
+    if (diffInMs <= 0) return '---'
+    const hours = (diffInMs / (1000 * 60 * 60)).toFixed(2)
+    return hours === '0.00' ? '---' : hours
+  }
+
+  // Function to get activities as comma-separated string for a single entry
+  const getActivities = (entry: TimeEntry): string => {
+    const activities = entry.checkedActivity?.activities?.map((act: any) => act.title) || []
+    return activities.length > 0 ? activities.join(', ') : '---'
+  }
+
+  // Function to get unique activities across all entries as comma-separated string
+  const getUniqueActivities = (entries: TimeEntry[]): string => {
+    const allActivities = entries.flatMap(
+      entry => entry.checkedActivity?.activities?.map((act: any) => act.title) || []
+    )
+    const uniqueActivities = [...new Set(allActivities)]
+    return uniqueActivities.length > 0 ? uniqueActivities.join(', ') : '---'
+  }
+
   // Transform each group into a GroupedTimeEntry
   return Object.entries(groupedByPair).map(([key, groupEntries]) => {
     const { caregiver, client } = groupEntries[0]
@@ -110,15 +135,17 @@ export function transformTimesheetDataTwo(entries: TimeEntry[]): GroupedTimeEntr
         },
         tsApprovalStatus: entry.tsApprovalStatus,
         serviceName: entry.serviceName,
-        clockIn: entry.clockIn, // Added clockIn for single entry
-        startLocation: entry.startLocation, // Added startLocation for single entry
-        endLocation: entry.endLocation, // Added endLocation for single entry
-        clockOut: entry.clockOut, // Added clockOut for single entry
-        signature: entry.signature // Existing signature for single entry
+        clockIn: entry.clockIn,
+        startLocation: entry.startLocation,
+        endLocation: entry.endLocation,
+        clockOut: entry.clockOut,
+        signature: entry.signature,
+        hrsWorked: calculateHoursWorked(entry.clockIn, entry.clockOut),
+        activities: getActivities(entry)
       }
     }
 
-    // For multiple entries, sort and group as before
+    // For multiple entries, sort and group
     const sortedEntries = [...groupEntries].sort(
       (a, b) => new Date(a.dateOfService).getTime() - new Date(b.dateOfService).getTime()
     )
@@ -136,14 +163,25 @@ export function transformTimesheetDataTwo(entries: TimeEntry[]): GroupedTimeEntr
 
     const dateRange = `${formatDate(startDate)} - ${formatDate(endDate)}`
     const hasAllSameStatus = sortedEntries.every(entry => entry.tsApprovalStatus === sortedEntries[0].tsApprovalStatus)
-
-    // For multiple entries, we'll use the earliest clockIn and latest clockOut
-    // const earliestClockIn = sortedEntries[0].clockIn
-    // const latestClockOut = sortedEntries[sortedEntries.length - 1].clockOut
-    const latestendLocation = sortedEntries[sortedEntries.length - 1].endLocation
-    const lateststartLocation = sortedEntries[sortedEntries.length - 1].startLocation
-
+    const latestEndLocation = sortedEntries[sortedEntries.length - 1].endLocation
+    const latestStartLocation = sortedEntries[sortedEntries.length - 1].startLocation
     const mostRecentSignature = sortedEntries[sortedEntries.length - 1].signature
+
+    // Calculate total hours worked for all entries
+    const totalHours = sortedEntries.reduce((sum, entry) => {
+      const hours = parseFloat(calculateHoursWorked(entry.clockIn, entry.clockOut))
+      return isNaN(hours) ? sum : sum + hours
+    }, 0)
+    const hrsWorked = totalHours > 0 ? totalHours.toFixed(2) : '---'
+
+    // Get unique activities for the parent row
+    const parentActivities = getUniqueActivities(sortedEntries)
+
+    // Add activities to each subRow entry
+    const subRowsWithActivities = sortedEntries.map(entry => ({
+      ...entry,
+      activities: getActivities(entry) // Add activities specific to this entry
+    }))
 
     return {
       id: key,
@@ -163,12 +201,14 @@ export function transformTimesheetDataTwo(entries: TimeEntry[]): GroupedTimeEntr
       },
       tsApprovalStatus: hasAllSameStatus ? sortedEntries[0].tsApprovalStatus : 'Mixed',
       serviceName: uniqueServices.join(', '),
-      // clockIn: earliestClockIn, // Added earliest clockIn for grouped entries
-      // clockOut: latestClockOut, // Added latest clockOut for grouped entries
-      signature: mostRecentSignature, // Existing signature for grouped entries
-      subRows: sortedEntries, // subRows already includes full TimeEntry with clockIn/clockOut
-      startLocation: lateststartLocation, // Added latest startLocation for grouped entries
-      endLocation: latestendLocation // Added latest endLocation for grouped entries
+      clockIn: '',
+      clockOut: '',
+      hrsWorked,
+      activities: parentActivities,
+      signature: mostRecentSignature,
+      subRows: subRowsWithActivities,
+      startLocation: latestStartLocation,
+      endLocation: latestEndLocation
     }
   })
 }

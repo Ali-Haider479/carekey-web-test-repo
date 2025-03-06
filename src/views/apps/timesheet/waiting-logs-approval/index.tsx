@@ -7,6 +7,7 @@ import axios from 'axios'
 import LogsApprovalFilters from './LogsApprovalFilters'
 import WaitingLogsApprovalTable from './WaitingLogsApprovalTable'
 import { transformTimesheetDataTwo } from '@/utils/transform'
+import CustomAlert from '@/@core/components/mui/Alter'
 
 // Component Imports
 
@@ -14,6 +15,8 @@ const LogsApprovalDetails = () => {
   // Shared state for the filtered data
   const [timeLogData, setTimeLogData] = useState<any>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [alertOpen, setAlertOpen] = useState(false)
+  const [alertProps, setAlertProps] = useState<any>()
 
   // Initial data fetch
   useEffect(() => {
@@ -35,11 +38,21 @@ const LogsApprovalDetails = () => {
 
   // Handler for filter updates
   const handleFilteredData = (filteredData: any) => {
-    setTimeLogData(filteredData)
+    // setTimeLogData(filteredData)
+    if (filteredData.length === 0) {
+      setAlertOpen(true)
+      setAlertProps({
+        message: 'User not found in the data.',
+        severity: 'error'
+      })
+      return
+    }
+    setTimeLogData(transformTimesheetDataTwo(filteredData))
   }
 
   return (
     <Grid container spacing={6}>
+      <CustomAlert AlertProps={alertProps} openAlert={alertOpen} setOpenAlert={setAlertOpen} />
       <Grid size={{ xs: 12 }}>
         <LogsApprovalFilters onFilterApplied={handleFilteredData} />
       </Grid>

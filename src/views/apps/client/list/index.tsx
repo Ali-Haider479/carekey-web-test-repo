@@ -9,17 +9,14 @@ import axios from 'axios'
 import Dropdown from '@/@core/components/mui/DropDown'
 
 import type { ClientTypes } from '@/types/apps/clientTypes'
-import { Avatar, Button, Card, Chip, Icon, TextField, Typography } from '@mui/material'
-import DataTable from '@/@core/components/mui/DataTable'
-import { GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
-import { useParams, useRouter } from 'next/navigation'
+import { Avatar, Button, Card, Icon, TextField, Typography } from '@mui/material'
+import { useRouter } from 'next/navigation'
 import ReactTable from '@/@core/components/mui/ReactTable'
 
 const ClientListApps = () => {
   const router = useRouter()
   const [data, setData] = useState<ClientTypes[]>([])
   const [dataWithProfileImg, setDataWithProfileImg] = useState<ClientTypes[]>([])
-  const [selectedRole, setSelectedRole] = useState<string>('')
   const [search, setSearch] = useState('')
   const [item, setItem] = useState('')
   const [status, setStatus] = useState('')

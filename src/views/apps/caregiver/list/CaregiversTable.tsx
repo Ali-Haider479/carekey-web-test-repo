@@ -142,7 +142,7 @@ const CaregiverTable = ({ data, isLoading }: CaregiverTableProps) => {
             variant='contained'
             sx={{ backgroundColor: '#4B0082', color: '#fff', fontWeight: 'bold' }}
           >
-            Add Employee
+            Add Caregiver
           </Button>
         </Grid>
       </Grid>

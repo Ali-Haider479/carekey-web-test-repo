@@ -2,8 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import Card from '@mui/material/Card'
-import CardHeader from '@mui/material/CardHeader'
-import { Alert, CircularProgress, IconButton, Typography } from '@mui/material'
+import { Box, Chip, CircularProgress, Tooltip, Typography } from '@mui/material'
 import ActionButton from '@/@core/components/mui/ActionButton'
 import ReactTable from '@/@core/components/mui/ReactTable'
 import axios from 'axios'
@@ -153,7 +152,7 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
       // Reset states
       const payload = {
         id: currentEditedData.id,
-        tsApprovalStatus: currentEditedData.tsApprovalStatus,
+        tsApprovalStatus: currentEditedData.tsApprovalStatus
         // clockIn: currentEditedData.clockIn,
         // clockOut: currentEditedData.clockOut
       }
@@ -201,7 +200,7 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
   const columns = [
     {
       id: 'clientName',
-      label: 'CLIENT NAME',
+      label: 'CLIENT',
       minWidth: 170,
       editable: false,
       sortable: true,
@@ -213,7 +212,7 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
     },
     {
       id: 'caregiverName',
-      label: 'CAREGIVER NAME',
+      label: 'CAREGIVER',
       minWidth: 170,
       editable: false,
       sortable: true,
@@ -230,39 +229,80 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
       minWidth: 170,
       editable: false,
       sortable: true,
-      render: (user: any) => <Typography color='primary'>{user?.serviceName}</Typography>
+      render: (user: any) => (
+        <Tooltip title={user?.serviceName || ''} placement='top'>
+          <Typography color='primary'>
+            {user?.serviceName?.slice(0, 20) || '---'}
+            {user?.serviceName?.length > 20 ? '...' : ''}
+          </Typography>
+        </Tooltip>
+      )
     },
-    // {
-    //   id: 'clockIn',
-    //   label: 'CLOCK IN',
-    //   minWidth: 170,
-    //   editable: true,
-    //   sortable: true,
-    //   render: (user: any) => <Typography color='primary'>{formatDateTime(user?.clockIn)}</Typography>
-    // },
-    // {
-    //   id: 'clockOut',
-    //   label: 'CLOCK OUT',
-    //   minWidth: 170,
-    //   editable: true,
-    //   sortable: true,
-    //   render: (user: any) => <Typography color='primary'>{formatDateTime(user?.clockOut)}</Typography>
-    // },
-    // {
-    //   id: 'payPeriod',
-    //   label: 'PAY PERIOD',
-    //   minWidth: 170,
-    //   editable: false,
-    //   sortable: true,
-    //   render: (user: any) => {
-    //     const startDate = user?.payPeriodHistory?.startDate
-    //     if (startDate) {
-    //       const date = new Date(startDate)
-    //       return <Typography className='font-normal text-base my-3'>{formatDate(user.dateOfService)}</Typography>
-    //     }
-    //     return <Typography className='font-normal text-base my-3'>N/A</Typography>
-    //   }
-    // },
+    {
+      id: 'activities',
+      label: 'ACTIVITIES',
+      minWidth: 170,
+      editable: false,
+      sortable: true,
+      render: (user: any) => (
+        <Tooltip title={user?.activities || ''} placement='top'>
+          <Typography color='primary'>
+            {user?.activities?.slice(0, 20) || '---'}
+            {user?.activities?.length > 20 ? '...' : ''}
+          </Typography>
+        </Tooltip>
+      )
+    },
+    {
+      id: 'clockInOut',
+      label: 'CLOCK IN / OUT',
+      minWidth: 200,
+      editable: true,
+      sortable: true,
+      render: (user: any) =>
+        !user.clockIn || !user.clockOut ? (
+          <Typography color='primary'>---</Typography>
+        ) : (
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+            <Typography color='primary' variant='body2'>
+              <strong>In:</strong> {user?.clockIn?.length > 0 ? formatDateTime(user.clockIn) : '---'}
+            </Typography>
+            <Typography color='primary' variant='body2'>
+              <strong>Out:</strong> {user?.clockOut?.length > 0 ? formatDateTime(user.clockOut) : '---'}
+            </Typography>
+          </Box>
+        )
+    },
+    {
+      id: 'timeDuration',
+      label: 'HRS WORKED',
+      minWidth: 170,
+      editable: false,
+      sortable: true,
+      render: (user: any) => {
+        if (!user?.clockIn || !user?.clockOut) {
+          return <Typography className='font-normal text-base my-3'>{user?.hrsWorked} Hrs</Typography>
+        } else {
+          const hoursWorked = calculateHoursWorked(user?.clockIn, user?.clockOut)
+          return <Typography className='font-normal text-base my-3'>{hoursWorked} Hrs</Typography>
+        }
+      }
+    },
+    {
+      id: 'notes',
+      label: 'NOTES',
+      minWidth: 170,
+      editable: true,
+      sortable: true,
+      render: (user: any) => (
+        <Tooltip title={user?.notes || ''} placement='top'>
+          <Typography color='primary'>
+            {user?.notes?.slice(0, 20) || '---'}
+            {user?.notes?.length > 20 ? '...' : ''}
+          </Typography>
+        </Tooltip>
+      )
+    },
     {
       id: 'dateOfService',
       label: 'DATE OF SERVICE',
@@ -296,30 +336,19 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
       editable: true,
       sortable: true,
       render: (user: any) => (
-        <Typography
-          color='primary'
-          className={`${
-            user?.tsApprovalStatus === 'Approved'
-              ? 'text-[#71DD37]'
-              : user?.tsApprovalStatus === 'Rejected'
-                ? 'text-[#FF4C51]'
-                : 'text-[#FFAB00]'
-          }`}
-        >
-          {user?.tsApprovalStatus || 'Pending'}
-        </Typography>
+        <Chip
+          label={user?.tsApprovalStatus.toUpperCase() || 'PENDING'}
+          sx={{
+            backgroundColor: user?.tsApprovalStatus === 'Approved' ? '#72E1281F' : '#FDB5281F',
+            borderRadius: '50px',
+            color: user?.tsApprovalStatus === 'Approved' ? '#71DD37' : '#FFAB00',
+            '& .MuiChip-label': {
+              padding: '0 10px'
+            }
+          }}
+        />
       )
     },
-    // {
-    //   id: 'timesheet',
-    //   label: 'TIMESHEET',
-    //   editable: false,
-    //   render: (user: any) => (
-    //     <IconButton onClick={() => console.log(user)}>
-    //       <LaunchIcon />
-    //     </IconButton>
-    //   )
-    // },
     {
       id: 'actions',
       label: 'ACTION',
@@ -335,7 +364,7 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
           user={user}
           selectedUser={selectedUser}
           anchorEl={anchorEl}
-          disabled={!!user.subRows && user.subRows.length > 0} // Disable if subRows exist
+          disabled={!!user.subRows && user.subRows.length > 0}
         />
       )
     }
@@ -360,8 +389,8 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
   // console.log('Date timesheet,data', transformedData)
   console.log('DATE AFTER SUBROWS', data)
   return (
-    <Card sx={{ borderRadius: 1, boxShadow: 3 }}>
-      <CardHeader title='Received Timesheet' className='pb-4' />
+    <>
+      {/* <CardHeader title='Received Timesheet' className='pb-4' /> */}
       <CustomAlert AlertProps={alertProps} openAlert={alertOpen} setOpenAlert={setAlertOpen} />
 
       <div style={{ overflowX: 'auto', padding: '0px' }}>
@@ -378,7 +407,7 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
           onEditChange={handleEditChange}
         />
       </div>
-    </Card>
+    </>
   )
 }
 

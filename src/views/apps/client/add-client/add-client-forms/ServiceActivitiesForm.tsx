@@ -259,7 +259,6 @@ const ServiceActivitiesForm = forwardRef<{ handleSubmit: any }, Props>(({ onFini
         <Card className='mt-3'>
           <CardContent>
             <Typography className='text-xl font-semibold mb-4'>Service Activities</Typography>
-
             <ServiceActivities
               name={'serviceActivities'}
               control={control}

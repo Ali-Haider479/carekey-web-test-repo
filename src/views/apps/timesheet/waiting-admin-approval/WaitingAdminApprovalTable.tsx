@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo } from 'react'
 import Card from '@mui/material/Card'
 import CardHeader from '@mui/material/CardHeader'
-import { CircularProgress, Typography } from '@mui/material'
+import { Chip, CircularProgress, Tooltip, Typography } from '@mui/material'
 import axios from 'axios'
 import ReactTable from '@/@core/components/mui/ReactTable'
 import { dark } from '@mui/material/styles/createPalette'
@@ -72,7 +72,7 @@ const WaitingAdminApprovalTable = () => {
   const columns = [
     {
       id: 'clientName',
-      label: 'CLIENT NAME',
+      label: 'CLIENT',
       minWidth: 170,
       editable: false,
       sortable: true,
@@ -84,7 +84,7 @@ const WaitingAdminApprovalTable = () => {
     },
     {
       id: 'caregiverName',
-      label: 'CAREGIVER NAME',
+      label: 'CAREGIVER',
       minWidth: 170,
       editable: false,
       sortable: true,
@@ -95,14 +95,20 @@ const WaitingAdminApprovalTable = () => {
         >{`${user?.caregiver?.firstName} ${user?.caregiver?.lastName}`}</Typography>
       )
     },
-
     {
       id: 'serviceName',
-      label: 'SERVICE TAKEN',
+      label: 'SERVICE',
       minWidth: 170,
       editable: false,
       sortable: true,
-      render: (user: any) => <Typography color='primary'>{user?.serviceName}</Typography>
+      render: (user: any) => (
+        <Tooltip title={user?.serviceName || ''} placement='top'>
+          <Typography color='primary'>
+            {user?.serviceName?.slice(0, 20) || '---'}
+            {user?.serviceName?.length > 20 ? '...' : ''}
+          </Typography>
+        </Tooltip>
+      )
     },
     {
       id: 'dateOfService',
@@ -135,39 +141,33 @@ const WaitingAdminApprovalTable = () => {
       }
     },
     {
-      id: 'tsApprovalStatus',
-      label: 'LOGS RECORDED',
-      minWidth: 170,
-      editable: true,
-      sortable: true,
-      render: (user: any) => (
-        <Typography
-          color='primary'
-          className={`${'YES' === 'YES' ? 'text-[#71DD37]' : 'NO' === 'NO' ? 'text-[#FF4C51]' : 'text-[#FFAB00]'}`}
-        >
-          YES
-        </Typography>
-      )
-    },
-    {
       id: 'signatureStatus',
       label: 'SIGNATURE STATUS',
       minWidth: 170,
       editable: true,
       sortable: true,
       render: (user: any) => (
-        <Typography
-          color='primary'
-          className={`${
-            user?.signature?.signatureStatus === 'Taken'
-              ? 'text-[#71DD37]'
-              : user?.signature?.signatureStatus === 'Missed'
-                ? 'text-[#FF4C51]'
-                : 'text-[#FFAB00]'
-          }`}
-        >
-          {user?.signature?.signatureStatus || 'Pending'}
-        </Typography>
+        <Chip
+          label={user?.signature?.signatureStatus.toUpperCase() || 'PENDING'}
+          sx={{
+            backgroundColor:
+              user?.signature?.signatureStatus === 'Taken'
+                ? '#72E1281F'
+                : user?.signature?.signatureStatus === 'Pending'
+                  ? '#26C6F91F'
+                  : '#FF4D491F',
+            borderRadius: '50px',
+            color:
+              user?.signature?.signatureStatus === 'Taken'
+                ? '#71DD37'
+                : user?.signature?.signatureStatus === 'Pending'
+                  ? '#03C3EC'
+                  : '#FF3E1D',
+            '& .MuiChip-label': {
+              padding: '0 15px'
+            }
+          }}
+        />
       )
     }
     // {
@@ -201,22 +201,19 @@ const WaitingAdminApprovalTable = () => {
   }
 
   return (
-    <Card sx={{ borderRadius: 1, boxShadow: 3 }}>
-      <CardHeader title='Waiting Admin Approval' className='pb-4' />
-      <div style={{ overflowX: 'auto', padding: '0px' }}>
-        <ReactTable
-          columns={columns}
-          data={filteredData}
-          keyExtractor={user => user.id.toString()}
-          enableRowSelect
-          enablePagination
-          pageSize={5}
-          stickyHeader
-          maxHeight={600}
-          containerStyle={{ borderRadius: 2 }}
-        />
-      </div>
-    </Card>
+    <div style={{ overflowX: 'auto', padding: '0px' }}>
+      <ReactTable
+        columns={columns}
+        data={filteredData}
+        keyExtractor={user => user.id.toString()}
+        enableRowSelect
+        enablePagination
+        pageSize={5}
+        stickyHeader
+        maxHeight={600}
+        containerStyle={{ borderRadius: 2 }}
+      />
+    </div>
   )
 }
 

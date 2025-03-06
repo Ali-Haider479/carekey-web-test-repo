@@ -13,7 +13,7 @@ export default function CustomAlert({ AlertProps, openAlert, setOpenAlert }: Pro
   }
 
   return (
-    <div style={{ padding: '20px' }} className='flex justify-center'>
+    <div style={{ padding: '0px 20px 20px 20px' }} className='flex justify-center'>
       <Snackbar
         open={openAlert}
         autoHideDuration={10000}

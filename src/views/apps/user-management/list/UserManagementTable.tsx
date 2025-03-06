@@ -9,10 +9,12 @@ import {
   Chip,
   CircularProgress,
   Dialog,
+  FormControl,
   FormControlLabel,
   Grid2 as Grid,
   IconButton,
   InputAdornment,
+  InputLabel,
   MenuItem,
   OutlinedInput,
   Select,
@@ -77,6 +79,7 @@ const UserManagementList = () => {
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [touched, setTouched] = useState<Record<string, boolean>>({})
   const [selectedRolePermissions, setSelectedRolePermissions] = useState<Permission[]>([])
+  const [open, setOpen] = useState(false)
   const [formData, setFormData] = useState<FormData>({
     userName: '',
     emailAddress: '',
@@ -96,15 +99,10 @@ const UserManagementList = () => {
       const userData = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/user`)
       const roleData = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/role`)
       const permission = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/permission`)
-      setUsersData(userData.data.filter((item: any) => {
-        const roleTitle = item?.role?.title;
-        return roleTitle !== 'Caregiver' && roleTitle !== 'Super Admin';
-      }));
-
-      setRolesData(roleData.data.filter((item: any) => {
-        const roleTitle = item?.title;
-        return roleTitle !== 'Caregiver' && roleTitle !== 'Super Admin';
-      }));
+      const roles = roleData.data.filter((role: any) => role.id !== 1)
+      const users = userData.data.filter((user: any) => user.role?.title !== 'Super Admin')
+      setUsersData(users)
+      setRolesData(roles)
       setPermissionData(permission.data)
     } catch (error) {
       console.error('Error fetching roles:', error)
@@ -230,6 +228,7 @@ const UserManagementList = () => {
     // Update the displayed permissions
     const selectedPermissions = permissionData.filter((permission: Permission) => selectedIds.includes(permission.id))
     setSelectedRolePermissions(selectedPermissions)
+    setOpen(false)
   }
 
   const handleModalClose = () => {
@@ -369,24 +368,30 @@ const UserManagementList = () => {
     if (customRole) {
       return (
         <Grid size={{ xs: 12, sm: 12 }}>
-          <Select
-            multiple
-            fullWidth
-            value={formData.customPermissions}
-            label='Select Permissions'
-            onChange={handlePermissionChange}
-            input={<OutlinedInput label='Select Permissions' placeholder='Select Permissions' />}
-            onBlur={handleBlur('customPermissions')}
-            error={touched.customPermissions && !!errors.customPermissions}
-            // helperText={touched.customPermissions && errors.customPermissions}
-            sx={textFieldSx}
-          >
-            {permissionData.map((permission: Permission) => (
-              <MenuItem key={permission.id} value={permission.id}>
-                {permission.name}
-              </MenuItem>
-            ))}
-          </Select>
+          <FormControl fullWidth className='relative'>
+            <InputLabel>Select Permissions</InputLabel>
+            <Select
+              multiple
+              fullWidth
+              value={formData.customPermissions}
+              label='Select Permissions'
+              onChange={handlePermissionChange}
+              // input={<OutlinedInput label='Select Permissions' placeholder='Select Permissions' />}
+              onBlur={handleBlur('customPermissions')}
+              error={touched.customPermissions && !!errors.customPermissions}
+              // helperText={touched.customPermissions && errors.customPermissions}
+              sx={textFieldSx}
+              open={open}
+              onOpen={() => setOpen(true)}
+              onClose={() => setOpen(false)}
+            >
+              {permissionData.map((permission: Permission) => (
+                <MenuItem key={permission.id} value={permission.id}>
+                  {permission.name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
           <Box className='flex flex-wrap gap-2 mt-2'>
             {selectedRolePermissions.map(permission => (
               <Chip
@@ -395,7 +400,7 @@ const UserManagementList = () => {
                 onDelete={() => handleRemovePermission(permission.id)}
                 deleteIcon={<CloseIcon className='text-sm text-[#4B0082] border-[1px] border-[#4B0082] rounded' />}
                 className='mt-2 text-[#4B0082] bg-[#e3e4fb] text-sm py-1'
-              // aria-label={`Remove ${selectedActivity?.title}`}
+                // aria-label={`Remove ${selectedActivity?.title}`}
               />
             ))}
           </Box>
@@ -444,7 +449,7 @@ const UserManagementList = () => {
               variant='contained'
               sx={{ backgroundColor: '#4B0082', color: '#fff', fontWeight: 'bold' }}
             >
-              ADD ADMIN
+              ADD USER
             </Button>
           </Grid>
         </Grid>
@@ -482,14 +487,23 @@ const UserManagementList = () => {
           <div className='flex items-center justify-center pt-[10px] pb-[5px] w-full px-5'>
             <form onSubmit={handleSubmit} autoComplete='off'>
               <div>
-                <h2 className='text-xl font-semibold mt-10 mb-6'>Add Admin</h2>
+                <h2 className='text-xl font-semibold mt-10 mb-6'>Add User</h2>
               </div>
               <Grid container spacing={4}>
                 <Grid size={{ xs: 12, md: 12 }}>
                   <div className='flex items-center gap-3 justify-end'>
                     {/* <Typography>Custom Role</Typography> */}
                     <FormControlLabel
-                      control={<Switch checked={customRole} onChange={() => setCustomRole(!customRole)} name='gilad' />}
+                      control={
+                        <Switch
+                          checked={customRole}
+                          onChange={() => {
+                            setCustomRole(!customRole)
+                            setFormData({ ...formData, role: '' })
+                          }}
+                          name='gilad'
+                        />
+                      }
                       label='Custom Role'
                     />
                   </div>

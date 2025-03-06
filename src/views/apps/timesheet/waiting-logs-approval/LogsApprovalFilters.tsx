@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form'
 import CustomTextField from '@/@core/components/mui/TextField'
 import axios from 'axios'
 import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
+import SearchIcon from '@mui/icons-material/Search'
 
 interface DefaultStateType {
   clientName: string
@@ -167,7 +168,14 @@ const LogsApprovalFilters = ({ onFilterApplied }: SignatureStatusFiltersProps) =
                 {...(errors.title && { error: true, helperText: 'This field is required' })}
               />
             </Grid>
-            <Button type='submit'>Filter</Button>
+            <Button
+              type='submit'
+              className='h-10 flex items-center justify-center bg-[#4B0082]'
+              variant='contained'
+              size='small'
+            >
+              <SearchIcon fontSize='medium' />
+            </Button>
           </Grid>
         </CardContent>
       </Card>

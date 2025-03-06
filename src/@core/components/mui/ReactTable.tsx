@@ -71,7 +71,7 @@ function ReactTable<T extends { subRows?: T[] }>({
   keyExtractor,
   enableRowSelect = false,
   enableRowExpand = false,
-  enablePagination = true,
+  enablePagination = false,
   pageSize = 10,
   onSelectionChange,
   expandedContent,
@@ -265,6 +265,14 @@ function ReactTable<T extends { subRows?: T[] }>({
     const isItemSelected = selected.includes(id.toString())
     const isItemExpanded = expanded.includes(id.toString())
     const hasSubRows = item.subRows && item.subRows.length > 0
+    const useExpandedColor = isItemExpanded || (level > 0 && parentExpanded)
+    const getBackgroundColor = () => {
+      const isLightTheme = theme?.palette?.mode === 'light'
+      if (useExpandedColor) {
+        return isLightTheme ? '#F5F5F5' : '#232333'
+      }
+      return isLightTheme ? '#FFFFFF' : '#2B2C40'
+    }
 
     return (
       <React.Fragment key={id}>
@@ -274,16 +282,12 @@ function ReactTable<T extends { subRows?: T[] }>({
             {
               ...rowStyle,
               ...(isItemSelected ? selectedRowStyle : {}),
-              backgroundColor:
-                level > 0
-                  ? theme.palette.mode === 'light'
-                    ? 'rgba(0, 0, 0, 0.02)'
-                    : 'rgba(255, 255, 255, 0.02)'
-                  : 'inherit',
+              backgroundColor: getBackgroundColor(),
               display: level === 0 || parentExpanded ? 'table-row' : 'none',
               '& > td': {
-                borderBottom: `1px solid ${theme.palette.divider}`
-              }
+                borderBottom: `1px solid ${theme?.palette?.divider || 'rgba(0, 0, 0, 0.12)'}`
+              },
+              boxShadow: 'none'
             } as SxProps<Theme>
           }
         >
@@ -322,16 +326,35 @@ function ReactTable<T extends { subRows?: T[] }>({
     <Box>
       <TableContainer
         component={Paper}
+        elevation={0}
         sx={{
-          maxHeight,
-          boxShadow: showBorder ? undefined : 'none',
+          // maxHeight,
           ...containerStyle,
-          backgroundColor: 'transparent'
+          backgroundColor: 'transparent',
+          // boxShadow:
+          //   '0px 2px 6px 4px rgba(50, 71, 92, 0.02), 0px 4px 9px 1px rgba(50, 71, 92, 0.04), 0px 2px 9px 0px rgba(50, 71, 92, 0.06)', // Figma shadows
+          borderRadius: '6px', // Rounded corners
+          borderWidth: 0
         }}
       >
         <Table stickyHeader={stickyHeader} size={size}>
           <TableHead>
-            <TableRow sx={headerStyle}>
+            <TableRow
+              sx={{
+                // backgroundColor: '#2A2D3E', // Distinct header background color
+                '& > th': {
+                  // borderBottom: `1px solid ${theme.palette.divider}`, // Bottom border for the header
+                  // color: theme.palette.text.secondary, // Light text color
+                  // fontWeight: 500,
+                  // fontSize: '0.875rem',
+                  // padding: '8px 16px', // Consistent padding
+                  backgroundColor: theme.palette.mode === 'light' ? '#FAFAFC' : '#333448' // Ensure header cells match
+                },
+                '& > th:last-child': {
+                  borderRight: 'none' // No right border for the last cell
+                }
+              }}
+            >
               <TableCell padding='none' sx={{ width: '48px' }} />
               {enableRowSelect && (
                 <TableCell padding='checkbox'>
@@ -370,7 +393,7 @@ function ReactTable<T extends { subRows?: T[] }>({
               ))}
             </TableRow>
           </TableHead>
-          <TableBody>{paginatedData.map(item => renderRow(item))}</TableBody>
+          <TableBody sx={{ boxShadow: 'none' }}>{paginatedData.map(item => renderRow(item))}</TableBody>
         </Table>
       </TableContainer>
 

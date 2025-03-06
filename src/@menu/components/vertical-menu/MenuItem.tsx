@@ -31,7 +31,8 @@ import StyledMenuLabel from '../../styles/StyledMenuLabel'
 import StyledMenuPrefix from '../../styles/StyledMenuPrefix'
 import StyledMenuSuffix from '../../styles/StyledMenuSuffix'
 import StyledVerticalMenuItem from '../../styles/vertical/StyledVerticalMenuItem'
-import { dark } from '@mui/material/styles/createPalette'
+import { dark, light } from '@mui/material/styles/createPalette'
+import { useTheme } from '@emotion/react'
 
 export type MenuItemProps = Omit<AnchorHTMLAttributes<HTMLAnchorElement>, 'prefix'> &
   RootStylesType &
@@ -72,6 +73,8 @@ const MenuItem: ForwardRefRenderFunction<HTMLLIElement, MenuItemProps> = (props,
 
   // States
   const [active, setActive] = useState(false)
+
+  const theme: any = useTheme()
 
   // Hooks
   const pathname = usePathname()
@@ -146,12 +149,15 @@ const MenuItem: ForwardRefRenderFunction<HTMLLIElement, MenuItemProps> = (props,
         className={classnames(menuClasses.button, { [menuClasses.active]: active })}
         style={{
           border: active
-            ? `${dark ? '2px solid #7112B7' : '2px solid #4B0082'}`
-            : dark
-              ? '1px solid  #50657A'
-              : '1px solid #32475C38',
+            ? theme?.palette?.mode === 'light'
+              ? '2px solid #4B0082'
+              : '2px solid #7122B7'
+            : theme?.palette?.mode === 'light'
+              ? '1px solid #d2d7db'
+              : '1px solid #50657A',
           borderRadius: '8px',
-          marginBottom: '8px'
+          marginBottom: '8px',
+          backgroundColor: active ? theme?.palette?.mode === 'light' ? '#4B0082' : '#7112B7' : theme?.palette?.mode === 'light' ? 'white' : '#333448'
         }}
         component={component}
         tabIndex={disabled ? -1 : 0}

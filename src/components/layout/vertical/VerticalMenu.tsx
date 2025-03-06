@@ -120,7 +120,7 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
         )}
 
         {/* Caregivers - requires Caregivers_Access permission */}
-        {hasPermission('Caregivers_Access') && (
+        {hasPermission('Caregivers') && (
           <MenuItem
             // href={`/${locale}/apps/caregiver/list`}
             href={
@@ -137,7 +137,7 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
         )}
 
         {/* Clients - requires Client_Access permission */}
-        {hasPermission('Client_Access') && (
+        {hasPermission('Client') && (
           <MenuItem
             href={`/${locale}/apps/client/list`}
             icon={<i className='bx-user' />}
@@ -189,7 +189,7 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
         )}
 
         {/* Timesheets - requires TimeSheets permission */}
-        {hasPermission('TimeSheets') && (
+        {hasPermission('Timesheets') && (
           <MenuItem
             href={`/${locale}/apps/timesheets`}
             icon={<i className='bx-spreadsheet' />}

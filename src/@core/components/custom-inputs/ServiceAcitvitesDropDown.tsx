@@ -1,6 +1,6 @@
 'use client' // <-- If using Next.js App Router
 
-import React from 'react'
+import React, { useState } from 'react'
 import { Controller, FieldError, FieldErrors } from 'react-hook-form'
 import { Box, FormControl, InputLabel, Select, MenuItem, FormHelperText, Chip } from '@mui/material'
 import CloseIcon from '@mui/icons-material/Close'
@@ -20,6 +20,8 @@ const handleDelete = (itemToRemove: string, onChange: (items: string[]) => void,
 }
 
 const ServiceActivities = ({ name, control, defaultValue, label, error, activities }: Props) => {
+  const [isOpen, setIsOpen] = useState(false)
+
   return (
     <Box className='w-full pb-4'>
       <Controller
@@ -37,7 +39,13 @@ const ServiceActivities = ({ name, control, defaultValue, label, error, activiti
               value={Array.isArray(value) ? value : []} // ensure it's an array
               label={label}
               size='small'
-              onChange={e => onChange(e.target.value as string[])}
+              onChange={e => {
+                onChange(e.target.value as string[])
+                setIsOpen(false)
+              }}
+              open={isOpen}
+              onOpen={() => setIsOpen(true)}
+              onClose={() => setIsOpen(false)}
             >
               {activities.map(svc => (
                 <MenuItem key={svc.id} value={svc.title}>

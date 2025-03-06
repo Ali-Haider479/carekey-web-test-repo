@@ -1,0 +1,14 @@
+th {
+  white-space: pre-wrap; /* Ensures the newline (\n) is respected */
+  text-align: center;
+  line-height: 1.5; /* Adjust spacing between lines */
+}
+
+th .day-name {
+  font-weight: bold; /* Matches font-semibold */
+}
+
+th .date {
+  font-size: 0.875rem; /* Matches text-sm (14px typically) */
+  color: #6b7280; /* Matches text-gray-600 */
+}

@@ -1,9 +1,9 @@
 import React, { useState } from 'react'
-import { Card, CardHeader, CardContent, MenuItem, Button, TextField } from '@mui/material'
+import { Card, CardHeader, CardContent, MenuItem, Button, TextField, IconButton } from '@mui/material'
 import Grid from '@mui/material/Grid2'
 import { useForm } from 'react-hook-form'
 import axios from 'axios'
-
+import SearchIcon from '@mui/icons-material/Search'
 interface DefaultStateType {
   clientName: string
   caregiverName: string
@@ -141,8 +141,13 @@ const ReceivedTimesheetFilters = ({ onFilterApplied }: SignatureStatusFiltersPro
               </TextField>
             </Grid>
             {/* variant='contained' */}
-            <Button type='submit'>
-              Filter
+            <Button
+              type='submit'
+              className='h-10 flex items-center justify-center bg-[#4B0082]'
+              variant='contained'
+              size='small'
+            >
+              <SearchIcon fontSize='medium' />
             </Button>
           </Grid>
         </CardContent>

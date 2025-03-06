@@ -1,5 +1,4 @@
 'use client'
-
 import { useState, FormEvent } from 'react'
 import Grid from '@mui/material/Grid2'
 import Card from '@mui/material/Card'
@@ -9,6 +8,9 @@ import { TextField, Button, InputAdornment, IconButton } from '@mui/material'
 import axios from 'axios'
 import { useRouter } from 'next/navigation'
 import { Visibility, VisibilityOff } from '@mui/icons-material'
+import { FormProvider, useForm } from 'react-hook-form'
+import CustomTextField from '@/@core/components/custom-inputs/CustomTextField'
+import CustomMaskedInput from '@/@core/components/custom-inputs/CustomMaskedInput'
 
 type Props = {
   open: boolean
@@ -27,6 +29,7 @@ interface FormData {
   taxonomyNumber: string
   einNumber: string
   faxNumber: string
+  confirmPassword: string
 }
 
 interface FormErrors {
@@ -34,105 +37,143 @@ interface FormErrors {
 }
 
 const CreateTenant = (props: Props) => {
-  const [formData, setFormData] = useState<FormData>({
-    firstName: '',
-    lastName: '',
-    emailAddress: '',
-    password: '',
-    companyName: '',
-    billingEmail: '',
-    contactNumber: '',
-    address: '',
-    npiUmpiNumber: '',
-    taxonomyNumber: '',
-    einNumber: '',
-    faxNumber: ''
+  // const [formData, setFormData] = useState<FormData>({
+  //   firstName: '',
+  //   lastName: '',
+  //   emailAddress: '',
+  //   password: '',
+  //   companyName: '',
+  //   billingEmail: '',
+  //   contactNumber: '',
+  //   address: '',
+  //   npiUmpiNumber: '',
+  //   taxonomyNumber: '',
+  //   einNumber: '',
+  //   faxNumber: '',
+  //   confirmPassword: ''
+  // })
+
+  const methods = useForm<FormData>({
+    mode: 'onSubmit',
+    reValidateMode: 'onChange'
   })
 
-  const [errors, setErrors] = useState<FormErrors>({})
+  const {
+    control,
+    formState: { errors },
+    handleSubmit, // Add this if you want to use form submission
+    watch,
+    reset
+  } = methods
+
   const [touched, setTouched] = useState<{ [key: string]: boolean }>({})
   const [showPassword, setShowPassword] = useState(false)
+  const [error, setError] = useState('')
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const router = useRouter()
+
+  const emailAddress = watch('emailAddress')
+  const billingEmail = watch('billingEmail')
 
   const handleClickShowPassword = () => {
     setShowPassword(!showPassword)
   }
 
-  const handleMouseDownPassword = (event: React.MouseEvent<HTMLButtonElement>) => {
-    event.preventDefault()
-  }
-  const validateForm = (): boolean => {
-    const newErrors: FormErrors = {}
-    let isValid = true
-
-    Object.keys(formData).forEach(key => {
-      if (!formData[key as keyof FormData]) {
-        newErrors[key] = 'This field is required'
-        isValid = false
-      }
-    })
-
-    // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (formData.emailAddress && !emailRegex.test(formData.emailAddress)) {
-      newErrors.emailAddress = 'Invalid email format'
-      isValid = false
-    }
-    if (formData.billingEmail && !emailRegex.test(formData.billingEmail)) {
-      newErrors.billingEmail = 'Invalid email format'
-      isValid = false
-    }
-
-    setErrors(newErrors)
-    return isValid
+  const handleClickShowConfirmPassword = () => {
+    setShowConfirmPassword(!showConfirmPassword)
   }
 
-  const handleChange = (field: keyof FormData) => (event: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: event.target.value
-    }))
-
-    // Clear error when user starts typing
-    if (errors[field]) {
-      setErrors(prev => ({
-        ...prev,
-        [field]: ''
-      }))
-    }
-  }
-
-  const handleBlur = (field: keyof FormData) => () => {
-    setTouched(prev => ({
-      ...prev,
-      [field]: true
-    }))
-
-    if (!formData[field]) {
-      setErrors(prev => ({
-        ...prev,
-        [field]: 'This field is required'
-      }))
-    }
-  }
-
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault()
-
-    if (validateForm()) {
-      console.log('Form submitted with data:', { roleId: 2, ...formData })
+  const validateEmail = () => {
+    const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
+    if (!emailPattern.test(emailAddress)) {
+      setError('Please enter a valid email address!.')
     } else {
-      console.log('Form has errors')
-      // Mark all fields as touched to show errors
-      const allTouched: { [key: string]: boolean } = {}
-      Object.keys(formData).forEach(key => {
-        allTouched[key] = true
-      })
-      setTouched(allTouched)
+      setError('')
     }
+  }
+
+  const validateBillingEmail = () => {
+    const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
+    if (!emailPattern.test(billingEmail)) {
+      setError('Please enter a valid email address!.')
+    } else {
+      setError('')
+    }
+  }
+
+  // const validateForm = (): boolean => {
+  //   console.log('inside form validation')
+  //   const newErrors: FormErrors = {}
+  //   let isValid = true
+
+  //   Object.keys(formData).forEach(key => {
+  //     if (!formData[key as keyof FormData]) {
+  //       newErrors[key] = 'This field is required'
+  //       isValid = false
+  //     }
+  //   })
+
+  //   // Email validation
+  //   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  //   if (formData.emailAddress && !emailRegex.test(formData.emailAddress)) {
+  //     newErrors.emailAddress = 'Invalid email format'
+  //     isValid = false
+  //   }
+  //   if (formData.billingEmail && !emailRegex.test(formData.billingEmail)) {
+  //     newErrors.billingEmail = 'Invalid email format'
+  //     isValid = false
+  //   }
+
+  //   return isValid
+  // }
+
+  const onSubmit = async (data: any) => {
+    const tenantPayload = {
+      firstName: data.firstName,
+      lastName: data.lastName,
+      emailAddress: data.emailAddress,
+      password: data.password,
+      companyName: data.companyName,
+      billingEmail: data.billingEmail,
+      contactNumber: data.contactNumber,
+      address: data.address,
+      npiUmpiNumber: data.npiUmpiNumber,
+      taxonomyNumber: data.taxonomynumber,
+      einNumber: data.einNumber,
+      faxNumber: data.faxNumber
+    }
+    console.log('inside onSubmit', tenantPayload)
+    // e.preventDefault()
+
+    // if (validateForm()) {
+    //   console.log('Form submitted with data:', { roleId: 2, ...formData })
+    // } else {
+    //   console.log('Form has errors')
+    //   // Mark all fields as touched to show errors
+    //   const allTouched: { [key: string]: boolean } = {}
+    //   Object.keys(formData).forEach(key => {
+    //     allTouched[key] = true
+    //   })
+    //   setTouched(allTouched)
+    // }
 
     try {
-      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/tenant`, { roleId: 2, ...formData })
+      const tenantPayload = {
+        firstName: data.firstName,
+        lastName: data.lastName,
+        emailAddress: data.emailAddress,
+        password: data.password,
+        companyName: data.companyName,
+        billingEmail: data.billingEmail,
+        contactNumber: data.contactNumber,
+        address: data.address,
+        npiUmpiNumber: data.npiUmpiNumber,
+        taxonomyNumber: data.taxonomynumber,
+        einNumber: data.einNumber,
+        faxNumber: data.faxNumber,
+        roleId: 2
+      }
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/tenant`, tenantPayload)
       console.log('RESPONSE TENANT', response)
       const payload = {
         startDate: new Date(),
@@ -142,7 +183,7 @@ const CreateTenant = (props: Props) => {
       }
       const payperiod = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/pay-period`, payload)
       console.log('Payperiod res', payperiod)
-      router.replace(`/apps/accounts//tenant-list`)
+      router.replace(`/apps/accounts/tenant-list`)
     } catch (error) {
       console.log('ERROR', error)
     }
@@ -162,259 +203,242 @@ const CreateTenant = (props: Props) => {
   }
 
   return (
-    <form onSubmit={handleSubmit} className='flex flex-col gap-6'>
-      <Card>
-        <CardHeader title='Tenant/Accounts' titleTypographyProps={{ sx: { fontSize: '24px' } }} />
-        <CardContent>
-          <div className='pb-24 p-0'>
-            <Grid container spacing={5}>
-              <Grid size={{ xs: 12, md: 4 }}>
-                <TextField
-                  fullWidth
-                  required
-                  label='Admin First Name'
-                  placeholder='John'
-                  value={formData.firstName}
-                  onChange={handleChange('firstName')}
-                  onBlur={handleBlur('firstName')}
-                  error={touched.firstName && !!errors.firstName}
-                  helperText={touched.firstName && errors.firstName}
-                  sx={textFieldSx}
-                />
+    <FormProvider {...methods}>
+      <form onSubmit={handleSubmit(onSubmit)} className='flex flex-col gap-6'>
+        <Card>
+          <CardHeader title='Tenant/Accounts' titleTypographyProps={{ sx: { fontSize: '24px' } }} />
+          <CardContent>
+            <div className='pb-24 p-0'>
+              <Grid container spacing={5}>
+                <Grid size={{ xs: 12, md: 4 }}>
+                  <CustomTextField
+                    label={' Admin First Name'}
+                    placeHolder={'John'}
+                    name={'firstName'}
+                    defaultValue={''}
+                    type={'text'}
+                    error={errors.firstName}
+                    control={control}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, md: 4 }}>
+                  <CustomTextField
+                    label={' Admin Last Name'}
+                    placeHolder={'John'}
+                    name={'lastName'}
+                    defaultValue={''}
+                    type={'text'}
+                    error={errors.lastName}
+                    control={control}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, md: 4 }}>
+                  <CustomTextField
+                    label={' Admin Email Address'}
+                    placeHolder={'John'}
+                    name={'emailAddress'}
+                    defaultValue={''}
+                    type={'email'}
+                    error={errors.emailAddress}
+                    control={control}
+                    onBlur={validateEmail}
+                  />
+                </Grid>
+                {/* Add similar TextField components for remaining fields */}
+                {/* Password */}
+                <Grid size={{ xs: 12, md: 4 }}>
+                  <CustomTextField
+                    label={'Password'}
+                    placeHolder={'********'}
+                    name={'password'}
+                    defaultValue={''}
+                    type={showPassword ? 'text' : 'password'}
+                    error={errors.password}
+                    control={control}
+                    minLength={8}
+                    slotProps={{
+                      input: {
+                        endAdornment: (
+                          <InputAdornment position='end'>
+                            <IconButton
+                              edge='end'
+                              onClick={handleClickShowPassword}
+                              onMouseDown={e => e.preventDefault()}
+                            >
+                              <i className={showPassword ? 'bx-hide' : 'bx-show'} />
+                            </IconButton>
+                          </InputAdornment>
+                        )
+                      }
+                    }}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, md: 4 }}>
+                  <CustomTextField
+                    label={'Confrim Password'}
+                    placeHolder={'********'}
+                    name={'confirmPassword'}
+                    defaultValue={''}
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    error={errors.confirmPassword}
+                    control={control}
+                    slotProps={{
+                      input: {
+                        endAdornment: (
+                          <InputAdornment position='end'>
+                            <IconButton
+                              edge='end'
+                              onClick={handleClickShowConfirmPassword}
+                              onMouseDown={e => e.preventDefault()}
+                            >
+                              <i className={showConfirmPassword ? 'bx-hide' : 'bx-show'} />
+                            </IconButton>
+                          </InputAdornment>
+                        )
+                      }
+                    }}
+                  />
+                </Grid>
+                {/* Company Name */}
+                <Grid size={{ xs: 12, md: 4 }}>
+                  <CustomTextField
+                    label={' Company Name'}
+                    placeHolder={'Tenant'}
+                    name={'companyName'}
+                    defaultValue={''}
+                    type={'text'}
+                    error={errors.companyName}
+                    control={control}
+                  />
+                </Grid>
+                {/* Address */}
+                <Grid size={{ xs: 12, md: 4 }}>
+                  <CustomTextField
+                    label={'Company Address'}
+                    placeHolder={'123 innovation, suite 20'}
+                    name={'address'}
+                    defaultValue={''}
+                    type={'text'}
+                    error={errors.address}
+                    control={control}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, md: 4 }}>
+                  <CustomTextField
+                    label={'NPI/UMPI Number'}
+                    placeHolder={'A-123456789'}
+                    name={'npiUmpiNumber'}
+                    defaultValue={''}
+                    type={'text'}
+                    error={errors.npiUmpiNumber}
+                    control={control}
+                    maxLength={10}
+                    minLength={10}
+                  />
+                </Grid>
+                {/* Taxonomy */}
+                <Grid size={{ xs: 12, md: 4 }}>
+                  <CustomTextField
+                    label={'Taxonomy'}
+                    placeHolder={'123456'}
+                    name={'taxonomyNumber'}
+                    defaultValue={''}
+                    type={'number'}
+                    error={errors.taxonomyNumber}
+                    control={control}
+                  />
+                </Grid>
+                {/* EIN */}
+                <Grid size={{ xs: 12, md: 4 }}>
+                  <CustomTextField
+                    label={'EIN'}
+                    placeHolder={'123456'}
+                    name={'einNumber'}
+                    defaultValue={''}
+                    type={'number'}
+                    error={errors.einNumber}
+                    control={control}
+                  />
+                </Grid>
+                {/* Company Email */}
+                <Grid size={{ xs: 12, md: 4 }}>
+                  <CustomTextField
+                    label={'Company Email Address'}
+                    placeHolder={'abc@example.com'}
+                    name={'billingEmail'}
+                    defaultValue={''}
+                    type={'email'}
+                    error={errors.billingEmail}
+                    control={control}
+                    onBlur={validateBillingEmail}
+                  />
+                </Grid>
+                {/* Phone Number */}
+                <Grid size={{ xs: 12, md: 4 }}>
+                  <CustomTextField
+                    label={'Company Phone Number'}
+                    placeHolder={'(123) 456-7890'}
+                    name={'contactNumber'}
+                    defaultValue={''}
+                    type={'number'}
+                    isPhoneNumber={true}
+                    error={errors.contactNumber}
+                    control={control}
+                  />
+                </Grid>
+                {/* Fax Number */}
+                <Grid size={{ xs: 12, md: 4 }}>
+                  <CustomTextField
+                    label={'Company Fax Number'}
+                    placeHolder={'(123) 456-7890'}
+                    name={'faxNumber'}
+                    defaultValue={''}
+                    type={'number'}
+                    isPhoneNumber={true}
+                    error={errors.faxNumber}
+                    control={control}
+                  />
+                </Grid>
               </Grid>
-
-              <Grid size={{ xs: 12, md: 4 }}>
-                <TextField
-                  fullWidth
-                  required
-                  label='Admin Last Name'
-                  placeholder='Doe'
-                  value={formData.lastName}
-                  onChange={handleChange('lastName')}
-                  onBlur={handleBlur('lastName')}
-                  error={touched.lastName && !!errors.lastName}
-                  helperText={touched.lastName && errors.lastName}
-                  sx={textFieldSx}
-                />
-              </Grid>
-
-              <Grid size={{ xs: 12, md: 4 }}>
-                <TextField
-                  fullWidth
-                  required
-                  type='email'
-                  label='Admin Email Address'
-                  placeholder='admin@example.com'
-                  value={formData.emailAddress}
-                  onChange={handleChange('emailAddress')}
-                  onBlur={handleBlur('emailAddress')}
-                  error={touched.emailAddress && !!errors.emailAddress}
-                  helperText={touched.emailAddress && errors.emailAddress}
-                  sx={textFieldSx}
-                />
-              </Grid>
-
-              {/* Add similar TextField components for remaining fields */}
-              {/* Password */}
-              <Grid size={{ xs: 12, md: 4 }}>
-                <TextField
-                  fullWidth
-                  required
-                  type={showPassword ? 'text' : 'password'}
-                  label='Password'
-                  placeholder='********'
-                  value={formData.password}
-                  onChange={handleChange('password')}
-                  onBlur={handleBlur('password')}
-                  error={touched.password && !!errors.password}
-                  helperText={touched.password && errors.password}
-                  sx={textFieldSx}
-                  InputProps={{
-                    endAdornment: (
-                      <InputAdornment position='end'>
-                        <IconButton
-                          aria-label='toggle password visibility'
-                          onClick={handleClickShowPassword}
-                          onMouseDown={handleMouseDownPassword}
-                          edge='end'
-                        >
-                          {showPassword ? <VisibilityOff /> : <Visibility />}
-                        </IconButton>
-                      </InputAdornment>
-                    )
-                  }}
-                />
-              </Grid>
-              {/* Company Name */}
-              <Grid size={{ xs: 12, md: 4 }}>
-                <TextField
-                  fullWidth
-                  required
-                  label='Company Name'
-                  placeholder='Tenant'
-                  value={formData.companyName}
-                  onChange={handleChange('companyName')}
-                  onBlur={handleBlur('companyName')}
-                  error={touched.companyName && !!errors.companyName}
-                  helperText={touched.companyName && errors.companyName}
-                  sx={textFieldSx}
-                />
-              </Grid>
-
-              {/* Address */}
-              <Grid size={{ xs: 12, md: 4 }}>
-                <TextField
-                  fullWidth
-                  required
-                  label='Company Address'
-                  placeholder='123 innovation, suite 20'
-                  value={formData.address}
-                  onChange={handleChange('address')}
-                  onBlur={handleBlur('address')}
-                  error={touched.address && !!errors.address}
-                  helperText={touched.address && errors.address}
-                  sx={textFieldSx}
-                />
-              </Grid>
-
-              {/* NPI/UMPI Number */}
-              <Grid size={{ xs: 12, md: 4 }}>
-                <TextField
-                  fullWidth
-                  required
-                  type='number'
-                  label='NPI/UMPI Number'
-                  placeholder='123456789'
-                  value={formData.npiUmpiNumber}
-                  onChange={handleChange('npiUmpiNumber')}
-                  onBlur={handleBlur('npiUmpiNumber')}
-                  error={touched.npiUmpiNumber && !!errors.npiUmpiNumber}
-                  helperText={touched.npiUmpiNumber && errors.npiUmpiNumber}
-                  sx={textFieldSx}
-                />
-              </Grid>
-
-              {/* Taxonomy */}
-              <Grid size={{ xs: 12, md: 4 }}>
-                <TextField
-                  fullWidth
-                  required
-                  label='Taxonomy'
-                  type='number'
-                  placeholder='123456789'
-                  value={formData.taxonomyNumber}
-                  onChange={handleChange('taxonomyNumber')}
-                  onBlur={handleBlur('taxonomyNumber')}
-                  error={touched.taxonomyNumber && !!errors.taxonomyNumber}
-                  helperText={touched.taxonomyNumber && errors.taxonomyNumber}
-                  sx={textFieldSx}
-                />
-              </Grid>
-
-              {/* EIN */}
-              <Grid size={{ xs: 12, md: 4 }}>
-                <TextField
-                  fullWidth
-                  required
-                  type='number'
-                  placeholder='123456789'
-                  value={formData.einNumber}
-                  onChange={handleChange('einNumber')}
-                  onBlur={handleBlur('einNumber')}
-                  error={touched.einNumber && !!errors.einNumber}
-                  helperText={touched.einNumber && errors.einNumber}
-                  sx={textFieldSx}
-                />
-              </Grid>
-
-              {/* Company Email */}
-              <Grid size={{ xs: 12, md: 4 }}>
-                <TextField
-                  fullWidth
-                  required
-                  type='email'
-                  label='Company Email Address'
-                  placeholder='user@company.com'
-                  value={formData.billingEmail}
-                  onChange={handleChange('billingEmail')}
-                  onBlur={handleBlur('billingEmail')}
-                  error={touched.billingEmail && !!errors.billingEmail}
-                  helperText={touched.billingEmail && errors.billingEmail}
-                  sx={textFieldSx}
-                />
-              </Grid>
-
-              {/* Phone Number */}
-              <Grid size={{ xs: 12, md: 4 }}>
-                <TextField
-                  fullWidth
-                  required
-                  type='number'
-                  label='Company Phone Number'
-                  placeholder='+1 202 555 0111'
-                  value={formData.contactNumber}
-                  onChange={handleChange('contactNumber')}
-                  onBlur={handleBlur('contactNumber')}
-                  error={touched.contactNumber && !!errors.contactNumber}
-                  helperText={touched.contactNumber && errors.contactNumber}
-                  sx={textFieldSx}
-                />
-              </Grid>
-
-              {/* Fax Number */}
-              <Grid size={{ xs: 12, md: 4 }}>
-                <TextField
-                  fullWidth
-                  required
-                  label='Company FAX Number'
-                  placeholder='+1 555 0111'
-                  type='number'
-                  value={formData.faxNumber}
-                  onChange={handleChange('faxNumber')}
-                  onBlur={handleBlur('faxNumber')}
-                  error={touched.faxNumber && !!errors.faxNumber}
-                  helperText={touched.faxNumber && errors.faxNumber}
-                  sx={textFieldSx}
-                />
-              </Grid>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent>
+            <Grid container spacing={2} justifyContent='space-between' alignItems='center'>
+              <Button
+                variant='outlined'
+                color='secondary'
+                onClick={() => {
+                  reset({
+                    firstName: '',
+                    lastName: '',
+                    emailAddress: '',
+                    password: '',
+                    companyName: '',
+                    billingEmail: '',
+                    contactNumber: '',
+                    address: '',
+                    npiUmpiNumber: '',
+                    taxonomyNumber: '',
+                    einNumber: '',
+                    faxNumber: '',
+                    confirmPassword: ''
+                  })
+                  setTouched({})
+                  router.replace('/apps/accounts/tenant-list')
+                }}
+              >
+                Cancel
+              </Button>
+              <Button variant='contained' type='submit' sx={{ backgroundColor: '#4B0082' }}>
+                Submit
+              </Button>
             </Grid>
-          </div>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardContent>
-          <Grid container spacing={2} justifyContent='space-between' alignItems='center'>
-            <Button
-              variant='outlined'
-              color='secondary'
-              onClick={() => {
-                setFormData({
-                  firstName: '',
-                  lastName: '',
-                  emailAddress: '',
-                  password: '',
-                  companyName: '',
-                  billingEmail: '',
-                  contactNumber: '',
-                  address: '',
-                  npiUmpiNumber: '',
-                  taxonomyNumber: '',
-                  einNumber: '',
-                  faxNumber: ''
-                })
-                setErrors({})
-                setTouched({})
-              }}
-            >
-              Cancel
-            </Button>
-            <Button variant='contained' type='submit' sx={{ backgroundColor: '#4B0082' }}>
-              Submit
-            </Button>
-          </Grid>
-        </CardContent>
-      </Card>
-    </form>
+          </CardContent>
+        </Card>
+      </form>
+    </FormProvider>
   )
 }
 

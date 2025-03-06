@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react'
 import Card from '@mui/material/Card'
 import CardHeader from '@mui/material/CardHeader'
-import { CircularProgress, Typography } from '@mui/material'
+import { Chip, CircularProgress, Tooltip, Typography } from '@mui/material'
 import { calculateHoursWorked } from '@/utils/helperFunctions'
 import ReactTable from '@/@core/components/mui/ReactTable'
 import AdUnitsIcon from '@mui/icons-material/AdUnits'
@@ -47,7 +47,7 @@ const SignatureStatusTable = ({ data, isLoading }: SignatureStatusTableProps) =>
   const columns = [
     {
       id: 'clientName',
-      label: 'CLIENT NAME',
+      label: 'CLIENT',
       minWidth: 170,
       editable: false,
       sortable: true,
@@ -59,7 +59,7 @@ const SignatureStatusTable = ({ data, isLoading }: SignatureStatusTableProps) =>
     },
     {
       id: 'caregiverName',
-      label: 'CAREGIVER NAME',
+      label: 'CAREGIVER',
       minWidth: 170,
       editable: false,
       sortable: true,
@@ -70,14 +70,20 @@ const SignatureStatusTable = ({ data, isLoading }: SignatureStatusTableProps) =>
         >{`${user?.caregiver?.firstName} ${user?.caregiver?.lastName}`}</Typography>
       )
     },
-
     {
       id: 'serviceName',
-      label: 'SERVICE TAKEN',
+      label: 'SERVICE',
       minWidth: 170,
       editable: false,
       sortable: true,
-      render: (user: any) => <Typography color='primary'>{user?.serviceName}</Typography>
+      render: (user: any) => (
+        <Tooltip title={user?.serviceName || ''} placement='top'>
+          <Typography color='primary'>
+            {user?.serviceName?.slice(0, 20) || '---'}
+            {user?.serviceName?.length > 20 ? '...' : ''}
+          </Typography>
+        </Tooltip>
+      )
     },
     {
       id: 'dateOfService',
@@ -116,13 +122,11 @@ const SignatureStatusTable = ({ data, isLoading }: SignatureStatusTableProps) =>
       editable: false,
       sortable: true,
       render: (user: any) => {
-        try {
+        if (!user?.clockIn || !user?.clockOut) {
+          return <Typography className='font-normal text-base my-3'>{user?.hrsWorked} Hrs</Typography>
+        } else {
           const hoursWorked = calculateHoursWorked(user?.clockIn, user?.clockOut)
-
           return <Typography className='font-normal text-base my-3'>{hoursWorked} Hrs</Typography>
-        } catch (error) {
-          console.error('Error calculating hours worked:', error)
-          return <span>N/A</span>
         }
       }
     },
@@ -139,21 +143,19 @@ const SignatureStatusTable = ({ data, isLoading }: SignatureStatusTableProps) =>
       editable: true,
       sortable: true,
       render: (user: any) => (
-        <Typography
-          color='primary'
-          className={`${
-            user?.tsApprovalStatus === 'Approved'
-              ? 'text-[#71DD37]'
-              : user?.tsApprovalStatus === 'Rejected'
-                ? 'text-[#FF4C51]'
-                : 'text-[#FFAB00]'
-          }`}
-        >
-          {user?.tsApprovalStatus || 'Pending'}
-        </Typography>
+        <Chip
+          label={user?.tsApprovalStatus.toUpperCase() || 'PENDING'}
+          sx={{
+            backgroundColor: user?.tsApprovalStatus === 'Approved' ? '#72E1281F' : '#FDB5281F',
+            borderRadius: '50px',
+            color: user?.tsApprovalStatus === 'Approved' ? '#71DD37' : '#FFAB00',
+            '& .MuiChip-label': {
+              padding: '0 10px'
+            }
+          }}
+        />
       )
     },
-
     {
       id: 'signatureStatus',
       label: 'SIGNATURE STATUS',
@@ -161,18 +163,27 @@ const SignatureStatusTable = ({ data, isLoading }: SignatureStatusTableProps) =>
       editable: true,
       sortable: true,
       render: (user: any) => (
-        <Typography
-          color='primary'
-          className={`${
-            user?.signature?.signatureStatus === 'Taken'
-              ? 'text-[#71DD37]'
-              : user?.signature?.signatureStatus === 'Missed'
-                ? 'text-[#FF4C51]'
-                : 'text-[#FFAB00]'
-          }`}
-        >
-          {user?.signature?.signatureStatus || 'Pending'}
-        </Typography>
+        <Chip
+          label={user?.signature?.signatureStatus.toUpperCase() || 'PENDING'}
+          sx={{
+            backgroundColor:
+              user?.signature?.signatureStatus === 'Taken'
+                ? '#72E1281F'
+                : user?.signature?.signatureStatus === 'Pending'
+                  ? '#26C6F91F'
+                  : '#FF4D491F',
+            borderRadius: '50px',
+            color:
+              user?.signature?.signatureStatus === 'Taken'
+                ? '#71DD37'
+                : user?.signature?.signatureStatus === 'Pending'
+                  ? '#03C3EC'
+                  : '#FF3E1D',
+            '& .MuiChip-label': {
+              padding: '0 15px'
+            }
+          }}
+        />
       )
     }
     // {
@@ -207,8 +218,7 @@ const SignatureStatusTable = ({ data, isLoading }: SignatureStatusTableProps) =>
 
   console.log('DATA SINATURE STATUS TABLE', data)
   return (
-    <Card sx={{ borderRadius: 1, boxShadow: 3 }}>
-      <CardHeader title='Signatures Status' className='pb-4' />
+    <>
       <div style={{ overflowX: 'auto', padding: '0px' }}>
         <ReactTable
           columns={columns}
@@ -222,7 +232,7 @@ const SignatureStatusTable = ({ data, isLoading }: SignatureStatusTableProps) =>
           containerStyle={{ borderRadius: 2 }}
         />
       </div>
-    </Card>
+    </>
   )
 }
 

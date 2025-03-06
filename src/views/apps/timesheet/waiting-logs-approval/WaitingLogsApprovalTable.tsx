@@ -131,7 +131,7 @@ const WaitingLogsApprovalTable = ({ data, isLoading }: SignatureStatusTableProps
   const columns = [
     {
       id: 'clientName',
-      label: 'CLIENT NAME',
+      label: 'CLIENT',
       minWidth: 170,
       editable: false,
       sortable: true,
@@ -143,7 +143,7 @@ const WaitingLogsApprovalTable = ({ data, isLoading }: SignatureStatusTableProps
     },
     {
       id: 'caregiverName',
-      label: 'CAREGIVER NAME',
+      label: 'CAREGIVER',
       minWidth: 170,
       editable: false,
       sortable: true,
@@ -191,49 +191,49 @@ const WaitingLogsApprovalTable = ({ data, isLoading }: SignatureStatusTableProps
       editable: false,
       sortable: true,
       render: (user: any) => {
-        const startTime = user?.clockIn
-        const endTime = user?.clockOut
-        if (startTime) {
-          // Parse the date string into a Date object
-          const startDate = new Date(startTime)
-          const endDate = new Date(endTime)
-          // Format the time as "03:00:08 PM"
-          const formattedStartTime = startDate.toLocaleTimeString('en-US', {
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            hour12: true
-          })
-          const formattedEndTime = endDate.toLocaleTimeString('en-US', {
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            hour12: true
-          })
-          return (
-            <Typography className='font-normal text-base my-3'>
-              {formattedStartTime} - {formattedEndTime}
-            </Typography>
-          )
+        if (!user?.clockIn || !user?.clockOut) {
+          return <Typography className='font-normal text-base my-3'>---</Typography>
+        } else {
+          const startTime = user?.clockIn
+          const endTime = user?.clockOut
+          if (startTime) {
+            // Parse the date string into a Date object
+            const startDate = new Date(startTime)
+            const endDate = new Date(endTime)
+            // Format the time as "03:00:08 PM"
+            const formattedStartTime = startDate.toLocaleTimeString('en-US', {
+              hour: '2-digit',
+              minute: '2-digit',
+              second: '2-digit',
+              hour12: true
+            })
+            const formattedEndTime = endDate.toLocaleTimeString('en-US', {
+              hour: '2-digit',
+              minute: '2-digit',
+              second: '2-digit',
+              hour12: true
+            })
+            return (
+              <Typography className='font-normal text-base my-3'>
+                {formattedStartTime} - {formattedEndTime}
+              </Typography>
+            )
+          }
         }
-
-        return <Typography className='font-normal text-base my-3'>N/A</Typography>
       }
     },
     {
       id: 'timeDuration',
-      label: 'TIME DURATION',
+      label: 'HRS WORKED',
       minWidth: 170,
       editable: false,
       sortable: true,
       render: (user: any) => {
-        try {
+        if (!user?.clockIn || !user?.clockOut) {
+          return <Typography className='font-normal text-base my-3'>{user?.hrsWorked} Hrs</Typography>
+        } else {
           const hoursWorked = calculateHoursWorked(user?.clockIn, user?.clockOut)
-
           return <Typography className='font-normal text-base my-3'>{hoursWorked} Hrs</Typography>
-        } catch (error) {
-          console.error('Error calculating hours worked:', error)
-          return <span>N/A</span>
         }
       }
     },
@@ -282,22 +282,19 @@ const WaitingLogsApprovalTable = ({ data, isLoading }: SignatureStatusTableProps
   }
 
   return (
-    <Card sx={{ borderRadius: 1, boxShadow: 3 }}>
-      <CardHeader title='Waiting Logs Approval' className='pb-4' />
-      <div style={{ overflowX: 'auto', padding: '0px' }}>
-        <ReactTable
-          columns={columns}
-          data={data}
-          keyExtractor={user => user.id.toString()}
-          enableRowSelect
-          enablePagination
-          pageSize={5}
-          stickyHeader
-          maxHeight={600}
-          containerStyle={{ borderRadius: 2 }}
-        />
-      </div>
-    </Card>
+    <div style={{ overflowX: 'auto', padding: '0px' }}>
+      <ReactTable
+        columns={columns}
+        data={data}
+        keyExtractor={user => user.id.toString()}
+        enableRowSelect
+        enablePagination
+        pageSize={5}
+        stickyHeader
+        maxHeight={600}
+        containerStyle={{ borderRadius: 2 }}
+      />
+    </div>
   )
 }
 export default WaitingLogsApprovalTable

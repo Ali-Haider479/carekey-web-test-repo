@@ -21,11 +21,10 @@ type Props = {
   isPhoneNumber?: boolean
 }
 
-const CustomTextField = (props: Props, e: any) => {
-  const { isRequired = true, isPhoneNumber = false } = props
+const CustomMaskedInput = (props: Props, e: any) => {
+  const { isRequired = true, isPhoneNumber = true } = props
   const { trigger, watch, setValue } = useFormContext()
 
-  const password = watch('password')
   const phoneNumber = isPhoneNumber === true && watch(`${props.name}`)
 
   // Format US phone number as XXX XXX XXXX
@@ -56,17 +55,6 @@ const CustomTextField = (props: Props, e: any) => {
 
     // If error has a message property, use that (this will catch minLength/maxLength messages)
     if (error.message) return error.message
-
-    // Email Validation
-    if (props.type === 'email') {
-      const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
-      const value = error.ref?.value || ''
-      if (!emailPattern.test(value)) {
-        return 'Please enter a valid email address!.'
-      } else {
-        return ''
-      }
-    }
 
     // Phone number validation
     if (isPhoneNumber && isRequired) {
@@ -113,12 +101,6 @@ const CustomTextField = (props: Props, e: any) => {
             value: props.maxLength || 30,
             message: `${props.label} cannot exceed ${props.maxLength} characters`
           },
-          ...(props.type === 'email' && {
-            pattern: {
-              value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-              message: 'Please enter a valid email address'
-            }
-          }),
           ...(isPhoneNumber && {
             validate: {
               validPhoneNumber: (value: string) => {
@@ -132,13 +114,7 @@ const CustomTextField = (props: Props, e: any) => {
                 }
               }
             }
-          }),
-          ...(props.type === 'password' &&
-            props.name === 'confirmPassword' && {
-              validate: {
-                matchesPassword: (value: string) => value === password || 'Passwords do not match'
-              }
-            })
+          })
         }}
         render={({ field, fieldState }) => {
           return (
@@ -202,4 +178,4 @@ const CustomTextField = (props: Props, e: any) => {
   )
 }
 
-export default CustomTextField
+export default CustomMaskedInput

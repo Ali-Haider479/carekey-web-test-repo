@@ -50,6 +50,13 @@ function CustomDropDown(props: Props) {
             }
             size='small'
             disabled={props.disabled}
+            MenuProps={{
+              PaperProps: {
+                sx: {
+                  maxHeight: 200, // Adjust the height of the dropdown options
+                },
+              },
+            }}
           >
             {props?.optionList?.map((item: any) => (
               <MenuItem key={item.key} value={item.value}>

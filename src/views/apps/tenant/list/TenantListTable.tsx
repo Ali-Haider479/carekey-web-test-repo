@@ -22,7 +22,7 @@ import { rankItem } from '@tanstack/match-sorter-utils'
 import { createColumnHelper } from '@tanstack/react-table'
 import type { ColumnDef, FilterFn } from '@tanstack/react-table'
 
-import { CircularProgress } from '@mui/material'
+import { Avatar, CircularProgress } from '@mui/material'
 
 import { useSelector } from 'react-redux'
 
@@ -145,13 +145,10 @@ type TenantWithAction = Tenant & {
 }
 
 // Column Definitions
-const columnHelper = createColumnHelper<TenantWithAction>()
 
 const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
   // States
-  const [addUserOpen, setAddUserOpen] = useState(false)
   const dispatch = useAppDispatch()
-  const [rowSelection, setRowSelection] = useState({})
   const [data, setData] = useState<any>([])
   const [filteredData, setFilteredData] = useState<any>(data)
   const [globalFilter, setGlobalFilter] = useState('')
@@ -203,28 +200,61 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
     console.log(' CLICKED DOWNLOAD')
   }
 
+  const getInitials = (fullName: string): string => {
+    const names = fullName.trim().split(' ').filter(Boolean) // Split and remove extra spaces
+
+    if (names.length === 1) {
+      return names[0][0].toUpperCase() // Only one name, return its initial
+    }
+
+    if (names.length >= 2) {
+      return `${names[0][0].toUpperCase()}${names[names.length - 1][0].toUpperCase()}` // First and last name initials
+    }
+    return '' // Return empty string if no valid names
+  }
+
   const columns = [
     {
       id: 'companyName',
       label: 'COMPANY NAME',
       minWidth: 170,
       render: (user: any) => (
-        <Typography className={`font-semibold ${dark ? 'text-[#7112B7]' : 'text-[#4B0082]'}`} color='primary'>
-          {user?.companyName}
-        </Typography>
+        <div className='flex flex-row'>
+          <div className='bg-[#BDBDBD] rounded-md flex items-center justify-center h-10 w-10'>
+            <Typography className='text-lg font-semibold text-white'>{getInitials(user?.companyName)}</Typography>
+          </div>
+          <div className='ml-2'>
+            <Typography className={`font-semibold`} color='primary'>
+              {user?.companyName}
+            </Typography>
+            <Typography className='text-sm'>{user?.billingEmail}</Typography>
+          </div>
+        </div>
       )
     },
     {
       id: 'caregiverName',
       label: 'CONTACT',
       minWidth: 170,
-      render: (user: any) => <Typography color='primary'> {user?.users[0].userName}</Typography>
+      render: (user: any) => (
+        <div className='flex flex-row'>
+          <div>
+            <Avatar src={user?.users?.[0].profileImageUrl} alt={user?.firstName} />
+          </div>
+          <div className='ml-2'>
+            <Typography className='font-semibold' color='primary'>
+              {user?.users?.[0].userName}
+            </Typography>
+            <Typography className='text-sm'>{user?.users?.[0].emailAddress}</Typography>
+          </div>
+        </div>
+      )
     },
     {
       id: 'plan',
       label: 'PLAN',
       minWidth: 170,
-      render: (user: any) => <Typography color='primary'>Enterpries</Typography>
+      render: (user: any) => <Typography color='primary'>Enterprise</Typography>
     },
     {
       id: 'contactNumber',
@@ -237,18 +267,28 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
       label: 'STATUS',
       minWidth: 170,
       render: (user: any) => (
-        <Typography
-          color='primary'
-          className={`${
+        <div
+          className={`flex items-center justify-center rounded-md ${
             user?.tsApprovalStatus === 'Pending'
-              ? 'text-[#FFAB00]'
+              ? 'bg-[#FDB528]'
               : user?.tsApprovalStatus === 'Inactive'
-                ? 'text-[#FF4C51]'
-                : 'text-[#71DD37]'
+                ? 'bg-[#6D788D]'
+                : 'bg-[#eefbe5]'
           }`}
         >
-          {user?.tsApprovalStatus || 'Active'}
-        </Typography>
+          <Typography
+            color='primary'
+            className={`font-semibold !text-opacity-100 !opacity-100 ${
+              user?.tsApprovalStatus === 'Pending'
+                ? 'text-[#FFAB00]'
+                : user?.tsApprovalStatus === 'Inactive'
+                  ? 'text-[#8592A3]'
+                  : 'text-[#71DD37]'
+            }`}
+          >
+            {user?.tsApprovalStatus || 'Active'}
+          </Typography>
+        </div>
       )
     },
     {

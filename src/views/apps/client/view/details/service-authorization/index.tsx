@@ -11,6 +11,7 @@ import { useParams } from 'next/navigation'
 import axios from 'axios'
 import { GridRenderCellParams } from '@mui/x-data-grid'
 import CustomDropDown from '@/@core/components/custom-inputs/CustomDropDown'
+import ReactTable from '@/@core/components/mui/ReactTable'
 
 const options = [
   { label: 'Option 1', value: 'option1' },
@@ -146,41 +147,40 @@ const ServiceAuthorization = () => {
     }
   ]
 
-  const columns = [
+  const newColumns = [
     {
-      headerName: 'PAYER',
-      field: 'payer',
-      flex: 0.75
+      id: 'payer',
+      label: 'PAYER',
+      minWidth: 170,
+      render: (item: any) => <Typography>{item?.payer}</Typography>
     },
     {
-      headerName: 'MEMBER ID',
-      field: 'memberId',
-      flex: 0.75
+      id: 'memberId',
+      label: 'MEMBER ID',
+      minWidth: 170,
+      render: (item: any) => <Typography>{item?.memberId}</Typography>
     },
     {
-      headerName: 'SERVICE AUTH',
-      field: 'serviceAuthNumber',
-      flex: 0.75
+      id: 'serviceAuthNumber',
+      label: 'SERVICE AUTH NO.',
+      minWidth: 170,
+      render: (item: any) => <Typography>{item?.serviceAuthNumber}</Typography>
     },
     {
-      headerName: 'PRO & MOD',
-      field: 'procedureAndModifier',
-      flex: 0.75,
-      renderCell: (params: GridRenderCellParams) => {
-        return (
-          <div className='flex h-full items-center'>
-            <Typography className='text-xs text-gray-800'>
-              {params?.row?.procedureCode}, {params?.row?.modifierCode}
-            </Typography>
-          </div>
-        )
-      }
+      id: 'procedureAndModifier',
+      label: 'PRO & MOD',
+      minWidth: 170,
+      render: (item: any) => (
+        <Typography>
+          {item?.procedureCode}, {item?.modifierCode}
+        </Typography>
+      )
     },
     {
-      headerName: 'START DATE',
-      field: 'startDate',
-      flex: 0.75,
-      renderCell: (params: GridRenderCellParams) => {
+      id: 'startDate',
+      label: 'START DATE',
+      minWidth: 170,
+      render: (item: any) => {
         const formatDate = (dateString: string) => {
           const date = new Date(dateString)
           return date.toLocaleDateString('en-US', {
@@ -190,16 +190,16 @@ const ServiceAuthorization = () => {
           })
         }
 
-        const startDate = formatDate(params?.row?.startDate)
-        const endDate = formatDate(params?.row?.endDate)
-        return <span className=''>{startDate}</span>
+        const startDate = formatDate(item?.startDate)
+
+        return <Typography>{startDate}</Typography>
       }
     },
     {
-      headerName: 'END DATE',
-      field: 'endDate',
-      flex: 0.75,
-      renderCell: (params: GridRenderCellParams) => {
+      id: 'endDate',
+      label: 'END DATE',
+      minWidth: 170,
+      render: (item: any) => {
         const formatDate = (dateString: string) => {
           const date = new Date(dateString)
           return date.toLocaleDateString('en-US', {
@@ -209,22 +209,104 @@ const ServiceAuthorization = () => {
           })
         }
 
-        const startDate = formatDate(params?.row?.startDate)
-        const endDate = formatDate(params?.row?.endDate)
-        return <span className=''>{endDate}</span>
+        const endDate = formatDate(item?.endDate)
+
+        return <Typography>{endDate}</Typography>
       }
     },
     {
-      headerName: 'SERVICE RATE',
-      field: 'serviceRate',
-      flex: 0.75
+      id: 'serviceRate',
+      label: 'SERVICE RATE',
+      minWidth: 170,
+      render: (item: any) => <Typography>{item?.serviceRate}</Typography>
     },
     {
-      headerName: 'UNITS',
-      field: 'units',
-      flex: 0.75
+      id: 'units',
+      label: 'UNITS',
+      minWidth: 170,
+      render: (item: any) => <Typography>{item?.units}</Typography>
     }
   ]
+
+  // const columns = [
+  //   {
+  //     headerName: 'PAYER',
+  //     field: 'payer',
+  //     flex: 0.75
+  //   },
+  //   {
+  //     headerName: 'MEMBER ID',
+  //     field: 'memberId',
+  //     flex: 0.75
+  //   },
+  //   {
+  //     headerName: 'SERVICE AUTH',
+  //     field: 'serviceAuthNumber',
+  //     flex: 0.75
+  //   },
+  //   {
+  //     headerName: 'PRO & MOD',
+  //     field: 'procedureAndModifier',
+  //     flex: 0.75,
+  //     renderCell: (params: GridRenderCellParams) => {
+  //       return (
+  //         <div className='flex h-full items-center'>
+  //           <Typography className='text-xs text-gray-800'>
+  //             {params?.row?.procedureCode}, {params?.row?.modifierCode}
+  //           </Typography>
+  //         </div>
+  //       )
+  //     }
+  //   },
+  //   {
+  //     headerName: 'START DATE',
+  //     field: 'startDate',
+  //     flex: 0.75,
+  //     renderCell: (params: GridRenderCellParams) => {
+  //       const formatDate = (dateString: string) => {
+  //         const date = new Date(dateString)
+  //         return date.toLocaleDateString('en-US', {
+  //           month: '2-digit',
+  //           day: '2-digit',
+  //           year: 'numeric'
+  //         })
+  //       }
+
+  //       const startDate = formatDate(params?.row?.startDate)
+  //       const endDate = formatDate(params?.row?.endDate)
+  //       return <span className=''>{startDate}</span>
+  //     }
+  //   },
+  //   {
+  //     headerName: 'END DATE',
+  //     field: 'endDate',
+  //     flex: 0.75,
+  //     renderCell: (params: GridRenderCellParams) => {
+  //       const formatDate = (dateString: string) => {
+  //         const date = new Date(dateString)
+  //         return date.toLocaleDateString('en-US', {
+  //           month: '2-digit',
+  //           day: '2-digit',
+  //           year: 'numeric'
+  //         })
+  //       }
+
+  //       const startDate = formatDate(params?.row?.startDate)
+  //       const endDate = formatDate(params?.row?.endDate)
+  //       return <span className=''>{endDate}</span>
+  //     }
+  //   },
+  //   {
+  //     headerName: 'SERVICE RATE',
+  //     field: 'serviceRate',
+  //     flex: 0.75
+  //   },
+  //   {
+  //     headerName: 'UNITS',
+  //     field: 'units',
+  //     flex: 0.75
+  //   }
+  // ]
   return (
     <>
       <FormProvider {...methods}>
@@ -258,7 +340,21 @@ const ServiceAuthorization = () => {
           </div>
         </Card>
         <Card className=' w-full  flex flex-col h-auto mt-5 shadow-md rounded-lg'>
-          <DataTable columns={columns} data={serviceAuthData} />
+          {/* <DataTable columns={columns} data={serviceAuthData} /> */}
+          {!serviceAuthData?.length ? (
+            <Typography className='p-5 flex items-center justify-center'>No Data Available</Typography>
+          ) : (
+            <ReactTable
+              columns={newColumns}
+              data={serviceAuthData}
+              keyExtractor={item => item.id.toString()}
+              enablePagination
+              pageSize={5}
+              stickyHeader
+              maxHeight={600}
+              containerStyle={{ borderRadius: 2 }}
+            />
+          )}
         </Card>
         <div>
           <Dialog

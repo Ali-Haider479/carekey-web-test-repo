@@ -247,7 +247,7 @@ function ClientAboutCard() {
           <Button
             variant='contained'
             startIcon={isEdit ? <EditOutlined /> : <SaveOutlined />}
-            className='bg-indigo-900 text-white hover:bg-indigo-800'
+            className='bg-[#4B0082] text-white'
             onClick={isEdit ? () => setIsEdit(false) : handleSave}
             disabled={
               emailError
