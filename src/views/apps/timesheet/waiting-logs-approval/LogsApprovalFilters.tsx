@@ -93,7 +93,7 @@ const LogsApprovalFilters = ({ onFilterApplied }: SignatureStatusFiltersProps) =
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} autoComplete='off'>
-      <Card className='w-full' sx={{ p: 2, borderRadius: 1, boxShadow: 2 }}>
+      <Card className='w-full mb-5' sx={{ p: 2, borderRadius: 1, boxShadow: 2 }}>
         {/* Card Header */}
         <CardHeader title='Filters' titleTypographyProps={{ variant: 'h6', sx: { fontWeight: 500 } }} />
 

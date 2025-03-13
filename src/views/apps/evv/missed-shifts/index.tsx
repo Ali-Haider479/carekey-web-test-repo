@@ -16,6 +16,7 @@ const EvvMissedShifts = () => {
 
   const [timeLogData, setTimeLogData] = useState<any>([])
   const [isLoading, setIsLoading] = useState(true)
+  const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
 
   // // Initial data fetch
   useEffect(() => {
@@ -24,8 +25,11 @@ const EvvMissedShifts = () => {
 
   const fetchInitialData = async () => {
     try {
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/time-log/completed-timelogs`)
-      setTimeLogData(response.data)
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_URL}/time-log/dashboard/missed-shifts/${authUser?.tenant?.id}`
+      )
+      console.log('MISSED SHIFTS', response.data.data)
+      setTimeLogData(response.data.data)
       setIsLoading(false)
     } catch (error) {
       console.error('Error fetching initial data:', error)

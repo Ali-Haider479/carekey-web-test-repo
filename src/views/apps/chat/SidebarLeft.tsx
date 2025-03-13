@@ -49,7 +49,7 @@ export const statusObj: StatusObjType = {
 
 type FormItems = {
   clientId?: number
-  caregiverId?: number
+  otherUser?: number
 }
 
 type Props = {
@@ -78,7 +78,16 @@ type RenderChatType = {
 // Render chat list
 const renderChat = (props: RenderChatType) => {
   const { chatStore, getActiveUserData, setSidebarOpen, backdropOpen, setBackdropOpen, isBelowMdScreen } = props
-  return chatStore.chats.map(chat => {
+
+  // Sort chats by last message time (most recent first)
+  const sortedChats = [...chatStore.chats].sort((a, b) => {
+    const aLastMessageTime = a.chat.length ? new Date(a.chat[a.chat.length - 1].time).getTime() : 0
+    const bLastMessageTime = b.chat.length ? new Date(b.chat[b.chat.length - 1].time).getTime() : 0
+    return bLastMessageTime - aLastMessageTime // Descending order
+  })
+
+  // return chatStore.map(chat => {
+  return sortedChats.map(chat => {
     const contact = chatStore.contacts.find(contact => contact.chatRoomId === chat.id)
     if (!contact) return null
     const isChatActive = chatStore.activeUser?.chatRoomId === contact.chatRoomId
@@ -132,7 +141,11 @@ const renderChat = (props: RenderChatType) => {
           >
             {chat.chat.length ? formatDateToMonthShort(chat.chat[chat.chat.length - 1].time || new Date()) : null}
           </Typography>
-          {chat.unseenMsgs > 0 ? <CustomChip round='true' label={chat.unseenMsgs} color='error' size='small' /> : null}
+          {chat.id === chatStore.activeUser?.chatRoomId ? (
+            ''
+          ) : chat.unseenMsgs > 0 ? (
+            <CustomChip round='true' label={chat.unseenMsgs} color='error' size='small' />
+          ) : null}
         </div>
       </li>
     )
@@ -176,24 +189,30 @@ const SidebarLeft = (props: Props) => {
     const fetchClients = async () => {
       try {
         const clientList: any = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_URL}/user/clientUsers/${authUser?.tenant?.id}`
+          `${process.env.NEXT_PUBLIC_API_URL}/client/tenant/${authUser?.tenant?.id}`
         )
 
         const formattedClients =
           clientList?.data?.map((item: any) => {
             return {
-              key: `${item.client.id}-${item.client.firstName}`,
-              value: item.client.id,
-              optionString: `${item.client.firstName} ${item.client.lastName}`
+              key: `${item.id}-${item.firstName}`,
+              value: item.id,
+              optionString: `${item.firstName} ${item.lastName}`
             }
           }) || []
 
         const caregiverList: any = await axios.get(
           `${process.env.NEXT_PUBLIC_API_URL}/user/tenant/${authUser?.tenant?.id}`
         )
-        const formattedCaregivers = caregiverList.data
-          .filter((item: any) => item !== null && item.id != authUser?.id) // Filter out null and current user
-          ?.map((item: any) => ({
+        const dataToFilter = Array.isArray(caregiverList) ? caregiverList : caregiverList?.data || []
+        const formattedCaregivers = dataToFilter
+          .filter(
+            (item: any) =>
+              item !== null &&
+              item.id !== authUser?.id &&
+              item?.role?.rolePermissions?.some((permission: any) => permission.permission.name === 'Chat')
+          )
+          .map((item: any) => ({
             key: `${item?.id}-${item?.userName}`,
             value: item?.id,
             optionString: `${item?.userName}`
@@ -236,18 +255,18 @@ const SidebarLeft = (props: Props) => {
   }
 
   const onSubmit = async (data: FormItems) => {
-    const { caregiverId, clientId } = data
-    const chatRoomName = `chatroom-${Math.min(authUser?.id, Number(caregiverId))}-${Math.max(authUser?.id, Number(caregiverId))}-${clientId}`
+    const { otherUser, clientId } = data
+    const chatRoomName = `chatroom-${Math.min(authUser?.id, Number(otherUser))}-${Math.max(authUser?.id, Number(otherUser))}-${clientId}`
 
-    dispatch(
+    await dispatch(
       createChatRoom({
         chatRoomName,
-        caregiverId: authUser?.id,
+        userId: authUser?.id,
         clientId: Number(clientId),
-        otherCaregiverId: Number(caregiverId)
+        otherUserId: Number(otherUser)
       })
     )
-    dispatch(fetchChatRooms(authUser?.id))
+    await dispatch(fetchChatRooms(authUser?.id))
     handleModalClose()
   }
 
@@ -391,11 +410,11 @@ const SidebarLeft = (props: Props) => {
                 </Grid>
                 <Grid size={{ xs: 12, sm: 12 }}>
                   <CustomDropDown
-                    label='Select caregiver'
+                    label='Select User'
                     optionList={caregivers}
-                    name={'caregiverId'}
+                    name={'otherUser'}
                     control={control}
-                    error={errors.caregiverId}
+                    error={errors.otherUser}
                     defaultValue={''}
                     sx={{ width: '100%', minWidth: '180px' }} // added width styling
                   />

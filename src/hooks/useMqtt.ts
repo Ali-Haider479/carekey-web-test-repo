@@ -1,9 +1,13 @@
 // hooks/useMqttClient.ts
 import { useEffect, useRef, useState } from 'react'
-import mqtt, { MqttClient, IClientOptions } from 'mqtt'
+import mqtt, { MqttClient } from 'mqtt'
 
 interface MqttConfig {
   username: string
+}
+
+interface AwsCredentials {
+  url: string
 }
 
 export const useMqttClient = (config: MqttConfig) => {
@@ -12,33 +16,33 @@ export const useMqttClient = (config: MqttConfig) => {
   const messageHandlers = useRef<Map<string, (message: string) => void>>(new Map())
 
   useEffect(() => {
-    const connect = () => {
-      const url = `${process.env.NEXT_PUBLIC_MQTT_PROTOCOL}://${process.env.NEXT_PUBLIC_MQTT_HOST}:${process.env.NEXT_PUBLIC_MQTT_PORT}${process.env.NEXT_PUBLIC_MQTT_PATH}`
-      const clientId = `carekey-${Math.random().toString(16).substr(2, 8)}`
-
-      const options: IClientOptions = {
-        clientId,
-        username: config.username,
-        password: process.env.NEXT_PUBLIC_MQTT_PASSWORD,
-        keepalive: 30,
-        reconnectPeriod: 5000,
-        connectTimeout: 30 * 1000,
-        clean: true,
-        rejectUnauthorized: false,
-        protocolVersion: 4,
-        protocol: 'wss'
-      }
-
+    const connect = async () => {
       try {
-        if (clientRef.current?.connected) {
-          clientRef.current.end(true)
+        // Fetch presigned URL from your backend
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/mqtt/credentials`)
+        console.log('MQTT PRESIGNED URL RESPONSE', response)
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch AWS IoT credentials')
         }
 
-        console.log('Connecting to MQTT broker:', url)
-        clientRef.current = mqtt.connect(url, options)
+        const awsCredentials: AwsCredentials = await response.json()
+
+        // The clientId is important and should be unique for each client
+        const clientId = `carekey-client-${Math.random().toString(16).substr(2, 8)}`
+
+        console.log('Connecting to AWS IoT broker with presigned URL')
+
+        // Connect using the presigned URL directly
+        clientRef.current = mqtt.connect(awsCredentials.url, {
+          clientId,
+          clean: true,
+          reconnectPeriod: 5000,
+          connectTimeout: 30000
+        })
 
         clientRef.current.on('connect', () => {
-          console.log('Successfully connected to MQTT broker')
+          console.log('Successfully connected to AWS IoT MQTT broker')
           setIsConnected(true)
 
           // Resubscribe to all topics
@@ -55,21 +59,21 @@ export const useMqttClient = (config: MqttConfig) => {
         })
 
         clientRef.current.on('error', err => {
-          console.error('MQTT Error:', err)
+          console.error('AWS IoT MQTT Error:', err)
           setIsConnected(false)
         })
 
         clientRef.current.on('offline', () => {
-          console.log('MQTT client offline')
+          console.log('AWS IoT MQTT client offline')
           setIsConnected(false)
         })
 
         clientRef.current.on('disconnect', () => {
-          console.log('MQTT client disconnected')
+          console.log('AWS IoT MQTT client disconnected')
           setIsConnected(false)
         })
       } catch (error) {
-        console.error('MQTT connection error:', error)
+        console.error('AWS IoT MQTT connection error:', error)
         setIsConnected(false)
       }
     }
@@ -115,7 +119,7 @@ export const useMqttClient = (config: MqttConfig) => {
         }
       })
     } else {
-      console.warn('Cannot publish: MQTT client not connected')
+      console.warn('Cannot publish: AWS IoT MQTT client not connected')
     }
   }
 

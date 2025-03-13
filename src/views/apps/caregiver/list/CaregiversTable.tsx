@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Card from '@mui/material/Card'
 import TextField from '@mui/material/TextField'
 import Button from '@mui/material/Button'
@@ -19,14 +19,37 @@ type Caregiver = {
 }
 
 interface CaregiverTableProps {
-  data: []
+  data: Caregiver[]
   isLoading: boolean
 }
 
 const CaregiverTable = ({ data, isLoading }: CaregiverTableProps) => {
   const [search, setSearch] = useState('')
+  const [filteredData, setFilteredData] = useState<Caregiver[]>([])
 
   const router = useRouter()
+
+  useEffect(() => {
+    if (!data) {
+      setFilteredData([])
+      return
+    }
+
+    if (search.trim() === '') {
+      setFilteredData(data)
+      return
+    }
+
+    const searchLower = search.toLowerCase()
+    const filtered = data.filter(
+      caregiver =>
+        caregiver.firstName?.toLowerCase().includes(searchLower) ||
+        caregiver.lastName?.toLowerCase().includes(searchLower) ||
+        `${caregiver.firstName} ${caregiver.lastName}`.toLowerCase().includes(searchLower)
+    )
+
+    setFilteredData(filtered)
+  }, [search, data])
 
   const handleNext = (id: any) => {
     router.push(`/en/apps/caregiver/${id}/detail`)
@@ -122,7 +145,7 @@ const CaregiverTable = ({ data, isLoading }: CaregiverTableProps) => {
         <Grid size={{ xs: 12, md: 6 }}>
           <TextField
             fullWidth
-            placeholder='Search name, phone number, pmi number'
+            placeholder='Search caregiver by name'
             variant='outlined'
             size='small'
             value={search}
@@ -178,7 +201,7 @@ const CaregiverTable = ({ data, isLoading }: CaregiverTableProps) => {
         ) : (
           <ReactTable
             columns={newColumns}
-            data={data}
+            data={filteredData}
             keyExtractor={user => user.id.toString()}
             enablePagination
             pageSize={5}

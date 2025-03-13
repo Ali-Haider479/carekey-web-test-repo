@@ -44,6 +44,8 @@ interface TimeEntry {
   notes: string
   tsApprovalStatus: string
   serviceName: string
+  updatedAt: any
+  updatedBy: any
   startLocation: Location
   endLocation: Location
   payPeriodHistory: PayPeriodHistory
@@ -135,6 +137,8 @@ export function transformTimesheetDataTwo(entries: TimeEntry[]): GroupedTimeEntr
         },
         tsApprovalStatus: entry.tsApprovalStatus,
         serviceName: entry.serviceName,
+        updatedBy: entry.updatedBy,
+        updatedAt: entry.updatedAt,
         clockIn: entry.clockIn,
         startLocation: entry.startLocation,
         endLocation: entry.endLocation,

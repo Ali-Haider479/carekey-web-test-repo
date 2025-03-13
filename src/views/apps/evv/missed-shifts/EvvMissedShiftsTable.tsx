@@ -56,12 +56,30 @@ const EvvMissedShiftsTable = ({ timeLogData, isLoading }: Props) => {
       )
     },
     {
+      id: 'serviceName',
+      label: 'SERVICE NAME',
+      minWidth: 200,
+      editable: true,
+      sortable: true,
+      render: (user: any) => <Typography color='primary'>{user?.serviceName}</Typography>
+    },
+    {
+      id: 'clockIn',
+      label: 'SERVICE DATE',
+      minWidth: 170,
+      editable: false,
+      sortable: true,
+      render: (user: any) => <Typography color='primary'>{formattedDate(user?.clockIn)}</Typography>
+    },
+    {
       id: 'pro',
       label: 'PRO & MOD',
       minWidth: 200,
       editable: false,
       sortable: true,
-      render: (user: any) => <Typography color='primary'>{user?.client?.authService[0]?.procedureAndModifier}</Typography>
+      render: (user: any) => (
+        <Typography color='primary'>{user?.client?.serviceAuth[0]?.procedureAndModifier || 'N/A'}</Typography>
+      )
     },
     {
       id: 'totalHrs',

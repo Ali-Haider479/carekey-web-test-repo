@@ -393,7 +393,30 @@ function ReactTable<T extends { subRows?: T[] }>({
               ))}
             </TableRow>
           </TableHead>
-          <TableBody sx={{ boxShadow: 'none' }}>{paginatedData.map(item => renderRow(item))}</TableBody>
+          <TableBody sx={{ boxShadow: 'none' }}>
+            {paginatedData.length > 0 ? (
+              paginatedData.map(item => renderRow(item))
+            ) : (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length + (enableRowSelect ? 2 : 1)}
+                  align='center'
+                  sx={{
+                    py: 4,
+                    color: theme?.palette?.text?.secondary,
+                    fontSize: '1rem',
+                    fontStyle: 'italic'
+                  }}
+                >
+                  <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 1 }}>
+                    {/* Optional: Add an icon */}
+                    {/* <InfoOutlinedIcon /> */}
+                    No data found
+                  </Box>
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
         </Table>
       </TableContainer>
 

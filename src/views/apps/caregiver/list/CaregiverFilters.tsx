@@ -16,13 +16,18 @@ import Card from '@mui/material/Card'
 import { useForm } from 'react-hook-form'
 import axios from 'axios'
 import { Button, Typography } from '@mui/material'
+import USStates from '@/utils/constants'
 
 interface DefaultStateType {
   accountStatus: string
+  caregiverUmpi: string
+  state: string
 }
 
 const defaultState: DefaultStateType = {
-  accountStatus: ''
+  accountStatus: '',
+  caregiverUmpi: '',
+  state: ''
 }
 
 interface CaregiverFiltersProps {
@@ -41,6 +46,8 @@ const CaregiverFilters = ({
   // States
   const [item, setItem] = useState<CaregiverTypes['item']>('')
   const [accountStatus, setAccountStatus] = useState<DefaultStateType>(defaultState)
+  const [caregiverUmpi, setCaregiverUmpi] = useState<DefaultStateType>(defaultState)
+  const [caregiverState, setCaregiverState] = useState<DefaultStateType>(defaultState)
 
   // Hooks
   const {
@@ -52,7 +59,20 @@ const CaregiverFilters = ({
     try {
       const queryParams = new URLSearchParams()
 
-      if (accountStatus.accountStatus) queryParams.append('accountStatus', accountStatus.accountStatus)
+      // Add accountStatus filter if provided
+      if (accountStatus.accountStatus) {
+        queryParams.append('accountStatus', accountStatus.accountStatus)
+      }
+
+      // Add caregiverUMPI filter if provided
+      if (caregiverUmpi.caregiverUmpi) {
+        queryParams.append('caregiverUMPI', caregiverUmpi.caregiverUmpi)
+      }
+
+      // Add state filter if provided
+      if (caregiverState.state) {
+        queryParams.append('state', caregiverState.state)
+      }
       queryParams.append('page', '1')
       queryParams.append('limit', '10')
 
@@ -98,6 +118,7 @@ const CaregiverFilters = ({
             <CustomTextField
               select
               fullWidth
+              placeholder='Account Status'
               id='select-status'
               value={accountStatus.accountStatus}
               onChange={e => setAccountStatus({ ...accountStatus, accountStatus: e.target.value })}
@@ -108,27 +129,47 @@ const CaregiverFilters = ({
               <MenuItem value='Active'>Active</MenuItem>
               <MenuItem value='Inactive'>Inactive</MenuItem>
             </CustomTextField>
-            <Button type='submit' variant='outlined' className='mt-2 p-1'>
+            <Button type='submit' variant='outlined' className='mt-3 p-1'>
               Apply
             </Button>
           </Grid>
-          {/* <Grid size={{ xs: 12, sm: 4 }}>
-          <CustomTextField
-            select
-            fullWidth
-            id='select-item'
-            value={item}
-            onChange={e => setItem(e.target.value)}
-            slotProps={{
-              select: { displayEmpty: true }
-            }}
-          >
-            <MenuItem value=''> Item</MenuItem>
-            <MenuItem value='pending'>Pending</MenuItem>
-            <MenuItem value='active'>Active</MenuItem>
-            <MenuItem value='inactive'>Inactive</MenuItem>
-          </CustomTextField>
-        </Grid> */}
+          <Grid size={{ xs: 12, sm: 4 }}>
+            <Typography variant='h6' className='mb-2'>
+              Caregiver UMPI
+            </Typography>
+            <CustomTextField
+              fullWidth
+              id='caregiver-Umpi'
+              placeholder='Caregiver Umpi'
+              value={caregiverUmpi.caregiverUmpi}
+              onChange={e => setCaregiverUmpi({ ...caregiverUmpi, caregiverUmpi: e.target.value })}
+              slotProps={{
+                select: { displayEmpty: true }
+              }}
+            />
+          </Grid>
+          <Grid size={{ xs: 12, sm: 4 }}>
+            <Typography variant='h6' className='mb-2'>
+              State
+            </Typography>
+            <CustomTextField
+              select
+              fullWidth
+              id='caregiver-state'
+              placeholder='Caregiver State'
+              value={caregiverState.state}
+              onChange={e => setCaregiverState({ ...caregiverState, state: e.target.value })}
+              slotProps={{
+                select: { displayEmpty: true }
+              }}
+            >
+              {USStates.map((state: any) => (
+                <MenuItem key={state.key} value={state.value}>
+                  {state.optionString}
+                </MenuItem>
+              ))}
+            </CustomTextField>
+          </Grid>
         </Grid>
       </Card>
     </form>

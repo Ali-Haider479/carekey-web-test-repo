@@ -58,6 +58,7 @@ export interface ChatMessage {
   senderId: string
   receiverId: string
   message: string
+  chatRoomId?: any
   time: string
   msgStatus: {
     isSent: boolean

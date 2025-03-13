@@ -43,7 +43,7 @@ const ChatWrapper = () => {
   const { settings } = useSettings()
   const dispatch = useAppDispatch()
 
-  const chatStore = useSelector((state: RootState) => state.chatReducer)
+  const chatStore: any = useSelector((state: RootState) => state.chatReducer)
   const isBelowLgScreen = useMediaQuery((theme: Theme) => theme.breakpoints.down('lg'))
   const isBelowMdScreen = useMediaQuery((theme: Theme) => theme.breakpoints.down('md'))
   const isBelowSmScreen = useMediaQuery((theme: Theme) => theme.breakpoints.down('sm'))
@@ -73,7 +73,9 @@ const ChatWrapper = () => {
       dispatch(
         updateProfileFromSession({
           id: session.user.id,
-          userName: session.user.userName
+          userName: session.user.userName,
+          profileImageUrl: session.user.profileImageUrl,
+          role: session.user.userRoles.title
         })
       )
       dispatch(fetchChatRooms(session.user.id))

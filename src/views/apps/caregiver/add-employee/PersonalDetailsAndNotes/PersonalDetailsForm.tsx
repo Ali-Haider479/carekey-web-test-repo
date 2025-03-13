@@ -123,36 +123,13 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                     placeHolder={'caregiverUmpi'}
                     name='caregiverUMPI'
                     defaultValue={''}
-                    type={'number'}
+                    type={'text'}
                     error={errors.caregiverUMPI}
                     control={control}
+                    minLength={10}
+                    maxLength={10}
                   />
                 </Grid>
-                {/* <Grid size={{ xs: 12, sm: 4 }}>
-                  <Controller
-                    name='caregiverUMPI'
-                    control={control}
-                    defaultValue={null}
-                    rules={{ required: 'Caregiver UMPI is required' }}
-                    render={({ field }) => (
-                      <AppReactDatepicker
-                        selected={field.value}
-                        onChange={date => field.onChange(date)} // Pass the date to react-hook-form
-                        placeholderText='MM/DD/YYYY'
-                        customInput={
-                          <TextField
-                            fullWidth
-                            error={!!errors.caregiverUMPI}
-                            helperText={errors.caregiverUMPI && 'please select a date'}
-                            size='small'
-                            label='Caregiver UMPI'
-                            placeholder='MM-DD-YYYY'
-                          />
-                        }
-                      />
-                    )}
-                  />
-                </Grid> */}
                 <Grid size={{ xs: 12, sm: 4 }}>
                   <ControlledDatePicker
                     name={'dateOfBirth'}

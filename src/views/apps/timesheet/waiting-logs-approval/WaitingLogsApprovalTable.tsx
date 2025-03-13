@@ -79,16 +79,16 @@ const WaitingLogsApprovalTable = ({ data, isLoading }: SignatureStatusTableProps
         const response = await fetch(
           `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10`
         )
-        const data = await response.json()
+        const data = await response.json();
 
         return {
           city:
-            data.address.city ||
-            data.address.town ||
-            data.address.village ||
-            (data.address.district ? data.address.district.split(' ')[0] : null) ||
+            data?.address?.city ||
+            data?.address?.town ||
+            data?.address?.village ||
+            (data?.address?.district ? data?.address?.district?.split(' ')[0] : null) ||
             'Unknown',
-          country: data.address.country || 'Unknown'
+          country: data?.address?.country || 'Unknown'
         }
       } catch (error) {
         console.error('Error fetching location details:', error)
@@ -100,7 +100,7 @@ const WaitingLogsApprovalTable = ({ data, isLoading }: SignatureStatusTableProps
       let isMounted = true
 
       const fetchLocationDetails = async () => {
-        const details = await getLocationDetails(location.latitude, location.longitude)
+        const details = await getLocationDetails(location?.latitude, location?.longitude)
         if (isMounted) {
           setLocationDetails(details)
         }
@@ -111,7 +111,7 @@ const WaitingLogsApprovalTable = ({ data, isLoading }: SignatureStatusTableProps
       return () => {
         isMounted = false
       }
-    }, [location.latitude, location.longitude, getLocationDetails])
+    }, [location?.latitude, location?.longitude, getLocationDetails])
 
     return locationDetails
   }
@@ -170,18 +170,18 @@ const WaitingLogsApprovalTable = ({ data, isLoading }: SignatureStatusTableProps
           // Check if the parsed date is valid (not "Invalid Date")
           if (!isNaN(parsedDate.getTime())) {
             return (
-              <Typography className='font-normal text-base my-3'>
+              <Typography className='font-normal text-base '>
                 {`${parsedDate.getMonth() + 1}/${parsedDate.getDate()}/${parsedDate.getFullYear().toString().slice(-2)}`}
               </Typography>
             )
           }
 
           // If it's not a valid timestamp, return the raw string as is
-          return <Typography className='font-normal text-base my-3'>{dateOfService}</Typography>
+          return <Typography className='font-normal text-base '>{dateOfService}</Typography>
         }
 
         // If dateOfService is null/undefined, return N/A
-        return <Typography className='font-normal text-base my-3'>N/A</Typography>
+        return <Typography className='font-normal text-base '>N/A</Typography>
       }
     },
     {
@@ -192,7 +192,7 @@ const WaitingLogsApprovalTable = ({ data, isLoading }: SignatureStatusTableProps
       sortable: true,
       render: (user: any) => {
         if (!user?.clockIn || !user?.clockOut) {
-          return <Typography className='font-normal text-base my-3'>---</Typography>
+          return <Typography className='font-normal text-base '>---</Typography>
         } else {
           const startTime = user?.clockIn
           const endTime = user?.clockOut
@@ -214,7 +214,7 @@ const WaitingLogsApprovalTable = ({ data, isLoading }: SignatureStatusTableProps
               hour12: true
             })
             return (
-              <Typography className='font-normal text-base my-3'>
+              <Typography className='font-normal text-base '>
                 {formattedStartTime} - {formattedEndTime}
               </Typography>
             )
@@ -230,10 +230,10 @@ const WaitingLogsApprovalTable = ({ data, isLoading }: SignatureStatusTableProps
       sortable: true,
       render: (user: any) => {
         if (!user?.clockIn || !user?.clockOut) {
-          return <Typography className='font-normal text-base my-3'>{user?.hrsWorked} Hrs</Typography>
+          return <Typography className='font-normal text-base '>{user?.hrsWorked} Hrs</Typography>
         } else {
           const hoursWorked = calculateHoursWorked(user?.clockIn, user?.clockOut)
-          return <Typography className='font-normal text-base my-3'>{hoursWorked} Hrs</Typography>
+          return <Typography className='font-normal text-base '>{hoursWorked} Hrs</Typography>
         }
       }
     },
@@ -241,7 +241,7 @@ const WaitingLogsApprovalTable = ({ data, isLoading }: SignatureStatusTableProps
       id: 'logsVia',
       label: 'LOGGED VIA',
       minWidth: 170,
-      render: (params: any) => <AdUnitsIcon className='my-3 text-[#8082FF]' />
+      render: (params: any) => <AdUnitsIcon className=' text-[#8082FF]' />
     },
     {
       id: 'location',

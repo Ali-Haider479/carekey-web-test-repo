@@ -39,6 +39,7 @@ import CareKeyLogoLight from '@/@core/svg/LogoLight'
 import { getSession, signIn } from 'next-auth/react'
 import { CircularProgress, Grid2 as Grid } from '@mui/material'
 import CustomAlert from '@/@core/components/mui/Alter'
+import Logo from '@/@core/svg/Logo'
 
 const CareKeyLogin = () => {
   const router = useRouter()
@@ -50,7 +51,6 @@ const CareKeyLogin = () => {
   const [alertProps, setAlertProps] = useState<any>()
   const [isPasswordShown, setIsPasswordShown] = useState(false)
   const [loading, setLoading] = useState<boolean>(false)
-
   // Hooks
   const { lang: locale } = useParams()
   const { settings } = useSettings()
@@ -154,6 +154,12 @@ const CareKeyLogin = () => {
       <div className='flex justify-center items-center bs-full bg-backgroundPaper !min-is-full p-6 md:!min-is-[unset] md:p-12 md:is-[480px]'>
         <div className='flex flex-col gap-6 is-full sm:is-auto md:is-full sm:max-is-[400px] md:max-is-[unset] mbs-11 sm:mbs-14 md:mbs-0'>
           {dark ? <CareKeyLogoDark /> : <CareKeyLogoLight />}
+          {/* <Link
+            href={getLocalizedUrl('/', locale as Locale)}
+            className='absolute block-start-5 sm:block-start-[33px] inline-start-6 sm:inline-start-[38px]'
+          >
+            <Logo />
+          </Link> */}
           <div className='flex flex-col gap-1'>
             <Typography variant='h4'>{`Welcome to ${themeConfig.templateName}! 👋🏻`}</Typography>
             <Typography>Please sign-in to your account</Typography>
@@ -192,7 +198,7 @@ const CareKeyLogin = () => {
                 className='text-end'
                 color='primary.main'
                 component={Link}
-                href={getLocalizedUrl('/pages/auth/forgot-password-v2', locale as Locale)}
+                href={getLocalizedUrl('/auth/forgot-password', locale as Locale)}
               >
                 Forgot password?
               </Typography>

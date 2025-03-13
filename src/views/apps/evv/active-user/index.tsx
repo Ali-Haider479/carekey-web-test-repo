@@ -24,7 +24,6 @@ const EvvActiveUser = () => {
     try {
       const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/time-log/active-timelogs`)
       setTimeLogData(response.data)
-      console.log('DATAA RESPONSE------------->', response.data[0].payPeriodHistory)
       setPayperiod(response?.data[0]?.payPeriodHistory)
       setIsLoading(false)
     } catch (error) {

@@ -90,6 +90,8 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
   const handleSave = async (user: any) => {
     console.log('USER TWO', currentEditedData)
     console.log('USER ONE', data)
+    const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
+    const userId = authUser?.id
 
     // Function to find user in main array or subRows
     const findUser = (data: any[], targetId: number | string): any => {
@@ -152,7 +154,8 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
       // Reset states
       const payload = {
         id: currentEditedData.id,
-        tsApprovalStatus: currentEditedData.tsApprovalStatus
+        tsApprovalStatus: currentEditedData.tsApprovalStatus,
+        userId
         // clockIn: currentEditedData.clockIn,
         // clockOut: currentEditedData.clockOut
       }
@@ -238,41 +241,21 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
         </Tooltip>
       )
     },
-    {
-      id: 'activities',
-      label: 'ACTIVITIES',
-      minWidth: 170,
-      editable: false,
-      sortable: true,
-      render: (user: any) => (
-        <Tooltip title={user?.activities || ''} placement='top'>
-          <Typography color='primary'>
-            {user?.activities?.slice(0, 20) || '---'}
-            {user?.activities?.length > 20 ? '...' : ''}
-          </Typography>
-        </Tooltip>
-      )
-    },
-    {
-      id: 'clockInOut',
-      label: 'CLOCK IN / OUT',
-      minWidth: 200,
-      editable: true,
-      sortable: true,
-      render: (user: any) =>
-        !user.clockIn || !user.clockOut ? (
-          <Typography color='primary'>---</Typography>
-        ) : (
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-            <Typography color='primary' variant='body2'>
-              <strong>In:</strong> {user?.clockIn?.length > 0 ? formatDateTime(user.clockIn) : '---'}
-            </Typography>
-            <Typography color='primary' variant='body2'>
-              <strong>Out:</strong> {user?.clockOut?.length > 0 ? formatDateTime(user.clockOut) : '---'}
-            </Typography>
-          </Box>
-        )
-    },
+    // {
+    //   id: 'activities',
+    //   label: 'ACTIVITIES',
+    //   minWidth: 170,
+    //   editable: false,
+    //   sortable: true,
+    //   render: (user: any) => (
+    //     <Tooltip title={user?.activities || ''} placement='top'>
+    //       <Typography color='primary'>
+    //         {user?.activities?.slice(0, 20) || '---'}
+    //         {user?.activities?.length > 20 ? '...' : ''}
+    //       </Typography>
+    //     </Tooltip>
+    //   )
+    // },
     {
       id: 'timeDuration',
       label: 'HRS WORKED',
@@ -281,28 +264,28 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
       sortable: true,
       render: (user: any) => {
         if (!user?.clockIn || !user?.clockOut) {
-          return <Typography className='font-normal text-base my-3'>{user?.hrsWorked} Hrs</Typography>
+          return <Typography className='font-normal text-base '>{user?.hrsWorked} Hrs</Typography>
         } else {
           const hoursWorked = calculateHoursWorked(user?.clockIn, user?.clockOut)
-          return <Typography className='font-normal text-base my-3'>{hoursWorked} Hrs</Typography>
+          return <Typography className='font-normal text-base '>{hoursWorked} Hrs</Typography>
         }
       }
     },
-    {
-      id: 'notes',
-      label: 'NOTES',
-      minWidth: 170,
-      editable: true,
-      sortable: true,
-      render: (user: any) => (
-        <Tooltip title={user?.notes || ''} placement='top'>
-          <Typography color='primary'>
-            {user?.notes?.slice(0, 20) || '---'}
-            {user?.notes?.length > 20 ? '...' : ''}
-          </Typography>
-        </Tooltip>
-      )
-    },
+    // {
+    //   id: 'notes',
+    //   label: 'NOTES',
+    //   minWidth: 170,
+    //   editable: false,
+    //   sortable: true,
+    //   render: (user: any) => (
+    //     <Tooltip title={user?.notes || ''} placement='top'>
+    //       <Typography color='primary'>
+    //         {user?.notes?.slice(0, 20) || '---'}
+    //         {user?.notes?.length > 20 ? '...' : ''}
+    //       </Typography>
+    //     </Tooltip>
+    //   )
+    // },
     {
       id: 'dateOfService',
       label: 'DATE OF SERVICE',
@@ -318,15 +301,34 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
 
           // Check if the parsed date is valid (not "Invalid Date")
           if (!isNaN(parsedDate.getTime())) {
-            return <Typography className='font-normal text-base my-3'>{formatDate(user.dateOfService)}</Typography>
+            return (
+              <>
+                <Typography className='font-normal text-base '>
+                  {new Date(user?.dateOfService).toLocaleDateString('en-US', {
+                    month: '2-digit',
+                    day: '2-digit',
+                    year: 'numeric'
+                  })}
+                </Typography>
+                <Typography className='font-normal text-base '>
+                  {user?.clockIn?.length > 0
+                    ? `In: ${new Date(user?.clockIn).toLocaleTimeString('en-US', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: true
+                      })}`
+                    : 'In: ---'}
+                </Typography>
+              </>
+            )
           }
 
           // If it's not a valid timestamp, return the raw string as is
-          return <Typography className='font-normal text-base my-3'>{dateOfService}</Typography>
+          return <Typography className='font-normal text-base '>{dateOfService}</Typography>
         }
 
         // If dateOfService is null/undefined, return N/A
-        return <Typography className='font-normal text-base my-3'>N/A</Typography>
+        return <Typography className='font-normal text-base '>N/A</Typography>
       }
     },
     {
@@ -348,6 +350,32 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
           }}
         />
       )
+    },
+    {
+      id: 'updatedBy',
+      label: 'UPDATED BY',
+      minWidth: 170,
+      editable: false,
+      sortable: true,
+      render: (user: any) => {
+        if (!user?.updatedBy || !user?.updatedAt) {
+          return <Typography className='font-normal text-base'>---</Typography>
+        } else {
+          console.log('OYE JANI', user)
+          return (
+            <>
+              <Typography className='font-normal text-base'>{user?.updatedBy?.userName || 'N/A'}</Typography>
+              <Typography className='font-normal text-base'>
+                {new Date(user?.updatedAt).toLocaleDateString('en-US', {
+                  month: '2-digit',
+                  day: '2-digit',
+                  year: 'numeric'
+                })}
+              </Typography>
+            </>
+          )
+        }
+      }
     },
     {
       id: 'actions',

@@ -126,18 +126,18 @@ const WaitingAdminApprovalTable = () => {
           // Check if the parsed date is valid (not "Invalid Date")
           if (!isNaN(parsedDate.getTime())) {
             return (
-              <Typography className='font-normal text-base my-3'>
+              <Typography className='font-normal text-base '>
                 {`${parsedDate.getMonth() + 1}/${parsedDate.getDate()}/${parsedDate.getFullYear().toString().slice(-2)}`}
               </Typography>
             )
           }
 
           // If it's not a valid timestamp, return the raw string as is
-          return <Typography className='font-normal text-base my-3'>{dateOfService}</Typography>
+          return <Typography className='font-normal text-base '>{dateOfService}</Typography>
         }
 
         // If dateOfService is null/undefined, return N/A
-        return <Typography className='font-normal text-base my-3'>N/A</Typography>
+        return <Typography className='font-normal text-base '>N/A</Typography>
       }
     },
     {

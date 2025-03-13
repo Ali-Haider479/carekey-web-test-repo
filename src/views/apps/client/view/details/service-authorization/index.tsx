@@ -1,7 +1,18 @@
 'use client'
 import DataTable from '@/@core/components/mui/DataTable'
-import { Add } from '@mui/icons-material'
-import { Autocomplete, Button, Card, Grid2 as Grid, TextField, Dialog, Typography } from '@mui/material'
+import { Add, MoreVert } from '@mui/icons-material'
+import {
+  Autocomplete,
+  Button,
+  Card,
+  Grid2 as Grid,
+  TextField,
+  Dialog,
+  Typography,
+  IconButton,
+  Menu,
+  MenuItem
+} from '@mui/material'
 import { useEffect, useState } from 'react'
 import DialogCloseButton from '@/components/dialogs/DialogCloseButton'
 import { FormProvider, set, useForm } from 'react-hook-form'
@@ -29,33 +40,87 @@ interface ServiceAuthPayload {
   endDate: Date
   serviceRate: number
   units: number
-  diagnosisCode: number
-  umpiNumber: number
+  diagnosisCode: string
+  umpiNumber: string
   reimbursementType: string
-  taxonomy: number
+  taxonomy: string
   frequency: string
   clientId: number
 }
 
 const ServiceAuthorization = () => {
   const { id } = useParams()
+  const clientId = Number(id)
   const [selectedOption, setSelectedOption] = useState(null)
   const [isModalShow, setIsModalShow] = useState(false)
   const [serviceAuthData, setServiceAuthData] = useState<any[]>([])
-  const clientId = Number(id)
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
+  const [currentItem, setCurrentItem] = useState<any>(null)
+  const [isEditMode, setIsEditMode] = useState(false)
+
+  const handleMenuClick = (event: React.MouseEvent<HTMLElement>, item: any) => {
+    setAnchorEl(event.currentTarget)
+    setCurrentItem(item)
+  }
+
+  const handleMenuClose = () => {
+    setAnchorEl(null)
+  }
 
   const handleModalClose = () => {
     reset({
       payer: '',
       memberId: '',
       serviceAuthNumber: '',
-      procedureAndModifier: '',
+      procedureCode: '',
+      modifierCode: '',
       startDate: undefined,
       endDate: undefined,
       serviceRate: '',
-      units: ''
+      units: '',
+      diagnosisCode: '',
+      umpiNumber: '',
+      reimbursementType: '',
+      taxonomy: '',
+      frequency: ''
     })
     setIsModalShow(false)
+    setCurrentItem(null)
+    setIsEditMode(false)
+  }
+
+  const handleAddNew = () => {
+    setIsEditMode(false)
+    setCurrentItem(null)
+    setIsModalShow(true)
+  }
+
+  const handleEdit = (item: any) => {
+    setIsEditMode(true)
+    setCurrentItem(item)
+
+    const formattedStartDate = item.startDate ? new Date(item.startDate) : undefined
+    const formattedEndDate = item.endDate ? new Date(item.endDate) : undefined
+
+    reset({
+      payer: item.payer || '',
+      memberId: item.memberId || '',
+      serviceAuthNumber: item.serviceAuthNumber || '',
+      procedureCode: item.procedureCode || '',
+      modifierCode: item.modifierCode || '',
+      startDate: formattedStartDate || undefined,
+      endDate: formattedEndDate || undefined,
+      serviceRate: item.serviceRate || '',
+      units: item.units || '',
+      diagnosisCode: item.diagnosisCode || '',
+      umpiNumber: item.umpiNumber || '',
+      reimbursementType: item.reimbursementType || '',
+      taxonomy: item.taxonomy || '',
+      frequency: item.frequency || ''
+    })
+
+    setIsModalShow(true)
+    handleMenuClose()
   }
 
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -78,6 +143,7 @@ const ServiceAuthorization = () => {
     reset,
     formState: { errors }
   } = methods
+
   const onSubmit = async (data: any) => {
     console.log(data)
     try {
@@ -91,17 +157,32 @@ const ServiceAuthorization = () => {
         endDate: new Date(data.endDate),
         serviceRate: Number(data.serviceRate),
         units: Number(data.units),
-        diagnosisCode: Number(data.diagnosisCode),
-        umpiNumber: Number(data.umpiNumber),
+        diagnosisCode: data.diagnosisCode,
+        umpiNumber: data.umpiNumber,
         reimbursementType: data.reimbursementType,
-        taxonomy: Number(data.taxonomy),
+        taxonomy: data.taxonomy,
         frequency: data.frequency,
         clientId: clientId
       }
 
-      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/client/service-auth`, serviceAuthPayload)
-      console.log('Client Service Auth created successfully --> ', response)
-      setServiceAuthData([...serviceAuthData, response.data])
+      if (isEditMode && currentItem) {
+        const response = await axios.patch(
+          `${process.env.NEXT_PUBLIC_API_URL}/client/service-auth/${currentItem.id}`,
+          serviceAuthPayload
+        )
+
+        console.log('Client Service Auth updated successfully --> ', currentItem.id, serviceAuthPayload, response)
+
+        // Update the data in the state
+        setServiceAuthData(serviceAuthData.map(item => (item.id === currentItem.id ? response.data : item)))
+      } else {
+        // Create new record
+        const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/client/service-auth`, serviceAuthPayload)
+
+        console.log('Client Service Auth created successfully --> ', response)
+        setServiceAuthData([...serviceAuthData, response.data])
+      }
+
       handleModalClose()
     } catch (error) {
       console.error('Error posting data: ', error)
@@ -123,29 +204,6 @@ const ServiceAuthorization = () => {
   }, [])
 
   console.log(' Service Auth Data in state --> ', serviceAuthData)
-
-  const data = [
-    {
-      id: 1,
-      payor: 'MA',
-      promod: 'H2014 (UC U3)',
-      saNumber: '32069012220',
-      startDate: '08/01/2023',
-      endDate: '11/27/2023',
-      unitRate: 'Hours',
-      totalUnits: '320'
-    },
-    {
-      id: 2,
-      payor: 'MA',
-      promod: 'H2014 (UC U3)',
-      saNumber: '32069012220',
-      startDate: '08/01/2023',
-      endDate: '11/27/2023',
-      unitRate: 'Hours',
-      totalUnits: '320'
-    }
-  ]
 
   const newColumns = [
     {
@@ -225,88 +283,36 @@ const ServiceAuthorization = () => {
       label: 'UNITS',
       minWidth: 170,
       render: (item: any) => <Typography>{item?.units}</Typography>
+    },
+    {
+      id: 'action',
+      label: 'ACTION',
+      minWidth: 170,
+      render: (item: any) => (
+        <>
+          <IconButton onClick={e => handleMenuClick(e, item)}>
+            <MoreVert />
+          </IconButton>
+          <Menu
+            anchorEl={anchorEl}
+            open={Boolean(anchorEl)}
+            onClose={handleMenuClose}
+            anchorOrigin={{
+              vertical: 'bottom',
+              horizontal: 'right'
+            }}
+            transformOrigin={{
+              vertical: 'top',
+              horizontal: 'right'
+            }}
+          >
+            <MenuItem onClick={() => handleEdit(currentItem)}>Edit</MenuItem>
+          </Menu>
+        </>
+      )
     }
   ]
 
-  // const columns = [
-  //   {
-  //     headerName: 'PAYER',
-  //     field: 'payer',
-  //     flex: 0.75
-  //   },
-  //   {
-  //     headerName: 'MEMBER ID',
-  //     field: 'memberId',
-  //     flex: 0.75
-  //   },
-  //   {
-  //     headerName: 'SERVICE AUTH',
-  //     field: 'serviceAuthNumber',
-  //     flex: 0.75
-  //   },
-  //   {
-  //     headerName: 'PRO & MOD',
-  //     field: 'procedureAndModifier',
-  //     flex: 0.75,
-  //     renderCell: (params: GridRenderCellParams) => {
-  //       return (
-  //         <div className='flex h-full items-center'>
-  //           <Typography className='text-xs text-gray-800'>
-  //             {params?.row?.procedureCode}, {params?.row?.modifierCode}
-  //           </Typography>
-  //         </div>
-  //       )
-  //     }
-  //   },
-  //   {
-  //     headerName: 'START DATE',
-  //     field: 'startDate',
-  //     flex: 0.75,
-  //     renderCell: (params: GridRenderCellParams) => {
-  //       const formatDate = (dateString: string) => {
-  //         const date = new Date(dateString)
-  //         return date.toLocaleDateString('en-US', {
-  //           month: '2-digit',
-  //           day: '2-digit',
-  //           year: 'numeric'
-  //         })
-  //       }
-
-  //       const startDate = formatDate(params?.row?.startDate)
-  //       const endDate = formatDate(params?.row?.endDate)
-  //       return <span className=''>{startDate}</span>
-  //     }
-  //   },
-  //   {
-  //     headerName: 'END DATE',
-  //     field: 'endDate',
-  //     flex: 0.75,
-  //     renderCell: (params: GridRenderCellParams) => {
-  //       const formatDate = (dateString: string) => {
-  //         const date = new Date(dateString)
-  //         return date.toLocaleDateString('en-US', {
-  //           month: '2-digit',
-  //           day: '2-digit',
-  //           year: 'numeric'
-  //         })
-  //       }
-
-  //       const startDate = formatDate(params?.row?.startDate)
-  //       const endDate = formatDate(params?.row?.endDate)
-  //       return <span className=''>{endDate}</span>
-  //     }
-  //   },
-  //   {
-  //     headerName: 'SERVICE RATE',
-  //     field: 'serviceRate',
-  //     flex: 0.75
-  //   },
-  //   {
-  //     headerName: 'UNITS',
-  //     field: 'units',
-  //     flex: 0.75
-  //   }
-  // ]
   return (
     <>
       <FormProvider {...methods}>
@@ -329,18 +335,13 @@ const ServiceAuthorization = () => {
               {/* <Button startIcon={<Add />} className='w-[160px] bg-[#4B0082] text-white mt-4 h-10'>
               ADD SA LIST
             </Button> */}
-              <Button
-                startIcon={<Add />}
-                className='bg-[#4B0082] text-white mt-4 ml-4 h-10'
-                onClick={() => setIsModalShow(true)}
-              >
+              <Button startIcon={<Add />} className='bg-[#4B0082] text-white mt-4 ml-4 h-10' onClick={handleAddNew}>
                 ADD SERVICE AUTHORIZATION
               </Button>
             </div>
           </div>
         </Card>
         <Card className=' w-full  flex flex-col h-auto mt-5 shadow-md rounded-lg'>
-          {/* <DataTable columns={columns} data={serviceAuthData} /> */}
           {!serviceAuthData?.length ? (
             <Typography className='p-5 flex items-center justify-center'>No Data Available</Typography>
           ) : (
@@ -363,13 +364,15 @@ const ServiceAuthorization = () => {
             closeAfterTransition={false}
             sx={{ '& .MuiDialog-paper': { overflow: 'visible' } }}
           >
-            <DialogCloseButton onClick={() => setIsModalShow(false)} disableRipple>
+            <DialogCloseButton onClick={() => handleModalClose()} disableRipple>
               <i className='bx-x' />
             </DialogCloseButton>
             <div className='flex items-center justify-center pt-[10px] pb-[5px] w-full px-5'>
               <form onSubmit={handleSubmit(onSubmit)} autoComplete='off'>
                 <div>
-                  <Typography className='text-xl font-semibold mt-10 mb-6'>Add Service Authorization</Typography>
+                  <Typography className='text-xl font-semibold mt-10 mb-6'>
+                    {isEditMode ? 'Edit Service Authorization' : 'Add Service Authorization'}
+                  </Typography>
                 </div>
                 <Grid container spacing={4}>
                   <Grid size={{ xs: 12, sm: 6 }}>
@@ -454,6 +457,7 @@ const ServiceAuthorization = () => {
                       type={'text'}
                       error={errors.modifierCode}
                       control={control}
+                      isRequired={false}
                     />
                   </Grid>
                   <Grid size={{ xs: 12, sm: 6 }}>
@@ -473,7 +477,7 @@ const ServiceAuthorization = () => {
                       placeHolder={'Diagnosis Code'}
                       name={'diagnosisCode'}
                       defaultValue={''}
-                      type={'number'}
+                      type={'text'}
                       error={errors.diagnosisCode}
                       control={control}
                     />
@@ -484,7 +488,7 @@ const ServiceAuthorization = () => {
                       placeHolder={'NPI/UMPI'}
                       name={'umpiNumber'}
                       defaultValue={''}
-                      type={'number'}
+                      type={'text'}
                       error={errors.umpiNumber}
                       control={control}
                     />
@@ -507,7 +511,7 @@ const ServiceAuthorization = () => {
                       placeHolder={'Taxonomy'}
                       name={'taxonomy'}
                       defaultValue={''}
-                      type={'number'}
+                      type={'text'}
                       error={errors.taxonomy}
                       control={control}
                     />
@@ -531,7 +535,7 @@ const ServiceAuthorization = () => {
                     CANCEL
                   </Button>
                   <Button type='submit' variant='contained' className='bg-[#4B0082]'>
-                    Save
+                    {isEditMode ? 'Update' : 'Save'}
                   </Button>
                 </div>
               </form>

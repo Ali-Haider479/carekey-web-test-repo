@@ -101,18 +101,18 @@ const SignatureStatusTable = ({ data, isLoading }: SignatureStatusTableProps) =>
           // Check if the parsed date is valid (not "Invalid Date")
           if (!isNaN(parsedDate.getTime())) {
             return (
-              <Typography className='font-normal text-base my-3'>
+              <Typography className='font-normal text-base '>
                 {`${parsedDate.getMonth() + 1}/${parsedDate.getDate()}/${parsedDate.getFullYear().toString().slice(-2)}`}
               </Typography>
             )
           }
 
           // If it's not a valid timestamp, return the raw string as is
-          return <Typography className='font-normal text-base my-3'>{dateOfService}</Typography>
+          return <Typography className='font-normal text-base '>{dateOfService}</Typography>
         }
 
         // If dateOfService is null/undefined, return N/A
-        return <Typography className='font-normal text-base my-3'>N/A</Typography>
+        return <Typography className='font-normal text-base '>N/A</Typography>
       }
     },
     {
@@ -123,10 +123,10 @@ const SignatureStatusTable = ({ data, isLoading }: SignatureStatusTableProps) =>
       sortable: true,
       render: (user: any) => {
         if (!user?.clockIn || !user?.clockOut) {
-          return <Typography className='font-normal text-base my-3'>{user?.hrsWorked} Hrs</Typography>
+          return <Typography className='font-normal text-base '>{user?.hrsWorked} Hrs</Typography>
         } else {
           const hoursWorked = calculateHoursWorked(user?.clockIn, user?.clockOut)
-          return <Typography className='font-normal text-base my-3'>{hoursWorked} Hrs</Typography>
+          return <Typography className='font-normal text-base '>{hoursWorked} Hrs</Typography>
         }
       }
     },
@@ -134,7 +134,7 @@ const SignatureStatusTable = ({ data, isLoading }: SignatureStatusTableProps) =>
       id: 'logsVia',
       label: 'LOGGED VIA',
       minWidth: 170,
-      render: (params: any) => <AdUnitsIcon className='my-3 text-[#8082FF]' />
+      render: (params: any) => <AdUnitsIcon className=' text-[#8082FF]' />
     },
     {
       id: 'tsApprovalStatus',

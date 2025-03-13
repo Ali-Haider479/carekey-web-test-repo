@@ -27,22 +27,21 @@ const initialState: ChatDataType = {
 export const fetchChatRooms = createAsyncThunk('chat/fetchChatRooms', async (userId: number) => {
   const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/chatroom/list/${userId}`)
   const chatRooms = response.data
-
-  // Transform contacts - use otherCaregiver.id as the contact id
+  // Transform contacts - use otherUser.id as the contact id
   const contacts = chatRooms.map((room: any) => ({
-    id: room.otherCaregiver.id, // Use otherCaregiver.id instead of room.id
-    fullName: room.otherCaregiver.userName,
-    role: 'Caregiver',
+    id: room.otherUser.id, // Use otherUser.id instead of room.id
+    fullName: room.otherUser.userName,
+    role: 'User',
     about: `Chatroom for ${room.chatName}`,
-    avatar: room.otherCaregiver.profileImageUrl || '/images/avatars/default.png',
+    avatar: `https://${process.env.NEXT_PUBLIC_AWS_S3_PROFILE_BUCKET}.s3.amazonaws.com/${room.otherUser.profileImageUrl}`,
     status: 'offline' as StatusType,
     chatRoomId: room.id // Store chatRoomId for reference
   }))
 
-  // Transform messages - use otherCaregiver.id as userId
+  // Transform messages - use otherUser.id as userId
   const chats = chatRooms.map((room: any) => ({
     id: room.id,
-    userId: room.otherCaregiver.id, // Use otherCaregiver.id to match with contact
+    userId: room.otherUser.id, // Use otherUser.id to match with contact
     unseenMsgs: room.unreadCount || 0,
     chat: room.messages.map((msg: any) => ({
       message: msg.message,
@@ -55,6 +54,7 @@ export const fetchChatRooms = createAsyncThunk('chat/fetchChatRooms', async (use
       }
     }))
   }))
+
   return {
     contacts,
     chats
@@ -66,38 +66,36 @@ export const createChatRoom = createAsyncThunk(
   async (
     payload: {
       chatRoomName: string
-      caregiverId: number
+      userId: number
       clientId: number
-      otherCaregiverId: number
+      otherUserId: number
     },
     { dispatch }
   ) => {
     try {
       const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/chatroom/create`, payload)
-
       if (response.data.message === 'Chatroom already exists') {
         throw new Error('Chatroom already exists')
       }
 
       // Fetch updated room list to ensure consistency
-      const updatedResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/chatroom/list/${payload.caregiverId}`)
-      const newRoom = updatedResponse.data.find((room: any) => room.otherCaregiver.id === payload.otherCaregiverId)
+      const updatedResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/chatroom/list/${payload.userId}`)
+      const newRoom = updatedResponse.data.findLast((room: any) => room.otherUser.id === payload.otherUserId)
       if (!newRoom) throw new Error('Failed to fetch new chatroom')
 
       // Transform the new room data to match your state structure
       const newContact = {
-        id: newRoom.otherCaregiver.id,
-        fullName: newRoom.otherCaregiver.userName,
-        role: 'Caregiver',
+        id: newRoom.otherUser.id,
+        fullName: newRoom.otherUser.userName,
+        role: 'User',
         about: `Chatroom for ${newRoom.chatName}`,
-        avatar: newRoom.otherCaregiver.profileImageUrl || '/images/avatars/default.png',
+        avatar: `https://${process.env.NEXT_PUBLIC_AWS_S3_PROFILE_BUCKET}.s3.amazonaws.com/${newRoom.otherUser.profileImageUrl}`,
         status: 'offline' as StatusType,
         chatRoomId: newRoom.id
       }
-
       const newChat = {
         id: newRoom.id,
-        userId: newRoom.otherCaregiver.id,
+        userId: newRoom.otherUser.id,
         unseenMsgs: 0,
         chat: newRoom.messages.map((msg: any) => ({
           message: msg.message,
@@ -126,15 +124,20 @@ export const chatSlice = createSlice({
   name: 'chat',
   initialState,
   reducers: {
-    updateProfileFromSession: (state, action: PayloadAction<{ id: number; userName: string }>) => {
+    updateProfileFromSession: (
+      state,
+      action: PayloadAction<{ id: number; userName: string; profileImageUrl: string; role: string }>
+    ) => {
       state.profileUser = {
         ...state.profileUser,
+        avatar: `https://${process.env.NEXT_PUBLIC_AWS_S3_PROFILE_BUCKET}.s3.amazonaws.com/${action.payload.profileImageUrl}`,
         id: action.payload.id,
-        fullName: action.payload.userName
+        fullName: action.payload.userName,
+        role: action.payload.role
       }
     },
     getActiveUserData: (state, action: PayloadAction<number>) => {
-      // Find contact by otherCaregiver.id
+      // Find contact by otherUser.id
       const activeUser = state.contacts.find(user => user.chatRoomId === action.payload)
       // Find chat using the same ID
       const chat = state.chats.find(chat => chat.id === action.payload)
@@ -205,28 +208,38 @@ export const chatSlice = createSlice({
     },
 
     receiveMessage: (state, action: PayloadAction<ChatMessage>) => {
-      const { senderId, receiverId } = action.payload
-      const chatId = Number(senderId) === state.profileUser.id ? Number(receiverId) : Number(senderId)
-      const chat = state.chats.find(c => c.userId === chatId)
+      const { chatRoomId, senderId } = action.payload
+      // Find the chat by chatRoomId instead of userId
+      const chat = state.chats.find(c => c.id === Number(chatRoomId))
 
       if (chat) {
         const newMessage = {
           ...action.payload,
           senderId: Number(action.payload.senderId),
-          time: new Date(action.payload.time).toISOString()
+          time: new Date(action.payload.time).toISOString(),
+          msgStatus: {
+            isSent: true,
+            isDelivered: true,
+            isSeen: false // Default status for a new message
+          }
         }
-
         // Check if the message already exists
         const isDuplicate = chat.chat.some(
           chatMsg =>
             chatMsg.message === newMessage.message &&
             chatMsg.senderId === newMessage.senderId &&
-            Math.abs(new Date(chatMsg.time).getTime() - new Date(newMessage.time).getTime()) < 1000 // Allow 1-second tolerance
+            Math.abs(new Date(chatMsg.time).getTime() - new Date(newMessage.time).getTime()) < 1000 // 1-second tolerance
         )
 
         if (!isDuplicate) {
           chat.chat.push(newMessage)
+          // Optionally increment unseenMsgs if the message isn't from the current user
+          if (Number(senderId) !== state.profileUser.id) {
+            chat.unseenMsgs += 1
+          }
         }
+      } else {
+        console.warn(`Chat room with ID ${chatRoomId} not found in state.chats`)
       }
     }
   },

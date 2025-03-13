@@ -63,6 +63,7 @@ export const authOptions: NextAuthOptions = {
         token.tenant = user.tenant
         token.caregiver = user.caregiver
         token.userRoles = user.userRoles
+        token.profileImageUrl = user.profileImageUrl
         token.backendAccessToken = user.accessToken
         token.backendAccessExpiresIn = user.expiresIn
       }
@@ -75,6 +76,7 @@ export const authOptions: NextAuthOptions = {
       session.user.tenant = token.tenant
       session.user.caregiver = token.caregiver
       session.user.userRoles = token.userRoles
+      session.user.profileImageUrl = token.profileImageUrl
       session.user.backendAccessToken = token.backendAccessToken
       session.user.backendAccessExpiresIn = token.backendAccessExpiresIn
       return session

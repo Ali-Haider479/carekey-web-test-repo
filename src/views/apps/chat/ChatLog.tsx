@@ -22,6 +22,7 @@ import { getInitials } from '@/utils/getInitials'
 import { useMqttClient } from '@/hooks/useMqtt'
 import { useAppDispatch } from '@/hooks/useDispatch'
 import { receiveMessage } from '@/redux-store/slices/chat'
+import axios from 'axios'
 
 type MsgGroupType = {
   senderId: number
@@ -103,12 +104,36 @@ const ChatLog = ({ chatStore, isBelowLgScreen, isBelowMdScreen, isBelowSmScreen 
   const dispatch = useAppDispatch()
   const activeUserChat = chatStore.chats.find((chat: ChatType) => chat.id === chatStore.activeUser?.chatRoomId)
   const scrollRef = useRef(null)
-  // Keep track of processed message IDs to prevent duplicates
   const processedMessages = useRef(new Set<string>())
+
+  // Track the previous active chat room ID
+  const previousChatRoomRef = useRef<number | null>(null)
+
+  // Use this to prevent duplicate API calls
+  const isUpdatePendingRef = useRef<boolean>(false)
 
   const mqttClient = useMqttClient({
     username: profileUser.fullName
   })
+
+  // Function to update message read status
+  const updateMessagesReadStatus = async (chatRoomId: number) => {
+    if (!chatRoomId || !profileUser?.id || isUpdatePendingRef.current) return
+    try {
+      isUpdatePendingRef.current = true
+      await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/chat/update-read-status`, {
+        chatRoomId: chatRoomId,
+        readerId: profileUser.id
+      })
+      console.log('Updated read status for chat:', chatRoomId)
+    } catch (error) {
+      console.error('Error updating message read status:', error)
+    } finally {
+      isUpdatePendingRef.current = false
+    }
+  }
+
+  // MQTT subscription logic remains the same...
   useEffect(() => {
     if (activeUser && mqttClient.isConnected) {
       // const incomingTopic = `carekey/chat/${activeUser.id}/${profileUser.id}`
@@ -159,11 +184,44 @@ const ChatLog = ({ chatStore, isBelowLgScreen, isBelowMdScreen, isBelowSmScreen 
 
   // Scroll to bottom on new message
   useEffect(() => {
+    console.log('INSIDE UPDATE MSG INITIALIZA')
     if (activeUserChat && activeUserChat.chat && activeUserChat.chat.length) {
       scrollToBottom()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chatStore])
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      // If tab becomes hidden and we have a previous chat, update its read status
+      if (document.visibilityState === 'hidden' && previousChatRoomRef.current) {
+        updateMessagesReadStatus(previousChatRoomRef.current)
+      }
+    }
+
+    // Listen for visibility changes (tab switching, minimizing)
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    // Update previous chat room when active user changes
+    if (activeUser?.chatRoomId) {
+      // If we have a previous chat and it's different from current, update its read status
+      if (previousChatRoomRef.current && previousChatRoomRef.current !== activeUser.chatRoomId) {
+        updateMessagesReadStatus(previousChatRoomRef.current)
+      }
+
+      // Store current chat room as previous for next change
+      previousChatRoomRef.current = activeUser.chatRoomId
+    }
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+
+      // When unmounting, update the current chat's read status
+      if (activeUser?.chatRoomId) {
+        updateMessagesReadStatus(activeUser.chatRoomId)
+      }
+    }
+  }, [activeUser?.chatRoomId])
 
   return (
     <ScrollWrapper isBelowLgScreen={isBelowLgScreen} scrollRef={scrollRef}>

@@ -33,9 +33,9 @@ type User = {
   avatar: string
 }
 
-const ScheduleListTable = ({ events }: any) => {
+const ScheduleListTable = ({ events }: { events: any[] }) => {
   const { lang: locale } = useParams()
-  const [data, setData] = useState<any[]>([])
+  // const [data, setData] = useState<any[]>([])
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const [selectedRowId, setSelectedRowId] = useState<number | null>(null)
 
@@ -49,10 +49,12 @@ const ScheduleListTable = ({ events }: any) => {
     setSelectedRowId(null)
   }
 
-  useEffect(() => {
-    setData(events.events)
-  }, [events.events])
-  console.log(events)
+  console.log('Calender data', events)
+
+  // useEffect(() => {
+  //   setData(events.events)
+  // }, [events.events])
+  // console.log(events)
 
   const newCols: GridColDef[] = [
     { field: 'id', headerName: 'ID', flex: 0.5 },
@@ -164,13 +166,27 @@ const ScheduleListTable = ({ events }: any) => {
     }
   ]
 
+  const transformedData =
+    events?.map((event: any) => ({
+      id: event.id,
+      firstName: event.client?.firstName || 'N/A',
+      client: event.client,
+      caregiver: event.caregiver,
+      status: event.status,
+      assignedHours: event.assignedHours,
+      start: event.start,
+      end: event.end,
+      proMod: 'N/A', // Add default value if necessary
+      avatar: event.client?.profileImgUrl || ''
+    })) || []
+
   const handleDeleteSchedule = async (id: string) => {
     console.log('handleDeleteSchedule Clicked', id)
     try {
       const deletionRes = await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/schedule/${id}`)
       if (deletionRes) {
-        const updatedData = data.filter((item: any) => item.id !== id)
-        setData(updatedData)
+        const updatedData = events.filter((item: any) => item.id !== id)
+        // setData(updatedData)
       }
     } catch (error) {
       console.log(`Error deleting schedule with ID ${id}`, error)
@@ -195,7 +211,7 @@ const ScheduleListTable = ({ events }: any) => {
         }
       />
       <div style={{ overflowX: 'auto', padding: '0px' }}>
-        <DataTable data={data} columns={newCols} />
+        <DataTable data={transformedData} columns={newCols} />
       </div>
     </Card>
   )

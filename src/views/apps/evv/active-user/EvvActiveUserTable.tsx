@@ -141,7 +141,7 @@ const EvvActiveUserTable = ({ timeLogData, isLoading, payPeriod }: Props) => {
   console.log('Tg data-------------------', payPeriod)
 
   useEffect(() => {
-    if (Object?.keys(payPeriod).length > 0) {
+    if (payPeriod && Object?.keys(payPeriod).length > 0) {
       const range = calculateStartAndEndDate(payPeriod)
       setWeekRange(range)
     }

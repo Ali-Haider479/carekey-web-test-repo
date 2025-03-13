@@ -51,8 +51,15 @@ const LogsApprovalDetails = () => {
   }
 
   return (
-    <Grid container spacing={6}>
-      <CustomAlert AlertProps={alertProps} openAlert={alertOpen} setOpenAlert={setAlertOpen} />
+    <Grid>
+      <CustomAlert
+        AlertProps={alertProps}
+        openAlert={alertOpen}
+        setOpenAlert={setAlertOpen}
+        style={{
+          padding: 0 // Only these styles will be applied
+        }}
+      />
       <Grid size={{ xs: 12 }}>
         <LogsApprovalFilters onFilterApplied={handleFilteredData} />
       </Grid>

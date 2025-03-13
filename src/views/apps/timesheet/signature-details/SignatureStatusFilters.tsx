@@ -65,7 +65,7 @@ const SignatureStatusFilters = ({ onFilterApplied }: SignatureStatusFiltersProps
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} autoComplete='off'>
-      <Card className='w-full' sx={{ p: 2, borderRadius: 1, boxShadow: 2 }}>
+      <Card className='w-full mb-5' sx={{ p: 2, borderRadius: 1, boxShadow: 2 }}>
         {/* Card Header */}
         <CardHeader title='Filters' titleTypographyProps={{ variant: 'h6', sx: { fontWeight: 500 } }} />
 
@@ -142,12 +142,13 @@ const SignatureStatusFilters = ({ onFilterApplied }: SignatureStatusFiltersProps
                 placeholder='Timesheet Approved'
                 label='Timesheet Approved'
                 size='small'
-                value={filterData.timesheetApprovalStatus}
+                value={filterData.tsApprovalStatus}
                 id='event-calendar'
-                onChange={e => setFilterData({ ...filterData, timesheetApprovalStatus: e.target.value })}
+                onChange={e => setFilterData({ ...filterData, tsApprovalStatus: e.target.value })}
               >
-                <MenuItem value='Yes'>Yes</MenuItem>
-                <MenuItem value='No'>No</MenuItem>
+                <MenuItem value='Pending'>Pending</MenuItem>
+                <MenuItem value='Approved'>Approved</MenuItem>
+                <MenuItem value='Rejected'>Rejected</MenuItem>
               </TextField>
             </Grid>
             {/* <Button type='submit' variant='contained'> */}
