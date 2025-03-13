@@ -17,8 +17,8 @@ import Logo from '@components/layout/shared/Logo'
 import { useRouter } from 'next/navigation'
 
 interface ResetPasswordProps {
-  token: string // Token is required now
-  lang: string // Language from route
+  token: string
+  lang: string
 }
 
 const ResetPassword = ({ token, lang }: ResetPasswordProps) => {
