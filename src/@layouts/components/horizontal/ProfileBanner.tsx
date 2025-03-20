@@ -28,6 +28,7 @@ const ProfileBanner = ({ props }: { props: ProfileHeaderType }) => {
   const { id } = useParams()
   const [fileUrl, setFileUrl] = useState<string | undefined>(props?.profileImg)
   const [loading, setLoading] = useState<boolean>(true)
+  const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
 
   useEffect(() => {
     if (props?.profileImg) {
@@ -65,6 +66,13 @@ const ProfileBanner = ({ props }: { props: ProfileHeaderType }) => {
       if (response.data?.profileImageUrl) {
         setFileUrl(response.data.profileImageUrl)
       }
+      const payLoad = {
+        actionType: 'Update Profile Image',
+        details: 'Caregiver update profile image',
+        userId: authUser?.id,
+        caregiverId: id
+      }
+      await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/account-history/log`, payLoad)
       setLoading(false)
     } catch (error) {
       console.error('Update image error:', error)

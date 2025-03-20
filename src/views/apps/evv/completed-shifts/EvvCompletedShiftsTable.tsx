@@ -73,6 +73,12 @@ interface Props {
 }
 
 const EvvCompletedShiftsTable = ({ timeLogData, isLoading }: Props) => {
+  const [filteredData, setFilteredData] = useState<TimeLogData[]>([])
+
+  useEffect(() => {
+    setFilteredData(timeLogData)
+  }, [timeLogData])
+
   const columns = [
     {
       id: 'caregiverName',
@@ -122,10 +128,14 @@ const EvvCompletedShiftsTable = ({ timeLogData, isLoading }: Props) => {
     }
   ]
 
+  const handleFilteredData = (status: any) => {
+    setFilteredData(status)
+  }
+
   return (
     <Card sx={{ borderRadius: 1, boxShadow: 3 }}>
       <div className='p-4 my-2'>
-        <EvvFilters />
+        <EvvFilters onFilterApplied={handleFilteredData} />
       </div>
       {isLoading ? (
         <div className='flex items-center justify-center p-10'>
@@ -134,7 +144,7 @@ const EvvCompletedShiftsTable = ({ timeLogData, isLoading }: Props) => {
       ) : (
         <ReactTable
           columns={columns}
-          data={timeLogData}
+          data={filteredData}
           keyExtractor={user => user.id.toString()}
           enableRowSelect
           enablePagination

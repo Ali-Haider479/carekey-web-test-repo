@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Card, CardHeader, CardContent, MenuItem, Button, TextField } from '@mui/material'
 
 import Grid from '@mui/material/Grid2'
@@ -28,6 +28,7 @@ interface SignatureStatusFiltersProps {
 
 const SignatureStatusFilters = ({ onFilterApplied }: SignatureStatusFiltersProps) => {
   const [filterData, setFilterData] = useState<DefaultStateType>(defaultState)
+  const [payPeriod, setPayPeriod] = useState<any[]>([])
 
   // Hooks
   const {
@@ -60,6 +61,29 @@ const SignatureStatusFilters = ({ onFilterApplied }: SignatureStatusFiltersProps
       onFilterApplied(filterResponse.data.data)
     } catch (error) {
       console.error('Error applying filters:', error)
+    }
+  }
+
+  const fetchPayPeriod = async () => {
+    try {
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/pay-period/end-date/tenant/1`)
+      setPayPeriod(response.data)
+    } catch (error) {
+      console.error('Error fetching pay period data: ', error)
+    }
+  }
+
+  useEffect(() => {
+    fetchPayPeriod()
+  }, [])
+
+  const handleReset = async () => {
+    try {
+      setFilterData(defaultState)
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/time-log`)
+      onFilterApplied(response.data)
+    } catch (error) {
+      console.error('error resetting filters: ', error)
     }
   }
 
@@ -120,16 +144,18 @@ const SignatureStatusFilters = ({ onFilterApplied }: SignatureStatusFiltersProps
                 select
                 fullWidth
                 // className='mbe-6'
-                placeholder='Billing Period'
-                label='Billing Period'
+                placeholder='Week'
+                label='Week'
                 size='small'
-                value={filterData.tsApprovalStatus}
+                value={filterData.week}
                 id='event-calendar'
-                onChange={e => setFilterData({ ...filterData, tsApprovalStatus: e.target.value })}
+                onChange={e => setFilterData({ ...filterData, week: e.target.value })}
               >
-                <MenuItem value='Pending'>Pending</MenuItem>
-                <MenuItem value='Taken'>Taken</MenuItem>
-                <MenuItem value='Missed'>Missed</MenuItem>
+                {payPeriod.map((item: any) => (
+                  <MenuItem value={item.id} key={item.id}>
+                    {item.startDate} - {item.endDate === null ? 'ongoing' : item.endDate}
+                  </MenuItem>
+                ))}
               </TextField>
             </Grid>
 
@@ -152,14 +178,18 @@ const SignatureStatusFilters = ({ onFilterApplied }: SignatureStatusFiltersProps
               </TextField>
             </Grid>
             {/* <Button type='submit' variant='contained'> */}
-            <Button
-              type='submit'
-              className='h-10 flex items-center justify-center bg-[#4B0082]'
-              variant='contained'
-              size='small'
-            >
-              <SearchIcon fontSize='medium' />
-            </Button>
+            <Grid container spacing={12}>
+              <Grid size={{ xs: 12, sm: 4 }}>
+                <Button type='submit' variant='outlined' className='p-1'>
+                  Apply
+                </Button>
+              </Grid>
+              <Grid size={{ xs: 12, sm: 4 }}>
+                <Button onClick={handleReset} color='error' variant='outlined' className='p-1'>
+                  Reset
+                </Button>
+              </Grid>
+            </Grid>
           </Grid>
         </CardContent>
       </Card>

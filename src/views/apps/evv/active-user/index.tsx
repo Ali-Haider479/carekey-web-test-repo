@@ -39,9 +39,19 @@ const EvvActiveUser = () => {
 
   return (
     <Grid container spacing={6}>
-      <Grid size={{ xs: 12 }}>
-        <ActiveUserMapView timeLogData={timeLogData} />
-      </Grid>
+      {timeLogData.length ? (
+        <Grid size={{ xs: 12 }}>
+          <ActiveUserMapView
+            timeLogData={timeLogData?.filter(
+              (data: any) =>
+                !data.isCommunityVisit && // Existing condition
+                data.startLocation != null // New condition to filter out null or undefined startLocation
+            )}
+          />
+        </Grid>
+      ) : (
+        ''
+      )}
       <Grid size={{ xs: 12 }}>
         <EvvActiveUserTable timeLogData={timeLogData} isLoading={isLoading} payPeriod={payPeriod} />
       </Grid>

@@ -184,7 +184,6 @@ const ChatLog = ({ chatStore, isBelowLgScreen, isBelowMdScreen, isBelowSmScreen 
 
   // Scroll to bottom on new message
   useEffect(() => {
-    console.log('INSIDE UPDATE MSG INITIALIZA')
     if (activeUserChat && activeUserChat.chat && activeUserChat.chat.length) {
       scrollToBottom()
     }

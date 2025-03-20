@@ -10,6 +10,8 @@ import DialogCloseButton from '@/components/dialogs/DialogCloseButton'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
 import axios from 'axios'
 import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
+import ActiveUserFilters from './ActiveUserFilters'
+import { set } from 'date-fns'
 
 // Types
 interface Location {
@@ -114,6 +116,7 @@ const EvvActiveUserTable = ({ timeLogData, isLoading, payPeriod }: Props) => {
   const [clockOutReason, setClockOutReason] = useState('')
   const [values, setValues] = useState<any>()
   const [weekRange, setWeekRange] = useState<any>({})
+  const [filteredData, setFilteredData] = useState<any>()
 
   const handleModalClose = () => {
     setIsModalShow(false)
@@ -145,6 +148,8 @@ const EvvActiveUserTable = ({ timeLogData, isLoading, payPeriod }: Props) => {
       const range = calculateStartAndEndDate(payPeriod)
       setWeekRange(range)
     }
+
+    setFilteredData(timeLogData)
   }, [payPeriod])
 
   const handleSave = async () => {
@@ -209,7 +214,12 @@ const EvvActiveUserTable = ({ timeLogData, isLoading, payPeriod }: Props) => {
       minWidth: 170,
       editable: false,
       sortable: true,
-      render: (user: any) => <LocationCell location={user?.startLocation} />
+      render: (user: any) =>
+        user?.isCommunityVisit || !user?.startLocation ? (
+          <Typography color='primary'>Community Visit</Typography>
+        ) : (
+          <LocationCell location={user?.startLocation} />
+        )
     },
     {
       id: 'status',
@@ -251,11 +261,15 @@ const EvvActiveUserTable = ({ timeLogData, isLoading, payPeriod }: Props) => {
     )
   })
 
+  const handleFilteredData = (status: any) => {
+    setFilteredData(status)
+  }
+
   console.log('Updated values', values)
   return (
     <Card sx={{ borderRadius: 1, boxShadow: 3 }}>
       <div className='p-4 my-2'>
-        <EvvFilters />
+        <ActiveUserFilters onFilterApplied={handleFilteredData} />
       </div>
       {isLoading ? (
         <div className='flex items-center justify-center p-10'>
@@ -266,7 +280,7 @@ const EvvActiveUserTable = ({ timeLogData, isLoading, payPeriod }: Props) => {
         <>
           <ReactTable
             columns={columns}
-            data={timeLogData}
+            data={filteredData}
             keyExtractor={user => user.id.toString()}
             enableRowSelect
             enablePagination

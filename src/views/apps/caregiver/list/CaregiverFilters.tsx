@@ -92,15 +92,21 @@ const CaregiverFilters = ({
     }
   }
 
-  // useEffect(() => {
-  //   const filteredData = tableData?.filter(user => {
-  //     if (status && user.status !== status) return false
-  //     if (item && user.item !== item) return false
-  //     return true
-  //   })
+  const handleReset = async () => {
+    try {
+      // Reset all filter states to default empty values
+      setAccountStatus(defaultState)
+      setCaregiverUmpi(defaultState)
+      setCaregiverState(defaultState)
+      setItem('')
 
-  //   setData(filteredData || [])
-  // }, [status, item, tableData, setData])
+      // Fetch all data without filters
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/caregivers/1/tenant`)
+      onFilterApplied(response.data)
+    } catch (error) {
+      console.error('Error resetting filters:', error)
+    }
+  }
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} autoComplete='off'>
@@ -129,9 +135,6 @@ const CaregiverFilters = ({
               <MenuItem value='Active'>Active</MenuItem>
               <MenuItem value='Inactive'>Inactive</MenuItem>
             </CustomTextField>
-            <Button type='submit' variant='outlined' className='mt-3 p-1'>
-              Apply
-            </Button>
           </Grid>
           <Grid size={{ xs: 12, sm: 4 }}>
             <Typography variant='h6' className='mb-2'>
@@ -169,6 +172,18 @@ const CaregiverFilters = ({
                 </MenuItem>
               ))}
             </CustomTextField>
+          </Grid>
+          <Grid container spacing={12}>
+            <Grid size={{ xs: 12, sm: 4 }}>
+              <Button type='submit' variant='outlined' className='p-1'>
+                Apply
+              </Button>
+            </Grid>
+            <Grid size={{ xs: 12, sm: 4 }}>
+              <Button onClick={handleReset} color='error' variant='outlined' className='p-1'>
+                Reset
+              </Button>
+            </Grid>
           </Grid>
         </Grid>
       </Card>

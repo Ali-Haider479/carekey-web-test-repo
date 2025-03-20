@@ -28,7 +28,6 @@ const InfoCard = () => {
   const [isModalShow, setIsModalShow] = useState(false)
   const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
   const [formData, setFormData] = useState<FormItems>()
-
   const methods = useForm<FormItems>({
     mode: 'onSubmit',
     reValidateMode: 'onChange'
@@ -143,9 +142,17 @@ const InfoCard = () => {
       notes: data.assignmentNotes,
       scheduleHours: data.scheduleHours
     }
-    console.log('assignClientBody---------------', assignClientBody)
-    const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/user/createClientUser`, assignClientBody)
-    // console.log('Assigning Client --> ', response)
+
+    const accountHistoryPayLoad = {
+      actionType: 'Assign Client',
+      details: 'Assign client to a caregiver',
+      userId: authUser?.id,
+      caregiverId: id
+    }
+
+    await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/user/createClientUser`, assignClientBody)
+    await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/account-history/log`, accountHistoryPayLoad)
+
     fetchAssignClient()
     reset()
     handleModalClose()

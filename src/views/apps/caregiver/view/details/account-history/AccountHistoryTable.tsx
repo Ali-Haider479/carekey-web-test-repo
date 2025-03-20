@@ -5,23 +5,18 @@ import { useEffect, useState } from 'react'
 
 // MUI Imports
 import Card from '@mui/material/Card'
-import CardHeader from '@mui/material/CardHeader'
 import TextField from '@mui/material/TextField'
-import Chip from '@mui/material/Chip'
-import Avatar from '@mui/material/Avatar'
-import Button from '@mui/material/Button'
 import Grid from '@mui/material/Grid2'
 
 // Third-party Imports
-import { createColumnHelper, flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table'
 import axios from 'axios'
 
 // CSS Module Imports
-import styles from '../CaregiversTable.module.css'
-import { useRouter } from 'next/navigation'
+import { useParams } from 'next/navigation'
 import { GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
 import DataTable from '@/@core/components/mui/DataTable'
-import { List, ListItem } from '@mui/material'
+import { Typography } from '@mui/material'
+import { formatDateTime } from '@/utils/helperFunctions'
 
 // type AccountHistory = {
 //   key: number
@@ -33,20 +28,11 @@ import { List, ListItem } from '@mui/material'
 
 const AccountHistoryTable = () => {
   // State
-  const [data, setData] = useState([])
   const [search, setSearch] = useState('')
+  const [userActions, setUserActions] = useState([])
+  const [loading, setLoading] = useState(true)
 
-  const router = useRouter()
-
-  const rowData = [
-    {
-      id: '1',
-      dateAndTime: '04/28/2024, 02:12 pm',
-      admin: 'Sameer Khan',
-      section: 'Profile',
-      changesMade: 'Updated Assign client - Yolanda Jordan'
-    }
-  ]
+  const { id } = useParams()
 
   const listData = [
     'Removed Hss User',
@@ -57,34 +43,57 @@ const AccountHistoryTable = () => {
     'Removed Payor Group Information HSS-a:5'
   ]
 
+  // Fetch user actions when the component mounts or id changes
+  useEffect(() => {
+    const fetchUserActions = async () => {
+      try {
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/account-history/caregiver/${id}`)
+        setUserActions(response.data) // Set the fetched data into state
+      } catch (err) {
+        console.error(err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchUserActions()
+  }, [id]) // Dependency array: re-run if id changes
+
   const newColumns: GridColDef[] = [
-    // {
-    //   field: 'itemNumber',
-    //   headerName: '#',
-    //   flex: 0.5,
-    //   renderCell: (params: GridRenderCellParams) => <span>{params.row.index + 1}</span>
-    // },
     {
-      field: 'dateAndTime',
+      field: 'createdAt',
       headerName: 'DATE & TIME',
-      flex: 0.5
+      flex: 0.5,
+      renderCell: (params: GridRenderCellParams) => (
+        <Typography className='font-light text-sm my-3'>{formatDateTime(params.value)}</Typography>
+      )
     },
     {
-      field: 'admin',
+      field: 'userId',
       headerName: 'ADMIN',
-      flex: 0.5
+      flex: 0.5,
+      renderCell: (params: GridRenderCellParams) => (
+        <Typography className='font-light text-sm my-3'>{params.row.user.userName}</Typography> // Access nested user.userName
+      )
     },
     {
-      field: 'section',
+      field: 'actionType',
       headerName: 'SECTION',
-      flex: 0.5
+      flex: 0.5,
+      renderCell: (params: GridRenderCellParams) => (
+        <Typography className='font-light text-sm my-3'>{params.value}</Typography>
+      )
     },
     {
-      field: 'changesMade',
+      field: 'details',
       headerName: 'CHANGES MADE',
-      flex: 0.5
+      flex: 0.5,
+      renderCell: (params: GridRenderCellParams) => (
+        <Typography className='font-light text-sm my-3'>{params.value}</Typography>
+      )
     }
   ]
+  console.log('ONE USER ACTION LIST', userActions)
 
   return (
     <Card sx={{ borderRadius: 1, boxShadow: 3, p: 0 }}>
@@ -112,8 +121,8 @@ const AccountHistoryTable = () => {
 
       {/* Table */}
       <div style={{ overflowX: 'auto' }}>
-        <DataTable columns={newColumns} data={rowData} />
-        <List sx={{ mt: 0 }}>
+        <DataTable columns={newColumns} data={userActions} />
+        {/* <List sx={{ mt: 0 }}>
           {listData.map((item, index) => (
             <ListItem
               key={index}
@@ -126,7 +135,7 @@ const AccountHistoryTable = () => {
               {item}
             </ListItem>
           ))}
-        </List>
+        </List> */}
       </div>
     </Card>
   )

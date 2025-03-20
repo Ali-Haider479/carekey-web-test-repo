@@ -9,7 +9,11 @@ import axios from 'axios'
 import { dark } from '@mui/material/styles/createPalette'
 import { transformBillingData } from '@/utils/transformBillingData'
 
-const BillingDetailTable = () => {
+interface BillingDetailTableProps {
+  data: any
+}
+
+const BillingDetailTable = ({ data }: BillingDetailTableProps) => {
   const [isLoading, setIsLoading] = useState(true)
   const [filteredData, setFilteredData] = useState<any[]>([])
 
@@ -50,8 +54,8 @@ const BillingDetailTable = () => {
       minWidth: 170,
       render: item => {
         const payer = item.subRows
-          ? item.subRows[0].timelog[0].client.serviceAuth[0].payer
-          : item.timelog![0].client.serviceAuth[0].payer
+          ? item.subRows[0]?.timelog[0]?.client?.serviceAuth?.payer
+          : item.timelog![0]?.client?.serviceAuth?.payer
         return <Typography color='primary'>{payer}</Typography>
       }
     },
@@ -62,7 +66,7 @@ const BillingDetailTable = () => {
       render: item => {
         const serviceAuth = item.subRows
           ? item.subRows[0].timelog[0].client.serviceAuth[0]
-          : item.timelog![0].client.serviceAuth[0]
+          : item.timelog!.client?.serviceAuth
         const proMod = `${serviceAuth?.procedureCode ?? ''}-${serviceAuth?.modifierCode ?? ''}`
         return <Typography color='primary'>{proMod}</Typography>
       }
@@ -179,7 +183,7 @@ const BillingDetailTable = () => {
       ) : (
         <ReactTable
           columns={columns}
-          data={filteredData}
+          data={data}
           keyExtractor={user => user.id.toString()}
           enableRowSelect
           enablePagination

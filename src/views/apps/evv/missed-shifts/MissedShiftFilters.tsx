@@ -18,8 +18,9 @@ interface EVVFiltersProps {
   onFilterApplied: (data: any) => void
 }
 
-// const EvvFilters = ({ onFilterApplied }: SignatureStatusFiltersProps) => {
-const EvvFilters = ({ onFilterApplied }: EVVFiltersProps) => {
+// const MissedShiftFilters = ({ onFilterApplied }: SignatureStatusFiltersProps) => {
+const MissedShiftFilters = ({ onFilterApplied }: EVVFiltersProps) => {
+  const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
   const [filterData, setFilterData] = useState<DefaultStateType>(defaultState)
 
   // Hooks
@@ -39,7 +40,9 @@ const EvvFilters = ({ onFilterApplied }: EVVFiltersProps) => {
       queryParams.append('limit', '10')
       // If no filters are applied, fetch all data
       if (queryParams.toString() === 'page=1&limit=10') {
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/time-log/completed-timelogs`)
+        const response = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/time-log/dashboard/missed-shifts/${authUser?.tenant?.id}`
+        )
         onFilterApplied(response.data)
         return
       }
@@ -55,7 +58,9 @@ const EvvFilters = ({ onFilterApplied }: EVVFiltersProps) => {
 
   const handleReset = async () => {
     setFilterData(defaultState)
-    const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/time-log/completed-timelogs`)
+    const response = await axios.get(
+      `${process.env.NEXT_PUBLIC_API_URL}/time-log/dashboard/missed-shifts/${authUser?.tenant?.id}`
+    )
     onFilterApplied(response.data)
   }
 
@@ -111,4 +116,4 @@ const EvvFilters = ({ onFilterApplied }: EVVFiltersProps) => {
   )
 }
 
-export default EvvFilters
+export default MissedShiftFilters

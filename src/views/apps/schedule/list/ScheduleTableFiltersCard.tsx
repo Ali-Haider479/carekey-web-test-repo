@@ -1,21 +1,31 @@
 'use client'
-import React, { useState } from 'react'
+import React, { forwardRef, useState } from 'react'
 import { Card, CardHeader, CardContent, Grid2 as Grid, TextField, Button } from '@mui/material'
 import { useForm } from 'react-hook-form'
 import axios from 'axios'
+import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
 
 interface defaultStateType {
   clientName: string
   caregiverName: string
-  startDate: string
-  endDate: string
+  startDate: Date | null
+  endDate: Date | null
 }
 
 const defaultState: defaultStateType = {
   clientName: '',
   caregiverName: '',
-  startDate: '',
-  endDate: ''
+  startDate: null,
+  endDate: null
+}
+
+interface PickerProps {
+  label?: string
+  error?: boolean
+  className?: string
+  id?: string
+  registername?: string
+  placeholder?: string
 }
 
 interface scheduleFilterProps {
@@ -31,8 +41,8 @@ const ScheduleTableFiltersCard = ({ onFilterApplied }: scheduleFilterProps) => {
     defaultValues: {
       clientName: '',
       caregiverName: '',
-      startDate: '',
-      endDate: ''
+      startDate: null,
+      endDate: null
     }
   })
 
@@ -46,8 +56,8 @@ const ScheduleTableFiltersCard = ({ onFilterApplied }: scheduleFilterProps) => {
 
       if (filterData.clientName) queryParams.append('clientName', filterData.clientName)
       if (filterData.caregiverName) queryParams.append('caregiverName', filterData.caregiverName)
-      if (filterData.startDate) queryParams.append('startDate', filterData.startDate)
-      if (filterData.endDate) queryParams.append('endDate', filterData.endDate)
+      if (filterData.startDate) queryParams.append('startDate', filterData.startDate.toISOString())
+      if (filterData.endDate) queryParams.append('endDate', filterData.endDate.toISOString())
 
       let filterResponse
       if (queryParams.toString()) {
@@ -65,6 +75,32 @@ const ScheduleTableFiltersCard = ({ onFilterApplied }: scheduleFilterProps) => {
       console.error('Error applying filters:', error)
     }
   }
+
+  const handleReset = async () => {
+    try {
+      setFilterData(defaultState)
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/schedule`)
+      onFilterApplied(response.data)
+    } catch (error) {
+      console.error('Error resetting filters:', error)
+    }
+  }
+
+  const PickersComponent = forwardRef(({ ...props }: PickerProps, ref) => {
+    return (
+      <TextField
+        inputRef={ref}
+        fullWidth
+        size='small'
+        {...props}
+        label={props.label || ''}
+        placeholder={props.placeholder || ''}
+        className={props.className}
+        id={props.id}
+        error={props.error}
+      />
+    )
+  })
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
@@ -103,37 +139,55 @@ const ScheduleTableFiltersCard = ({ onFilterApplied }: scheduleFilterProps) => {
 
             {/* SA Start Date */}
             <Grid size={{ xs: 12, md: 6 }} sx={{ pb: 2 }}>
-              <TextField
-                fullWidth
-                label='SA Start Date'
-                placeholder='Select start date'
-                type='date'
-                InputLabelProps={{ shrink: true }}
-                variant='outlined'
-                size='small'
-                value={filterData.startDate}
-                onChange={e => setFilterData({ ...filterData, startDate: e.target.value })}
+              <AppReactDatepicker
+                selectsStart
+                id='start-date'
+                endDate={filterData.endDate}
+                selected={filterData.startDate}
+                startDate={filterData.startDate}
+                customInput={
+                  <PickersComponent
+                    placeholder='Start Date'
+                    label='Start Date'
+                    registername='startDate'
+                    id='start-date'
+                  />
+                }
+                onChange={(date: Date | null) =>
+                  date !== null && setFilterData({ ...filterData, startDate: new Date(date) })
+                }
               />
             </Grid>
 
             {/* SA End Date */}
             <Grid size={{ xs: 12, md: 6 }} sx={{ pb: 2 }}>
-              <TextField
-                fullWidth
-                label='SA End Date'
-                placeholder='Select end date'
-                type='date'
-                InputLabelProps={{ shrink: true }}
-                variant='outlined'
-                size='small'
-                value={filterData.endDate}
-                onChange={e => setFilterData({ ...filterData, endDate: e.target.value })}
+              <AppReactDatepicker
+                selectsStart
+                id='end-date'
+                endDate={filterData.startDate}
+                selected={filterData.endDate}
+                startDate={filterData.endDate}
+                customInput={
+                  <PickersComponent placeholder='End Date' label='End Date' registername='endDate' id='end-date' />
+                }
+                onChange={(date: Date | null) =>
+                  date !== null && setFilterData({ ...filterData, endDate: new Date(date) })
+                }
               />
             </Grid>
           </Grid>
-          <Button variant='outlined' type='submit'>
-            Apply
-          </Button>
+          <Grid container spacing={12}>
+            <Grid size={{ xs: 12, sm: 1 }}>
+              <Button type='submit' variant='outlined' className='p-1'>
+                Apply
+              </Button>
+            </Grid>
+            <Grid size={{ xs: 12, sm: 4 }}>
+              <Button onClick={handleReset} color='error' variant='outlined' className='p-1'>
+                Reset
+              </Button>
+            </Grid>
+          </Grid>
         </CardContent>
       </Card>
     </form>

@@ -35,9 +35,9 @@ export interface Column<T> {
   headerStyle?: SxProps<Theme>
 }
 
-type StatusOption = 'Approved' | 'Rejected' | 'Pending'
+type StatusOption = 'Approved' | 'Rejected' | 'Pending' | 'Mixed'
 
-const STATUS_OPTIONS: StatusOption[] = ['Approved', 'Rejected', 'Pending']
+const STATUS_OPTIONS: StatusOption[] = ['Approved', 'Rejected', 'Pending', 'Mixed']
 interface ReactTableProps<T extends { subRows?: T[] }> {
   columns: Column<T>[]
   data: T[]
@@ -131,8 +131,9 @@ function ReactTable<T extends { subRows?: T[] }>({
   }
 
   const renderCell = (item: T, column: Column<T>) => {
-    const id = Number(keyExtractor(item))
-    const isRowEditing = editingId === id
+    // const id = Number(keyExtractor(item))
+    const id = keyExtractor(item)
+    const isRowEditing = editingId == id
     if (isRowEditing && column.editable) {
       const value = getEditedValue(item, column.id)
 
@@ -151,7 +152,7 @@ function ReactTable<T extends { subRows?: T[] }>({
             }}
           >
             {STATUS_OPTIONS.map(status => (
-              <MenuItem key={status} value={status}>
+              <MenuItem key={status} value={status} disabled={status === 'Mixed'}>
                 {status}
               </MenuItem>
             ))}
@@ -213,6 +214,10 @@ function ReactTable<T extends { subRows?: T[] }>({
       return [...acc, itemId, ...subRowIds]
     }, [])
   }
+  const getSubRowIds = (item: T): string[] => {
+    if (!item.subRows) return []
+    return getAllIds(item.subRows)
+  }
 
   const handleSelectAll = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.checked) {
@@ -237,9 +242,23 @@ function ReactTable<T extends { subRows?: T[] }>({
     let newSelected: string[] = []
 
     if (selectedIndex === -1) {
+      // Selecting an item
       newSelected = [...selected, id]
+
+      // If the item has subRows (is a dummy row), select all subRows too
+      if (item.subRows && item.subRows.length > 0) {
+        const subRowIds = getSubRowIds(item)
+        newSelected = [...new Set([...newSelected, ...subRowIds])] // Remove duplicates
+      }
     } else {
+      // Deselecting an item
       newSelected = selected.filter(itemId => itemId !== id)
+
+      // If the item has subRows, deselect all subRows too
+      if (item.subRows && item.subRows.length > 0) {
+        const subRowIds = getSubRowIds(item)
+        newSelected = newSelected.filter(itemId => !subRowIds.includes(itemId))
+      }
     }
 
     setSelected(newSelected)
@@ -262,8 +281,8 @@ function ReactTable<T extends { subRows?: T[] }>({
 
   const renderRow = (item: T, level: number = 0, parentExpanded: boolean = true) => {
     const id = keyExtractor(item)
-    const isItemSelected = selected.includes(id.toString())
-    const isItemExpanded = expanded.includes(id.toString())
+    const isItemSelected = selected.includes(id)
+    const isItemExpanded = expanded.includes(id)
     const hasSubRows = item.subRows && item.subRows.length > 0
     const useExpandedColor = isItemExpanded || (level > 0 && parentExpanded)
     const getBackgroundColor = () => {
@@ -293,14 +312,14 @@ function ReactTable<T extends { subRows?: T[] }>({
         >
           <TableCell padding='none' sx={{ width: '48px' }}>
             {hasSubRows && (
-              <IconButton size='small' onClick={() => handleExpand(id.toString())} sx={{ ml: 1 }}>
+              <IconButton size='small' onClick={() => handleExpand(id)} sx={{ ml: 1 }}>
                 {isItemExpanded ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
               </IconButton>
             )}
           </TableCell>
           {enableRowSelect && (
             <TableCell padding='checkbox'>
-              <Checkbox checked={isItemSelected} onChange={() => handleSelect(id.toString(), item)} />
+              <Checkbox checked={isItemSelected} onChange={() => handleSelect(id, item)} />
             </TableCell>
           )}
           {columns.map((column, index) => (

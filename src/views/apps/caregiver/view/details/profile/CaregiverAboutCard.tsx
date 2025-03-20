@@ -24,6 +24,7 @@ function CaregiverAboutCard() {
   const [emergencyEmailError, setEmergencyEmailError] = useState<boolean>(false)
   const [phoneNumberError, setPhoneNumberError] = useState<boolean>(false)
   const [emergencyPhoneNumberError, setEmergencyPhoneNumberError] = useState<boolean>(false)
+  const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
 
   const formatPhoneNumber = (value: string = '') => {
     // Remove all non-digits
@@ -94,6 +95,7 @@ function CaregiverAboutCard() {
     try {
       setIsLoading(true)
       const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/caregivers/caregiver/${id}`)
+
       setData(response.data)
     } catch (error) {
       console.error('Error fetching data', error)
@@ -152,6 +154,13 @@ function CaregiverAboutCard() {
     try {
       setIsLoading(true)
       await axios.put(`${process.env.NEXT_PUBLIC_API_URL}/caregivers/${id}`, formData)
+      const accountHistoryPayLoad = {
+        actionType: 'Caregiver profile update',
+        details: 'Update caregiver profile information',
+        userId: authUser?.id,
+        caregiverId: id
+      }
+      await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/account-history/log`, accountHistoryPayLoad)
       console.log('FORM DATA', formData)
       setIsEdit(true)
       fetchData() // Refresh data after update

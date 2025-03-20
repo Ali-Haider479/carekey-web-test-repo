@@ -33,6 +33,7 @@ const ClientListApps = () => {
   const [data, setData] = useState<ClientTypes[]>([])
   const [dataWithProfileImg, setDataWithProfileImg] = useState<ClientTypes[]>([])
   const [search, setSearch] = useState('')
+  const [filteredData, setFilteredData] = useState<ClientTypes[]>([])
   const [pmiNumber, setPmiNumber] = useState<DefaultStateType>(defaultState)
   const [state, setState] = useState<DefaultStateType>(defaultState)
   const [serviceTypes, setServiceTypes] = useState<DefaultStateType>(defaultState)
@@ -65,6 +66,20 @@ const ClientListApps = () => {
     }
   }, [data])
 
+  useEffect(() => {
+    if (!search) {
+      setFilteredData(dataWithProfileImg)
+      return
+    }
+
+    const filtered = dataWithProfileImg.filter(item => {
+      const fullName = `${item.firstName} ${item.lastName}`.toLowerCase()
+      return fullName.includes(search.toLowerCase())
+    })
+
+    setFilteredData(filtered)
+  }, [search, dataWithProfileImg])
+
   const getProfileImage = async (key: string) => {
     try {
       const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/client/getProfileUrl/${key}`)
@@ -87,6 +102,7 @@ const ClientListApps = () => {
         })
       )
       setDataWithProfileImg(dataWithPhotoUrls)
+      setFilteredData(dataWithPhotoUrls)
     }
   }
 
@@ -124,6 +140,7 @@ const ClientListApps = () => {
       if (queryParams.toString() === 'page=1&limit=10') {
         const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/client`)
         setDataWithProfileImg(response.data)
+        setFilteredData(response.data)
         return
       }
       console.log('QUERY PARAMS', queryParams)
@@ -133,8 +150,22 @@ const ClientListApps = () => {
       )
       console.log('Filter response ----> ', filterResponse.data.data)
       setDataWithProfileImg(filterResponse.data.data)
+      setFilteredData(filterResponse.data.data)
     } catch (error) {
       console.error('error filtering data', error)
+    }
+  }
+
+  const handleReset = async () => {
+    try {
+      setPmiNumber(defaultState)
+      setState(defaultState)
+      setServiceTypes(defaultState)
+
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/client`)
+      setDataWithProfileImg(response.data)
+    } catch (error) {
+      console.error('Error Reseting Filters: ', error)
     }
   }
 
@@ -305,10 +336,17 @@ const ClientListApps = () => {
                   <MenuItem value={'Personal Care Assistant (PCA)'}>Personal Care Assistant (PCA)</MenuItem>
                 </CustomTextField>
               </Grid>
-              <Grid size={{ xs: 12, sm: 4 }}>
-                <Button type='submit' variant='outlined'>
-                  Apply
-                </Button>
+              <Grid container spacing={12}>
+                <Grid size={{ xs: 12, sm: 4 }}>
+                  <Button type='submit' variant='outlined' className='p-1'>
+                    Apply
+                  </Button>
+                </Grid>
+                <Grid size={{ xs: 12, sm: 4 }}>
+                  <Button onClick={handleReset} color='error' variant='outlined' className='p-1'>
+                    Reset
+                  </Button>
+                </Grid>
               </Grid>
             </Grid>
           </Card>
@@ -319,7 +357,7 @@ const ClientListApps = () => {
               <div className='flex flex-row justify-between'>
                 <TextField
                   className='w-[50%]' // Ensures the input takes up most of the width
-                  placeholder='Search name, phone number, PMI number'
+                  placeholder='Search name'
                   variant='outlined'
                   size='small'
                   value={search}
@@ -342,7 +380,7 @@ const ClientListApps = () => {
                 </Button>
               </div>
             </Grid>
-            {!dataWithProfileImg.length ? (
+            {!filteredData.length ? ( // Changed from dataWithProfileImg to filteredData
               <Card>
                 <div className='flex flex-col items-center justify-center p-10 gap-2'>
                   <Icon className='bx-folder-open text-6xl text-textSecondary' />
@@ -366,7 +404,7 @@ const ClientListApps = () => {
             ) : (
               <ReactTable
                 columns={newColumns}
-                data={dataWithProfileImg}
+                data={filteredData} // Changed from dataWithProfileImg to filteredData
                 keyExtractor={item => item.id.toString()}
                 enablePagination
                 pageSize={5}

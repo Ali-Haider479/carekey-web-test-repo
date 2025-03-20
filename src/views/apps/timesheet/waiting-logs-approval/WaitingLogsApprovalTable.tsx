@@ -79,7 +79,7 @@ const WaitingLogsApprovalTable = ({ data, isLoading }: SignatureStatusTableProps
         const response = await fetch(
           `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10`
         )
-        const data = await response.json();
+        const data = await response.json()
 
         return {
           city:
@@ -249,8 +249,14 @@ const WaitingLogsApprovalTable = ({ data, isLoading }: SignatureStatusTableProps
       minWidth: 170,
       editable: false,
       sortable: true,
-      render: (user: any) => <LocationCell location={user?.startLocation} />
+      render: (user: any) =>
+        user?.isCommunityVisit || !user?.startLocation ? (
+          <Typography color='primary'>Community Visit</Typography>
+        ) : (
+          <LocationCell location={user?.startLocation} />
+        )
     }
+
     // {
     //   id: 'actions',
     //   label: 'ACTION',

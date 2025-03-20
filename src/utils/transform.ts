@@ -53,6 +53,7 @@ interface TimeEntry {
   caregiver: Caregiver
   client: Client
   checkedActivity: any
+  billing: any
 }
 
 interface GroupedTimeEntry {
@@ -112,6 +113,8 @@ export function transformTimesheetDataTwo(entries: TimeEntry[]): GroupedTimeEntr
   return Object.entries(groupedByPair).map(([key, groupEntries]) => {
     const { caregiver, client } = groupEntries[0]
 
+    // Find billing data where claimStatus is 'Approved'
+    const approvedBilling = groupEntries.find(entry => entry.billing?.claimStatus === 'Approved')?.billing || {}
     // If only one entry, return it directly without subRows
     if (groupEntries.length === 1) {
       const entry = groupEntries[0]
@@ -212,7 +215,8 @@ export function transformTimesheetDataTwo(entries: TimeEntry[]): GroupedTimeEntr
       signature: mostRecentSignature,
       subRows: subRowsWithActivities,
       startLocation: latestStartLocation,
-      endLocation: latestEndLocation
+      endLocation: latestEndLocation,
+      billing: Object.keys(approvedBilling).length > 0 ? { dummyRow: true, ...approvedBilling } : approvedBilling
     }
   })
 }

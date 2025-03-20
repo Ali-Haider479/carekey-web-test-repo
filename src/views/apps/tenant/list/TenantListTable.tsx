@@ -18,15 +18,10 @@ import { styled } from '@mui/material/styles'
 import type { TextFieldProps } from '@mui/material/TextField'
 
 // Third-party Imports
-import { rankItem } from '@tanstack/match-sorter-utils'
-import { createColumnHelper } from '@tanstack/react-table'
-import type { ColumnDef, FilterFn } from '@tanstack/react-table'
 
-import { Avatar, CircularProgress } from '@mui/material'
+import { Avatar, CircularProgress, useTheme } from '@mui/material'
 
 import { useSelector } from 'react-redux'
-
-import { dark } from '@mui/material/styles/createPalette'
 
 import type { ThemeColor } from '@core/types'
 import type { UsersType } from '@/types/apps/userTypes'
@@ -42,6 +37,7 @@ import { useAppDispatch } from '@/hooks/useDispatch'
 import ReactTable from '@/@core/components/mui/ReactTable'
 import TenantActionButton from '@/@core/components/mui/TenantActionButton'
 import axios from 'axios'
+import { CarekeyTenantDarkLogo, CarekeyTenantLightLogo } from '@/@core/svg/CarekeyTenantLogo'
 
 type UserRoleType = {
   [key: string]: { icon: string; color: string }
@@ -53,19 +49,6 @@ type UserStatusType = {
 
 // Styled Components
 const Icon = styled('i')({})
-
-const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
-  // Rank the item
-  const itemRank = rankItem(row.getValue(columnId), value)
-
-  // Store the itemRank info
-  addMeta({
-    itemRank
-  })
-
-  // Return if the item should be filtered in/out
-  return itemRank.passed
-}
 
 const DebouncedInput = ({
   value: initialValue,
@@ -110,21 +93,6 @@ const DebouncedInput = ({
   )
 }
 
-// Vars
-const userRoleObj: UserRoleType = {
-  admin: { icon: 'bx-crown', color: 'error' },
-  author: { icon: 'bx-desktop', color: 'warning' },
-  editor: { icon: 'bx-edit', color: 'info' },
-  maintainer: { icon: 'bx-pie-chart-alt', color: 'success' },
-  subscriber: { icon: 'bx-user', color: 'primary' }
-}
-
-const userStatusObj: UserStatusType = {
-  active: 'success',
-  pending: 'warning',
-  inactive: 'secondary'
-}
-
 interface Tenant {
   id: number
   companyName: string
@@ -139,11 +107,6 @@ interface Tenant {
   users: any
 }
 
-type TenantWithAction = Tenant & {
-  action: string
-  plan: string
-}
-
 // Column Definitions
 
 const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
@@ -155,6 +118,8 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
   const [isLoading, setIsLoading] = useState(true)
   const tenantStore = useSelector((state: { tenantReducer: any }) => state.tenantReducer)
   const [tenantFilteredList, setTenantFilteredList] = useState<any>([])
+  const theme = useTheme()
+  const dark = theme.palette.mode === 'dark'
 
   const fetchInitialData = async () => {
     try {
@@ -220,8 +185,8 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
       minWidth: 170,
       render: (user: any) => (
         <div className='flex flex-row'>
-          <div className='bg-[#BDBDBD] rounded-md flex items-center justify-center h-10 w-10'>
-            <Typography className='text-lg font-semibold text-white'>{getInitials(user?.companyName)}</Typography>
+          <div className='flex items-center justify-center'>
+            {dark ? <CarekeyTenantDarkLogo /> : <CarekeyTenantLightLogo />}
           </div>
           <div className='ml-2'>
             <Typography className={`font-semibold`} color='primary'>

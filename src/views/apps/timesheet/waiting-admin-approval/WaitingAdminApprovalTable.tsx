@@ -46,28 +46,15 @@ interface Signature {
   timeLog: any[]
 }
 
-const WaitingAdminApprovalTable = () => {
+interface SignatureStatusTableProps {
+  data: []
+  isLoading: boolean
+}
+
+const WaitingAdminApprovalTable = ({ data, isLoading }: SignatureStatusTableProps) => {
   const [filteredData, setFilteredData] = useState<any>([])
   const [globalFilter, setGlobalFilter] = useState('')
   const [rowSelection, setRowSelection] = useState({})
-  const [isLoading, setIsLoading] = useState(true)
-
-  // Fetch signatures data
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/signatures`)
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/time-log`)
-        // setFilteredData(response.data.filter((item: any) => item.clockOut != null))
-        setFilteredData(transformTimesheetDataTwo(response.data.filter((item: any) => item.clockOut != null)))
-        setIsLoading(false)
-      } catch (error) {
-        console.error('Error fetching signatures:', error)
-        setIsLoading(false)
-      }
-    }
-    fetchData()
-  }, [])
 
   const columns = [
     {
@@ -204,7 +191,7 @@ const WaitingAdminApprovalTable = () => {
     <div style={{ overflowX: 'auto', padding: '0px' }}>
       <ReactTable
         columns={columns}
-        data={filteredData}
+        data={data}
         keyExtractor={user => user.id.toString()}
         enableRowSelect
         enablePagination

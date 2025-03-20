@@ -64,7 +64,7 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
   const [currentEditedData, setCurrentEditedData] = useState<any>(null)
   const [alertOpen, setAlertOpen] = useState(false)
   const [alertProps, setAlertProps] = useState<any>()
-
+  const [selectedRows, setSelectedRows] = useState<any[]>([])
   const handleActionClick = (event: React.MouseEvent<HTMLElement>, user: any) => {
     event.stopPropagation()
     setAnchorEl(event.currentTarget)
@@ -87,102 +87,157 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
     // handleCloseMenu()
   }
 
-  const handleSave = async (user: any) => {
-    console.log('USER TWO', currentEditedData)
-    console.log('USER ONE', data)
+  const handleSave = async () => {
     const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
     const userId = authUser?.id
-
-    // Function to find user in main array or subRows
-    const findUser = (data: any[], targetId: number | string): any => {
-      // First check main level
+    const findUser = (data: any[], targetId: string | number): { user: any; isDummyRow: boolean } => {
       let currentUser = data.find((item: any) => item.id === targetId)
-
       if (currentUser) {
-        return currentUser
+        return { user: currentUser, isDummyRow: !!currentUser.subRows }
       }
 
-      // If not found in main level, search in subRows
       for (const item of data) {
         if (item.subRows && Array.isArray(item.subRows)) {
           currentUser = item.subRows.find((subItem: any) => subItem.id === targetId)
           if (currentUser) {
-            return currentUser
+            return { user: currentUser, isDummyRow: false }
           }
         }
       }
-
-      return null
+      return { user: null, isDummyRow: false }
     }
 
-    const currentUser = findUser(data, currentEditedData.id)
-    console.log('USER THREE', currentUser)
+    const { user: currentUser, isDummyRow } = findUser(data, currentEditedData.id)
 
-    // If user not found, handle the error
     if (!currentUser) {
       setAlertOpen(true)
       setAlertProps({
         message: 'User not found in the data.',
         severity: 'error'
       })
+      handleCancelEdit()
       return
     }
 
-    // Check if signatureStatus is Pending
-    if (currentUser?.signature?.signatureStatus === 'Pending') {
-      console.log('INSIDE IF SP')
+    if (currentUser?.signature?.signatureStatus === 'Pending' || currentUser?.client?.serviceAuth?.length === 0) {
       setAlertOpen(true)
       setAlertProps({
-        message: 'Please approve the signature before editing.',
+        message:
+          currentUser?.signature?.signatureStatus === 'Pending'
+            ? 'Please approve the signature before editing.'
+            : 'Please complete the service authorization before editing.',
         severity: 'error'
       })
+      handleCancelEdit()
       return
     }
 
-    // Check if serviceAuth exists
-    if (currentUser?.client?.serviceAuth?.length === 0) {
-      console.log('INSIDE IF SA')
-      setAlertOpen(true)
-      setAlertProps({
-        message: 'Please complete the service authorization before editing.',
-        severity: 'error'
-      })
-      return
+    if (currentUser?.billing && Object.keys(currentUser.billing).length > 0) {
+      if (currentUser?.billing?.claimStatus?.includes('Approved')) {
+        setAlertOpen(true)
+        if (currentUser?.subRows?.length > 0 && currentUser?.billing?.dummyRow) {
+          setAlertProps({
+            message: 'Please update timelogs manually.',
+            severity: 'error'
+          })
+          handleCancelEdit()
+        } else {
+          setAlertProps({
+            message: 'Cannot update timelog because billing has already been approved.',
+            severity: 'error'
+          })
+        }
+        return
+      }
     }
 
     try {
-      // Reset states
-      const payload = {
-        id: currentEditedData.id,
+      const basePayload = {
         tsApprovalStatus: currentEditedData.tsApprovalStatus,
         userId
-        // clockIn: currentEditedData.clockIn,
-        // clockOut: currentEditedData.clockOut
       }
-      console.log('PAYLOAD UPDATE TS', payload)
-      const res = await axios.patch(`${process.env.NEXT_PUBLIC_API_URL}/time-log/update-ts-approval`, payload)
 
-      if (currentEditedData.tsApprovalStatus === 'Approved') {
-        console.log('CURRENT EDITED DATA ONE', currentEditedData)
-        const hrs = calculateHoursWorked(currentUser?.clockIn, currentUser?.clockOut)
-        const billedAmount = parseFloat(hrs) * currentUser?.client?.serviceAuth[0]?.serviceRate
+      let updatePromises: Promise<any>[] = []
+      let rowsToUpdate: any[] = []
 
-        const billingPayload = {
-          timeLogId: currentUser.id,
-          claimDate: null,
-          billedAmount: Number(billedAmount.toFixed(2)),
-          receivedAmount: 0,
-          claimStatus: 'Pending',
-          billedStatus: 'Pending'
+      if (isDummyRow) {
+        const selectedSubRowIds = selectedRows
+          .filter(
+            row => row.id !== currentEditedData.id && currentUser.subRows.some((subRow: any) => subRow.id === row.id)
+          )
+          .map(row => row.id)
+
+        if (selectedSubRowIds.length === 0) {
+          setAlertOpen(true)
+          setAlertProps({
+            message: 'Please select at least one sub-row to update.',
+            severity: 'warning'
+          })
+          return
         }
-        console.log('BILLING PP ONE', billingPayload)
-        const createBilling = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/time-log/billing`, billingPayload)
-        console.log('createBilling', createBilling)
-      } else if (
-        currentEditedData.tsApprovalStatus === 'Rejected' ||
-        currentEditedData.tsApprovalStatus === 'Pending'
-      ) {
-        console.log('Timesheet is Rejected ONE')
+
+        rowsToUpdate = currentUser.subRows.filter((subRow: any) => selectedSubRowIds.includes(subRow.id))
+
+        const subRowUpdates = rowsToUpdate.map((subRow: any) => ({
+          id: subRow.id,
+          ...basePayload
+        }))
+
+        updatePromises = subRowUpdates.map((payload: any) =>
+          axios.patch(`${process.env.NEXT_PUBLIC_API_URL}/time-log/update-ts-approval`, payload)
+        )
+      } else {
+        rowsToUpdate = [currentUser]
+        updatePromises.push(
+          axios.patch(`${process.env.NEXT_PUBLIC_API_URL}/time-log/update-ts-approval`, {
+            id: currentEditedData.id,
+            ...basePayload
+          })
+        )
+      }
+
+      const updateResponses = await Promise.all(updatePromises)
+
+      // Handle billing creation or removal based on tsApprovalStatus
+      if (currentEditedData.tsApprovalStatus === 'Approved') {
+        const billingPromises = []
+
+        for (const row of rowsToUpdate) {
+          const hrs = calculateHoursWorked(row.clockIn, row.clockOut)
+          const billedAmount = parseFloat(hrs) * row.client.serviceAuth[0].serviceRate
+
+          billingPromises.push(
+            axios.post(`${process.env.NEXT_PUBLIC_API_URL}/time-log/billing`, {
+              timeLogId: row.id,
+              claimDate: null,
+              billedAmount: Number(billedAmount.toFixed(2)),
+              receivedAmount: 0,
+              claimStatus: 'Pending',
+              billedStatus: 'Pending'
+            })
+          )
+        }
+
+        const billingResponses = await Promise.all(billingPromises)
+      } else {
+        // } else if (currentUser?.billing?.id) {
+        const billingDeletePromises = []
+
+        // Delete billing for all updated rows that have billing
+        for (const row of rowsToUpdate) {
+          if (row?.billing?.id) {
+            billingDeletePromises.push(
+              axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/time-log/remove-billing/${row.billing.id}`)
+            )
+          }
+        }
+
+        if (billingDeletePromises.length > 0) {
+          const billingDeleteResponses = await Promise.all(billingDeletePromises)
+          console.log('INSIDE CALL Billing delete responses:', billingDeleteResponses)
+        } else {
+          console.log('INSIDE CALL NO BILLING TO DELETE')
+        }
       }
 
       await fetchInitialData()
@@ -191,6 +246,11 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
       setEditedValues({})
     } catch (error) {
       console.error('Error saving data', error)
+      setAlertOpen(true)
+      setAlertProps({
+        message: 'Failed to save changes. Please try again.',
+        severity: 'error'
+      })
     }
   }
 
@@ -241,21 +301,6 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
         </Tooltip>
       )
     },
-    // {
-    //   id: 'activities',
-    //   label: 'ACTIVITIES',
-    //   minWidth: 170,
-    //   editable: false,
-    //   sortable: true,
-    //   render: (user: any) => (
-    //     <Tooltip title={user?.activities || ''} placement='top'>
-    //       <Typography color='primary'>
-    //         {user?.activities?.slice(0, 20) || '---'}
-    //         {user?.activities?.length > 20 ? '...' : ''}
-    //       </Typography>
-    //     </Tooltip>
-    //   )
-    // },
     {
       id: 'timeDuration',
       label: 'HRS WORKED',
@@ -271,21 +316,6 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
         }
       }
     },
-    // {
-    //   id: 'notes',
-    //   label: 'NOTES',
-    //   minWidth: 170,
-    //   editable: false,
-    //   sortable: true,
-    //   render: (user: any) => (
-    //     <Tooltip title={user?.notes || ''} placement='top'>
-    //       <Typography color='primary'>
-    //         {user?.notes?.slice(0, 20) || '---'}
-    //         {user?.notes?.length > 20 ? '...' : ''}
-    //       </Typography>
-    //     </Tooltip>
-    //   )
-    // },
     {
       id: 'dateOfService',
       label: 'DATE OF SERVICE',
@@ -392,7 +422,7 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
           user={user}
           selectedUser={selectedUser}
           anchorEl={anchorEl}
-          disabled={!!user.subRows && user.subRows.length > 0}
+          // disabled={!!user.subRows && user.subRows.length > 0}
         />
       )
     }
@@ -410,6 +440,10 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
 
   const handleEditChange = (updatedRow: any) => {
     setCurrentEditedData(updatedRow)
+  }
+
+  const handleSelect = (selectedRowsData: any) => {
+    setSelectedRows(selectedRowsData)
   }
 
   // Assuming your first file data is in originalTimeEntries
@@ -433,6 +467,7 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
           editingId={editingId}
           onSave={handleSave}
           onEditChange={handleEditChange}
+          onSelectionChange={handleSelect}
         />
       </div>
     </>
