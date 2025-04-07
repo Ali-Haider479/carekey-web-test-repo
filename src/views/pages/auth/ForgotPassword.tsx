@@ -67,7 +67,7 @@ const ForgotPassword = () => {
     try {
       const response: AxiosResponse<{ message: string }> = await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/auth/forgot-password`,
-        { email },
+        { email: email.toLowerCase() },
         {
           headers: {
             'Content-Type': 'application/json'

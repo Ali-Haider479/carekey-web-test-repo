@@ -9,7 +9,7 @@ import Grid from '@mui/material/Grid2'
 import axios from 'axios'
 import ControlledDatePicker from '@/@core/components/custom-inputs/ControledDatePicker'
 import ControlledTextArea from '@/@core/components/custom-inputs/ControlledTextArea'
-import USStates from '@/utils/constants'
+import { USStates } from '@/utils/constants'
 
 type Props = {
   onFinish: any
@@ -282,7 +282,7 @@ const LoginInfoComponent = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
                   error={errors.unassignmentDate}
                   disabled={!assignClientEnabled}
                   minDate={watch('assignmentDate') || undefined}
-                  isRequired={!assignClientEnabled ? false : true}
+                  isRequired={false}
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 4 }}>

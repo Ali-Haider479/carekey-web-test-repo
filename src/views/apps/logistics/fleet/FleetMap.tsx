@@ -21,8 +21,12 @@ type Props = {
       type: string
       geometry: {
         type: string
-        longitude: number
-        latitude: number
+        coordinates: [number, number] // Updated to match GeoJSON standard
+      }
+      properties: {
+        id: string
+        caregiverName: string
+        clientName: string
       }
     }[]
   }
@@ -30,39 +34,37 @@ type Props = {
 }
 
 const FleetMap = (props: Props) => {
-  // Vars
   const { carIndex, viewState, geojson, mapboxAccessToken } = props
 
-  // Hooks
-  const mapRef = useRef<MapRef>()
+  const mapRef = useRef<MapRef>(null)
 
   useEffect(() => {
-    mapRef.current?.flyTo({ center: [viewState.longitude, viewState.latitude], zoom: 16 })
+    // Only fly to the location when viewState changes, respecting the passed zoom
+    mapRef.current?.flyTo({
+      center: [viewState.longitude, viewState.latitude],
+      zoom: viewState.zoom
+    })
   }, [viewState])
 
   return (
     <div className='is-full bs-full rounded-lg border-2 p-0.5'>
       <Map
         mapboxAccessToken={mapboxAccessToken}
-        // eslint-disable-next-line lines-around-comment
-        // @ts-ignore
         ref={mapRef}
-        // initialViewState={{ longitude: -73.999024, latitude: 40.75249842, zoom: 12.5 }}
+        initialViewState={viewState} // Set initialViewState to respect the passed viewState
         mapStyle='mapbox://styles/mapbox/light-v9'
         attributionControl={false}
       >
-        {geojson.features.map((item, index) => {
-          return (
-            <Marker
-              key={index}
-              longitude={item.geometry.longitude}
-              latitude={item.geometry.latitude}
-              style={{ display: 'flex' }}
-            >
-              <i className='bx-target-lock text-gray-800' />
-            </Marker>
-          )
-        })}
+        {geojson.features.map((item, index) => (
+          <Marker
+            key={index}
+            longitude={item.geometry.coordinates[0]} // Use coordinates array
+            latitude={item.geometry.coordinates[1]} // Use coordinates array
+            style={{ display: 'flex' }}
+          >
+            <i className='bx-target-lock text-gray-800' />
+          </Marker>
+        ))}
       </Map>
     </div>
   )

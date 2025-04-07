@@ -16,7 +16,7 @@ import Card from '@mui/material/Card'
 import { useForm } from 'react-hook-form'
 import axios from 'axios'
 import { Button, Typography } from '@mui/material'
-import USStates from '@/utils/constants'
+import { USStates } from '@/utils/constants'
 
 interface DefaultStateType {
   accountStatus: string

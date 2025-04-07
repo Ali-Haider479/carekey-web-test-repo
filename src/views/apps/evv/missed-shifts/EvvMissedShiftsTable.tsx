@@ -85,7 +85,7 @@ const EvvMissedShiftsTable = ({ timeLogData, isLoading }: Props) => {
       editable: false,
       sortable: true,
       render: (user: any) => (
-        <Typography color='primary'>{user?.client?.serviceAuth[0]?.procedureAndModifier || 'N/A'}</Typography>
+        <Typography color='primary'>{user?.client?.serviceAuth?.[0]?.procedureCode || 'N/A'}</Typography>
       )
     },
     {

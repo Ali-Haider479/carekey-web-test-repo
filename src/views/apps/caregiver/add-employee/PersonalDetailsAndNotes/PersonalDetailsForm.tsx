@@ -20,7 +20,7 @@ import CustomTextField from '@core/components/custom-inputs/CustomTextField'
 import CustomDropDown from '@core/components/custom-inputs/CustomDropDown'
 import { PersonalDetailsFormDataType } from '../types'
 import ControlledDatePicker from '@/@core/components/custom-inputs/ControledDatePicker'
-import USStates from '@/utils/constants'
+import { USStates } from '@/utils/constants'
 
 type Props = {
   // form?: any

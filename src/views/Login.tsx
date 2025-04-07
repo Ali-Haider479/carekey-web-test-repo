@@ -96,7 +96,7 @@ const Login = () => {
 
   const onSubmit: SubmitHandler<FormData> = async (data: FormData) => {
     const res = await signIn('credentials', {
-      email: data.email,
+      email: data.email.toLowerCase(),
       password: data.password,
       redirect: false
     })

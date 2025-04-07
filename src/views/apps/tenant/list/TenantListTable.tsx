@@ -204,13 +204,13 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
       render: (user: any) => (
         <div className='flex flex-row'>
           <div>
-            <Avatar src={user?.users?.[0].profileImageUrl} alt={user?.firstName} />
+            <Avatar src={user?.users?.[0]?.profileImageUrl} alt={user?.firstName} />
           </div>
           <div className='ml-2'>
             <Typography className='font-semibold' color='primary'>
-              {user?.users?.[0].userName}
+              {user?.users?.[0]?.userName}
             </Typography>
-            <Typography className='text-sm'>{user?.users?.[0].emailAddress}</Typography>
+            <Typography className='text-sm'>{user?.users?.[0]?.emailAddress}</Typography>
           </div>
         </div>
       )

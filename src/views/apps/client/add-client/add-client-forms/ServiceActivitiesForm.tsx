@@ -175,7 +175,7 @@ const ServiceActivitiesForm = forwardRef<{ handleSubmit: any }, Props>(({ onFini
                   error={errors.unassignmentDate}
                   disabled={!assignCaregiverEnabled}
                   minDate={watch('assignmentDate') || undefined}
-                  isRequired={!assignCaregiverEnabled ? false : true}
+                  isRequired={false}
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 4 }}>

@@ -16,7 +16,7 @@ import { useParams } from 'next/navigation'
 import axios from 'axios'
 
 const BillingAddress = () => {
-  const { id } = useParams();
+  const { id } = useParams()
   const [tenantData, setTenantData] = useState<any>([])
 
   const buttonProps: ButtonProps = {
@@ -31,24 +31,22 @@ const BillingAddress = () => {
     // Define an async function inside useEffect
     const fetchTenantData = async () => {
       try {
-        const response = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_URL}/tenant/${id}`
-        );
-        const data = response.data;
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/tenant/${id}`)
+        const data = response.data
 
         // Optionally save the data to localStorage
-        localStorage.setItem("view-tenant", JSON.stringify(data));
+        localStorage.setItem('view-tenant', JSON.stringify(data))
 
         // Update the state with fetched data
-        setTenantData(data);
+        setTenantData(data)
       } catch (error) {
-        console.error("Error fetching tenant data:", error);
+        console.error('Error fetching tenant data:', error)
       }
-    };
+    }
 
     // Call the async function
-    fetchTenantData();
-  }, [id]); // Re-run the effect if `id` changes
+    fetchTenantData()
+  }, [id]) // Re-run the effect if `id` changes
 
   return (
     <>

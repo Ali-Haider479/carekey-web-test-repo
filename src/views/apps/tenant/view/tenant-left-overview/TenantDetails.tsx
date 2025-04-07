@@ -7,26 +7,21 @@ import Chip from '@mui/material/Chip'
 import Divider from '@mui/material/Divider'
 import Button from '@mui/material/Button'
 import type { ButtonProps } from '@mui/material/Button'
-
 // Type Imports
 import type { ThemeColor } from '@core/types'
-
 // Component Imports
-import EditUserInfo from '@components/dialogs/edit-user-info'
 import EditTenantInfo from '@/components/dialogs/edit-tenant-info'
 import ConfirmationDialog from '@components/dialogs/confirmation-dialog'
 import OpenDialogOnElementClick from '@components/dialogs/OpenDialogOnElementClick'
 import CustomAvatar from '@core/components/mui/Avatar'
-import { useSelector } from 'react-redux'
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import axios from 'axios'
 import { CircularProgress } from '@mui/material'
 import ProfileAvatar from '@/@core/components/mui/ProfileAvatar'
 
-const TenantDetails = () => {
+const TenantDetails = ({ tenantData }: any) => {
   const { id } = useParams()
-  const [tenantData, setTenantData] = useState<any>([])
   const [adminUserName, setAdminUserName] = useState<string>('')
   const [fileUrl, setFileUrl] = useState<string>('')
   const [loading, setLoading] = useState<boolean>(true)
@@ -57,12 +52,8 @@ const TenantDetails = () => {
     const fetchTenantData = async () => {
       try {
         setLoading(true)
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/tenant/${id}`)
-        const data = response.data
-        console.log('DATATATATATAT', data)
-        setTenantData(data)
 
-        const admin = data?.users?.find((user: any) => user.role.title === 'Tenant Admin')
+        const admin = tenantData?.users?.find((user: any) => user.role.title === 'Tenant Admin')
         console.log('ADMIN', admin)
 
         if (admin?.userName) {
@@ -99,8 +90,6 @@ const TenantDetails = () => {
         }
       )
 
-      console.log('Tenant Data', tenantData)
-
       if (response.data?.profileImageUrl) {
         // Update the image URL immediately
         updateImageUrl(response.data.profileImageUrl)
@@ -124,6 +113,7 @@ const TenantDetails = () => {
       </Card>
     )
   }
+  console.log('Tenant Data', tenantData)
 
   return (
     <>

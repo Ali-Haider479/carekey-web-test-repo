@@ -155,8 +155,8 @@ function CaregiverAboutCard() {
       setIsLoading(true)
       await axios.put(`${process.env.NEXT_PUBLIC_API_URL}/caregivers/${id}`, formData)
       const accountHistoryPayLoad = {
-        actionType: 'Caregiver profile update',
-        details: 'Update caregiver profile information',
+        actionType: 'CaregiverProfileInfoUpdate',
+        details: `Caregiver (ID: ${id}) profile information updated by User (ID: ${authUser?.id})`,
         userId: authUser?.id,
         caregiverId: id
       }

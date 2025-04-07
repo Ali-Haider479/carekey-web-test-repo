@@ -51,8 +51,8 @@ const LogsApprovalFilters = ({ onFilterApplied }: SignatureStatusFiltersProps) =
 
       if (filterData.clientName) queryParams.append('clientName', filterData.clientName)
       if (filterData.caregiverName) queryParams.append('caregiverName', filterData.caregiverName)
-      if (filterData.startDate) queryParams.append('clockIn', filterData.startDate.toISOString())
-      if (filterData.endDate) queryParams.append('clockOut', filterData.endDate.toISOString())
+      if (filterData.startDate) queryParams.append('clockIn', filterData.startDate.toISOString().split('T')[0])
+      if (filterData.endDate) queryParams.append('clockOut', filterData.endDate.toISOString().split('T')[0])
       // if (filterData.tsApprovalStatus) queryParams.append('tsApprovalStatus', filterData.tsApprovalStatus)
       queryParams.append('page', '1')
       queryParams.append('limit', '10')

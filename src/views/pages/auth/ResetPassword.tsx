@@ -96,7 +96,8 @@ const ResetPassword = ({ token, lang }: ResetPasswordProps) => {
       setAlertProps({ severity: 'success', message: response.data.message })
       setAlertOpen(true)
       setTimeout(() => {
-        window.location.href = getLocalizedUrl('/pages/auth/login-v2', lang)
+        // window.location.href = getLocalizedUrl('/pages/auth/login-v2', lang)
+        router.replace('/pages/auth/CareKeyLogin')
       }, 2000)
     } catch (error: any) {
       setAlertProps({
@@ -200,7 +201,7 @@ const ResetPassword = ({ token, lang }: ResetPasswordProps) => {
                 {isLoading ? 'Setting...' : 'Set New Password'}
               </Button>
               <Typography className='flex justify-center items-center' color='primary.main'>
-                <Link href={getLocalizedUrl('/pages/auth/login-v2', lang)} className='flex items-center gap-1'>
+                <Link href={getLocalizedUrl('/pages/auth/CareKeyLogin', lang)} className='flex items-center gap-1'>
                   <DirectionalIcon ltrIconClass='bx-chevron-left' rtlIconClass='bx-chevron-right' />
                   <span>Back to Login</span>
                 </Link>

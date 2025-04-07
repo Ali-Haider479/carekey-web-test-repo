@@ -7,8 +7,8 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
 import CustomDropDown from '@/@core/components/custom-inputs/CustomDropDown'
 import CustomTextField from '@/@core/components/custom-inputs/CustomTextField'
 import PCAUMPITable from '../PcaUmpi/PCAUMPITable'
-import USStates from '@/utils/constants'
 import ControlledDatePicker from '@/@core/components/custom-inputs/ControledDatePicker'
+import { USStates } from '@/utils/constants'
 
 type Props = {
   onFinish: (data: any) => void

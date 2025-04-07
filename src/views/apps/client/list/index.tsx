@@ -14,7 +14,7 @@ import { useRouter } from 'next/navigation'
 import ReactTable from '@/@core/components/mui/ReactTable'
 import { useForm } from 'react-hook-form'
 import CustomTextField from '@/@core/components/mui/TextField'
-import USStates from '@/utils/constants'
+import { USStates } from '@/utils/constants'
 
 interface DefaultStateType {
   pmiNumber: string
@@ -132,7 +132,7 @@ const ClientListApps = () => {
 
       if (pmiNumber.pmiNumber) queryParams.append('pmiNumber', pmiNumber.pmiNumber)
       if (state.state) queryParams.append('state', state.state)
-      if (serviceTypes.serviceTypes) queryParams.append('service', serviceTypes.serviceTypes)
+      if (serviceTypes.serviceTypes) queryParams.append('serviceType', serviceTypes.serviceTypes)
       queryParams.append('page', '1')
       queryParams.append('limit', '10')
 
@@ -334,6 +334,7 @@ const ClientListApps = () => {
                   }}
                 >
                   <MenuItem value={'Personal Care Assistant (PCA)'}>Personal Care Assistant (PCA)</MenuItem>
+                  <MenuItem value={'Individualized Home Supports (IHS)'}>Individualized Home Supports (IHS)</MenuItem>
                 </CustomTextField>
               </Grid>
               <Grid container spacing={12}>

@@ -2,24 +2,22 @@
 import DataTable from '@/@core/components/mui/DataTable'
 import CustomTextField from '@/@core/components/mui/TextField'
 import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
+import { formatDateTime } from '@/utils/helperFunctions'
 import { SearchOutlined } from '@mui/icons-material'
-import { Box, Card, Input, List, ListItem, ListItemText, Paper, Typography } from '@mui/material'
+import { Button, Card, CardHeader, Input, MenuItem, TextField, Typography } from '@mui/material'
+import Grid from '@mui/material/Grid2'
 import { GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
-import React, { useState, forwardRef } from 'react'
+import axios from 'axios'
+import { useParams } from 'next/navigation'
+import React, { useState, forwardRef, useEffect } from 'react'
 
 interface DefaultStateType {
-  url: string
-  title: string
-  allDay: boolean
-  calendar: string
-  description: string
-  endDate: Date
-  startDate: Date
-  guests: string[] | undefined
+  actionType: string
+  startDate: string // Changed to string to match ISO format
 }
 
 interface PickerProps {
-  label?: string
+  placeholder?: string
   error?: boolean
   className?: string
   id?: string
@@ -27,14 +25,8 @@ interface PickerProps {
 }
 
 const defaultState: DefaultStateType = {
-  url: '',
-  title: '',
-  guests: [],
-  allDay: true,
-  description: '',
-  endDate: new Date(),
-  calendar: 'Business',
-  startDate: new Date()
+  actionType: '',
+  startDate: '' // Empty string instead of new Date()
 }
 
 const PickersComponent = forwardRef(({ ...props }: PickerProps, ref) => {
@@ -43,7 +35,7 @@ const PickersComponent = forwardRef(({ ...props }: PickerProps, ref) => {
       inputRef={ref}
       fullWidth
       {...props}
-      label={props.label || ''}
+      placeholder={props.placeholder || ''}
       className={props.className}
       id={props.id}
       error={props.error}
@@ -52,112 +44,167 @@ const PickersComponent = forwardRef(({ ...props }: PickerProps, ref) => {
 })
 
 const AccountHistory = () => {
-  const [values, setValues] = useState<DefaultStateType>(defaultState)
-  const data = [
-    {
-      id: '1',
-      dateTime: '04/28/2024, 02:12 pm',
-      admin: 'Sameer khan',
-      section: 'Profile',
-      changes: ['Updated Assign client - Yolanda Jordan']
+  const [values, setValues] = useState(defaultState)
+  const [userActions, setUserActions] = useState<any>([])
+  const [originalUserActions, setOriginalUserActions] = useState([])
+  const [loading, setLoading] = useState(true)
+  const { id } = useParams()
+
+  useEffect(() => {
+    const fetchUserActions = async () => {
+      try {
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/account-history/client/${id}`)
+        setUserActions(response.data)
+        setOriginalUserActions(response.data)
+      } catch (err) {
+        console.error(err)
+      } finally {
+        setLoading(false)
+      }
     }
-  ]
 
-  const listData = [
-    'Removed Hss User',
-    'Updated Agency Location-868005',
-    'Updated Agency Location-868006',
-    'Updated Agency Location-868007',
-    'Updated Agency Location-868009',
-    'Removed Payor Group Information HSS-a:5'
-  ]
+    fetchUserActions()
+  }, [id])
 
-  const columns: GridColDef[] = [
+  const newColumns: GridColDef[] = [
     {
-      headerName: 'Date & Time',
-      field: 'dateTime',
-      flex: 0.75
-    },
-    {
-      headerName: 'Admin',
-      field: 'admin',
-      flex: 0.75
-    },
-    {
-      headerName: 'Section',
-      field: 'section',
-      flex: 0.75
-    },
-    {
-      headerName: 'Changes Made',
-      field: 'changes',
-      flex: 1.75,
+      field: 'createdAt',
+      headerName: 'DATE & TIME',
+      flex: 0.5,
       renderCell: (params: GridRenderCellParams) => (
-        <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-          {Array.isArray(params.value) &&
-            params.value.map((change: string, index: number) => (
-              <li
-                key={index}
-                style={{
-                  marginBottom: '0.25rem',
-                  color: change.includes('Removed') ? 'red' : ''
-                }}
-              >
-                {change}
-              </li>
-            ))}
-        </ul>
+        <Typography className='font-light text-sm my-3'>{formatDateTime(params.value)}</Typography>
+      )
+    },
+    {
+      field: 'userId',
+      headerName: 'ADMIN',
+      flex: 0.5,
+      renderCell: (params: GridRenderCellParams) => (
+        <Typography className='font-light text-sm my-3'>{params.row.user.userName}</Typography>
+      )
+    },
+    {
+      field: 'actionType',
+      headerName: 'SECTION',
+      flex: 0.5,
+      renderCell: (params: GridRenderCellParams) => (
+        <Typography className='font-light text-sm my-3'>{params.value}</Typography>
+      )
+    },
+    {
+      field: 'details',
+      headerName: 'CHANGES MADE',
+      flex: 0.5,
+      renderCell: (params: GridRenderCellParams) => (
+        <Typography className='font-light text-sm my-3'>{params.value}</Typography>
       )
     }
   ]
 
-  const handleStartDate = (date: Date | null) => {
-    if (date && date > values.endDate) {
-      setValues({ ...values, startDate: new Date(date), endDate: new Date(date) })
+  const applyFilters = (data: any[], filters: typeof defaultState) => {
+    return data.filter(action => {
+      const matchesActionType = filters.actionType ? action.actionType === filters.actionType : true
+
+      const filterStartDate = filters.startDate ? new Date(filters.startDate).getTime() : null
+      const actionCreatedAt = new Date(action.createdAt).getTime()
+
+      const matchesStartDate = filterStartDate ? actionCreatedAt >= filterStartDate : true
+
+      console.log('FILTER DEBUG:', {
+        actionType: action.actionType,
+        matchesActionType,
+        createdAt: action.createdAt,
+        startDate: filters.startDate,
+        matchesStartDate
+      })
+
+      return matchesActionType && matchesStartDate
+    })
+  }
+
+  const onSubmit = async (e: any) => {
+    e.preventDefault()
+    try {
+      console.log('FILTER VALUES:', values)
+      const filteredActions = applyFilters(originalUserActions, values)
+      console.log('FILTERED ACTIONS:', filteredActions)
+      setUserActions(filteredActions)
+    } catch (error) {
+      console.error('Error applying filters:', error)
     }
   }
 
+  const handleReset = async () => {
+    try {
+      setValues(defaultState)
+      setUserActions(originalUserActions)
+    } catch (error) {
+      console.error('Error resetting filters:', error)
+    }
+  }
+
+  console.log('USER ACTIONS', userActions)
   return (
     <>
-      <Card className=' w-full flex flex-col h-[152px] p-4 shadow-md rounded-lg'>
-        <span className='ml-2 text-2xl font-bold'>Filters</span>
-        <AppReactDatepicker
-          className='w-[534px] h-14 mt-4 ml-3 '
-          selectsStart
-          id='event-start-date'
-          endDate={values.endDate}
-          selected={values.startDate}
-          startDate={values.startDate}
-          showTimeSelect={!values.allDay}
-          dateFormat={!values.allDay ? 'yyyy-MM-dd hh:mm' : 'yyyy-MM-dd'}
-          customInput={<PickersComponent label='' registername='startDate' className='mbe-6' id='event-start-date' />}
-          onChange={(date: Date | null) => date !== null && setValues({ ...values, startDate: new Date(date) })}
-          onSelect={handleStartDate}
-          icon={<SearchOutlined />}
-        />
-      </Card>
-      <Card className=' h-full w-full mt-3 shadow-md rounded-lg p-1'>
+      <form onSubmit={onSubmit} autoComplete='off'>
+        <Card className='w-full' sx={{ borderRadius: 1, boxShadow: 2 }}>
+          <CardHeader title='Filters' titleTypographyProps={{ variant: 'h3', sx: { fontWeight: 500 } }} />
+          <Grid container spacing={4}>
+            <Grid size={{ xs: 12, md: 4 }} sx={{ ml: 6 }}>
+              <AppReactDatepicker
+                id='event-start-date'
+                selected={values.startDate ? new Date(values.startDate) : null}
+                startDate={values.startDate ? new Date(values.startDate) : null}
+                dateFormat={'yyyy-MM-dd'}
+                customInput={
+                  <PickersComponent
+                    placeholder='Start Date'
+                    registername='startDate'
+                    className='mbe-6'
+                    id='event-start-date'
+                  />
+                }
+                onChange={(date: Date | null) =>
+                  date !== null && setValues({ ...values, startDate: date.toISOString() })
+                }
+              />
+            </Grid>
+            <Grid size={{ xs: 12, md: 4 }}>
+              <TextField
+                select
+                fullWidth
+                placeholder='Actions'
+                label='Actions'
+                size='small'
+                value={values.actionType}
+                id='event-actions'
+                onChange={e => setValues({ ...values, actionType: e.target.value })}
+              >
+                <MenuItem value=''>All Actions</MenuItem> {/* Added for no filter */}
+                <MenuItem value='ClientProfileImageUpdate'>Profile Image</MenuItem>
+                <MenuItem value='ClientProfileInfoUpdate'>Profile Info</MenuItem>
+                <MenuItem value='ClientServiceAuthCreate'>Service Auth Create</MenuItem>
+                <MenuItem value='ClientServiceAuthUpdate'>Service Auth Update</MenuItem>
+              </TextField>
+            </Grid>
+            <Grid container spacing={12}>
+              <Grid size={{ xs: 12, sm: 4 }}>
+                <Button type='submit' variant='contained' className='px-1'>
+                  Apply
+                </Button>
+              </Grid>
+              {/* <Grid size={{ xs: 12, sm: 4 }}>
+                <Button onClick={handleReset} color='error' variant='outlined' className='px-1'>
+                  Reset
+                </Button>
+              </Grid> */}
+            </Grid>
+          </Grid>
+        </Card>
+      </form>
+      <Card className='h-full w-full mt-3 shadow-md rounded-lg p-1'>
         <Input endAdornment={<SearchOutlined />} className='w-[534px] !h-[40px] m-4' placeholder='Search Admin name' />
-        <DataTable
-          columns={columns}
-          data={data}
-          paginationConfig={{ pages: 1, pageSize: 1 }}
-          checkboxSelection={false}
-        />
-        <List>
-          {listData.map((item, index) => (
-            <ListItem
-              key={index}
-              sx={{
-                padding: '0.5rem',
-                marginBottom: '0.25rem',
-                borderBottom: '2px solid #DBDBEB1F'
-              }}
-            >
-              <ListItemText sx={{ color: item.includes('Removed') ? 'red' : '#E0E0E0' }} primary={item} />
-            </ListItem>
-          ))}
-        </List>
+        {loading ? <Typography>Loading...</Typography> : <DataTable columns={newColumns} data={userActions} />}
       </Card>
     </>
   )

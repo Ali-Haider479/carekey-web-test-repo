@@ -38,6 +38,7 @@
     "@mui/x-data-grid": "^7.24.0",
     "@mui/x-date-pickers": "^7.24.0",
     "@reduxjs/toolkit": "2.5.0",
+    "@stripe/stripe-js": "^6.1.0",
     "@tanstack/match-sorter-utils": "8.19.4",
     "@tanstack/react-table": "8.20.6",
     "@tiptap/extension-color": "^2.10.4",
@@ -82,6 +83,7 @@
     "react-use": "17.6.0",
     "recharts": "2.15.0",
     "server-only": "0.0.1",
+    "stripe": "^17.7.0",
     "valibot": "0.42.1"
   },
   "devDependencies": {

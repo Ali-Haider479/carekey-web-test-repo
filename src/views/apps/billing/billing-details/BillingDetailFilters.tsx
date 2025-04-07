@@ -79,10 +79,10 @@ const BillingDetailFilters = ({ onFilterApplied }: BillingDetailFiltersProps) =>
       if (filterData.claimNumber) queryParams.append('claimNumber', filterData.claimNumber)
       if (filterData.payer) queryParams.append('payer', filterData.payer)
       if (filterData.procedureCode) queryParams.append('procedureCode', filterData.procedureCode)
-      if (filterData.DOS) queryParams.append('dos', filterData.DOS.toISOString())
+      if (filterData.DOS) queryParams.append('dos', filterData.DOS.toISOString().split('T')[0])
       if (filterData.billedAmount) queryParams.append('billedAmount', filterData.billedAmount)
       if (filterData.receivedAmount) queryParams.append('receivedAmount', filterData.receivedAmount)
-      if (filterData.claimDate) queryParams.append('claimDate', filterData.claimDate.toISOString())
+      if (filterData.claimDate) queryParams.append('claimDate', filterData.claimDate.toISOString().split('T')[0])
       if (filterData.claimStatus) queryParams.append('claimStatus', filterData.claimStatus)
       // if (filterData.tsApprovalStatus) queryParams.append('tsApprovalStatus', filterData.tsApprovalStatus)
       queryParams.append('page', '1')
@@ -138,7 +138,7 @@ const BillingDetailFilters = ({ onFilterApplied }: BillingDetailFiltersProps) =>
               id='event-title'
             />
           </Grid>
-          <Grid size={{ xs: 12, sm: 6, md: 4, lg: 4 }}>
+          {/* <Grid size={{ xs: 12, sm: 6, md: 4, lg: 4 }}>
             <TextField
               value={filterData?.claimNumber}
               onChange={e => setFilterData({ ...filterData, claimNumber: e.target.value })}
@@ -149,7 +149,7 @@ const BillingDetailFilters = ({ onFilterApplied }: BillingDetailFiltersProps) =>
               // className='mbe-6'
               id='event-title'
             />
-          </Grid>
+          </Grid> */}
           <Grid size={{ xs: 12, sm: 6, md: 4, lg: 4 }}>
             <TextField
               value={filterData?.payer}
@@ -210,7 +210,7 @@ const BillingDetailFilters = ({ onFilterApplied }: BillingDetailFiltersProps) =>
               customInput={
                 <PickersComponent placeholder='Date of Service' label='Date of Service' id='date-of-service' />
               }
-              onChange={(date: Date | null) => date !== null && setFilterData({ ...filterData, DOS: new Date(date) })}
+              onChange={(date: Date | null) => date !== null && setFilterData({ ...filterData, DOS: date })}
             />
           </Grid>
           <Grid size={{ xs: 12, sm: 6, md: 3, lg: 3 }}>

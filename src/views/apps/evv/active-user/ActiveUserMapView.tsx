@@ -15,8 +15,7 @@ const createGeoJSON = (timeLogData: any) => {
       type: 'Feature',
       geometry: {
         type: 'Point',
-        longitude: log.startLocation.longitude,
-        latitude: log.startLocation.latitude
+        coordinates: [log.startLocation.longitude, log.startLocation.latitude] // Updated to GeoJSON standard
       },
       properties: {
         id: log.id,
@@ -29,15 +28,20 @@ const createGeoJSON = (timeLogData: any) => {
 
 const ActiveUserMapView = ({ timeLogData }: { timeLogData: any }) => {
   if (timeLogData.length) {
-    // Calculate initial view state based on first location in timeLogData
-    const initialViewState = useMemo(
-      () => ({
-        longitude: timeLogData?.[0].startLocation?.longitude || -73.999024,
-        latitude: timeLogData?.[0].startLocation?.latitude || 40.75249842,
-        zoom: 12.5
-      }),
-      [timeLogData]
-    )
+    const initialViewState = useMemo(() => {
+      if (timeLogData?.[0]?.startLocation) {
+        return {
+          longitude: timeLogData[0].startLocation.longitude,
+          latitude: timeLogData[0].startLocation.latitude,
+          zoom: 13 // Default zoom for city-level visibility
+        }
+      }
+      return {
+        longitude: -96.0, // Center of USA
+        latitude: 37.0, // Center of USA
+        zoom: 3.5 // USA-wide view if no data
+      }
+    }, [timeLogData])
 
     const [expanded, setExpanded] = useState<number | false>(0)
     const [viewState, setViewState] = useState<viewStateType>(initialViewState)
@@ -45,7 +49,8 @@ const ActiveUserMapView = ({ timeLogData }: { timeLogData: any }) => {
     const geoJsonData = useMemo(() => createGeoJSON(timeLogData), [timeLogData])
 
     const mapboxAccessToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN || ''
-    console.log('GEO JSO data', geoJsonData)
+    console.log('GEO JSON data', geoJsonData)
+
     return (
       <div className='w-full h-80'>
         <FleetMap
@@ -57,6 +62,7 @@ const ActiveUserMapView = ({ timeLogData }: { timeLogData: any }) => {
       </div>
     )
   }
+  return null // Handle case when timeLogData is empty
 }
 
 export default ActiveUserMapView

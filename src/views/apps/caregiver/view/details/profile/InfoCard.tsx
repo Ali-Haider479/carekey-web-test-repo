@@ -144,8 +144,8 @@ const InfoCard = () => {
     }
 
     const accountHistoryPayLoad = {
-      actionType: 'Assign Client',
-      details: 'Assign client to a caregiver',
+      actionType: 'ClientAssignedToCaregiver',
+      details: `Client (ID: ${data?.clientId}) assigned to Caregiver (ID: ${id}) by User (ID: ${authUser?.id})`,
       userId: authUser?.id,
       caregiverId: id
     }

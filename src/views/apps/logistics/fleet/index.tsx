@@ -135,7 +135,7 @@ const Fleet = ({ mapboxAccessToken }: { mapboxAccessToken: string }) => {
         setViewState={setViewState}
         geojson={geojson}
       />
-      <FleetMap carIndex={expanded} viewState={viewState} geojson={geojson} mapboxAccessToken={mapboxAccessToken} />
+      {/* <FleetMap carIndex={expanded} viewState={viewState} geojson={geojson} mapboxAccessToken={mapboxAccessToken} /> */}
       <Backdrop open={backdropOpen} onClick={() => setBackdropOpen(false)} className='absolute z-10' />
     </div>
   )

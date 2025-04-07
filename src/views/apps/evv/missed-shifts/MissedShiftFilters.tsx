@@ -34,8 +34,9 @@ const MissedShiftFilters = ({ onFilterApplied }: EVVFiltersProps) => {
       // Only add parameters that have values
       const queryParams = new URLSearchParams()
       if (filterData.caregiverName) queryParams.append('caregiverName', filterData.caregiverName)
-      if (filterData.status) queryParams.append('status', filterData.status)
+      if (filterData.status) queryParams.append('caregiverStatus', filterData.status)
       // if (filterData.tsApprovalStatus) queryParams.append('tsApprovalStatus', filterData.tsApprovalStatus)
+      queryParams.append('screenType', 'missed')
       queryParams.append('page', '1')
       queryParams.append('limit', '10')
       // If no filters are applied, fetch all data
@@ -43,7 +44,7 @@ const MissedShiftFilters = ({ onFilterApplied }: EVVFiltersProps) => {
         const response = await axios.get(
           `${process.env.NEXT_PUBLIC_API_URL}/time-log/dashboard/missed-shifts/${authUser?.tenant?.id}`
         )
-        onFilterApplied(response.data)
+        onFilterApplied(response.data.data)
         return
       }
       // Fetch filtered data
@@ -61,7 +62,7 @@ const MissedShiftFilters = ({ onFilterApplied }: EVVFiltersProps) => {
     const response = await axios.get(
       `${process.env.NEXT_PUBLIC_API_URL}/time-log/dashboard/missed-shifts/${authUser?.tenant?.id}`
     )
-    onFilterApplied(response.data)
+    onFilterApplied(response.data.data)
   }
 
   return (

@@ -129,9 +129,9 @@ const EmployeeStepper = () => {
       setIsLoading(true)
       const userPayload = {
         userName: loginInfo.userName,
-        emailAddress: loginInfo.emailAddress,
+        emailAddress: loginInfo.emailAddress.toLowerCase(),
         password: loginInfo.password,
-        additionalEmailAddress: loginInfo.additionalEmailAddress,
+        additionalEmailAddress: loginInfo.additionalEmailAddress.toLowerCase(),
         accountStatus: loginInfo.accountStatus,
         joinDate: new Date(),
         roleId: 3
@@ -272,6 +272,7 @@ const EmployeeStepper = () => {
         loginInfoFormRef.current?.handleSubmit((data: FormDataType) => {
           setLoginInfo((prevData: any) => ({ ...prevData, ...data, addressType: 'Mailing' }))
           setActiveStep(prevActiveStep => prevActiveStep + 1)
+          console.log('Email in lower case:', loginInfo.emailAddress.toLowerCase())
         })()
         break
       case 2:

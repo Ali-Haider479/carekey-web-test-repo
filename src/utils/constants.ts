@@ -1,4 +1,4 @@
-const USStates: any = [
+export const USStates: any = [
   { key: 1, value: 'AL', optionString: 'Alabama' },
   { key: 2, value: 'AK', optionString: 'Alaska' },
   { key: 3, value: 'AZ', optionString: 'Arizona' },
@@ -52,4 +52,63 @@ const USStates: any = [
   { key: 51, value: 'DC', optionString: 'District of Columbia' }
 ]
 
-export default USStates
+export const placeOfServiceOptions = [
+  { key: 1, value: 'pharmacy', optionString: 'Pharmacy' },
+  {
+    key: 2,
+    value: 'telehealthOtherThanInPatientsHome',
+    optionString: "Telehealth Provided Other Than In Patient's Home"
+  },
+  { key: 3, value: 'school', optionString: 'School' },
+  { key: 4, value: 'homelessShelter', optionString: 'Homeless Shelter' },
+  { key: 5, value: 'ihsFreeStandFacility', optionString: 'IHS Free Stand Facility' },
+  { key: 6, value: 'ihsProvBasedFacility', optionString: 'IHS Prov Based Facility' },
+  { key: 7, value: 'tribal638FreeStandingFac', optionString: 'Tribal 638 Free Standing Facility' },
+  { key: 8, value: 'tribal638ProvBasedFac', optionString: 'Tribal 638 Prov Based Facility' },
+  { key: 9, value: 'prisonCorrectionalFacility', optionString: 'Prison/Correctional Facility' },
+  { key: 10, value: 'telehealthInPatientsHome', optionString: "Telehealth Provided In Patient's Home" },
+  { key: 11, value: 'office', optionString: 'Office' },
+  { key: 12, value: 'home', optionString: 'Home' },
+  { key: 13, value: 'assistedLivingFacility', optionString: 'Assisted Living Facility' },
+  { key: 14, value: 'groupHome', optionString: 'Group Home' },
+  { key: 15, value: 'mobileUnit', optionString: 'Mobile Unit' },
+  { key: 16, value: 'temporaryLodging', optionString: 'Temporary Lodging' },
+  { key: 17, value: 'walkInRetailHealthClinic', optionString: 'Walk-In Retail Health Clinic' },
+  { key: 18, value: 'offCampusOutpatientHospital', optionString: 'Off Campus-Outpatient Hospital' },
+  { key: 19, value: 'urgentCare', optionString: 'Urgent Care' },
+  { key: 20, value: 'inpatientHospital', optionString: 'Inpatient Hospital' },
+  { key: 21, value: 'outpatientHospital', optionString: 'Outpatient Hospital' },
+  { key: 22, value: 'emergencyRoomHospital', optionString: 'Emergency Room Hospital' },
+  { key: 23, value: 'ambulatorySurgicalCenter', optionString: 'Ambulatory Surgical Center' },
+  { key: 24, value: 'birthingCenter', optionString: 'Birthing Center' },
+  { key: 25, value: 'militaryTreatmentFacility', optionString: 'Military Treatment Facility' },
+  { key: 26, value: 'outreachSiteStreet', optionString: 'Outreach Site/Street' },
+  { key: 27, value: 'skilledNursingFacility', optionString: 'Skilled Nursing Facility' },
+  { key: 28, value: 'nursingFacility', optionString: 'Nursing Facility' },
+  { key: 29, value: 'custodialCareFacility', optionString: 'Custodial Care Facility' },
+  { key: 30, value: 'hospiceLand', optionString: 'Hospice Land' },
+  { key: 31, value: 'ambulance', optionString: 'Ambulance' },
+  { key: 32, value: 'ambulanceAirOrWater', optionString: 'Ambulance Air Or Water' },
+  { key: 33, value: 'independentClinic', optionString: 'Independent Clinic' },
+  { key: 34, value: 'federallyQualifiedHlthCent', optionString: 'Federally Qualified Health Center' },
+  { key: 35, value: 'inpatientPsychologyFacility', optionString: 'Inpatient Psychology Facility' },
+  { key: 36, value: 'psychiatricFacilityPartHosp', optionString: 'Psychiatric Facility Part Hospital' },
+  { key: 37, value: 'communityMentalHealthCenter', optionString: 'Community Mental Health Center' },
+  { key: 38, value: 'interCareFacMentalHealth', optionString: 'Intermediate Care Facility Mental Health' },
+  { key: 39, value: 'residSubstanceAbuseTrmtFac', optionString: 'Residential Substance Abuse Treatment Facility' },
+  { key: 40, value: 'psychiatricResidTrmtCenter', optionString: 'Psychiatric Residential Treatment Center' },
+  { key: 41, value: 'nonResSubstanceAbuseFac', optionString: 'Non-Residential Substance Abuse Facility' },
+  {
+    key: 42,
+    value: 'nonResidentialOpioidTreatmentFacility',
+    optionString: 'Non-Residential Opioid Treatment Facility'
+  },
+  { key: 43, value: 'massImmunizationCenter', optionString: 'Mass Immunization Center' },
+  { key: 44, value: 'compInpatientRehabFacility', optionString: 'Comprehensive Inpatient Rehab Facility' },
+  { key: 45, value: 'compOutpatientRehabFacility', optionString: 'Comprehensive Outpatient Rehab Facility' },
+  { key: 46, value: 'endStageRenalDialTrmtFac', optionString: 'End Stage Renal Dialysis Treatment Facility' },
+  { key: 47, value: 'stateOrLocPublicHlthCntr', optionString: 'State Or Local Public Health Center' },
+  { key: 48, value: 'ruralHealthClinic', optionString: 'Rural Health Clinic' },
+  { key: 49, value: 'independentLaboratory', optionString: 'Independent Laboratory' },
+  { key: 50, value: 'otherUnlistedFacility', optionString: 'Other Unlisted Facility' }
+]

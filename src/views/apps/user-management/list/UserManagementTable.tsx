@@ -189,7 +189,8 @@ const UserManagementList = () => {
           role: formData.role.toString(),
           customRole,
           accountStatus: 'Active',
-          joinDate: new Date().toISOString()
+          joinDate: new Date().toISOString(),
+          emailAddress: formData.emailAddress.toLowerCase()
         }
         console.log('IF SECTION PAYLOAD', payload)
       } else {
@@ -199,7 +200,8 @@ const UserManagementList = () => {
           role: Number(formData.role),
           customRole,
           accountStatus: 'Active',
-          joinDate: new Date().toISOString()
+          joinDate: new Date().toISOString(),
+          emailAddress: formData.emailAddress.toLowerCase()
         }
         console.log('ELSE SECTION PAYLOAD', payload)
       }

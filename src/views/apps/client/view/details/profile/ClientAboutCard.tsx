@@ -18,6 +18,7 @@ function ClientAboutCard() {
   const [emergencyEmailError, setEmergencyEmailError] = useState<boolean>(false)
   const [phoneNumberError, setPhoneNumberError] = useState<boolean>(false)
   const [emergencyPhoneNumberError, setEmergencyPhoneNumberError] = useState<boolean>(false)
+  const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
 
   const formatPhoneNumber = (value: string = '') => {
     // Remove all non-digits
@@ -158,6 +159,13 @@ function ClientAboutCard() {
     try {
       setIsLoading(true)
       await axios.put(`${process.env.NEXT_PUBLIC_API_URL}/client/${id}`, formData)
+      const accountHistoryPayLoad = {
+        actionType: 'ClientProfileInfoUpdate',
+        details: `Client (ID: ${id}) profile information updated by User (ID: ${authUser?.id})`,
+        userId: authUser?.id,
+        clientId: id
+      }
+      await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/account-history/log`, accountHistoryPayLoad)
       console.log('FORM DATA', formData)
       setIsEdit(true)
       fetchData() // Refresh data after update

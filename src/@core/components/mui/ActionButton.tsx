@@ -1,9 +1,10 @@
 import React from 'react'
-import { Box, IconButton, Menu, MenuItem } from '@mui/material'
+import { Box, IconButton, Menu, MenuItem, Typography } from '@mui/material'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
 import EditIcon from '@mui/icons-material/Edit'
 import CheckIcon from '@mui/icons-material/Check'
 import CloseIcon from '@mui/icons-material/Close'
+import { Visibility } from '@mui/icons-material'
 
 const ActionButton = ({
   handleEdit,
@@ -15,6 +16,7 @@ const ActionButton = ({
   selectedUser,
   anchorEl,
   isEditing,
+  handleViewDetails,
   disabled // Add this prop
 }: any) => {
   const isCurrentRowEditing = isEditing && selectedUser?.id === user.id
@@ -61,7 +63,10 @@ const ActionButton = ({
         onClose={handleCloseMenu}
       >
         <MenuItem onClick={() => handleEdit(user)}>
-          <EditIcon fontSize='small' sx={{ mr: 1 }} />
+          <Typography className='font-semibold'>Edit</Typography>
+        </MenuItem>
+        <MenuItem onClick={() => handleViewDetails(user)}>
+          <Typography className='font-semibold'>View Details</Typography>
         </MenuItem>
       </Menu>
     </>

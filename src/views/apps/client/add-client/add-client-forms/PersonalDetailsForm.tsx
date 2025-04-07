@@ -13,7 +13,7 @@ import TextField from '@mui/material/TextField'
 import MenuItem from '@mui/material/MenuItem'
 import FormControl from '@mui/material/FormControl'
 import CustomDropDown from '@/@core/components/custom-inputs/CustomDropDown'
-import USStates from '@/utils/constants'
+import { USStates } from '@/utils/constants'
 
 type Props = {
   form?: any

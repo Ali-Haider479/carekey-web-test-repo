@@ -50,12 +50,12 @@ const BillingDetailTable = ({ data }: BillingDetailTableProps) => {
     },
     {
       id: 'payer',
-      label: 'PAYOR',
+      label: 'PAYER',
       minWidth: 170,
       render: item => {
         const payer = item.subRows
-          ? item.subRows[0]?.timelog[0]?.client?.serviceAuth?.payer
-          : item.timelog![0]?.client?.serviceAuth?.payer
+          ? item.subRows[0]?.timelog[0]?.client?.serviceAuth?.[0]?.payer
+          : item.timelog![0]?.client?.serviceAuth?.[0]?.payer
         return <Typography color='primary'>{payer}</Typography>
       }
     },
@@ -65,9 +65,9 @@ const BillingDetailTable = ({ data }: BillingDetailTableProps) => {
       minWidth: 170,
       render: item => {
         const serviceAuth = item.subRows
-          ? item.subRows[0].timelog[0].client.serviceAuth[0]
-          : item.timelog!.client?.serviceAuth
-        const proMod = `${serviceAuth?.procedureCode ?? ''}-${serviceAuth?.modifierCode ?? ''}`
+          ? item.subRows[0]?.timelog[0]?.client?.serviceAuth?.[0]
+          : item.timelog![0]?.client?.serviceAuth?.[0]
+        const proMod = `${serviceAuth?.procedureCode}-${serviceAuth?.modifierCode ?? ''}`
         return <Typography color='primary'>{proMod}</Typography>
       }
     },
@@ -97,7 +97,7 @@ const BillingDetailTable = ({ data }: BillingDetailTableProps) => {
         // For parent rows with subRows, claimDate is already a range or null
         // For leaf nodes, use the original claimDate
         const claimDateStr = item.claimDate
-        const claimDate = claimDateStr ? new Date(claimDateStr.split(' - ')[0]) : new Date()
+        const claimDate = new Date(claimDateStr?.split(' - ')[0])
         return (
           <Typography color='primary'>
             {claimDateStr?.includes('-') ? claimDateStr : claimDate.toLocaleDateString('en-US')}

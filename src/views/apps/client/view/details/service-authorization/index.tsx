@@ -11,11 +11,12 @@ import {
   MenuItem,
   Tab,
   Autocomplete,
-  TextField
+  TextField,
+  CircularProgress
 } from '@mui/material'
 import { useEffect, useState } from 'react'
 import DialogCloseButton from '@/components/dialogs/DialogCloseButton'
-import { FormProvider, set, useForm } from 'react-hook-form'
+import { FormProvider, useForm } from 'react-hook-form'
 import CustomTextField from '@/@core/components/custom-inputs/CustomTextField'
 import ControlledDatePicker from '@/@core/components/custom-inputs/ControledDatePicker'
 import { useParams } from 'next/navigation'
@@ -24,6 +25,7 @@ import ReactTable from '@/@core/components/mui/ReactTable'
 import TabContext from '@mui/lab/TabContext'
 import CustomTabList from '@/@core/components/mui/TabList'
 import CustomDropDown from '@/@core/components/custom-inputs/CustomDropDown'
+import { ServiceAuthListModal } from './ServiceAuthModal'
 
 const options = [
   { label: 'Option 1', value: 'option1' },
@@ -49,38 +51,20 @@ interface ServiceAuthPayload {
   clientId: number
 }
 
-// Add this interface above the component
-interface ExtractedData {
-  payer: string
-  memberId: string
-  serviceAuthNumber: string
-  procedureCode: string
-  modifierCode: string
-  startDate: Date
-  endDate: Date
-  serviceRate: string
-  units: string
-  diagnosisCode: string
-  umpiNumber: string
-  reimbursementType: string
-  taxonomy: string
-  frequency: string
-}
-
 const ServiceAuthorization = () => {
   const { id } = useParams()
   const clientId = Number(id)
-  const [selectedTab, setSelectedTab] = useState('active-service-auth') // Use string values from Tab value prop
+  const [selectedTab, setSelectedTab] = useState('active-service-auth')
   const [isModalShow, setIsModalShow] = useState(false)
+  const [isListModalShow, setIsListModalShow] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
   const [serviceAuthData, setServiceAuthData] = useState<any[]>([])
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const [currentItem, setCurrentItem] = useState<any>(null)
   const [isEditMode, setIsEditMode] = useState(false)
-  const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const [selectedOption, setSelectedOption] = useState(null)
   const currentDate = new Date()
+  const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
 
-  // Filter data based on tabs
   const activeServices = serviceAuthData.filter(item => {
     const endDate = new Date(item.endDate)
     return endDate >= currentDate
@@ -98,6 +82,10 @@ const ServiceAuthorization = () => {
 
   const handleMenuClose = () => {
     setAnchorEl(null)
+  }
+
+  const handleListModalClose = () => {
+    setIsListModalShow(false)
   }
 
   const handleModalClose = () => {
@@ -156,75 +144,9 @@ const ServiceAuthorization = () => {
     handleMenuClose()
   }
 
-  // Add file handler
-  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files && event.target.files[0]) {
-      const file = event.target.files[0]
-      setSelectedFile(file)
-
-      try {
-        const formData = new FormData()
-        formData.append('pdf', file)
-
-        // Call backend API to extract data from PDF
-        const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/client/ocr`, formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data'
-          }
-        })
-        console.log('RESPONSE DATA', response)
-
-        const extractedData = response?.data?.extractedData // Array of objects
-        const fileKey = response?.data?.fileKey // Array of objects
-        console.log('EXTRACTED DATA', extractedData)
-        console.log('EXTRACTED KEY', fileKey)
-
-        // // Map each extractedData object to the serviceAuthPayload structure
-        const serviceAuthPayloads = extractedData.map((data: any) => ({
-          payer: 'MA',
-          memberId: Number(data.recipientId || 0), // "recipientId"
-          serviceAuthNumber: Number(data.agreementNumber || 0), // "agreementNumber"
-          procedureCode: data.procedureCode || '', // "procedureCode"
-          modifierCode: data.modifier || '', // "modifier"
-          startDate: data.startDate ? new Date(data.startDate) : undefined, // "startDate"
-          endDate: data.endDate ? new Date(data.endDate) : undefined, // "endDate"
-          serviceRate: Number(data.serviceRate.replace('$', '')),
-          units: Number(data.quantity || 0), // "quantity"
-          diagnosisCode: data.diagnosisCode || '', // "diagnosisCode"
-          umpiNumber: data.providerId || '', // "providerId"
-          reimbursementType: data.reimbursement || '', // "reimbursement"
-          taxonomy: data.taxonomy || '', // "taxonomy"
-          frequency: data.frequency || '',
-          clientId: clientId,
-          fileKey: fileKey // optional
-        }))
-
-        // Send each payload to the service-auth endpoint concurrently
-        const serviceAuthResponses = await Promise.all(
-          serviceAuthPayloads.map((payload: any) =>
-            axios.post(`${process.env.NEXT_PUBLIC_API_URL}/client/service-auth`, payload)
-          )
-        )
-
-        console.log('SERVICE AUTH CREATED', serviceAuthResponses)
-
-        // Fetch updated data and reset file selection
-        await fetchClientServiceAuthData()
-        setSelectedFile(null)
-      } catch (error) {
-        console.error('Error uploading PDF or saving service auth:', error)
-      }
-    }
-  }
-
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
     console.log('Search query:', event.target.value)
   }
-
-  // const handleChange = (event: any, newValue: any) => {
-  //   setSelectedOption(newValue)
-  //   console.log('Selected:', newValue)
-  // }
 
   const methods = useForm<any>({
     mode: 'onSubmit',
@@ -239,8 +161,8 @@ const ServiceAuthorization = () => {
   } = methods
 
   const onSubmit = async (data: any) => {
-    console.log(data)
     try {
+      setIsLoading(true)
       const serviceAuthPayload: ServiceAuthPayload = {
         payer: data.payer,
         memberId: Number(data.memberId),
@@ -264,21 +186,29 @@ const ServiceAuthorization = () => {
           `${process.env.NEXT_PUBLIC_API_URL}/client/service-auth/${currentItem.id}`,
           serviceAuthPayload
         )
-
-        console.log('Client Service Auth updated successfully --> ', currentItem.id, serviceAuthPayload, response)
-
-        // Update the data in the state
+        const accountHistoryPayLoad = {
+          actionType: 'ClientServiceAuthUpdate',
+          details: `Service authorization updated for Client (ID: ${id}) by User (ID: ${authUser?.id})`,
+          userId: authUser?.id,
+          clientId: id
+        }
+        await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/account-history/log`, accountHistoryPayLoad)
         setServiceAuthData(serviceAuthData.map(item => (item.id === currentItem.id ? response.data : item)))
       } else {
-        // Create new record
         const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/client/service-auth`, serviceAuthPayload)
-
-        console.log('Client Service Auth created successfully --> ', response)
+        const accountHistoryPayLoad = {
+          actionType: 'ClientServiceAuthCreate',
+          details: `Service authorization created for Client (ID: ${id}) by User (ID: ${authUser?.id})`,
+          userId: authUser?.id,
+          clientId: id
+        }
+        await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/account-history/log`, accountHistoryPayLoad)
         setServiceAuthData([...serviceAuthData, response.data])
       }
-
+      setIsLoading(false)
       handleModalClose()
     } catch (error) {
+      setIsLoading(false)
       console.error('Error posting data: ', error)
     }
   }
@@ -295,8 +225,6 @@ const ServiceAuthorization = () => {
   useEffect(() => {
     fetchClientServiceAuthData()
   }, [])
-
-  console.log(' Service Auth Data in state --> ', serviceAuthData)
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: string) => {
     setSelectedTab(newValue)
@@ -401,7 +329,6 @@ const ServiceAuthorization = () => {
   ]
 
   const handleChange = (event: any, newValue: any) => {
-    setSelectedOption(newValue)
     console.log('Selected:', newValue)
   }
 
@@ -424,11 +351,10 @@ const ServiceAuthorization = () => {
               />
             </div>
             <div className='flex justify-end gap-3'>
-              <input type='file' accept='.pdf' onChange={handleFileChange} className='hidden' id='pdf-upload' />
               <Button
                 startIcon={<Add />}
                 className='w-[160px] bg-[#4B0082] text-white h-10'
-                onClick={() => document.getElementById('pdf-upload')?.click()}
+                onClick={() => setIsListModalShow(true)}
               >
                 ADD SA LIST
               </Button>
@@ -439,41 +365,49 @@ const ServiceAuthorization = () => {
           </div>
         </Card>
         <Card className='w-full flex flex-col h-auto mt-5 shadow-md rounded-lg gap-5 p-5'>
-          <div className='flex justify-between items-start'>
-            <TabContext value={selectedTab}>
-              <Grid container spacing={6}>
-                <Grid size={{ xs: 12, md: 12 }}>
-                  <CustomTabList orientation='horizontal' onChange={handleTabChange} className='is-fit' pill='true'>
-                    <Tab
-                      label='Active Service'
-                      iconPosition='start'
-                      value='active-service-auth'
-                      className='flex-row justify-start'
-                    />
-                    <Tab
-                      label='Expired Service'
-                      iconPosition='start'
-                      value='expired-service-auth'
-                      className='flex-row justify-start'
-                    />
-                  </CustomTabList>
-                </Grid>
-              </Grid>
-            </TabContext>
-          </div>
-          {!serviceAuthData?.length ? (
-            <Typography className='p-5 flex items-center justify-center'>No Data Available</Typography>
+          {isLoading ? (
+            <span className='text-center'>
+              <CircularProgress />
+            </span>
           ) : (
-            <ReactTable
-              columns={newColumns}
-              data={selectedTab === 'active-service-auth' ? activeServices : expiredServices}
-              keyExtractor={item => item.id.toString()}
-              enablePagination
-              pageSize={5}
-              stickyHeader
-              maxHeight={600}
-              containerStyle={{ borderRadius: 2 }}
-            />
+            <>
+              <div className='flex justify-between items-start'>
+                <TabContext value={selectedTab}>
+                  <Grid container spacing={6}>
+                    <Grid size={{ xs: 12, md: 12 }}>
+                      <CustomTabList orientation='horizontal' onChange={handleTabChange} className='is-fit' pill='true'>
+                        <Tab
+                          label='Active Service'
+                          iconPosition='start'
+                          value='active-service-auth'
+                          className='flex-row justify-start'
+                        />
+                        <Tab
+                          label='Expired Service'
+                          iconPosition='start'
+                          value='expired-service-auth'
+                          className='flex-row justify-start'
+                        />
+                      </CustomTabList>
+                    </Grid>
+                  </Grid>
+                </TabContext>
+              </div>
+              {!serviceAuthData?.length ? (
+                <Typography className='p-5 flex items-center justify-center'>No Data Available</Typography>
+              ) : (
+                <ReactTable
+                  columns={newColumns}
+                  data={selectedTab === 'active-service-auth' ? activeServices : expiredServices}
+                  keyExtractor={item => item.id.toString()}
+                  enablePagination
+                  pageSize={5}
+                  stickyHeader
+                  maxHeight={600}
+                  containerStyle={{ borderRadius: 2 }}
+                />
+              )}
+            </>
           )}
         </Card>
         <div>
@@ -483,7 +417,7 @@ const ServiceAuthorization = () => {
             closeAfterTransition={false}
             sx={{ '& .MuiDialog-paper': { overflow: 'visible' } }}
           >
-            <DialogCloseButton onClick={() => handleModalClose()} disableRipple>
+            <DialogCloseButton onClick={handleModalClose} disableRipple>
               <i className='bx-x' />
             </DialogCloseButton>
             <div className='flex items-center justify-center pt-[10px] pb-[5px] w-full px-5'>
@@ -616,7 +550,7 @@ const ServiceAuthorization = () => {
                     <CustomDropDown
                       name={'reimbursementType'}
                       control={control}
-                      label={'Reimburrsement Type'}
+                      label={'Reimbursement Type'}
                       error={errors.reimbursementType}
                       optionList={[
                         { key: 1, value: 'per unit', optionString: 'Per Unit' },
@@ -660,6 +594,12 @@ const ServiceAuthorization = () => {
               </form>
             </div>
           </Dialog>
+          <ServiceAuthListModal
+            open={isListModalShow}
+            onClose={handleListModalClose}
+            clientId={id}
+            fetchClientServiceAuthData={fetchClientServiceAuthData}
+          />
         </div>
       </FormProvider>
     </>

@@ -56,8 +56,8 @@ const ScheduleTableFiltersCard = ({ onFilterApplied }: scheduleFilterProps) => {
 
       if (filterData.clientName) queryParams.append('clientName', filterData.clientName)
       if (filterData.caregiverName) queryParams.append('caregiverName', filterData.caregiverName)
-      if (filterData.startDate) queryParams.append('startDate', filterData.startDate.toISOString())
-      if (filterData.endDate) queryParams.append('endDate', filterData.endDate.toISOString())
+      if (filterData.startDate) queryParams.append('startDate', filterData.startDate.toISOString().split('T')[0])
+      if (filterData.endDate) queryParams.append('endDate', filterData.endDate.toISOString().split('T')[0])
 
       let filterResponse
       if (queryParams.toString()) {

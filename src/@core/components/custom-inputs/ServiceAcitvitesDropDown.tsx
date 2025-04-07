@@ -11,6 +11,7 @@ type Props = {
   defaultValue?: string[]
   label: string
   error?: FieldError | FieldErrors
+  isRequired?: boolean
   activities: { id: string; serviceId: string; title: string }[]
 }
 
@@ -19,25 +20,27 @@ const handleDelete = (itemToRemove: string, onChange: (items: string[]) => void,
   onChange(newValue)
 }
 
-const ServiceActivities = ({ name, control, defaultValue, label, error, activities }: Props) => {
+const ServiceActivities = (props: Props) => {
   const [isOpen, setIsOpen] = useState(false)
+
+  const { isRequired = true } = props
 
   return (
     <Box className='w-full pb-4'>
       <Controller
-        name={name}
-        control={control}
+        name={props.name}
+        control={props.control}
         defaultValue={''}
-        rules={{ required: `${label} is required` }}
+        rules={{ required: isRequired ? `${props.label} is required` : false }}
         render={({ field: { value = [], onChange, ...field } }) => (
-          <FormControl fullWidth error={!!error} className='relative'>
-            <InputLabel size='small'>{label}</InputLabel>
+          <FormControl fullWidth error={!!props.error} className='relative'>
+            <InputLabel size='small'>{props.label}</InputLabel>
             <Select
               {...field}
               multiple
               renderValue={() => ''}
               value={Array.isArray(value) ? value : []} // ensure it's an array
-              label={label}
+              label={props.label}
               size='small'
               onChange={e => {
                 onChange(e.target.value as string[])
@@ -47,7 +50,7 @@ const ServiceActivities = ({ name, control, defaultValue, label, error, activiti
               onOpen={() => setIsOpen(true)}
               onClose={() => setIsOpen(false)}
             >
-              {activities.map(svc => (
+              {props.activities.map(svc => (
                 <MenuItem key={svc.id} value={svc.title}>
                   {svc.title}
                 </MenuItem>
@@ -55,12 +58,12 @@ const ServiceActivities = ({ name, control, defaultValue, label, error, activiti
             </Select>
 
             {/* Show error text if there's a validation error */}
-            {error && <FormHelperText>{`Please select a ${label}`}</FormHelperText>}
+            {props.error && <FormHelperText>{`Please select a ${props.label}`}</FormHelperText>}
 
             <Box className='flex flex-wrap gap-2 mt-2'>
               {Array.isArray(value) &&
                 value.map(item => {
-                  const selectedActivity = activities.find(s => s.title === item)
+                  const selectedActivity = props.activities.find(s => s.title === item)
                   return (
                     <Chip
                       key={item}

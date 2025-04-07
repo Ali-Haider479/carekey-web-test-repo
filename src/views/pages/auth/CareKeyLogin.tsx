@@ -92,7 +92,7 @@ const CareKeyLogin = () => {
       setLoading(true)
       const res = await signIn('credentials', {
         redirect: false,
-        email,
+        email: email.toLowerCase(),
         password
       })
 

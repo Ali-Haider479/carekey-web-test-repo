@@ -67,11 +67,13 @@ const ProfileBanner = ({ props }: { props: ProfileHeaderType }) => {
         setFileUrl(response.data.profileImageUrl)
       }
       const payLoad = {
-        actionType: 'Update Profile Image',
-        details: 'Caregiver update profile image',
+        actionType: props.isClient ? 'ClientProfileImageUpdate' : 'CaregiverProfileImageUpdate',
+        details: `Profile image updated by User (ID: ${authUser?.id}) for ${props.isClient ? `Client (ID: ${id})` : `Caregiver (ID: ${id})`}`,
         userId: authUser?.id,
-        caregiverId: id
+        caregiverId: props.isClient ? null : id,
+        clientId: props.isClient ? id : null
       }
+      console.log('ONE PROFILE PAYLOAD', payLoad)
       await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/account-history/log`, payLoad)
       setLoading(false)
     } catch (error) {

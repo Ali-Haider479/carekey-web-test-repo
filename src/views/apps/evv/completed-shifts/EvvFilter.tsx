@@ -33,8 +33,9 @@ const EvvFilters = ({ onFilterApplied }: EVVFiltersProps) => {
       // Only add parameters that have values
       const queryParams = new URLSearchParams()
       if (filterData.caregiverName) queryParams.append('caregiverName', filterData.caregiverName)
-      if (filterData.status) queryParams.append('status', filterData.status)
+      if (filterData.status) queryParams.append('caregiverStatus', filterData.status)
       // if (filterData.tsApprovalStatus) queryParams.append('tsApprovalStatus', filterData.tsApprovalStatus)
+      queryParams.append('screenType', 'completed')
       queryParams.append('page', '1')
       queryParams.append('limit', '10')
       // If no filters are applied, fetch all data

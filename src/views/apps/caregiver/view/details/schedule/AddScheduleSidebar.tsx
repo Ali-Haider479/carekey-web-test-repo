@@ -251,8 +251,8 @@ const AddEventModal = (props: AddEventSidebarType) => {
           }
           const updatedSchedule = await axios.patch(`${process.env.NEXT_PUBLIC_API_URL}/schedule/${eventId}`, patchBody)
           const accountHistoryPayLoad = {
-            actionType: 'Update schedule',
-            details: 'Update caregiver schedule',
+            actionType: 'CaregiverScheduleUpdate',
+            details: `Caregiver (ID: ${id}) schedule updated by User (ID: ${authUser?.id})`,
             userId: authUser?.id,
             caregiverId: id
           }
@@ -272,8 +272,8 @@ const AddEventModal = (props: AddEventSidebarType) => {
           const createSchedule = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/schedule`, bulkEvents)
           props.handleAddEvent(createSchedule.data)
           const accountHistoryPayLoad = {
-            actionType: 'Create schedule',
-            details: 'Create a schedule for caregiver',
+            actionType: 'CaregiverScheduleCreation',
+            details: `Schedule created for Caregiver (ID: ${id}) by User (ID: ${authUser?.id})`,
             userId: authUser?.id,
             caregiverId: id
           }

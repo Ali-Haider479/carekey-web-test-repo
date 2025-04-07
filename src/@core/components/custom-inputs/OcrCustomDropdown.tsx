@@ -19,13 +19,13 @@ type Props = {
   optionList: Option[]
   defaultValue?: any
   sx?: any
-  // value?: any
-  // onChange?: any
+  value?: any
+  onChange?: any
   isRequired?: boolean
   disabled?: boolean
 }
 
-function CustomDropDown(props: Props) {
+function OcrCustomDropDown(props: Props) {
   const { isRequired = true } = props
   return (
     <Controller
@@ -60,8 +60,8 @@ function CustomDropDown(props: Props) {
               )
             }
             size='small'
-            // value={props.value}
-            // onChange={props.onChange}
+            value={props.value}
+            onChange={props.onChange}
             disabled={props.disabled}
             MenuProps={{
               PaperProps: {
@@ -84,4 +84,4 @@ function CustomDropDown(props: Props) {
   )
 }
 
-export default CustomDropDown
+export default OcrCustomDropDown

@@ -1,5 +1,5 @@
 'use client'
-import { TextField } from '@mui/material'
+import { TextField, Typography } from '@mui/material'
 import React from 'react'
 import { Controller } from 'react-hook-form'
 
@@ -14,13 +14,15 @@ type Props = {
 }
 
 const ControlledTextArea = (props: Props) => {
+  const { isRequired = true } = props
+
   return (
     <Controller
       name={props.name}
       control={props.control}
       defaultValue={props.defaultValue} // Set the default value
       rules={{
-        required: props.isRequired ? `${props.label} is required` : false, // Required validation
+        required: isRequired ? `${props.label} is required` : false, // Required validation
         minLength: {
           value: 10,
           message: `Please provide at least 10 characters for ${props.label}`
@@ -34,7 +36,16 @@ const ControlledTextArea = (props: Props) => {
           helperText={error ? error.message : ''} // Show validation error message
           fullWidth
           size='small'
-          label={props.label} // Label for the field
+          label={
+            isRequired === true ? (
+              <div className='flex flex-row'>
+                <Typography>{props.label}</Typography>
+                <Typography className='text-red-500 ml-1'>*</Typography>
+              </div>
+            ) : (
+              props.label
+            )
+          } // Label for the field
           placeholder={props.placeHolder} // Placeholder text
           multiline // Enables textarea
           rows={4} // Number of visible rows

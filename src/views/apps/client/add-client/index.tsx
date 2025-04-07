@@ -156,13 +156,13 @@ const AddClientStepper = () => {
         dateOfBirth: personalDetails.dateOfBirth,
         pmiNumber: personalDetails.pmiNumber,
         gender: personalDetails.gender,
-        emailId: personalDetails.emailId,
+        emailId: personalDetails.emailId.toLowerCase(),
         primaryPhoneNumber: personalDetails.primaryPhoneNumber,
         primaryCellNumber: personalDetails.primaryPhoneNumber,
         additionalPhoneNumber: personalDetails.additionalPhoneNumber,
         emergencyContactName: personalDetails.emergencyContactName,
         emergencyContactNumber: personalDetails.emergencyContactNumber,
-        emergencyEmailId: personalDetails.emergencyEmail,
+        emergencyEmailId: personalDetails.emergencyEmail.toLowerCase(),
         insuranceCode: personalDetails.insuranceCode,
         clientCode: personalDetails.clientCode,
         medicalSpendDown: personalDetails.medicalSpendDown,
@@ -223,7 +223,7 @@ const AddClientStepper = () => {
 
       const clientResponsiblePartyBody = {
         name: personalDetails.clientResponsibilityPartyName,
-        emailAddress: personalDetails.clientResponsibilityPartyEmailAddress,
+        emailAddress: personalDetails.clientResponsibilityPartyEmailAddress.toLowerCase(),
         phoneNumber: personalDetails.clientResponsibilityPartyPhoneNumber,
         faxNumber: personalDetails.clientResponsibilityPartyFaxNumber,
         clientId: clientId
@@ -256,7 +256,7 @@ const AddClientStepper = () => {
 
       const createCaseManagerBody = {
         caseManagerName: physicianDetails.caseManagerName,
-        caseManagerEmail: physicianDetails.caseMangerEmail,
+        caseManagerEmail: physicianDetails.caseMangerEmail.toLowerCase(),
         caseManagerPhoneNumber: physicianDetails.caseMangerPhoneNumber,
         caseManagerExtention: physicianDetails.caseManagerExtension,
         caseManagerFaxNumber: physicianDetails.caseManagerFaxNumber,
