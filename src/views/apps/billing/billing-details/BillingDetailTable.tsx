@@ -31,10 +31,10 @@ const BillingDetailTable = ({ data }: BillingDetailTableProps) => {
       minWidth: 170,
       render: item => {
         // Use subRows[0] if it exists, otherwise use timelog[0]
-        const client = item.subRows ? item.subRows[0].timelog[0].client : item.timelog![0].client
+        const client = item.subRows ? item.subRows[0]?.timelog[0]?.client : item.timelog![0]?.client
         return (
           <Typography className={`font-semibold ${dark ? 'text-[#7112B7]' : 'text-[#4B0082]'}`} color='primary'>
-            {`${client.firstName} ${client.lastName}`}
+            {`${client?.firstName} ${client?.lastName}`}
           </Typography>
         )
       }
@@ -44,8 +44,8 @@ const BillingDetailTable = ({ data }: BillingDetailTableProps) => {
       label: 'CAREGIVER NAME',
       minWidth: 170,
       render: item => {
-        const caregiver = item.subRows ? item.subRows[0].timelog[0].caregiver : item.timelog![0].caregiver
-        return <Typography color='primary'>{`${caregiver.firstName} ${caregiver.lastName}`}</Typography>
+        const caregiver = item.subRows ? item.subRows[0]?.timelog[0]?.caregiver : item.timelog![0]?.caregiver
+        return <Typography color='primary'>{`${caregiver?.firstName} ${caregiver?.lastName}`}</Typography>
       }
     },
     {
@@ -80,11 +80,11 @@ const BillingDetailTable = ({ data }: BillingDetailTableProps) => {
           // For parent row, use the claimDate range which is already formatted
           return <Typography color='primary'>{item.claimDate || '-'}</Typography>
         }
-        const clockIn = item.timelog![0].clockIn ? new Date(item.timelog![0].clockIn) : new Date()
-        const clockOut = item.timelog![0].clockOut ? new Date(item.timelog![0].clockOut) : new Date()
+        const clockIn = item.timelog![0]?.clockIn ? new Date(item.timelog![0]?.clockIn) : new Date()
+        const clockOut = item.timelog![0]?.clockOut ? new Date(item.timelog![0]?.clockOut) : new Date()
         return (
           <Typography color='primary'>
-            {`${clockIn.toLocaleDateString('en-US')} - ${clockOut.toLocaleDateString('en-US')}`}
+            {`${clockIn?.toLocaleDateString('en-US')} - ${clockOut?.toLocaleDateString('en-US')}`}
           </Typography>
         )
       }

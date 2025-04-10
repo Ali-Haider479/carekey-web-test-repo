@@ -113,7 +113,9 @@ const DocumentsPage = forwardRef<{ handleSubmit: any }, Props>(({ onFinish, defa
           <div className='flex items-center gap-10'>
             <div className='flex items-center gap-2'>
               <PictureAsPdfIcon />
-              <Typography className='font-semibold text-green-600 text-sm'>{file.name} (100%)</Typography>
+              <Typography className='font-semibold text-green-600 text-sm'>
+                {file.name.length > 20 ? `${file.name.substring(0, 20)}...` : file.name} (100%)
+              </Typography>
             </div>
             <div>
               <Typography className='font-semibold text-green-600 text-sm'>Completed</Typography>
@@ -130,10 +132,15 @@ const DocumentsPage = forwardRef<{ handleSubmit: any }, Props>(({ onFinish, defa
     files.length > 0 && (
       <div className='p-4 rounded-lg border border-[#32475C] border-opacity-[22%]'>
         <Typography className='text-md font-semibold mb-2'>{title}</Typography>
+        <Typography className='font-semibold text-green-600 text-sm'>
+          {title.length > 20 ? `${title.substring(0, 20)}...` : title}
+        </Typography>
         {files.map((file, index) => (
           <div key={index} className='flex items-center gap-2 mb-2'>
             <PictureAsPdfIcon />
-            <span className='font-semibold text-green-600'>{file.name}</span>
+            <span className='font-semibold text-green-600'>
+              {file.name.length > 20 ? `${file.name.substring(0, 20)}...` : file.name}
+            </span>
           </div>
         ))}
       </div>
@@ -215,7 +222,9 @@ const DocumentsPage = forwardRef<{ handleSubmit: any }, Props>(({ onFinish, defa
                         <div className='flex items-center gap-10'>
                           <div className='flex items-center gap-2'>
                             <PictureAsPdfIcon />
-                            <Typography className='font-semibold text-green-600 text-sm'>{file.name} (100%)</Typography>
+                            <Typography className='font-semibold text-green-600 text-sm'>
+                              {file.name.length > 20 ? `${file.name.substring(0, 20)}...` : file.name} (100%)
+                            </Typography>
                           </div>
                           <div>
                             <Typography className='font-semibold text-green-600 text-sm'>Completed</Typography>

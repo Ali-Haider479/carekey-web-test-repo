@@ -1,4 +1,5 @@
 import { format, parseISO } from 'date-fns'
+import { toZonedTime } from 'date-fns-tz'
 
 export const calculateHoursWorked = (clockIn: string, clockOut: string) => {
   // Parse the clock-in and clock-out times
@@ -17,6 +18,14 @@ export const calculateHoursWorked = (clockIn: string, clockOut: string) => {
 
   // Round to two decimal places
   return hours.toFixed(2)
+}
+
+export const formatToLocalTime = (gmtDate: any) => {
+  if (!gmtDate) return null
+  const date = parseISO(gmtDate) // Parse GMT/UTC date
+  const localDate = toZonedTime(date, Intl.DateTimeFormat().resolvedOptions().timeZone) // Convert to local
+  console.log('LOCAL DATE', localDate)
+  return format(localDate, 'MM/dd/yyyy hh:mm a')
 }
 
 export const formattedDate = (dateString: string) => {

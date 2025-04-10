@@ -143,8 +143,8 @@ export const transformBillingData = (payload: BillingData[]): BillingData[] => {
         ...group[0],
         billedAmount: formatAmount(group[0].billedAmount),
         receivedAmount: formatAmount(group[0].receivedAmount),
-        serviceDateRange: formatDate(timelog.dateOfService),
-        scheduledHrs: `${calculateScheduledHours(timelog.clockIn, timelog.clockOut)} Hrs`
+        serviceDateRange: formatDate(timelog?.dateOfService),
+        scheduledHrs: `${calculateScheduledHours(timelog?.clockIn, timelog?.clockOut)} Hrs`
       }
     }
 
@@ -170,7 +170,7 @@ export const transformBillingData = (payload: BillingData[]): BillingData[] => {
       })(),
       serviceDateRange: (() => {
         const dates = group
-          .map(item => item.timelog![0].dateOfService)
+          .map(item => item.timelog![0]?.dateOfService)
           .filter(date => date)
           .sort()
         return dates.length ? `${formatDate(dates[0])} - ${formatDate(dates[dates.length - 1])}` : null
@@ -178,7 +178,7 @@ export const transformBillingData = (payload: BillingData[]): BillingData[] => {
       scheduledHrs: (() => {
         const totalHours = group.reduce((sum, item) => {
           const timelog = item.timelog![0]
-          return sum + parseFloat(calculateScheduledHours(timelog.clockIn, timelog.clockOut))
+          return sum + parseFloat(calculateScheduledHours(timelog?.clockIn, timelog?.clockOut))
         }, 0)
         return `${totalHours.toFixed(1)} Hrs`
       })(),
@@ -188,8 +188,8 @@ export const transformBillingData = (payload: BillingData[]): BillingData[] => {
           ...item,
           billedAmount: formatAmount(item.billedAmount),
           receivedAmount: formatAmount(item.receivedAmount),
-          serviceDateRange: formatDate(timelog.dateOfService),
-          scheduledHrs: `${calculateScheduledHours(timelog.clockIn, timelog.clockOut)} Hrs`,
+          serviceDateRange: formatDate(timelog?.dateOfService),
+          scheduledHrs: `${calculateScheduledHours(timelog?.clockIn, timelog?.clockOut)} Hrs`,
           timelog: [...item.timelog!]
         }
       })

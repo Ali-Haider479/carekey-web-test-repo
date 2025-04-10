@@ -20,6 +20,8 @@ import Grid from '@mui/material/Grid2'
 import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
 import axios from 'axios'
 import { Close as CloseIcon } from '@mui/icons-material'
+import { format, parseISO } from 'date-fns' // Core date-fns functions
+import { toZonedTime } from 'date-fns-tz'
 
 interface DefaultStateType {
   currentWeek: string
@@ -70,6 +72,29 @@ const ManualTimesheet = ({ clientList, caregiverList, serviceList, payPeriod }: 
   const [weekRange, setWeekRange] = useState<any>({})
   const [selectedItems, setSelectedItems] = useState<number[]>([])
   const [activities, setActivities] = useState<any[]>([])
+  const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
+
+  const combineDateAndTimeForGMT = (date: any, time: any) => {
+    if (!date || !time) return null
+
+    const datePart = new Date(date)
+    const timePart = new Date(time)
+
+    // Create a GMT date by setting hours/minutes in UTC context
+    const combined = new Date(
+      Date.UTC(
+        datePart.getUTCFullYear(),
+        datePart.getUTCMonth(),
+        datePart.getUTCDate(),
+        timePart.getHours(),
+        timePart.getMinutes(),
+        0,
+        0
+      )
+    )
+
+    return combined.toISOString()
+  }
 
   // Helper function to remove a specific item from the array
   const handleDelete = (itemToRemove: number) => {
@@ -139,17 +164,34 @@ const ManualTimesheet = ({ clientList, caregiverList, serviceList, payPeriod }: 
     setValues(defaultState)
   }
 
+  console.log('CLOCKIN', values.clockIn?.toISOString())
+  console.log('CLOCKOUT', values.clockOut?.toISOString())
+  console.log('DATEOFSERVICE', values.dateOfService)
+
   const onSubmit = async () => {
     try {
       const checkedActivityRes = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/activity`, {
         activityIds: selectedItems
       })
+
+      const payLoad = {
+        clientSignature: '',
+        caregiverSignature: '',
+        duration: '',
+        caregiverId: values.caregiver,
+        clientId: values.client,
+        tenantId: authUser?.tenant?.id,
+        signatureStatus: 'Pending'
+      }
+
+      // Make the API call only if client does not exist in taken or pending
+      const signResponse: any = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/signatures`, payLoad)
       if (checkedActivityRes.status === 201) {
         const modifiedEvent = {
           dateOfService: values.dateOfService,
           manualEntry: true,
-          clockIn: values.clockIn,
-          clockOut: values.clockOut,
+          clockIn: values.clockIn?.toISOString(),
+          clockOut: values.clockOut?.toISOString(),
           tsApprovalStatus: 'Pending',
           notes: values.notes,
           reason: values.reason,
@@ -159,7 +201,7 @@ const ManualTimesheet = ({ clientList, caregiverList, serviceList, payPeriod }: 
           checkedActivityId: checkedActivityRes.data.id,
           serviceName: values.serviceName,
           payPeriodHistoryId: payPeriod.id,
-          signatureId: null
+          signatureId: signResponse.data.id
         }
         const updateSchedule = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/time-log`, modifiedEvent)
       }
@@ -280,9 +322,10 @@ const ManualTimesheet = ({ clientList, caregiverList, serviceList, payPeriod }: 
                 showTimeSelectOnly
                 dateFormat='hh:mm aa'
                 id='time-only-picker'
-                onChange={(date: Date | null) => {
+                onChange={(date: any | null) => {
                   if (date !== null) {
                     // Combine the selected end date with the selected end time
+                    const combinedDate = combineDateAndTimeForGMT(values.dateOfService, date)
                     setValues({
                       ...values,
                       clockIn: date
@@ -312,6 +355,7 @@ const ManualTimesheet = ({ clientList, caregiverList, serviceList, payPeriod }: 
                 id='time-only-picker'
                 onChange={(date: Date | null) => {
                   if (date !== null) {
+                    const combinedDate = combineDateAndTimeForGMT(values.dateOfService, date)
                     // Combine the selected end date with the selected end time
                     setValues({
                       ...values,

@@ -16,7 +16,7 @@ import {
 import ActionButton from '@/@core/components/mui/ActionButton'
 import ReactTable from '@/@core/components/mui/ReactTable'
 import axios from 'axios'
-import { calculateHoursWorked, formatDate, formatDateTime } from '@/utils/helperFunctions'
+import { calculateHoursWorked, formatDate, formatDateTime, formatToLocalTime } from '@/utils/helperFunctions'
 import { dark } from '@mui/material/styles/createPalette'
 import CustomAlert from '@/@core/components/mui/Alter'
 import DialogCloseButton from '@/components/dialogs/DialogCloseButton'
@@ -58,11 +58,11 @@ interface EditDetailsPayload {
   id: number
   tsApprovalStatus: string
   userId: number
-  clockInDate: string
-  clockInTime: string
-  clockOutDate: string
-  clockOutTime: string
-  clockOut: string
+  clockInDate: Date
+  clockInTime: Date
+  clockOutDate: Date
+  clockOutTime: Date
+  clockOut: Date
   dateOfService: string
   serviceName: string
   updatedBy: string
@@ -128,6 +128,8 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
   const [modalData, setModalData] = useState<any>(null)
   const [activities, setActivities] = useState<any[]>()
   const [isEditing, setIsEditing] = useState(false)
+  const clockInDate = watch('clockInDate')
+  const clockInTime = watch('clockInTime')
 
   const toggleEditing = () => {
     if (isEditing) {
@@ -195,17 +197,13 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
     )
   })
 
-  const parseTimeStringToDate = (timeString: string): Date | null => {
+  const parseTimeStringToDate = (timeString: string) => {
     if (!timeString) return null
     const [time, period] = timeString.split(' ')
     const [hours, minutes] = time.split(':')
     const date = new Date()
-    let hours24 = parseInt(hours, 10)
-
-    if (period?.toLowerCase() === 'pm' && hours24 !== 12) hours24 += 12
-    if (period?.toLowerCase() === 'am' && hours24 === 12) hours24 = 0
-
-    date.setHours(hours24, parseInt(minutes, 10), 0, 0)
+    date.setHours(period === 'PM' ? parseInt(hours) + 12 : parseInt(hours))
+    date.setMinutes(parseInt(minutes))
     return date
   }
 
@@ -233,13 +231,32 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
       clockOutTime = timePart // hh:mm:aa
     }
 
+    const convertedClockInTime = formatToLocalTime(user.clockIn)
+    const convertedClockOutTime = formatToLocalTime(user.clockOut)
+
+    console.log('CONVERTED CLOCK IN TIME', convertedClockInTime)
+    console.log('CONVERTED CLOCK OUT TIME', convertedClockOutTime)
+
+    const UTCTimeClockIn = new Date(user.clockIn)
+    const timezoneOffsetClockIn = UTCTimeClockIn.getTimezoneOffset() * 60 * 1000 // Offset in milliseconds
+    console.log('UTC TIME', UTCTimeClockIn)
+    const localClockInTime = new Date(UTCTimeClockIn.getTime() - timezoneOffsetClockIn).toISOString()
+
+    console.log('LOCAL CLOCK IN TIME', localClockInTime)
+
+    const UTCTimeClockOut = new Date(user.clockOut)
+    const timezoneOffsetClockOut = UTCTimeClockOut.getTimezoneOffset() * 60 * 1000 // Offset in milliseconds
+    const localClockOutTime = new Date(UTCTimeClockOut.getTime() - timezoneOffsetClockOut).toISOString()
+
+    console.log('LOCAL CLOCKOUT TIME', localClockOutTime)
+
     setValue('id', user.id)
     setValue('tsApprovalStatus', user.tsApprovalStatus || 'Pending')
-    setValue('clockInDate', clockInDate)
-    setValue('clockInTime', clockInTime)
-    setValue('clockOutDate', clockOutDate)
-    setValue('clockOutTime', clockOutTime)
-    setValue('hoursWorked', calculateHoursWorked(user.clockInTime, user.clockOutTime) || user.hrsWorked || '')
+    setValue('clockInDate', localClockInTime.split('T')[0])
+    setValue('clockInTime', localClockInTime.split('T')[1])
+    setValue('clockOutDate', localClockOutTime.split('T')[0])
+    setValue('clockOutTime', localClockOutTime.split('T')[1])
+    setValue('hoursWorked', calculateHoursWorked(user.clockIn, user.clockOut) || user.hrsWorked || '')
     setValue('dateOfService', user.dateOfService ? new Date(user.dateOfService).toISOString().split('T')[0] : '')
     setValue('serviceName', user.serviceName || '')
     setValue('updatedBy', user.updatedBy?.userName || 'N/A')
@@ -254,46 +271,77 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
       const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
       const userId = authUser?.id
 
-      const formatTimeToISO = (dateStr: any, timeStr: any): any => {
+      const formatTimeToISO = (dateStr: any, timeStr: any): string => {
         if (!dateStr || !timeStr) return ''
 
-        // Parse the time string (e.g., "10:09 AM")
-        const [time, period] = timeStr.split(' ')
-        let [hours, minutes] = time.split(':')
-        hours = parseInt(hours, 10)
+        // Handle case where dateStr is a Date object (e.g., from a date picker)
+        let formattedDateStr: string
+        if (dateStr instanceof Date) {
+          formattedDateStr = dateStr.toISOString().split('T')[0] // Extracts "YYYY-MM-DD"
+        } else {
+          formattedDateStr = dateStr // Assume it's already in "YYYY-MM-DD" format
+        }
 
-        // Convert to 24-hour format
-        // if (period.toLowerCase() === 'pm' && hours !== 12) hours += 12
-        // if (period.toLowerCase() === 'am' && hours === 12) hours = 0
+        // Parse the time string (e.g., "08:40:00" or "08:40 AM")
+        let hours: string,
+          minutes: string,
+          seconds: string = '00'
+        if (timeStr.includes(':')) {
+          const [time, period] = timeStr.split(' ')
+          let [h, m, s] = time.split(':')
+          hours = h
+          minutes = m
+          seconds = s || '00' // Use provided seconds or default to '00'
 
-        // Pad hours and minutes with leading zeros if needed
-        const hoursStr = hours.toString().padStart(2, '0')
-        const minutesStr = minutes.padStart(2, '0')
+          // Convert to 24-hour format if period (AM/PM) is provided
+          if (period) {
+            let hoursNum = parseInt(hours, 10)
+            if (period.toLowerCase() === 'pm' && hoursNum !== 12) hoursNum += 12
+            if (period.toLowerCase() === 'am' && hoursNum === 12) hoursNum = 0
+            hours = hoursNum.toString().padStart(2, '0')
+          }
+        } else {
+          // Fallback if timeStr is not in expected format
+          return ''
+        }
 
-        // Combine date and time in ISO format (assuming UTC with 'Z')
-        return `${dateStr}T${hoursStr}:${minutesStr}:00.000Z`
+        // Combine into ISO format
+        return `${formattedDateStr}T${hours}:${minutes}:${seconds}.000Z`
       }
 
-      const clockIn = formatTimeToISO(formData.clockInDate, formData.clockInTime)
-      const clockOut = formatTimeToISO(formData.clockOutDate, formData.clockOutTime)
+      const originalClockIn = modalData?.clockIn || ''
+      const originalClockOut = modalData?.clockOut || ''
 
-      // const clockIn =
-      //   formData.clockInDate && formData.clockInTime
-      //     ? `${formData.clockInDate}T${formData.clockInTime}`
-      //     : formData.clockInDate || ''
+      // Split original clockIn into date and time for comparison
+      const [originalClockInDate = '', originalClockInTime = ''] = originalClockIn.split('T')
+      const [originalClockOutDate = '', originalClockOutTime = ''] = originalClockOut.split('T')
 
-      // // Combine clockOut date and time
-      // const clockOut =
-      //   formData.clockOutDate && formData.clockOutTime
-      //     ? `${formData.clockOutDate}T${formData.clockOutTime}`
-      //     : formData.clockOutDate || ''
+      // Determine if clockIn or clockOut fields have changed
+      const clockInDateChanged = formData.clockInDate !== originalClockInDate
+      const clockInTimeChanged = formData.clockInTime !== originalClockInTime
+      const clockOutDateChanged = formData.clockOutDate !== originalClockOutDate
+      const clockOutTimeChanged = formData.clockOutTime !== originalClockOutTime
+
+      const clockIn =
+        clockInDateChanged || clockInTimeChanged
+          ? formatTimeToISO(formData.clockInDate, formData.clockInTime)
+          : originalClockIn
+
+      // Format clockOut only if it has changed
+      const clockOut =
+        clockOutDateChanged || clockOutTimeChanged
+          ? formatTimeToISO(formData.clockOutDate, formData.clockOutTime)
+          : originalClockOut
+
+      console.log('CLOCK IN', clockIn)
+      console.log('CLOCK OUT', clockOut)
 
       const payload = {
         id: formData.id,
         tsApprovalStatus: formData.tsApprovalStatus,
         userId,
-        clockIn,
-        clockOut,
+        clockIn: clockIn,
+        clockOut: clockOut,
         dateOfService: formData.dateOfService,
         serviceName: formData.serviceName,
         updatedBy: formData.updatedBy,
@@ -303,10 +351,10 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
       }
 
       await axios.patch(`${process.env.NEXT_PUBLIC_API_URL}/time-log/update-timelog`, payload)
-      await fetchInitialData() // Refresh the table data
-      setIsModalShow(false) // Close the modal
-      setModalData(null) // Clear modal data
-      setIsEditing(false) // Reset the editing state
+      await fetchInitialData()
+      setIsModalShow(false)
+      setModalData(null)
+      setIsEditing(false)
     } catch (error) {
       console.error('Error saving modal data', error)
       setAlertOpen(true)
@@ -356,6 +404,19 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
           currentUser?.signature?.signatureStatus === 'Pending'
             ? 'Please approve the signature before editing.'
             : 'Please complete the service authorization before editing.',
+        severity: 'error'
+      })
+      handleCancelEdit()
+      return
+    }
+
+    if (
+      currentUser?.client?.serviceAuth?.length > 0 &&
+      new Date(currentUser.client.serviceAuth[0].endDate) < new Date()
+    ) {
+      setAlertOpen(true)
+      setAlertProps({
+        message: 'The service authorization has expired. Please update the end date before editing.',
         severity: 'error'
       })
       handleCancelEdit()
@@ -599,7 +660,7 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
       sortable: true,
       render: (user: any) => (
         <Chip
-          label={user?.tsApprovalStatus.toUpperCase() || 'PENDING'}
+          label={user?.tsApprovalStatus?.toUpperCase() || 'PENDING'}
           sx={{
             backgroundColor: user?.tsApprovalStatus === 'Approved' ? '#72E1281F' : '#FDB5281F',
             borderRadius: '50px',
@@ -805,7 +866,8 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
                             const timeString = date.toLocaleTimeString('en-US', {
                               hour: '2-digit',
                               minute: '2-digit',
-                              hour12: true
+                              second: '2-digit',
+                              hour12: false
                             })
                             setValue('clockInTime', timeString)
                           }
@@ -827,6 +889,7 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
                         control={control}
                         label={'Clock Out Date'}
                         defaultValue={''}
+                        minDate={clockInDate || undefined} // Restrict to clockInDate or later
                         isRequired={false}
                         disabled={!isEditing}
                       />
@@ -840,12 +903,22 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
                         id='clock-out-time-picker'
                         disabled={!isEditing}
                         selected={parseTimeStringToDate(watch('clockOutTime'))}
+                        minTime={
+                          clockInDate &&
+                          watch('clockOutDate') &&
+                          new Date(clockInDate).toDateString() === new Date(watch('clockOutDate')).toDateString()
+                            ? parseTimeStringToDate(clockInTime) || undefined
+                            : undefined
+                        }
+                        maxTime={new Date()}
+                        // filterTime={filterPassedTime}
                         onChange={(date: Date | null) => {
                           if (date) {
                             const timeString = date.toLocaleTimeString('en-US', {
                               hour: '2-digit',
                               minute: '2-digit',
-                              hour12: true
+                              second: '2-digit',
+                              hour12: false
                             })
                             setValue('clockOutTime', timeString)
                           }

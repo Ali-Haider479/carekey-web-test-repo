@@ -47,6 +47,7 @@ interface Props {
   timeLogData: TimeLogData[]
   isLoading: boolean
   payPeriod: any
+  fetchInitialData: any
 }
 
 // Custom hook for location details
@@ -110,13 +111,14 @@ const LocationCell = React.memo(({ location }: { location: Location }) => {
   )
 })
 
-const EvvActiveUserTable = ({ timeLogData, isLoading, payPeriod }: Props) => {
+const EvvActiveUserTable = ({ timeLogData, isLoading, payPeriod, fetchInitialData }: Props) => {
   const [selectedUser, setSelectedUser] = useState<any | null>(null)
   const [isModalShow, setIsModalShow] = useState(false)
   const [clockOutReason, setClockOutReason] = useState('')
   const [values, setValues] = useState<any>()
   const [weekRange, setWeekRange] = useState<any>({})
   const [filteredData, setFilteredData] = useState<any>()
+  const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
 
   const handleModalClose = () => {
     setIsModalShow(false)
@@ -153,15 +155,38 @@ const EvvActiveUserTable = ({ timeLogData, isLoading, payPeriod }: Props) => {
   }, [payPeriod])
 
   const handleSave = async () => {
+    const pendingSignatures: any = await axios.get(
+      `${process.env.NEXT_PUBLIC_API_URL}/signatures/${selectedUser.caregiver?.id}/pending-signatures-count/${selectedUser?.payPeriodHistory?.id}`
+    )
+    const currentClientPendingSigns = pendingSignatures.data.pendingClients.filter(
+      (el: any) => el.clientId === selectedUser.client.id
+    )
+    console.log('ONE EVV currentClientPendingSigns', currentClientPendingSigns)
+    let signResponse: any
     try {
+      if (currentClientPendingSigns.length === 0) {
+        const payLoad = {
+          clientSignature: '',
+          caregiverSignature: '',
+          duration: '',
+          caregiverId: selectedUser.caregiver?.id,
+          clientId: selectedUser.client.id,
+          tenantId: authUser?.tenant?.id,
+          signatureStatus: 'Pending'
+        }
+
+        signResponse = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/signatures`, payLoad)
+      }
       const payload = {
         id: selectedUser.id,
         notes: clockOutReason,
-        clockOut: combineDateAndTime(values?.dateOfService, values?.clockIn)
+        clockOut: combineDateAndTime(values?.dateOfService, values?.clockIn),
+        signatureId:
+          currentClientPendingSigns.length > 0 ? currentClientPendingSigns[0].signatureId : signResponse?.data?.id
       }
-      console.log('UPDATED DATA AFTER SAVE', payload)
       const res = await axios.patch(`${process.env.NEXT_PUBLIC_API_URL}/time-log`, payload)
       console.log('RESPONSE', res)
+      await fetchInitialData()
       // Reset states
       setSelectedUser(null)
       setIsModalShow(false)
@@ -312,7 +337,7 @@ const EvvActiveUserTable = ({ timeLogData, isLoading, payPeriod }: Props) => {
                       startDate={values?.dateOfService !== null ? values?.dateOfService : weekRange.startDate}
                       showTimeSelect={!values?.dateOfService}
                       dateFormat={!values?.dateOfService ? 'yyyy-MM-dd hh:mm' : 'yyyy-MM-dd'}
-                      minDate={weekRange.startDate} // Set the minimum selectable date
+                      minDate={selectedUser?.clockIn} // Set the minimum selectable date
                       maxDate={weekRange.endDate}
                       customInput={
                         <PickersComponent label='Date Of Clockout' registername='dateOfService' id='event-start-date' />
@@ -328,11 +353,13 @@ const EvvActiveUserTable = ({ timeLogData, isLoading, payPeriod }: Props) => {
                       showTimeSelect
                       selected={values?.clockIn}
                       timeIntervals={15}
-                      minDate={new Date()}
+                      minDate={selectedUser?.clockIn}
                       startDate={new Date()}
                       showTimeSelectOnly
                       dateFormat='hh:mm aa'
                       id='time-only-picker'
+                      // minTime={new Date()}
+                      // maxTime={selectedUser?.clockIn}
                       onChange={(date: Date | null) => {
                         if (date !== null) {
                           // Combine the selected end date with the selected end time

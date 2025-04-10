@@ -159,7 +159,7 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
               <Grid size={{ xs: 12, sm: 4 }}>
                 <CustomTextField
                   label={'Social Security'}
-                  placeHolder={'John'}
+                  placeHolder={'1234'}
                   name={'socialSecurity'}
                   defaultValue={''}
                   type={'number'}

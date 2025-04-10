@@ -73,7 +73,9 @@ const DocumentsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish, defa
                         <div className='flex items-center gap-10'>
                           <div className='flex items-center gap-2'>
                             <PictureAsPdfIcon />
-                            <Typography className='font-semibold text-green-600 text-sm'>{file.name} (100%)</Typography>
+                            <Typography className='font-semibold text-green-600 text-sm'>
+                              {file.name.length > 20 ? `${file.name.substring(0, 20)}...` : file.name} (100%)
+                            </Typography>
                           </div>
                           <div>
                             <Typography className='font-semibold text-green-600 text-sm'>Completed</Typography>

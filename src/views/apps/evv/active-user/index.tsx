@@ -53,7 +53,12 @@ const EvvActiveUser = () => {
         ''
       )}
       <Grid size={{ xs: 12 }}>
-        <EvvActiveUserTable timeLogData={timeLogData} isLoading={isLoading} payPeriod={payPeriod} />
+        <EvvActiveUserTable
+          timeLogData={timeLogData}
+          isLoading={isLoading}
+          payPeriod={payPeriod}
+          fetchInitialData={fetchInitialData}
+        />
       </Grid>
     </Grid>
   )

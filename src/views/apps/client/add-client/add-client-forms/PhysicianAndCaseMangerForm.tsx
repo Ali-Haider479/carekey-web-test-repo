@@ -4,6 +4,8 @@ import Grid from '@mui/material/Grid2'
 import { forwardRef, useImperativeHandle } from 'react'
 import { FormProvider, useForm } from 'react-hook-form'
 import { PhysicianAndCaseMangerFormDataType } from './formTypes'
+import CustomDropDown from '@/@core/components/custom-inputs/CustomDropDown'
+import { USStates } from '@/utils/constants'
 
 type Props = {
   form?: any
@@ -90,8 +92,8 @@ const PhysicianAndCaseMangerForm = forwardRef<{ handleSubmit: any }, Props>(({ o
               </Grid>
               <Grid size={{ xs: 12, sm: 4 }}>
                 <CustomTextField
-                  label={'Physical Address'}
-                  placeHolder={'Enter Physical Address'}
+                  label={'Physician Address'}
+                  placeHolder={'Enter Physician Address'}
                   name={'physicalAddress'}
                   defaultValue={''}
                   type={'text'}
@@ -112,14 +114,17 @@ const PhysicianAndCaseMangerForm = forwardRef<{ handleSubmit: any }, Props>(({ o
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 4 }}>
-                <CustomTextField
-                  label={'Physician State'}
-                  placeHolder={'Enter Physician State'}
-                  name={'physicianState'}
-                  defaultValue={''}
-                  type={'text'}
-                  error={errors.physicianState}
+                <CustomDropDown
+                  name='physicianState'
                   control={control}
+                  error={errors.physicianState}
+                  label='Physician State'
+                  optionList={USStates.map((state: any) => ({
+                    key: state.key,
+                    value: state.value,
+                    optionString: state.optionString
+                  }))}
+                  defaultValue={''}
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 4 }}>
