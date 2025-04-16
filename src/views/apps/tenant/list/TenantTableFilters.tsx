@@ -14,6 +14,7 @@ import CustomTextField from '@core/components/mui/TextField'
 import { useForm } from 'react-hook-form'
 import axios from 'axios'
 import { Button } from '@mui/material'
+import api from '@/utils/api'
 
 interface DefaultStateType {
   role: string
@@ -68,9 +69,7 @@ const TenantTableFilters = ({
       }
 
       // Fetch filtered data
-      const filterResponse = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/tenant/filtered/?${queryParams.toString()}`
-      )
+      const filterResponse = await api.get(`/tenant/filtered/?${queryParams.toString()}`)
       onFilterApplied(filterResponse.data.data)
       console.log('filterResponse', filterResponse)
     } catch (error) {

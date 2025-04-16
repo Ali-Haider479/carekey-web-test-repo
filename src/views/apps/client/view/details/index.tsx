@@ -16,6 +16,7 @@ import ProfileBanner from '@/@layouts/components/horizontal/ProfileBanner'
 import { Typography } from '@mui/material'
 import axios from 'axios'
 import { useParams } from 'next/navigation'
+import api from '@/utils/api'
 
 interface BottomBodyProps {
   tabContentList: Record<string, ReactElement>
@@ -57,7 +58,7 @@ const ClientDetails = ({ tabContentList }: BottomBodyProps) => {
 
   const fetchClientData = async () => {
     try {
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/client/${id}`)
+      const response = await api.get(`/client/${id}`)
       console.log('Response Client Data =>>', response.data)
       setClientData(response.data)
     } catch (error) {

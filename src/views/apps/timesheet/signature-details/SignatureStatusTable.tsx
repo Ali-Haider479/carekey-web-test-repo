@@ -144,7 +144,7 @@ const SignatureStatusTable = ({ data, isLoading }: SignatureStatusTableProps) =>
       sortable: true,
       render: (user: any) => (
         <Chip
-          label={user?.tsApprovalStatus.toUpperCase() || 'PENDING'}
+          label={user?.tsApprovalStatus?.toUpperCase() || 'PENDING'}
           sx={{
             backgroundColor: user?.tsApprovalStatus === 'Approved' ? '#72E1281F' : '#FDB5281F',
             borderRadius: '50px',

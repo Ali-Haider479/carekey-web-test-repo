@@ -8,6 +8,7 @@ import axios from 'axios'
 import { AddOutlined, EditOutlined, SaveOutlined } from '@mui/icons-material'
 import { EditableField } from '@/@core/components/custom-inputs/CustomEditableTextField'
 import CloseIcon from '@mui/icons-material/Close'
+import api from '@/utils/api'
 
 const CircularProgressDeterminate = styled(CircularProgress)<CircularProgressProps>({
   color: 'var(--mui-palette-customColors-trackBg)'
@@ -94,7 +95,7 @@ function CaregiverAboutCard() {
   const fetchData = async () => {
     try {
       setIsLoading(true)
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/caregivers/caregiver/${id}`)
+      const response = await api.get(`/caregivers/caregiver/${id}`)
 
       setData(response.data)
     } catch (error) {
@@ -153,14 +154,14 @@ function CaregiverAboutCard() {
   const handleSave = async () => {
     try {
       setIsLoading(true)
-      await axios.put(`${process.env.NEXT_PUBLIC_API_URL}/caregivers/${id}`, formData)
+      await api.put(`/caregivers/${id}`, formData)
       const accountHistoryPayLoad = {
         actionType: 'CaregiverProfileInfoUpdate',
         details: `Caregiver (ID: ${id}) profile information updated by User (ID: ${authUser?.id})`,
         userId: authUser?.id,
         caregiverId: id
       }
-      await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/account-history/log`, accountHistoryPayLoad)
+      await api.post(`/account-history/log`, accountHistoryPayLoad)
       console.log('FORM DATA', formData)
       setIsEdit(true)
       fetchData() // Refresh data after update

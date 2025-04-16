@@ -3,6 +3,7 @@ import { Card, CardHeader, CardContent, MenuItem, Button, TextField, Typography 
 import Grid from '@mui/material/Grid2'
 import { useForm } from 'react-hook-form'
 import axios from 'axios'
+import api from '@/utils/api'
 
 interface DefaultStateType {
   caregiverName: string
@@ -41,16 +42,12 @@ const MissedShiftFilters = ({ onFilterApplied }: EVVFiltersProps) => {
       queryParams.append('limit', '10')
       // If no filters are applied, fetch all data
       if (queryParams.toString() === 'page=1&limit=10') {
-        const response = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_URL}/time-log/dashboard/missed-shifts/${authUser?.tenant?.id}`
-        )
+        const response = await api.get(`/time-log/dashboard/missed-shifts/${authUser?.tenant?.id}`)
         onFilterApplied(response.data.data)
         return
       }
       // Fetch filtered data
-      const filterResponse = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/time-log/filtered/?${queryParams.toString()}`
-      )
+      const filterResponse = await api.get(`/time-log/filtered/?${queryParams.toString()}`)
       onFilterApplied(filterResponse.data.data)
     } catch (error) {
       console.error('Error applying filters:', error)
@@ -59,9 +56,7 @@ const MissedShiftFilters = ({ onFilterApplied }: EVVFiltersProps) => {
 
   const handleReset = async () => {
     setFilterData(defaultState)
-    const response = await axios.get(
-      `${process.env.NEXT_PUBLIC_API_URL}/time-log/dashboard/missed-shifts/${authUser?.tenant?.id}`
-    )
+    const response = await api.get(`/time-log/dashboard/missed-shifts/${authUser?.tenant?.id}`)
     onFilterApplied(response.data.data)
   }
 

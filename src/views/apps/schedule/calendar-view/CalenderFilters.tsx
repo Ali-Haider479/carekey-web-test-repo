@@ -2,6 +2,7 @@ import CustomDropDown from '@/@core/components/custom-inputs/CustomDropDown'
 import Dropdown from '@/@core/components/mui/DropDown'
 import { useAppDispatch } from '@/hooks/useDispatch'
 import { clearFilter, filterCaregiverSchedules } from '@/redux-store/slices/calendar'
+import api from '@/utils/api'
 import { Grid2 as Grid, Typography } from '@mui/material'
 import axios from 'axios'
 import React, { useEffect, useState } from 'react'
@@ -22,7 +23,7 @@ const CalenderFilters = ({ filterEvent }: any) => {
 
   const fetchCaregiverList = async () => {
     try {
-      const caregiversResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/caregivers`)
+      const caregiversResponse = await api.get(`/caregivers`)
       const fetchedCaregivers = caregiversResponse.data
       console.log('Caregivers List --> ', fetchedCaregivers)
       setCaregivers(fetchedCaregivers)
@@ -33,7 +34,7 @@ const CalenderFilters = ({ filterEvent }: any) => {
 
   const fetchClientsList = async () => {
     try {
-      const clientsResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/client`)
+      const clientsResponse = await api.get(`/client`)
       const fetchedClients = clientsResponse.data
       console.log('Client List --> ', fetchedClients)
       setCllients(fetchedClients)

@@ -2,10 +2,10 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import type { PayloadAction } from '@reduxjs/toolkit'
 import type { EventInput } from '@fullcalendar/core'
-import axios from 'axios'
 
 // Type Imports
 import type { CalendarFiltersType, CalendarType } from '@/types/apps/calendarTypes'
+import api from '@/utils/api'
 
 // Define initial state
 const initialState: CalendarType & { loading: boolean; error: string | null } = {
@@ -22,7 +22,7 @@ const initialState: CalendarType & { loading: boolean; error: string | null } = 
 // Create async thunk for fetching events
 // export const fetchEvents = createAsyncThunk('calendar/fetchEvents', async (_, { rejectWithValue }) => {
 //   try {
-//     const response = await axios.get('http://192.168.18.192:8080/schedule')
+//     const response = await api.get('http://192.168.18.192:8080/schedule')
 
 //     return response.data
 //   } catch (error: any) {
@@ -32,7 +32,7 @@ const initialState: CalendarType & { loading: boolean; error: string | null } = 
 
 export const fetchEvents = createAsyncThunk('calendar/fetchEvents', async (_, { rejectWithValue }) => {
   try {
-    const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/schedule`)
+    const response = await api.get(`/schedule`)
     return response.data
   } catch (error: any) {
     return rejectWithValue(error.response?.data || 'Failed to fetch events')

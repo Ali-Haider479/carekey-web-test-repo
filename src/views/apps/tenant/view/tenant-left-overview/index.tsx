@@ -9,6 +9,7 @@ import TenantPlan from './TenantPlan'
 import { useEffect, useState } from 'react'
 import axios from 'axios'
 import { useParams } from 'next/navigation'
+import api from '@/utils/api'
 
 const TenantLeftOverview = () => {
   const { id } = useParams()
@@ -17,7 +18,7 @@ const TenantLeftOverview = () => {
   useEffect(() => {
     const fetchTenantData = async () => {
       try {
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/tenant/${id}`)
+        const response = await api.get(`/tenant/${id}`)
         const data = response.data
         setTenantData(data)
       } catch (error) {

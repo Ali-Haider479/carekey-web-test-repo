@@ -8,6 +8,7 @@ import ReactTable from '@/@core/components/mui/ReactTable'
 import axios from 'axios'
 import { dark } from '@mui/material/styles/createPalette'
 import { transformBillingData } from '@/utils/transformBillingData'
+import api from '@/utils/api'
 
 interface BillingDetailTableProps {
   data: any
@@ -31,7 +32,7 @@ const BillingDetailTable = ({ data }: BillingDetailTableProps) => {
       minWidth: 170,
       render: item => {
         // Use subRows[0] if it exists, otherwise use timelog[0]
-        const client = item.subRows ? item.subRows[0]?.timelog[0]?.client : item.timelog![0]?.client
+        const client = item?.subRows ? item?.subRows[0]?.timelog[0]?.client : item?.timelog![0]?.client
         return (
           <Typography className={`font-semibold ${dark ? 'text-[#7112B7]' : 'text-[#4B0082]'}`} color='primary'>
             {`${client?.firstName} ${client?.lastName}`}
@@ -150,7 +151,7 @@ const BillingDetailTable = ({ data }: BillingDetailTableProps) => {
   const getBillingDetails = async () => {
     try {
       setIsLoading(true)
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/time-log/billing`)
+      const response = await api.get(`/time-log/billing`)
       setFilteredData(transformBillingData(response.data))
       // setFilteredData(transformTimesheetDataTwo(response.data))
     } catch (error) {

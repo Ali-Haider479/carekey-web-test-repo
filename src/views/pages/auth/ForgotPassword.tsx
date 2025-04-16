@@ -32,6 +32,7 @@ import CareKeyLogoLight from '@/@core/svg/LogoLight'
 import ForgotPasswordPageSVG from '../../../../public/assets/icons/ForgotPasswordSVG'
 import axios, { AxiosResponse } from 'axios'
 import { Grid2 as Grid } from '@mui/material'
+import api from '@/utils/api'
 
 // Styled Custom Components
 const ForgotPasswordIllustration = styled('img')(({ theme }) => ({
@@ -65,8 +66,8 @@ const ForgotPassword = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
-      const response: AxiosResponse<{ message: string }> = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/auth/forgot-password`,
+      const response: AxiosResponse<{ message: string }> = await api.post(
+        `/auth/forgot-password`,
         { email: email.toLowerCase() },
         {
           headers: {

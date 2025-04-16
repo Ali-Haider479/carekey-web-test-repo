@@ -10,6 +10,7 @@ import axios from 'axios'
 import ControlledDatePicker from '@/@core/components/custom-inputs/ControledDatePicker'
 import ControlledTextArea from '@/@core/components/custom-inputs/ControlledTextArea'
 import { USStates } from '@/utils/constants'
+import api from '@/utils/api'
 
 type Props = {
   onFinish: any
@@ -97,7 +98,7 @@ const LoginInfoComponent = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
   }
 
   const fetchClients = async () => {
-    const fetchedClients = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/client`)
+    const fetchedClients = await api.get(`/client`)
     console.log('List of all clients --> ', fetchedClients)
     setClientList(fetchedClients)
   }

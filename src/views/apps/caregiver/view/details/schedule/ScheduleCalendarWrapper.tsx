@@ -27,6 +27,7 @@ import {
 import axios from 'axios'
 import { useParams } from 'next/navigation'
 import { useAppDispatch } from '@/hooks/useDispatch'
+import api from '@/utils/api'
 
 // CalendarColors Object
 const calendarsColor: CalendarColors = {
@@ -70,11 +71,11 @@ const AppCalendar = () => {
     ;(async () => {
       try {
         const response = await Promise.all([
-          axios.get(`${process.env.NEXT_PUBLIC_API_URL}/caregivers`),
-          axios.get(`${process.env.NEXT_PUBLIC_API_URL}/client`),
-          axios.get(`${process.env.NEXT_PUBLIC_API_URL}/service`),
-          axios.get(`${process.env.NEXT_PUBLIC_API_URL}/pay-period/tenant/${authUser?.tenant?.id}`),
-          axios.get(`${process.env.NEXT_PUBLIC_API_URL}/caregivers/${id}`)
+          api.get(`/caregivers`),
+          api.get(`/client`),
+          api.get(`/service`),
+          api.get(`/pay-period/tenant/${authUser?.tenant?.id}`),
+          api.get(`/caregivers/${id}`)
         ])
         setCaregiverList(response[0].data)
         setClientList(response[1].data)

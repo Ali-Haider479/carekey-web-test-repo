@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react'
 import axios from 'axios'
 import { fetchEvents } from '@/redux-store/slices/calendar'
 import { useAppDispatch } from '@/hooks/useDispatch'
+import api from '@/utils/api'
 
 // Component Imports
 
@@ -26,10 +27,10 @@ const ManualTimesheetPage = () => {
     ;(async () => {
       try {
         const response = await Promise.all([
-          axios.get(`${process.env.NEXT_PUBLIC_API_URL}/caregivers`),
-          axios.get(`${process.env.NEXT_PUBLIC_API_URL}/client`),
-          axios.get(`${process.env.NEXT_PUBLIC_API_URL}/service`),
-          axios.get(`${process.env.NEXT_PUBLIC_API_URL}/pay-period/tenant/${authUser?.tenant?.id}`)
+          api.get(`/caregivers`),
+          api.get(`/client`),
+          api.get(`/service`),
+          api.get(`/pay-period/tenant/${authUser?.tenant?.id}`)
         ])
         setCaregiverList(response[0].data)
         setClientList(response[1].data)

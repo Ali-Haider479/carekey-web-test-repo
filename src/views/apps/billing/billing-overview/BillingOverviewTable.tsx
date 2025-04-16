@@ -4,10 +4,9 @@ import { useEffect, useState } from 'react'
 import Card from '@mui/material/Card'
 import { CircularProgress, Typography } from '@mui/material'
 import Dropdown from '@/@core/components/mui/DropDown'
-import { dark } from '@mui/material/styles/createPalette'
 import ReactTable from '@/@core/components/mui/ReactTable'
 import { transformBillingData } from '@/utils/transformBillingData'
-import axios from 'axios'
+import api from '@/utils/api'
 
 const BillingOverviewTable = () => {
   const [filteredData, setFilteredData] = useState<any>([])
@@ -30,8 +29,8 @@ const BillingOverviewTable = () => {
       editable: true,
       sortable: true,
       render: item => {
-        const client = item.subRows ? item.subRows[0].timelog![0].client : item.timelog![0].client
-        return <Typography color='primary'>{`${client.firstName} ${client.lastName}`}</Typography>
+        const client = item.subRows ? item?.subRows[0]?.timelog![0]?.client : item?.timelog![0]?.client
+        return <Typography color='primary'>{`${client?.firstName} ${client?.lastName}`}</Typography>
       }
     },
     {
@@ -41,8 +40,8 @@ const BillingOverviewTable = () => {
       editable: true,
       sortable: true,
       render: item => {
-        const caregiver = item.subRows ? item.subRows[0].timelog![0].caregiver : item.timelog![0].caregiver
-        return <Typography color='primary'>{`${caregiver.firstName} ${caregiver.lastName}`}</Typography>
+        const caregiver = item?.subRows ? item?.subRows[0]?.timelog![0]?.caregiver : item?.timelog![0]?.caregiver
+        return <Typography color='primary'>{`${caregiver?.firstName} ${caregiver?.lastName}`}</Typography>
       }
     },
     {
@@ -116,7 +115,7 @@ const BillingOverviewTable = () => {
   const getBillingDetails = async () => {
     try {
       setIsLoading(true)
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/time-log/billing`)
+      const response = await api.get(`/time-log/billing`)
       setFilteredData(transformBillingData(response.data))
       // setFilteredData(transformTimesheetDataTwo(response.data))
     } catch (error) {

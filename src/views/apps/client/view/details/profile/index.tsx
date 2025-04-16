@@ -5,13 +5,14 @@ import ClientAboutCard from './ClientAboutCard'
 import Grid from '@mui/material/Grid2'
 import { useParams } from 'next/navigation'
 import axios from 'axios'
+import api from '@/utils/api'
 
 const Profile = () => {
   const { id } = useParams()
   const [clientData, setClientData] = useState<any>()
   const getClientData = async () => {
     try {
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/client/detail/${id}`)
+      const response = await api.get(`/client/detail/${id}`)
       console.log('Response Client from Profile Data =>>', response.data)
       setClientData(response.data)
     } catch (error) {

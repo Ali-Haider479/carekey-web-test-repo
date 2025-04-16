@@ -80,22 +80,28 @@ const TenantPlan = ({ tenantData }: any) => {
   const handleSubscribe = async (priceId: string, tenantId: any, planId: any) => {
     setLoadingStates((prev: any) => ({ ...prev, [planId]: true }))
     try {
+      // Get the current active subscription ID, if any
+      const currentSubscriptionId = sortedPayments?.length > 0 ? sortedPayments[0].stripeSubscriptionId : null
+
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/stripe/create-checkout-session`,
-        { priceId, tenantId }, // Request body
+        {
+          priceId,
+          tenantId,
+          currentSubscriptionId // Send current subscription ID to cancel it
+        },
         {
           headers: {
             'Content-Type': 'application/json'
           }
         }
       )
-      console.log('ONE CREATE SESSION', response.data)
-      const { sessionId } = response.data // Axios automatically parses JSON
+
+      const { sessionId } = response.data
       const stripe = await stripePromise
       await stripe?.redirectToCheckout({ sessionId })
     } catch (error: any) {
       console.error('Frontend error:', error)
-      // Optionally, handle Axios-specific errors
       if (error.response) {
         console.error('Error response:', error.response.data)
       }

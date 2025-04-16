@@ -4,6 +4,7 @@ import { Card, CardHeader, CardContent, Grid2 as Grid, TextField, Button } from 
 import { useForm } from 'react-hook-form'
 import axios from 'axios'
 import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
+import api from '@/utils/api'
 
 interface defaultStateType {
   clientName: string
@@ -62,13 +63,11 @@ const ScheduleTableFiltersCard = ({ onFilterApplied }: scheduleFilterProps) => {
       let filterResponse
       if (queryParams.toString()) {
         // Fetch filtered data
-        filterResponse = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_URL}/schedule/filtered/?${queryParams.toString()}`
-        )
+        filterResponse = await api.get(`/schedule/filtered/?${queryParams.toString()}`)
         onFilterApplied(filterResponse.data) // Pass the filtered data
       } else {
         // If no filters, pass all events (or reset to null to use Redux events)
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/schedule`)
+        const response = await api.get(`/schedule`)
         onFilterApplied(response.data)
       }
     } catch (error) {
@@ -79,7 +78,7 @@ const ScheduleTableFiltersCard = ({ onFilterApplied }: scheduleFilterProps) => {
   const handleReset = async () => {
     try {
       setFilterData(defaultState)
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/schedule`)
+      const response = await api.get(`/schedule`)
       onFilterApplied(response.data)
     } catch (error) {
       console.error('Error resetting filters:', error)

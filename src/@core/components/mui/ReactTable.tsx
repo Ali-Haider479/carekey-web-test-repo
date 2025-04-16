@@ -38,6 +38,7 @@ export interface Column<T> {
 type StatusOption = 'Approved' | 'Rejected' | 'Pending' | 'Mixed'
 
 const STATUS_OPTIONS: StatusOption[] = ['Approved', 'Rejected', 'Pending', 'Mixed']
+
 interface ReactTableProps<T extends { subRows?: T[] }> {
   columns: Column<T>[]
   data: T[]
@@ -93,7 +94,10 @@ function ReactTable<T extends { subRows?: T[] }>({
   const [expanded, setExpanded] = useState<string[]>([])
   const [page, setPage] = useState(0)
   const [rowsPerPage, setRowsPerPage] = useState(pageSize)
-  const [sortConfig, setSortConfig] = useState<{ columnId: string; direction: 'asc' | 'desc' } | null>(null)
+  const [sortConfig, setSortConfig] = useState<{ columnId: string; direction: 'asc' | 'desc' } | null>({
+    columnId: 'id',
+    direction: 'asc'
+  })
   const [editedData, setEditedData] = useState<{ [key: string]: any }>({})
 
   const theme: any = useTheme()
@@ -103,6 +107,45 @@ function ReactTable<T extends { subRows?: T[] }>({
       setEditedData({})
     }
   }, [editingId])
+
+  // Initialize default sorting by id in ascending order
+  useEffect(() => {
+    if (data.length > 0 && sortConfig?.columnId === 'id' && sortConfig?.direction === 'asc') {
+      onSort?.('id', 'asc')
+    }
+  }, [data, onSort, sortConfig])
+
+  // Function to sort data
+  const getSortedData = (data: T[]): T[] => {
+    if (!sortConfig) return data
+
+    const { columnId, direction } = sortConfig
+
+    // Only sort top-level rows; preserve subRows
+    const sortedData = [...data].sort((a, b) => {
+      const aValue = (a as any)[columnId]
+      const bValue = (b as any)[columnId]
+
+      if (aValue == null && bValue == null) return 0
+      if (aValue == null) return direction === 'asc' ? -1 : 1
+      if (bValue == null) return direction === 'asc' ? 1 : -1
+
+      if (typeof aValue === 'number' && typeof bValue === 'number') {
+        return direction === 'asc' ? aValue - bValue : bValue - aValue
+      }
+
+      // Handle strings or other types
+      return direction === 'asc'
+        ? String(aValue).localeCompare(String(bValue))
+        : String(bValue).localeCompare(String(aValue))
+    })
+
+    // Recursively sort subRows if needed (optional)
+    return sortedData.map(item => ({
+      ...item,
+      subRows: item.subRows ? getSortedData(item.subRows) : item.subRows
+    }))
+  }
 
   const handleEditChange = (id: string | number, columnId: string, value: any, item?: any) => {
     const newEditedData = {
@@ -214,6 +257,7 @@ function ReactTable<T extends { subRows?: T[] }>({
       return [...acc, itemId, ...subRowIds]
     }, [])
   }
+
   const getSubRowIds = (item: T): string[] => {
     if (!item.subRows) return []
     return getAllIds(item.subRows)
@@ -268,6 +312,14 @@ function ReactTable<T extends { subRows?: T[] }>({
 
   const handleExpand = (id: string) => {
     setExpanded(prev => (prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]))
+  }
+
+  const handleSort = (columnId: string) => {
+    if (!columns.find(col => col.id === columnId)?.sortable) return
+
+    const direction = sortConfig?.columnId === columnId && sortConfig.direction === 'asc' ? 'desc' : 'asc'
+    setSortConfig({ columnId, direction })
+    onSort?.(columnId, direction)
   }
 
   const handleChangePage = (event: unknown, newPage: number) => {
@@ -340,7 +392,12 @@ function ReactTable<T extends { subRows?: T[] }>({
     )
   }
 
-  const paginatedData = enablePagination ? data.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage) : data
+  // Apply sorting to data
+  const sortedData = getSortedData(data)
+  const paginatedData = enablePagination
+    ? sortedData.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+    : sortedData
+
   return (
     <Box>
       <TableContainer
@@ -406,8 +463,10 @@ function ReactTable<T extends { subRows?: T[] }>({
                     //   backgroundColor: theme.palette.divider // Use the theme's divider color
                     // }
                   }}
+                  onClick={() => column.sortable && handleSort(column.id)}
                 >
                   {column.label}
+                  {sortConfig?.columnId === column.id && <span>{sortConfig.direction === 'asc' ? ' ↑' : ' ↓'}</span>}
                 </TableCell>
               ))}
             </TableRow>

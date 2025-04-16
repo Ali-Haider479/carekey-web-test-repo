@@ -1,4 +1,3 @@
-// hooks/useMqttClient.ts
 import { useEffect, useRef, useState } from 'react'
 import mqtt, { MqttClient } from 'mqtt'
 
@@ -15,6 +14,9 @@ export const useMqttClient = (config: MqttConfig) => {
   const [isConnected, setIsConnected] = useState(false)
   const messageHandlers = useRef<Map<string, (message: string) => void>>(new Map())
 
+  // Optionally retrieve tenantId from Redux for tenant-specific topics
+  // const tenantId = useAppSelector(state => state.auth.user.tenant?.id)
+
   useEffect(() => {
     const connect = async () => {
       try {
@@ -28,12 +30,9 @@ export const useMqttClient = (config: MqttConfig) => {
 
         const awsCredentials: AwsCredentials = await response.json()
 
-        // The clientId is important and should be unique for each client
         const clientId = `carekey-client-${Math.random().toString(16).substr(2, 8)}`
-
         console.log('Connecting to AWS IoT broker with presigned URL')
 
-        // Connect using the presigned URL directly
         clientRef.current = mqtt.connect(awsCredentials.url, {
           clientId,
           clean: true,
@@ -42,19 +41,55 @@ export const useMqttClient = (config: MqttConfig) => {
         })
 
         clientRef.current.on('connect', () => {
-          console.log('Successfully connected to AWS IoT MQTT broker')
+          console.log('Layyah Successfully connected to AWS IoT MQTT broker')
           setIsConnected(true)
 
-          // Resubscribe to all topics
+          // Subscribe to wildcard topic: carekey/chat/#
+          const wildcardTopic = 'carekey/chat/#'
+          if (!messageHandlers.current.has(wildcardTopic)) {
+            messageHandlers.current.set(wildcardTopic, (message: string) => {
+              console.log(`Layyah Received message on ${wildcardTopic}:`, message)
+              // Add logic to handle chat messages, e.g., dispatch to Redux
+              // dispatch({ type: 'ADD_CHAT_MESSAGE', payload: JSON.parse(message) });
+            })
+          }
+
+          // Subscribe to wildcard topic
+          clientRef.current?.subscribe(wildcardTopic, err => {
+            if (err) {
+              console.error(`Error subscribing to ${wildcardTopic}:`, err)
+            } else {
+              console.log(`Layyah Successfully subscribed to ${wildcardTopic}`)
+            }
+          })
+
+          // Resubscribe to other topics
           messageHandlers.current.forEach((_, topic) => {
-            clientRef.current?.subscribe(topic)
+            if (topic !== wildcardTopic) {
+              clientRef.current?.subscribe(topic, err => {
+                if (err) {
+                  console.error(`Error subscribing to ${topic}:`, err)
+                } else {
+                  console.log(`Layyah Successfully subscribed to ${topic}`)
+                }
+              })
+            }
           })
         })
 
         clientRef.current.on('message', (topic, message) => {
-          const handler = messageHandlers.current.get(topic)
-          if (handler) {
-            handler(message.toString())
+          // Handle exact topic match
+          const exactHandler = messageHandlers.current.get(topic)
+          if (exactHandler) {
+            exactHandler(message.toString())
+            return
+          }
+
+          // Handle wildcard match (carekey/chat/# or tenant-specific)
+          const wildcardTopic = 'carekey/chat/#'
+          const wildcardHandler = messageHandlers.current.get(wildcardTopic)
+          if (wildcardHandler && topic.startsWith(wildcardTopic.replace('#', ''))) {
+            wildcardHandler(message.toString())
           }
         })
 
@@ -86,7 +121,7 @@ export const useMqttClient = (config: MqttConfig) => {
         clientRef.current.end(true)
       }
     }
-  }, [config.username])
+  }, [config.username]) // Add tenantId to dependencies
 
   const subscribe = (topic: string, callback: (message: string) => void) => {
     if (!topic || !callback) return

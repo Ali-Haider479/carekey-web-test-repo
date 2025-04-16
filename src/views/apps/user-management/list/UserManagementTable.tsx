@@ -28,6 +28,7 @@ import axios from 'axios'
 import { useRouter } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
 import CloseIcon from '@mui/icons-material/Close'
+import api from '@/utils/api'
 
 type Permission = {
   id: number
@@ -96,9 +97,9 @@ const UserManagementList = () => {
 
   const fetchData = async () => {
     try {
-      const userData = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/user`)
-      const roleData = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/role`)
-      const permission = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/permission`)
+      const userData = await api.get(`/user`)
+      const roleData = await api.get(`/role`)
+      const permission = await api.get(`/permission`)
       const roles = roleData.data.filter((role: any) => role.id !== 1)
       const users = userData.data.filter((user: any) => user.role?.title !== 'Super Admin')
       setUsersData(users)
@@ -205,7 +206,7 @@ const UserManagementList = () => {
         }
         console.log('ELSE SECTION PAYLOAD', payload)
       }
-      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/user/user-management`, payload)
+      const response = await api.post(`/user/user-management`, payload)
       await fetchData()
       setIsModalShow(false)
       setFormData({

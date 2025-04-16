@@ -6,6 +6,7 @@ import BillingDetailFilters from './BillingDetailFilters'
 import { transformBillingData } from '@/utils/transformBillingData'
 import axios from 'axios'
 import { useEffect, useState } from 'react'
+import api from '@/utils/api'
 
 // Component Imports
 
@@ -20,7 +21,7 @@ const BillingDetails = () => {
   const getBillingDetails = async () => {
     try {
       setIsLoading(true)
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/time-log/billing`)
+      const response = await api.get(`/time-log/billing`)
       setBillingData(transformBillingData(response.data))
       // setFilteredData(transformTimesheetDataTwo(response.data))
     } catch (error) {

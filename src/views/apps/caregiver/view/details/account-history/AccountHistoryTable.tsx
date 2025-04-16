@@ -21,6 +21,7 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
 
 // Utility Imports
 import { formatDateTime } from '@/utils/helperFunctions'
+import api from '@/utils/api'
 
 interface DefaultStateType {
   actionType: string
@@ -65,7 +66,7 @@ const AccountHistoryTable = () => {
   useEffect(() => {
     const fetchUserActions = async () => {
       try {
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/account-history/caregiver/${id}`)
+        const response = await api.get(`/account-history/caregiver/${id}`)
         setUserActions(response.data)
         setOriginalUserActions(response.data) // Save original data
       } catch (err) {

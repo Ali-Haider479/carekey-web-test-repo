@@ -8,6 +8,7 @@ import LogsApprovalFilters from './LogsApprovalFilters'
 import WaitingLogsApprovalTable from './WaitingLogsApprovalTable'
 import { transformTimesheetDataTwo } from '@/utils/transform'
 import CustomAlert from '@/@core/components/mui/Alter'
+import api from '@/utils/api'
 
 // Component Imports
 
@@ -25,9 +26,14 @@ const LogsApprovalDetails = () => {
 
   const fetchInitialData = async () => {
     try {
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/time-log`)
+      const response = await api.get(`/time-log`)
       // setTimeLogData(response.data.filter((item: any) => item.clockOut != null))
-      setTimeLogData(transformTimesheetDataTwo(response.data.filter((item: any) => item.clockOut != null)))
+      // setTimeLogData(transformTimesheetDataTwo(response.data.filter((item: any) => item.clockOut != null)))
+      setTimeLogData(
+        response?.data?.length > 0
+          ? transformTimesheetDataTwo(response.data.filter((item: any) => item.clockOut != null))
+          : []
+      )
 
       setIsLoading(false)
     } catch (error) {

@@ -21,6 +21,7 @@ import FormModal from '@/@core/components/mui/Modal'
 import { AddEventSidebarType, AddEventType } from '@/types/apps/calendarTypes'
 import { Alert, Grid2 as Grid, patch, Snackbar } from '@mui/material'
 import CustomAlert from '@/@core/components/mui/Alter'
+import api from '@/utils/api'
 
 interface PickerProps {
   label?: string
@@ -142,6 +143,8 @@ const AddEventModal = (props: AddEventSidebarType) => {
   const [values, setValues] = useState<DefaultStateType>(defaultState)
   const [alertOpen, setAlertOpen] = useState<boolean>(false)
   const [alertMessage, setAlertMessage] = useState<any>()
+  const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
+
   const PickersComponent = forwardRef(({ ...props }: PickerProps, ref) => {
     return (
       <CustomTextField
@@ -243,7 +246,8 @@ const AddEventModal = (props: AddEventSidebarType) => {
         assignedHours: assignedHours,
         notes: values.notes,
         location: values.location,
-        payPeriod: props?.payPeriod?.id
+        payPeriod: props?.payPeriod?.id,
+        tenantId: authUser?.tenant?.id
       })
 
       // Move to the next day without modifying endDate
@@ -271,7 +275,7 @@ const AddEventModal = (props: AddEventSidebarType) => {
           const patchBody = {
             ...bulkEvents[0]
           }
-          const updatedSchedule = await axios.patch(`${process.env.NEXT_PUBLIC_API_URL}/schedule/${eventId}`, patchBody)
+          const updatedSchedule = await api.patch(`/schedule/${eventId}`, patchBody)
           handleUpdateEvent(updatedSchedule.data)
         }
       } catch (error) {
@@ -281,7 +285,7 @@ const AddEventModal = (props: AddEventSidebarType) => {
       }
     } else {
       try {
-        const createSchedule = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/schedule`, bulkEvents)
+        const createSchedule = await api.post(`/schedule`, bulkEvents)
         console.log('Created schedule:', createSchedule.data)
         handleAddEvent(createSchedule.data)
       } catch (error) {

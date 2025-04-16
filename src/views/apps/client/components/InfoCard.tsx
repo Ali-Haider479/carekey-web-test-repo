@@ -1,5 +1,6 @@
 'use client'
 import ProfileAvatar from '@/@core/components/mui/ProfileAvatar'
+import api from '@/utils/api'
 import { Avatar, Card, CardContent, Typography } from '@mui/material'
 import axios from 'axios'
 import { useParams } from 'next/navigation'
@@ -11,7 +12,7 @@ const InfoCard = () => {
 
   const fetchAssignCaregivers = async () => {
     try {
-      const clientResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/client/assigned-caregivers/${id}`)
+      const clientResponse = await api.get(`/client/assigned-caregivers/${id}`)
       const fetchedClient = clientResponse.data
       console.log('Assigned Caregivers --> ', fetchedClient)
 
@@ -38,7 +39,7 @@ const InfoCard = () => {
 
   const getProfileImage = async (key: string) => {
     try {
-      const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/client/getProfileUrl/${key}`)
+      const res = await api.get(`/client/getProfileUrl/${key}`)
       return res.data
     } catch (err) {
       console.error(`Error fetching profile image: ${err}`)

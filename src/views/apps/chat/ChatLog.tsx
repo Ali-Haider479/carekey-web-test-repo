@@ -23,6 +23,7 @@ import { useMqttClient } from '@/hooks/useMqtt'
 import { useAppDispatch } from '@/hooks/useDispatch'
 import { receiveMessage } from '@/redux-store/slices/chat'
 import axios from 'axios'
+import api from '@/utils/api'
 
 type MsgGroupType = {
   senderId: number
@@ -121,7 +122,7 @@ const ChatLog = ({ chatStore, isBelowLgScreen, isBelowMdScreen, isBelowSmScreen 
     if (!chatRoomId || !profileUser?.id || isUpdatePendingRef.current) return
     try {
       isUpdatePendingRef.current = true
-      await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/chat/update-read-status`, {
+      await api.post(`/chat/update-read-status`, {
         chatRoomId: chatRoomId,
         readerId: profileUser.id
       })

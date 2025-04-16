@@ -15,6 +15,7 @@ import ReactTable from '@/@core/components/mui/ReactTable'
 import { useForm } from 'react-hook-form'
 import CustomTextField from '@/@core/components/mui/TextField'
 import { USStates } from '@/utils/constants'
+import api from '@/utils/api'
 
 interface DefaultStateType {
   pmiNumber: string
@@ -52,7 +53,7 @@ const ClientListApps = () => {
 
   const fetchData = async () => {
     try {
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/client`)
+      const response = await api.get(`/client`)
       console.log('RESPONSE CLIENT DATA', response)
       setData(response.data)
     } catch (error) {
@@ -82,7 +83,7 @@ const ClientListApps = () => {
 
   const getProfileImage = async (key: string) => {
     try {
-      const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/client/getProfileUrl/${key}`)
+      const res = await api.get(`/client/getProfileUrl/${key}`)
       return res.data
     } catch (err) {
       throw Error(`Error in fetching profile image url, ${err}`)
@@ -108,7 +109,7 @@ const ClientListApps = () => {
 
   const getServiceTypes = async () => {
     try {
-      const serviceTypesResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/service`)
+      const serviceTypesResponse = await api.get(`/service`)
       console.log('Service Types --> ', serviceTypesResponse)
       setServiceTypes(serviceTypesResponse.data)
     } catch (error) {
@@ -138,16 +139,14 @@ const ClientListApps = () => {
 
       // If no filters are applied, fetch all data
       if (queryParams.toString() === 'page=1&limit=10') {
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/client`)
+        const response = await api.get(`/client`)
         setDataWithProfileImg(response.data)
         setFilteredData(response.data)
         return
       }
       console.log('QUERY PARAMS', queryParams)
       // Fetch filtered data
-      const filterResponse = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/client/filtered/?${queryParams.toString()}`
-      )
+      const filterResponse = await api.get(`/client/filtered/?${queryParams.toString()}`)
       console.log('Filter response ----> ', filterResponse.data.data)
       setDataWithProfileImg(filterResponse.data.data)
       setFilteredData(filterResponse.data.data)
@@ -162,7 +161,7 @@ const ClientListApps = () => {
       setState(defaultState)
       setServiceTypes(defaultState)
 
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/client`)
+      const response = await api.get(`/client`)
       setDataWithProfileImg(response.data)
     } catch (error) {
       console.error('Error Reseting Filters: ', error)

@@ -10,6 +10,7 @@ import ControlledTextArea from '@/@core/components/custom-inputs/ControlledTextA
 import CustomTextField from '@/@core/components/custom-inputs/CustomTextField'
 import { FormProvider, useForm } from 'react-hook-form'
 import DialogCloseButton from '@/components/dialogs/DialogCloseButton'
+import api from '@/utils/api'
 
 type FormItems = {
   clientId?: number
@@ -43,7 +44,7 @@ const InfoCard = () => {
   const getProfileImage = async (key: string | null) => {
     if (!key) return
     try {
-      const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/client/getProfileUrl/${key}`)
+      const res = await api.get(`/client/getProfileUrl/${key}`)
       return res.data
     } catch (err) {
       console.error(`Error fetching profile image: ${err}`)
@@ -55,9 +56,9 @@ const InfoCard = () => {
 
   const fetchData = async () => {
     try {
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/caregivers/user/${id}`)
+      const response = await api.get(`/caregivers/user/${id}`)
       const fetchedData = response.data
-      const caregivers = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/caregivers/caregiver/${id}`)
+      const caregivers = await api.get(`/caregivers/caregiver/${id}`)
       console.log('CAREGIVER USER ', caregivers)
       setCurrentUser(caregivers?.data?.user)
       console.log('Caregiver Profile Data ----> ', fetchedData)
@@ -69,9 +70,7 @@ const InfoCard = () => {
 
   const fetchAssignClient = async () => {
     try {
-      const { data: fetchedClient } = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/user/clientUsers/${currentUser?.id}`
-      )
+      const { data: fetchedClient } = await api.get(`/user/clientUsers/${currentUser?.id}`)
       console.log('fetched client', { data: fetchedClient })
       const fetchedClientsWithPhotos = await Promise.all(
         fetchedClient.map(async (item: any) => {
@@ -89,7 +88,7 @@ const InfoCard = () => {
 
   const fetchClients = async () => {
     try {
-      const { data: fetchedClients } = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/client`)
+      const { data: fetchedClients } = await api.get(`/client`)
 
       // Get array of assigned client IDs
       const assignedClientIds = assignedClients?.map((assigned: any) => assigned.client.id) || []
@@ -150,8 +149,8 @@ const InfoCard = () => {
       caregiverId: id
     }
 
-    await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/user/createClientUser`, assignClientBody)
-    await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/account-history/log`, accountHistoryPayLoad)
+    await api.post(`/user/createClientUser`, assignClientBody)
+    await api.post(`/account-history/log`, accountHistoryPayLoad)
 
     fetchAssignClient()
     reset()

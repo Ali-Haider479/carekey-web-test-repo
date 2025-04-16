@@ -28,6 +28,8 @@ import ServiceActivities from '@/@core/components/custom-inputs/ServiceAcitvites
 import ControlledDatePicker from '@/@core/components/custom-inputs/ControledDatePicker'
 import { Edit } from '@mui/icons-material'
 import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
+import { setHours, setMinutes, setSeconds } from 'date-fns'
+import api from '@/utils/api'
 // Updated interfaces to match your data structure
 interface Caregiver {
   id: number
@@ -128,8 +130,12 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
   const [modalData, setModalData] = useState<any>(null)
   const [activities, setActivities] = useState<any[]>()
   const [isEditing, setIsEditing] = useState(false)
+  const [deletingId, setDeletingId] = useState<string | number | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [rowsToDelete, setRowsToDelete] = useState<any[]>([])
   const clockInDate = watch('clockInDate')
   const clockInTime = watch('clockInTime')
+  const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
 
   const toggleEditing = () => {
     if (isEditing) {
@@ -147,7 +153,7 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
 
   const getAvailableServices = async () => {
     try {
-      const activities = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/activity`)
+      const activities = await api.get(`/activity`)
       setActivities(activities.data)
     } catch (error) {
       console.error('Error getting activities: ', error)
@@ -170,17 +176,6 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
     setSelectedUser(null)
   }
 
-  const handleEdit = (user: any) => {
-    setEditingId(user.id)
-    // setSelectedUser(user)
-    // // Initialize edited values with current values
-    // setEditedValues({
-    //   ...user,
-    //   id: user.id // Ensure we keep the id
-    // })
-    // handleCloseMenu()
-  }
-
   const PickersComponent = forwardRef(({ ...props }: PickerProps, ref) => {
     return (
       <TextField
@@ -197,13 +192,25 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
     )
   })
 
-  const parseTimeStringToDate = (timeString: string) => {
+  const parseTimeStringToDate = (timeString: string): Date | null => {
     if (!timeString) return null
     const [time, period] = timeString.split(' ')
     const [hours, minutes] = time.split(':')
     const date = new Date()
-    date.setHours(period === 'PM' ? parseInt(hours) + 12 : parseInt(hours))
-    date.setMinutes(parseInt(minutes))
+    let hoursNum = parseInt(hours, 10)
+
+    // Convert to 24-hour format
+    if (period) {
+      if (period.toLowerCase() === 'pm' && hoursNum !== 12) {
+        hoursNum += 12
+      } else if (period.toLowerCase() === 'am' && hoursNum === 12) {
+        hoursNum = 0
+      }
+    }
+
+    date.setHours(hoursNum)
+    date.setMinutes(parseInt(minutes, 10))
+    date.setSeconds(0)
     return date
   }
 
@@ -268,7 +275,6 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
 
   const onSubmit = async (formData: EditDetailsPayload) => {
     try {
-      const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
       const userId = authUser?.id
 
       const formatTimeToISO = (dateStr: any, timeStr: any): string => {
@@ -282,31 +288,45 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
           formattedDateStr = dateStr // Assume it's already in "YYYY-MM-DD" format
         }
 
-        // Parse the time string (e.g., "08:40:00" or "08:40 AM")
-        let hours: string,
-          minutes: string,
-          seconds: string = '00'
-        if (timeStr.includes(':')) {
-          const [time, period] = timeStr.split(' ')
-          let [h, m, s] = time.split(':')
-          hours = h
-          minutes = m
-          seconds = s || '00' // Use provided seconds or default to '00'
+        // Parse the time string (e.g., "08:40 AM" or "08:40:00")
+        let hours: number
+        let minutes: number
+        let seconds: number = 0
 
-          // Convert to 24-hour format if period (AM/PM) is provided
-          if (period) {
-            let hoursNum = parseInt(hours, 10)
-            if (period.toLowerCase() === 'pm' && hoursNum !== 12) hoursNum += 12
-            if (period.toLowerCase() === 'am' && hoursNum === 12) hoursNum = 0
-            hours = hoursNum.toString().padStart(2, '0')
+        // Handle "hh:mm aa" format (e.g., "08:40 AM")
+        if (timeStr.includes(' ')) {
+          const [time, period] = timeStr.split(' ')
+          const [h, m] = time.split(':')
+          hours = parseInt(h, 10)
+          minutes = parseInt(m, 10)
+
+          // Convert to 24-hour format
+          if (period.toLowerCase() === 'pm' && hours !== 12) {
+            hours += 12
+          } else if (period.toLowerCase() === 'am' && hours === 12) {
+            hours = 0
           }
         } else {
-          // Fallback if timeStr is not in expected format
-          return ''
+          // Handle "HH:mm:ss" format (e.g., "08:40:00") as a fallback
+          const [h, m, s = '00'] = timeStr.split(':')
+          hours = parseInt(h, 10)
+          minutes = parseInt(m, 10)
+          seconds = parseInt(s, 10)
         }
 
-        // Combine into ISO format
-        return `${formattedDateStr}T${hours}:${minutes}:${seconds}.000Z`
+        // Create a new Date object with the combined date and time
+        const combinedDate = new Date(
+          `${formattedDateStr}T${hours.toString().padStart(2, '0')}:${minutes
+            .toString()
+            .padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.000Z`
+        )
+
+        const localTime = new Date(combinedDate)
+        const timezoneOffset = localTime.getTimezoneOffset() * 60 * 1000 // Offset in milliseconds
+        const convertedUTCTime = new Date(localTime.getTime() + timezoneOffset)
+
+        // Return the ISO string
+        return convertedUTCTime.toISOString()
       }
 
       const originalClockIn = modalData?.clockIn || ''
@@ -350,7 +370,7 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
         reason: formData.reason
       }
 
-      await axios.patch(`${process.env.NEXT_PUBLIC_API_URL}/time-log/update-timelog`, payload)
+      await api.patch(`/time-log/update-timelog`, payload)
       await fetchInitialData()
       setIsModalShow(false)
       setModalData(null)
@@ -474,13 +494,11 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
           ...basePayload
         }))
 
-        updatePromises = subRowUpdates.map((payload: any) =>
-          axios.patch(`${process.env.NEXT_PUBLIC_API_URL}/time-log/update-ts-approval`, payload)
-        )
+        updatePromises = subRowUpdates.map((payload: any) => api.patch(`/time-log/update-ts-approval`, payload))
       } else {
         rowsToUpdate = [currentUser]
         updatePromises.push(
-          axios.patch(`${process.env.NEXT_PUBLIC_API_URL}/time-log/update-ts-approval`, {
+          api.patch(`/time-log/update-ts-approval`, {
             id: currentEditedData.id,
             ...basePayload
           })
@@ -498,7 +516,7 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
           const billedAmount = parseFloat(hrs) * row.client.serviceAuth[0].serviceRate
 
           billingPromises.push(
-            axios.post(`${process.env.NEXT_PUBLIC_API_URL}/time-log/billing`, {
+            api.post(`/time-log/billing`, {
               timeLogId: row.id,
               claimDate: null,
               billedAmount: Number(billedAmount.toFixed(2)),
@@ -517,9 +535,7 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
         // Delete billing for all updated rows that have billing
         for (const row of rowsToUpdate) {
           if (row?.billing?.id) {
-            billingDeletePromises.push(
-              axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/time-log/remove-billing/${row.billing.id}`)
-            )
+            billingDeletePromises.push(api.delete(`/time-log/remove-billing/${row.billing.id}`))
           }
         }
 
@@ -545,10 +561,92 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
     }
   }
 
+  const handleEdit = (user: any) => {
+    setSelectedUser(user)
+    setEditingId(user.id)
+    setIsEditing(true)
+    setCurrentEditedData(user)
+    // Reset any deleting state
+    setDeletingId(null)
+    setIsDeleting(false)
+    setRowsToDelete([])
+  }
+
   const handleCancelEdit = () => {
     setEditingId(null)
+    setIsEditing(false)
     setSelectedUser(null)
-    // setEditedValues({})
+    setSelectedRows([])
+    setEditedValues({})
+    setRowSelection({}) // Reset row selection)
+  }
+
+  const onDelete = async (row: any) => {
+    try {
+      const tenantId = authUser?.tenant?.id
+      console.log('DELETE TS', row)
+      if (row?.[0].subRows?.length) {
+        const deletelogsIds = row?.[0].subRows.map((el: any) => el.id)
+        await api.patch(`/time-log/delete-log/${tenantId}`, deletelogsIds)
+        console.log('DELETE Multiple', deletelogsIds)
+      } else {
+        console.log('DELETE SINGLE', [row[0].id])
+        await api.patch(`/time-log/delete-log/${tenantId}`, [row[0].id])
+      }
+      await fetchInitialData()
+    } catch (error) {
+      console.error('Error in onDelete:', error)
+      throw error
+    }
+  }
+
+  const handleDelete = (user: any) => {
+    setSelectedUser(user)
+    setDeletingId(user.id)
+    setIsDeleting(true)
+    // Pre-select the current row
+    setRowsToDelete([user])
+    // Reset any editing state
+    setEditingId(null)
+    setIsEditing(false)
+    setSelectedRows([])
+  }
+
+  const handleConfirmDelete = async () => {
+    try {
+      // Call the onDelete function with the IDs of rows to delete
+      await onDelete(rowsToDelete)
+      // await onDelete(rowsToDelete.map(row => row.id))
+      // Refresh the table data
+      await fetchInitialData()
+      // Reset delete state
+      setDeletingId(null)
+      setIsDeleting(false)
+      setSelectedUser(null)
+      setRowsToDelete([])
+      setRowSelection({}) // Reset row selection
+      setAlertOpen(true)
+      setAlertProps({
+        message: 'Rows deleted successfully.',
+        severity: 'success'
+      })
+    } catch (error) {
+      console.error('Error deleting rows:', error)
+      setAlertOpen(true)
+      setAlertProps({
+        message: 'Failed to delete rows. Please try again.',
+        severity: 'error'
+      })
+    }
+  }
+
+  // Handler for canceling delete
+  const handleCancelDelete = () => {
+    setDeletingId(null)
+    setIsDeleting(false)
+    setSelectedUser(null)
+    setRowsToDelete([])
+    setRowSelection({}) // Reset row selection
   }
 
   const columns = [
@@ -706,15 +804,19 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
         <ActionButton
           handleEdit={handleEdit}
           handleSave={handleSave}
-          handleViewDetails={handleViewDetails}
+          handleDelete={handleDelete} // Pass delete handler
+          handleConfirmDelete={handleConfirmDelete} // Pass confirm delete handler
+          handleCancelDelete={handleCancelDelete} // Pass cancel delete handler
           handleActionClick={handleActionClick}
           handleCloseMenu={handleCloseMenu}
           handleCancelEdit={handleCancelEdit}
-          isEditing={editingId !== null}
+          isEditing={isEditing}
+          isDeleting={isDeleting} // Pass deleting state
           user={user}
           selectedUser={selectedUser}
           anchorEl={anchorEl}
-          // disabled={!!user.subRows && user.subRows.length > 0}
+          handleViewDetails={handleViewDetails}
+          // disabled={!!user.subRows && user.subRows.length > 0} // Disable for dummy rows
         />
       )
     }
@@ -738,10 +840,6 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
     setSelectedRows(selectedRowsData)
   }
 
-  // Assuming your first file data is in originalTimeEntries
-  // const transformedData = transformTimesheetData(data)
-  // console.log('Date timesheet,data', transformedData)
-  console.log('DATE AFTER SUBROWS', data)
   return (
     <>
       <FormProvider {...methods}>
@@ -910,7 +1008,7 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
                             ? parseTimeStringToDate(clockInTime) || undefined
                             : undefined
                         }
-                        maxTime={new Date()}
+                        maxTime={setSeconds(setMinutes(setHours(new Date(), 23), 59), 59)}
                         // filterTime={filterPassedTime}
                         onChange={(date: Date | null) => {
                           if (date) {

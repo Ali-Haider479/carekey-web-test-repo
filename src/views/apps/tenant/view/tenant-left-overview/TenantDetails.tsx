@@ -15,10 +15,12 @@ import ConfirmationDialog from '@components/dialogs/confirmation-dialog'
 import OpenDialogOnElementClick from '@components/dialogs/OpenDialogOnElementClick'
 import CustomAvatar from '@core/components/mui/Avatar'
 import { useEffect, useState } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import axios from 'axios'
 import { CircularProgress } from '@mui/material'
 import ProfileAvatar from '@/@core/components/mui/ProfileAvatar'
+import CustomAlert from '@/@core/components/mui/Alter'
+import api from '@/utils/api'
 
 const TenantDetails = ({ tenantData }: any) => {
   const { id } = useParams()
@@ -26,6 +28,11 @@ const TenantDetails = ({ tenantData }: any) => {
   const [fileUrl, setFileUrl] = useState<string>('')
   const [loading, setLoading] = useState<boolean>(true)
   const [refreshTrigger, setRefreshTrigger] = useState<number>(0)
+  const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
+  const token = authUser?.backendAccessToken
+  const [alertOpen, setAlertOpen] = useState(false)
+  const [alertProps, setAlertProps] = useState({ message: '', severity: 'info' })
+  const router = useRouter()
 
   // Vars
   const buttonProps = (
@@ -52,6 +59,12 @@ const TenantDetails = ({ tenantData }: any) => {
     const fetchTenantData = async () => {
       try {
         setLoading(true)
+        console.log('TENANT ID', 1)
+        const response = await api.get(`/tenant/${id}`)
+        console.log('RESPONSE ONE-----', response)
+        const data = response.data
+        console.log('DATATATATATAT', data)
+        // setTenantData(data)
 
         const admin = tenantData?.users?.find((user: any) => user.role.title === 'Tenant Admin')
         console.log('ADMIN', admin)
@@ -62,17 +75,37 @@ const TenantDetails = ({ tenantData }: any) => {
 
         // Update image URL if available
         if (admin?.profileImageUrl) {
-          updateImageUrl(admin.profileImageUrl)
+          updateImageUrl(admin.profileImageUrl) // Assuming updateImageUrl is defined elsewhere
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error fetching tenant data:', error)
+
+        // RLS return us 404 instead of 403 Forbidden error
+        if (error.response?.status === 403) {
+          setAlertOpen(true)
+          setAlertProps({
+            message: 'You do not have access to this tenant.',
+            severity: 'warning'
+          })
+          // Redirect to homepage after a delay (e.g., 3 seconds)
+          // setTimeout(() => {
+          router.push('/')
+          // }, 3000)
+        } else {
+          // Handle other errors
+          setAlertOpen(true)
+          setAlertProps({
+            message: 'An error occurred while fetching tenant data.',
+            severity: 'error'
+          })
+        }
       } finally {
         setLoading(false)
       }
     }
 
     fetchTenantData()
-  }, [id, refreshTrigger])
+  }, [id, token, router]) // Add router to dependencies
 
   const handleImageChange = async (file: File) => {
     try {
@@ -80,15 +113,11 @@ const TenantDetails = ({ tenantData }: any) => {
       const formData = new FormData()
       formData.append('image', file)
 
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/user/${tenantData?.users[0]?.id}/profile-image`,
-        formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data'
-          }
+      const response = await api.post(`/user/${tenantData?.users[0]?.id}/profile-image`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
         }
-      )
+      })
 
       if (response.data?.profileImageUrl) {
         // Update the image URL immediately
@@ -117,6 +146,14 @@ const TenantDetails = ({ tenantData }: any) => {
 
   return (
     <>
+      <CustomAlert
+        AlertProps={alertProps}
+        openAlert={alertOpen}
+        setOpenAlert={setAlertOpen}
+        style={{
+          padding: 0 // Only these styles will be applied
+        }}
+      />
       <Card>
         <CardContent className='flex flex-col pbs-12 gap-6'>
           <div className='flex flex-col gap-6'>

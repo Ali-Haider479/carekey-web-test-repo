@@ -16,7 +16,7 @@ const TenantList = () => {
 
   //   const fetchInitialData = async () => {
   //     try {
-  //       const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/tenant`)
+  //       const response = await api.get(`/tenant`)
   //       setTenantFilteredList(response.data)
   //     } catch (error) {
   //       console.error('Error fetching initial data:', error)

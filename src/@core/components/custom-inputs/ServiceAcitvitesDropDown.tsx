@@ -51,7 +51,7 @@ const ServiceActivities = (props: Props) => {
               onClose={() => setIsOpen(false)}
             >
               {props.activities.map(svc => (
-                <MenuItem key={svc.id} value={svc.title}>
+                <MenuItem key={svc.id} value={svc.id}>
                   {svc.title}
                 </MenuItem>
               ))}
@@ -62,13 +62,13 @@ const ServiceActivities = (props: Props) => {
 
             <Box className='flex flex-wrap gap-2 mt-2'>
               {Array.isArray(value) &&
-                value.map(item => {
-                  const selectedActivity = props.activities.find(s => s.title === item)
+                value.map(itemId => {
+                  const selectedActivity = props.activities.find(s => s.id === itemId)
                   return (
                     <Chip
-                      key={item}
+                      key={itemId}
                       label={selectedActivity?.title}
-                      onDelete={() => handleDelete(item, onChange, value)}
+                      onDelete={() => handleDelete(itemId, onChange, value)}
                       deleteIcon={<CloseIcon className='text-sm text-[#8592A3] border-2 rounded' />}
                       className='mt-2 text-[#8592A3] text-sm py-1'
                       aria-label={`Remove ${selectedActivity?.title}`}

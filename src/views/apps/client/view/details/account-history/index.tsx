@@ -2,6 +2,7 @@
 import DataTable from '@/@core/components/mui/DataTable'
 import CustomTextField from '@/@core/components/mui/TextField'
 import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
+import api from '@/utils/api'
 import { formatDateTime } from '@/utils/helperFunctions'
 import { SearchOutlined } from '@mui/icons-material'
 import { Button, Card, CardHeader, Input, MenuItem, TextField, Typography } from '@mui/material'
@@ -53,7 +54,7 @@ const AccountHistory = () => {
   useEffect(() => {
     const fetchUserActions = async () => {
       try {
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/account-history/client/${id}`)
+        const response = await api.get(`/account-history/client/${id}`)
         setUserActions(response.data)
         setOriginalUserActions(response.data)
       } catch (err) {

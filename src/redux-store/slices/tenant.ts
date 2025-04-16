@@ -1,4 +1,5 @@
 // src/store/apps/tenant/index.ts
+import api from '@/utils/api'
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import axios from 'axios'
 
@@ -55,9 +56,9 @@ const initialState: TenantState = {
 }
 
 // Async thunks
-export const fetchTenants = createAsyncThunk('tenant/fetchTenants', async (_, { rejectWithValue }) => {
+export const fetchTenants = createAsyncThunk('tenant/fetchTenants', async (token: string, { rejectWithValue }) => {
   try {
-    const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/tenant`)
+    const response = await api.get(`/tenant`)
     return response.data
   } catch (error: any) {
     return rejectWithValue(error.response?.data || 'Failed to fetch tenants')

@@ -14,6 +14,7 @@ import DataTable from '@/@core/components/mui/DataTable'
 import { List, ListItem, Typography } from '@mui/material'
 import axios from 'axios'
 import { dark, light } from '@mui/material/styles/createPalette'
+import api from '@/utils/api'
 
 // type AccountHistory = {
 //   key: number
@@ -31,6 +32,8 @@ const AssignedServiceTable = () => {
   const [assignedClients, setAssignedClients] = useState<any[]>([])
   const [clientServices, setClientServices] = useState<any>()
   const [rowData, setRowData] = useState<any>()
+  const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
+  const token = authUser?.backendAccessToken
 
   const fetchClientService = async (fetchedClients: any) => {
     try {
@@ -41,7 +44,7 @@ const AssignedServiceTable = () => {
         const clientId = item.client.id
 
         // Fetch services for the current client
-        const serviceResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/client/${clientId}/services`)
+        const serviceResponse = await api.get(`/client/${clientId}/services`)
 
         // Push only the data from the response
         clientServicesRes.push(serviceResponse.data)
@@ -60,13 +63,11 @@ const AssignedServiceTable = () => {
   const fetchAssignClient = async () => {
     try {
       // Fetch assigned clients
-      const caregivers = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/caregivers/caregiver/${id}`)
+      const caregivers = await api.get(`/caregivers/caregiver/${id}`)
       console.log('CAREGIVER USER ', caregivers)
       // setCurrentUser(caregivers?.data?.user)
-      console.log('url', `${process.env.NEXT_PUBLIC_API_URL}/user/clientUsers/${caregivers?.data?.user?.id}`)
-      const clientResponse = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/user/clientUsers/${caregivers?.data?.user?.id}`
-      )
+      console.log('url', `/user/clientUsers/${caregivers?.data?.user?.id}`)
+      const clientResponse = await api.get(`/user/clientUsers/${caregivers?.data?.user?.id}`)
       const fetchedClient = clientResponse.data
 
       console.log('Assigned Client --> ', fetchedClient)

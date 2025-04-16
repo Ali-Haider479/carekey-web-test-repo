@@ -3,6 +3,7 @@ import { Card, CardHeader, CardContent, MenuItem, Button, TextField } from '@mui
 import Grid from '@mui/material/Grid2'
 import { useForm } from 'react-hook-form'
 import axios from 'axios'
+import api from '@/utils/api'
 
 interface DefaultStateType {
   clientName: string
@@ -44,15 +45,13 @@ const ReceivedTimesheetFilters = ({ onFilterApplied }: SignatureStatusFiltersPro
 
       // If no filters are applied, fetch all data
       if (queryParams.toString() === 'page=1&limit=10') {
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/time-log`)
+        const response = await api.get(`/time-log`)
         onFilterApplied(response.data)
         return
       }
 
       // Fetch filtered data
-      const filterResponse = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/time-log/filtered/?${queryParams.toString()}`
-      )
+      const filterResponse = await api.get(`/time-log/filtered/?${queryParams.toString()}`)
       onFilterApplied(filterResponse.data.data)
     } catch (error) {
       console.error('Error applying filters:', error)
@@ -141,9 +140,7 @@ const ReceivedTimesheetFilters = ({ onFilterApplied }: SignatureStatusFiltersPro
               </TextField>
             </Grid>
             {/* variant='contained' */}
-            <Button type='submit'>
-              Filter
-            </Button>
+            <Button type='submit'>Filter</Button>
           </Grid>
         </CardContent>
       </Card>

@@ -14,6 +14,7 @@ import {
 } from '@mui/material'
 import axios from 'axios'
 import { useForm } from 'react-hook-form'
+import api from '@/utils/api'
 
 interface DefaultStateType {
   week: string
@@ -38,7 +39,7 @@ const AdminApprovalFilters = ({ onFilterApplied }: AdminApprovalFiltersProps) =>
 
   const fetchPayPeriod = async () => {
     try {
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/pay-period/end-date/tenant/1`)
+      const response = await api.get(`/pay-period/end-date/tenant/1`)
       setPayPeriod(response.data)
     } catch (error) {
       console.error('Error fetching pay period data: ', error)
@@ -60,15 +61,13 @@ const AdminApprovalFilters = ({ onFilterApplied }: AdminApprovalFiltersProps) =>
 
       // If no filters are applied, fetch all data
       if (queryParams.toString() === 'page=1&limit=10') {
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/time-log`)
+        const response = await api.get(`/time-log`)
         onFilterApplied(response.data)
         return
       }
 
       // Fetch filtered data
-      const filterResponse = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/time-log/filtered/?${queryParams.toString()}`
-      )
+      const filterResponse = await api.get(`/time-log/filtered/?${queryParams.toString()}`)
       onFilterApplied(filterResponse.data.data)
     } catch (error) {
       console.error('Error applying filters:', error)
@@ -78,7 +77,7 @@ const AdminApprovalFilters = ({ onFilterApplied }: AdminApprovalFiltersProps) =>
   const handleReset = async () => {
     try {
       setFilterData(defaultState)
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/time-log`)
+      const response = await api.get(`/time-log`)
       onFilterApplied(response.data)
     } catch (error) {
       console.error('error resetting filters: ', error)

@@ -2,6 +2,7 @@ import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
 import type { PayloadAction } from '@reduxjs/toolkit'
 import type { ChatDataType, ChatMessage, StatusType } from '@/types/apps/chatTypes'
 import axios from 'axios'
+import api from '@/utils/api'
 
 const initialState: ChatDataType = {
   profileUser: {
@@ -25,8 +26,9 @@ const initialState: ChatDataType = {
 }
 
 export const fetchChatRooms = createAsyncThunk('chat/fetchChatRooms', async (userId: number) => {
-  const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/chatroom/list/${userId}`)
+  const response = await api.get(`/chatroom/list/${userId}`)
   const chatRooms = response.data
+  console.log('REDUX CHATS ONE', chatRooms)
   // Transform contacts - use otherUser.id as the contact id
   const contacts = chatRooms.map((room: any) => ({
     id: room.otherUser.id, // Use otherUser.id instead of room.id
@@ -37,24 +39,24 @@ export const fetchChatRooms = createAsyncThunk('chat/fetchChatRooms', async (use
     status: 'offline' as StatusType,
     chatRoomId: room.id // Store chatRoomId for reference
   }))
-
+  console.log('REDUX CHATS MIDDLE', contacts)
   // Transform messages - use otherUser.id as userId
   const chats = chatRooms.map((room: any) => ({
-    id: room.id,
-    userId: room.otherUser.id, // Use otherUser.id to match with contact
-    unseenMsgs: room.unreadCount || 0,
-    chat: room.messages.map((msg: any) => ({
-      message: msg.message,
-      time: msg.createdAt,
-      senderId: msg.sender.id,
+    id: room?.id,
+    userId: room?.otherUser.id, // Use otherUser.id to match with contact
+    unseenMsgs: room?.unreadCount || 0,
+    chat: room?.messages?.map((msg: any) => ({
+      message: msg?.message,
+      time: msg?.createdAt,
+      senderId: msg?.sender?.id,
       msgStatus: {
         isSent: true,
         isDelivered: true,
-        isSeen: msg.isRead
+        isSeen: msg?.isRead
       }
     }))
   }))
-
+  console.log('REDUX CHATS TWO', chats)
   return {
     contacts,
     chats
@@ -73,13 +75,13 @@ export const createChatRoom = createAsyncThunk(
     { dispatch }
   ) => {
     try {
-      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/chatroom/create`, payload)
+      const response = await api.post(`/chatroom/create`, payload)
       if (response.data.message === 'Chatroom already exists') {
         throw new Error('Chatroom already exists')
       }
 
       // Fetch updated room list to ensure consistency
-      const updatedResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/chatroom/list/${payload.userId}`)
+      const updatedResponse = await api.get(`/chatroom/list/${payload.userId}`)
       const newRoom = updatedResponse.data.findLast((room: any) => room.otherUser.id === payload.otherUserId)
       if (!newRoom) throw new Error('Failed to fetch new chatroom')
 
@@ -215,13 +217,9 @@ export const chatSlice = createSlice({
       if (chat) {
         const newMessage = {
           ...action.payload,
-          senderId: Number(action.payload.senderId),
+          senderId: Number(senderId),
           time: new Date(action.payload.time).toISOString(),
-          msgStatus: {
-            isSent: true,
-            isDelivered: true,
-            isSeen: false // Default status for a new message
-          }
+          msgStatus: { isSent: true, isDelivered: true, isSeen: false }
         }
         // Check if the message already exists
         const isDuplicate = chat.chat.some(
@@ -238,8 +236,6 @@ export const chatSlice = createSlice({
             chat.unseenMsgs += 1
           }
         }
-      } else {
-        console.warn(`Chat room with ID ${chatRoomId} not found in state.chats`)
       }
     }
   },

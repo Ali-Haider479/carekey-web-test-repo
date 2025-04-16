@@ -11,6 +11,7 @@ import { Visibility, VisibilityOff } from '@mui/icons-material'
 import { FormProvider, useForm } from 'react-hook-form'
 import CustomTextField from '@/@core/components/custom-inputs/CustomTextField'
 import CustomMaskedInput from '@/@core/components/custom-inputs/CustomMaskedInput'
+import api from '@/utils/api'
 
 type Props = {
   open: boolean
@@ -173,7 +174,7 @@ const CreateTenant = (props: Props) => {
         faxNumber: data.faxNumber,
         roleId: 2
       }
-      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/tenant`, tenantPayload)
+      const response = await api.post(`/tenant`, tenantPayload)
       console.log('RESPONSE TENANT', response)
       const payload = {
         startDate: new Date(),
@@ -181,7 +182,7 @@ const CreateTenant = (props: Props) => {
         tenantId: response?.data?.id,
         numberOfWeeks: 1
       }
-      const payperiod = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/pay-period`, payload)
+      const payperiod = await api.post(`/pay-period`, payload)
       console.log('Payperiod res', payperiod)
       router.replace(`/apps/accounts/tenant-list`)
     } catch (error) {

@@ -14,8 +14,10 @@ import Grid from '@mui/material/Grid2'
 import CustomTabList from '@core/components/mui/TabList'
 import ProfileBanner from '@/@layouts/components/horizontal/ProfileBanner'
 import { Typography } from '@mui/material'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import axios from 'axios'
+import api from '@/utils/api'
+import CustomAlert from '@/@core/components/mui/Alter'
 
 interface BottomBodyProps {
   tabContentList: Record<string, (props: { data: any }) => ReactElement>
@@ -23,18 +25,34 @@ interface BottomBodyProps {
 
 const CaregiverDetails = ({ tabContentList }: BottomBodyProps) => {
   const { id } = useParams()
+  const [alertOpen, setAlertOpen] = useState(false)
+  const [alertProps, setAlertProps] = useState({ message: '', severity: 'info' })
+
   // States
   const [activeTab, setActiveTab] = useState('profile')
   const [data, setData] = useState<any>()
+  const router = useRouter()
+
   useEffect(() => {
     // Fetch data from the backend API
     const fetchData = async () => {
       try {
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/caregivers/caregiver/${id}`)
+        const response = await api.get(`/caregivers/caregiver/${id}`)
         const fetchedData = response.data
         console.log('Caregiver Profile Data ----> ', fetchedData)
         setData(fetchedData)
-      } catch (error) {
+      } catch (error: any) {
+        // RLS return us 404 instead of 403 Forbidden error
+        if (error.response?.status === 403) {
+          setAlertOpen(true)
+          setAlertProps({
+            message: 'You do not have access to this tenant.',
+            severity: 'warning'
+          })
+          // Redirect to homepage after a delay (e.g., 3 seconds)
+          // setTimeout(() => {
+          router.push('/')
+        }
         console.error('Error fetching data', error)
       }
     }
@@ -69,6 +87,14 @@ const CaregiverDetails = ({ tabContentList }: BottomBodyProps) => {
 
   return (
     <>
+      <CustomAlert
+        AlertProps={alertProps}
+        openAlert={alertOpen}
+        setOpenAlert={setAlertOpen}
+        style={{
+          padding: 0 // Only these styles will be applied
+        }}
+      />
       <TabContext value={activeTab}>
         <Typography variant='h4' gutterBottom>
           {getTabHeading(activeTab)}

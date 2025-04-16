@@ -8,6 +8,7 @@ import CalendarTodayIcon from '@mui/icons-material/CalendarToday'
 import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
 import { useForm } from 'react-hook-form'
 import axios from 'axios'
+import api from '@/utils/api'
 
 interface DefaultStatyeType {
   clientName: string
@@ -89,14 +90,12 @@ const BillingDetailFilters = ({ onFilterApplied }: BillingDetailFiltersProps) =>
       queryParams.append('limit', '10')
       // If no filters are applied, fetch all data
       if (queryParams.toString() === 'page=1&limit=10') {
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/time-log/billing`)
+        const response = await api.get(`/time-log/billing`)
         onFilterApplied(response.data)
         return
       }
       // Fetch filtered data
-      const filterResponse = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/time-log/billing/filtered/?${queryParams.toString()}`
-      )
+      const filterResponse = await api.get(`/time-log/billing/filtered/?${queryParams.toString()}`)
       onFilterApplied(filterResponse.data.data)
     } catch (error) {
       console.error('Error applying filters:', error)
@@ -105,7 +104,7 @@ const BillingDetailFilters = ({ onFilterApplied }: BillingDetailFiltersProps) =>
 
   const handleReset = async () => {
     setFilterData(defaultState)
-    const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/time-log/billing`)
+    const response = await api.get(`/time-log/billing`)
     onFilterApplied(response.data)
   }
 

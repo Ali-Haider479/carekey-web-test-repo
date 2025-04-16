@@ -26,6 +26,7 @@ import TabContext from '@mui/lab/TabContext'
 import CustomTabList from '@/@core/components/mui/TabList'
 import CustomDropDown from '@/@core/components/custom-inputs/CustomDropDown'
 import { ServiceAuthListModal } from './ServiceAuthModal'
+import api from '@/utils/api'
 
 const options = [
   { label: 'Option 1', value: 'option1' },
@@ -182,27 +183,24 @@ const ServiceAuthorization = () => {
       }
 
       if (isEditMode && currentItem) {
-        const response = await axios.patch(
-          `${process.env.NEXT_PUBLIC_API_URL}/client/service-auth/${currentItem.id}`,
-          serviceAuthPayload
-        )
+        const response = await api.patch(`/client/service-auth/${currentItem.id}`, serviceAuthPayload)
         const accountHistoryPayLoad = {
           actionType: 'ClientServiceAuthUpdate',
           details: `Service authorization updated for Client (ID: ${id}) by User (ID: ${authUser?.id})`,
           userId: authUser?.id,
           clientId: id
         }
-        await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/account-history/log`, accountHistoryPayLoad)
+        await api.post(`/account-history/log`, accountHistoryPayLoad)
         setServiceAuthData(serviceAuthData.map(item => (item.id === currentItem.id ? response.data : item)))
       } else {
-        const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/client/service-auth`, serviceAuthPayload)
+        const response = await api.post(`/client/service-auth`, serviceAuthPayload)
         const accountHistoryPayLoad = {
           actionType: 'ClientServiceAuthCreate',
           details: `Service authorization created for Client (ID: ${id}) by User (ID: ${authUser?.id})`,
           userId: authUser?.id,
           clientId: id
         }
-        await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/account-history/log`, accountHistoryPayLoad)
+        await api.post(`/account-history/log`, accountHistoryPayLoad)
         setServiceAuthData([...serviceAuthData, response.data])
       }
       setIsLoading(false)
@@ -215,7 +213,7 @@ const ServiceAuthorization = () => {
 
   const fetchClientServiceAuthData = async () => {
     try {
-      const fetchedData = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/client/${clientId}/service-auth`)
+      const fetchedData = await api.get(`/client/${clientId}/service-auth`)
       setServiceAuthData(fetchedData?.data.length > 0 ? fetchedData?.data : [])
     } catch (error) {
       console.error('Error fetching data: ', error)

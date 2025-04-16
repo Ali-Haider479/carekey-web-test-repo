@@ -12,6 +12,7 @@ import axios from 'axios'
 import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
 import ActiveUserFilters from './ActiveUserFilters'
 import { set } from 'date-fns'
+import api from '@/utils/api'
 
 // Types
 interface Location {
@@ -155,8 +156,8 @@ const EvvActiveUserTable = ({ timeLogData, isLoading, payPeriod, fetchInitialDat
   }, [payPeriod])
 
   const handleSave = async () => {
-    const pendingSignatures: any = await axios.get(
-      `${process.env.NEXT_PUBLIC_API_URL}/signatures/${selectedUser.caregiver?.id}/pending-signatures-count/${selectedUser?.payPeriodHistory?.id}`
+    const pendingSignatures: any = await api.get(
+      `/signatures/${selectedUser.caregiver?.id}/pending-signatures-count/${selectedUser?.payPeriodHistory?.id}`
     )
     const currentClientPendingSigns = pendingSignatures.data.pendingClients.filter(
       (el: any) => el.clientId === selectedUser.client.id
@@ -175,7 +176,7 @@ const EvvActiveUserTable = ({ timeLogData, isLoading, payPeriod, fetchInitialDat
           signatureStatus: 'Pending'
         }
 
-        signResponse = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/signatures`, payLoad)
+        signResponse = await api.post(`/signatures`, payLoad)
       }
       const payload = {
         id: selectedUser.id,
@@ -184,7 +185,7 @@ const EvvActiveUserTable = ({ timeLogData, isLoading, payPeriod, fetchInitialDat
         signatureId:
           currentClientPendingSigns.length > 0 ? currentClientPendingSigns[0].signatureId : signResponse?.data?.id
       }
-      const res = await axios.patch(`${process.env.NEXT_PUBLIC_API_URL}/time-log`, payload)
+      const res = await api.patch(`/time-log`, payload)
       console.log('RESPONSE', res)
       await fetchInitialData()
       // Reset states

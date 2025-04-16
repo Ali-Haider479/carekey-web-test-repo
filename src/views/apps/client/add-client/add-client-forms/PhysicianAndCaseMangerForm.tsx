@@ -53,6 +53,7 @@ const PhysicianAndCaseMangerForm = forwardRef<{ handleSubmit: any }, Props>(({ o
                   type={'text'}
                   error={errors.physicianName}
                   control={control}
+                  isRequired={false}
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 4 }}>
@@ -64,6 +65,7 @@ const PhysicianAndCaseMangerForm = forwardRef<{ handleSubmit: any }, Props>(({ o
                   type={'text'}
                   error={errors.clinicName}
                   control={control}
+                  isRequired={false}
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 4 }}>
@@ -76,6 +78,7 @@ const PhysicianAndCaseMangerForm = forwardRef<{ handleSubmit: any }, Props>(({ o
                   isPhoneNumber={true}
                   error={errors.phoneNumber}
                   control={control}
+                  isRequired={false}
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 4 }}>
@@ -88,6 +91,7 @@ const PhysicianAndCaseMangerForm = forwardRef<{ handleSubmit: any }, Props>(({ o
                   isPhoneNumber={true}
                   error={errors.faxNumber}
                   control={control}
+                  isRequired={false}
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 4 }}>
@@ -99,6 +103,7 @@ const PhysicianAndCaseMangerForm = forwardRef<{ handleSubmit: any }, Props>(({ o
                   type={'text'}
                   error={errors.physicalAddress}
                   control={control}
+                  isRequired={false}
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 4 }}>
@@ -111,6 +116,7 @@ const PhysicianAndCaseMangerForm = forwardRef<{ handleSubmit: any }, Props>(({ o
                   type={'text'}
                   error={errors.physicianCity}
                   control={control}
+                  isRequired={false}
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 4 }}>
@@ -125,6 +131,7 @@ const PhysicianAndCaseMangerForm = forwardRef<{ handleSubmit: any }, Props>(({ o
                     optionString: state.optionString
                   }))}
                   defaultValue={''}
+                  isRequired={false}
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 4 }}>
@@ -138,6 +145,7 @@ const PhysicianAndCaseMangerForm = forwardRef<{ handleSubmit: any }, Props>(({ o
                   error={errors.physicianZipCode}
                   control={control}
                   maxLength={5}
+                  isRequired={false}
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 4 }}>
@@ -150,6 +158,7 @@ const PhysicianAndCaseMangerForm = forwardRef<{ handleSubmit: any }, Props>(({ o
                   isPhoneNumber={true}
                   error={errors.primaryPhoneNumber}
                   control={control}
+                  isRequired={false}
                 />
               </Grid>
             </Grid>
@@ -168,6 +177,7 @@ const PhysicianAndCaseMangerForm = forwardRef<{ handleSubmit: any }, Props>(({ o
                   type={'text'}
                   error={errors.caseManagerName}
                   control={control}
+                  isRequired={false}
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 4 }}>
@@ -179,6 +189,7 @@ const PhysicianAndCaseMangerForm = forwardRef<{ handleSubmit: any }, Props>(({ o
                   type={'email'}
                   error={errors.caseMangerEmail}
                   control={control}
+                  isRequired={false}
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 4 }}>
@@ -192,6 +203,7 @@ const PhysicianAndCaseMangerForm = forwardRef<{ handleSubmit: any }, Props>(({ o
                   isPhoneNumber={true}
                   error={errors.caseMangerPhoneNumber}
                   control={control}
+                  isRequired={false}
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 4 }}>
@@ -204,6 +216,7 @@ const PhysicianAndCaseMangerForm = forwardRef<{ handleSubmit: any }, Props>(({ o
                   isPhoneNumber={true}
                   error={errors.caseManagerFaxNumber}
                   control={control}
+                  isRequired={false}
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 4 }}>
@@ -215,6 +228,7 @@ const PhysicianAndCaseMangerForm = forwardRef<{ handleSubmit: any }, Props>(({ o
                   type={'number'}
                   error={errors.caseManagerExtension}
                   control={control}
+                  isRequired={false}
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 4 }}>
@@ -226,6 +240,7 @@ const PhysicianAndCaseMangerForm = forwardRef<{ handleSubmit: any }, Props>(({ o
                   type={'text'}
                   error={errors.caseMangerNote}
                   control={control}
+                  isRequired={false}
                 />
               </Grid>
             </Grid>

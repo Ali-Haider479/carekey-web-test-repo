@@ -22,6 +22,7 @@ import axios from 'axios'
 import { Close as CloseIcon } from '@mui/icons-material'
 import { format, parseISO } from 'date-fns' // Core date-fns functions
 import { toZonedTime } from 'date-fns-tz'
+import api from '@/utils/api'
 
 interface DefaultStateType {
   currentWeek: string
@@ -108,7 +109,7 @@ const ManualTimesheet = ({ clientList, caregiverList, serviceList, payPeriod }: 
 
   const getAvailableServices = async () => {
     try {
-      const activities = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/activity`)
+      const activities = await api.get(`/activity`)
       setActivities(activities.data)
     } catch (error) {
       console.error('Error getting activities: ', error)
@@ -170,7 +171,7 @@ const ManualTimesheet = ({ clientList, caregiverList, serviceList, payPeriod }: 
 
   const onSubmit = async () => {
     try {
-      const checkedActivityRes = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/activity`, {
+      const checkedActivityRes = await api.post(`/activity`, {
         activityIds: selectedItems
       })
 
@@ -185,7 +186,7 @@ const ManualTimesheet = ({ clientList, caregiverList, serviceList, payPeriod }: 
       }
 
       // Make the API call only if client does not exist in taken or pending
-      const signResponse: any = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/signatures`, payLoad)
+      const signResponse: any = await api.post(`/signatures`, payLoad)
       if (checkedActivityRes.status === 201) {
         const modifiedEvent = {
           dateOfService: values.dateOfService,
@@ -201,9 +202,10 @@ const ManualTimesheet = ({ clientList, caregiverList, serviceList, payPeriod }: 
           checkedActivityId: checkedActivityRes.data.id,
           serviceName: values.serviceName,
           payPeriodHistoryId: payPeriod.id,
-          signatureId: signResponse.data.id
+          signatureId: signResponse.data.id,
+          tenantId: authUser?.tenant?.id
         }
-        const updateSchedule = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/time-log`, modifiedEvent)
+        const updateSchedule = await api.post(`/time-log`, modifiedEvent)
       }
       // Reset form and show success message
       setValues(defaultState)

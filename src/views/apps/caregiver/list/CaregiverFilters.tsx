@@ -17,6 +17,7 @@ import { useForm } from 'react-hook-form'
 import axios from 'axios'
 import { Button, Typography } from '@mui/material'
 import { USStates } from '@/utils/constants'
+import api from '@/utils/api'
 
 interface DefaultStateType {
   accountStatus: string
@@ -78,14 +79,12 @@ const CaregiverFilters = ({
 
       // If no filters are applied, fetch all data
       if (queryParams.toString() === 'page=1&limit=10') {
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/caregivers/1/tenant`)
+        const response = await api.get(`/caregivers/1/tenant`)
         onFilterApplied(response.data)
         return
       }
       // Fetch filtered data
-      const filterResponse = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/caregivers/filtered/?${queryParams.toString()}`
-      )
+      const filterResponse = await api.get(`/caregivers/filtered/?${queryParams.toString()}`)
       onFilterApplied(filterResponse.data.data)
     } catch (error) {
       console.error('Error applying filters:', error)
@@ -101,7 +100,7 @@ const CaregiverFilters = ({
       setItem('')
 
       // Fetch all data without filters
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/caregivers/1/tenant`)
+      const response = await api.get(`/caregivers/1/tenant`)
       onFilterApplied(response.data)
     } catch (error) {
       console.error('Error resetting filters:', error)

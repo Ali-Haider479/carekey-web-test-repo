@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react'
 import axios from 'axios'
 import EvvMissedShiftsTable from './EvvMissedShiftsTable'
 import EvvFilters from '../completed-shifts/EvvFilter'
+import api from '@/utils/api'
 
 // Component Imports
 
@@ -25,9 +26,7 @@ const EvvMissedShifts = () => {
 
   const fetchInitialData = async () => {
     try {
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/time-log/dashboard/missed-shifts/${authUser?.tenant?.id}`
-      )
+      const response = await api.get(`/time-log/dashboard/missed-shifts/${authUser?.tenant?.id}`)
       console.log('MISSED SHIFTS', response.data.data)
       setTimeLogData(response.data.data)
       setIsLoading(false)

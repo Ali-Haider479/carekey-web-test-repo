@@ -6,6 +6,7 @@ import EvvActiveUserTable from './EvvActiveUserTable'
 import ActiveUserMapView from './ActiveUserMapView'
 import axios from 'axios'
 import { useEffect, useState } from 'react'
+import api from '@/utils/api'
 
 // Component Imports
 
@@ -22,7 +23,7 @@ const EvvActiveUser = () => {
 
   const fetchInitialData = async () => {
     try {
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/time-log/active-timelogs`)
+      const response = await api.get(`/time-log/active-timelogs`)
       setTimeLogData(response.data)
       setPayperiod(response?.data[0]?.payPeriodHistory)
       setIsLoading(false)

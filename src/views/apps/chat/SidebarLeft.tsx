@@ -21,7 +21,7 @@ import type { ChatDataType, StatusObjType } from '@/types/apps/chatTypes'
 import type { AppDispatch } from '@/redux-store'
 
 // Slice Imports
-import { addNewChat, createChatRoom, fetchChatRooms } from '@/redux-store/slices/chat'
+import { addNewChat, createChatRoom, fetchChatRooms, receiveMessage } from '@/redux-store/slices/chat'
 
 // Component Imports
 import CustomAvatar from '@core/components/mui/Avatar'
@@ -32,13 +32,15 @@ import CustomTextField from '@core/components/mui/TextField'
 
 // Util Imports
 import { getInitials } from '@/utils/getInitials'
-import { formatDateToMonthShort } from './utils'
 import { Button, Chip, Dialog, Grid2 as Grid } from '@mui/material'
 import DialogCloseButton from '@/components/dialogs/DialogCloseButton'
 import CustomDropDown from '@/@core/components/custom-inputs/CustomDropDown'
 import { useForm } from 'react-hook-form'
 import axios from 'axios'
 import { useSession } from 'next-auth/react'
+import api from '@/utils/api'
+import { useMqttClient } from '@/hooks/useMqtt'
+import { renderChat } from './RenderChat'
 
 export const statusObj: StatusObjType = {
   busy: 'error',
@@ -64,92 +66,6 @@ type Props = {
   isBelowMdScreen: boolean
   isBelowSmScreen: boolean
   messageInputRef: RefObject<HTMLDivElement>
-}
-
-type RenderChatType = {
-  chatStore: ChatDataType
-  getActiveUserData: (id: number) => void
-  setSidebarOpen: (value: boolean) => void
-  backdropOpen: boolean
-  setBackdropOpen: (value: boolean) => void
-  isBelowMdScreen: boolean
-}
-
-// Render chat list
-const renderChat = (props: RenderChatType) => {
-  const { chatStore, getActiveUserData, setSidebarOpen, backdropOpen, setBackdropOpen, isBelowMdScreen } = props
-
-  // Sort chats by last message time (most recent first)
-  const sortedChats = [...chatStore.chats].sort((a, b) => {
-    const aLastMessageTime = a.chat.length ? new Date(a.chat[a.chat.length - 1].time).getTime() : 0
-    const bLastMessageTime = b.chat.length ? new Date(b.chat[b.chat.length - 1].time).getTime() : 0
-    return bLastMessageTime - aLastMessageTime // Descending order
-  })
-
-  // return chatStore.map(chat => {
-  return sortedChats.map(chat => {
-    const contact = chatStore.contacts.find(contact => contact.chatRoomId === chat.id)
-    if (!contact) return null
-    const isChatActive = chatStore.activeUser?.chatRoomId === contact.chatRoomId
-
-    return (
-      <li
-        key={chat.id}
-        className={classnames('flex items-start gap-4 bs-[60px] pli-3 plb-2 cursor-pointer rounded mbe-1', {
-          'bg-[#4B0082] shadow-primarySm': isChatActive,
-          'text-[var(--mui-palette-primary-contrastText)]': isChatActive
-        })}
-        onClick={() => {
-          if (contact.chatRoomId !== undefined) {
-            getActiveUserData(contact.chatRoomId)
-          }
-          isBelowMdScreen && setSidebarOpen(false)
-          isBelowMdScreen && backdropOpen && setBackdropOpen(false)
-        }}
-      >
-        <AvatarWithBadge
-          src={contact.avatar}
-          isChatActive={isChatActive}
-          alt={contact.fullName}
-          badgeColor={statusObj[contact.status]}
-          color={contact.avatarColor}
-        />
-        <div className='min-is-0 flex-auto'>
-          <div className='flex items-center gap-3'>
-            <Typography>
-              {contact.fullName.length > 8 ? `${contact.fullName.substring(0, 8)}...` : contact.fullName}
-            </Typography>
-            <Chip icon={<PersonIcon />} label={contact.about.split('/')[1]} variant='outlined' />
-          </div>
-          {chat.chat.length ? (
-            <Typography variant='body2' color={isChatActive ? 'inherit' : 'text.secondary'} className='truncate'>
-              {chat.chat[chat.chat.length - 1].message}
-            </Typography>
-          ) : (
-            <Typography variant='body2' color={isChatActive ? 'inherit' : 'text.secondary'} className='truncate'>
-              {contact.role}
-            </Typography>
-          )}
-        </div>
-        <div className='flex flex-col items-end justify-start'>
-          <Typography
-            variant='body2'
-            color='inherit'
-            className={classnames('truncate', {
-              'text-textDisabled': !isChatActive
-            })}
-          >
-            {chat.chat.length ? formatDateToMonthShort(chat.chat[chat.chat.length - 1].time || new Date()) : null}
-          </Typography>
-          {chat.id === chatStore.activeUser?.chatRoomId ? (
-            ''
-          ) : chat.unseenMsgs > 0 ? (
-            <CustomChip round='true' label={chat.unseenMsgs} color='error' size='small' />
-          ) : null}
-        </div>
-      </li>
-    )
-  })
 }
 
 // Scroll wrapper for chat list
@@ -185,25 +101,49 @@ const SidebarLeft = (props: Props) => {
   const [caregivers, setCaregivers] = useState<any>([])
   const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
 
+  // MQTT Hook
+  const { subscribe, isConnected } = useMqttClient({
+    username: authUser?.userName || 'anonymous'
+  })
+
+  // Subscribe to MQTT wildcard topic
+  useEffect(() => {
+    if (isConnected && authUser?.tenant?.id) {
+      const wildcardTopic = `carekey/chat/#`
+
+      subscribe(wildcardTopic, (message: string) => {
+        try {
+          const parsedMessage = JSON.parse(message)
+          console.log('LAYYAH MSG RECEIVED', message)
+          const { chatRoomId, message: text, senderId, time } = parsedMessage
+
+          // Skip if sent by current user
+          if (senderId === authUser?.id) {
+            return
+          }
+
+          // Dispatch new message to Redux
+          dispatch(receiveMessage(parsedMessage))
+        } catch (error) {
+          console.error('Invalid MQTT message:', error)
+        }
+      })
+    }
+  }, [isConnected, subscribe, dispatch, authUser])
+
   useEffect(() => {
     const fetchClients = async () => {
       try {
-        const clientList: any = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_URL}/client/tenant/${authUser?.tenant?.id}`
-        )
+        const clientList: any = await api.get(`/client/tenant/${authUser?.tenant?.id}`)
 
         const formattedClients =
-          clientList?.data?.map((item: any) => {
-            return {
-              key: `${item.id}-${item.firstName}`,
-              value: item.id,
-              optionString: `${item.firstName} ${item.lastName}`
-            }
-          }) || []
+          clientList?.data?.map((item: any) => ({
+            key: `${item.id}-${item.firstName}`,
+            value: item.id,
+            optionString: `${item.firstName} ${item.lastName}`
+          })) || []
 
-        const caregiverList: any = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_URL}/user/tenant/${authUser?.tenant?.id}`
-        )
+        const caregiverList: any = await api.get(`/user/tenant/${authUser?.tenant?.id}`)
         const dataToFilter = Array.isArray(caregiverList) ? caregiverList : caregiverList?.data || []
         const formattedCaregivers = dataToFilter
           .filter(
@@ -225,7 +165,7 @@ const SidebarLeft = (props: Props) => {
       }
     }
     fetchClients()
-  }, [])
+  }, [authUser?.tenant?.id])
 
   const handleChange = (
     event: SyntheticEvent<Element, Event>,
@@ -279,7 +219,7 @@ const SidebarLeft = (props: Props) => {
         variant={!isBelowMdScreen ? 'permanent' : 'persistent'}
         ModalProps={{
           disablePortal: true,
-          keepMounted: true // Better open performance on mobile.
+          keepMounted: true
         }}
         sx={{
           zIndex: isBelowMdScreen && sidebarOpen ? 11 : 10,
@@ -298,9 +238,7 @@ const SidebarLeft = (props: Props) => {
             alt={chatStore.profileUser.fullName}
             src={chatStore.profileUser.avatar}
             badgeColor={statusObj[chatStore.profileUser.status]}
-            onClick={() => {
-              setUserSidebar(true)
-            }}
+            onClick={() => setUserSidebar(true)}
           />
           <div className='flex is-full items-center flex-auto sm:gap-x-3'>
             <Autocomplete
@@ -310,7 +248,7 @@ const SidebarLeft = (props: Props) => {
               options={chatStore.contacts.map(contact => ({
                 label: `${contact.fullName} (${contact.about.split('/')[1]})`,
                 chatRoomId: contact.chatRoomId,
-                key: contact.chatRoomId // Add the key prop here
+                key: contact.chatRoomId
               }))}
               value={searchValue}
               onChange={handleChange}
@@ -335,16 +273,9 @@ const SidebarLeft = (props: Props) => {
                 />
               )}
             />
-            <IconButton
-              className='mis-2'
-              size='small'
-              onClick={() => {
-                setIsModalShow(true)
-              }}
-            >
+            <IconButton className='mis-2' size='small' onClick={() => setIsModalShow(true)}>
               <i className='bx bx-plus text-2xl' />
             </IconButton>
-
             {isBelowMdScreen ? (
               <IconButton
                 className='mis-2'
@@ -405,7 +336,7 @@ const SidebarLeft = (props: Props) => {
                     control={control}
                     error={errors.clientId}
                     defaultValue={''}
-                    sx={{ width: '100%', minWidth: '180px' }} // added width styling
+                    sx={{ width: '100%', minWidth: '180px' }}
                   />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 12 }}>
@@ -416,7 +347,7 @@ const SidebarLeft = (props: Props) => {
                     control={control}
                     error={errors.otherUser}
                     defaultValue={''}
-                    sx={{ width: '100%', minWidth: '180px' }} // added width styling
+                    sx={{ width: '100%', minWidth: '180px' }}
                   />
                 </Grid>
               </Grid>

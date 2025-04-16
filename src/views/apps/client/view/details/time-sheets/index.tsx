@@ -1,7 +1,7 @@
 'use client'
 import DataTable from '@/@core/components/mui/DataTable'
 import { CheckOutlined, CloseOutlined } from '@mui/icons-material'
-import { Button, Card, CardContent, Typography } from '@mui/material'
+import { Button, Card, CardContent, CircularProgress, Typography } from '@mui/material'
 import { GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
 import React, { useEffect, useState } from 'react'
 import moment from 'moment'
@@ -11,6 +11,9 @@ import { useParams } from 'next/navigation'
 import axios from 'axios'
 import ReactTable from '@/@core/components/mui/ReactTable'
 import './table.css'
+import { jsPDF } from 'jspdf'
+import html2canvas from 'html2canvas'
+import api from '@/utils/api'
 
 interface DetailItemProps {
   label: string
@@ -98,10 +101,11 @@ const TimeSheets = () => {
   const { id } = useParams()
   const [timelogData, setTimelogData] = useState<any>([])
   const [search, setSearch] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
 
   const fetchTimeLog = async () => {
     try {
-      const fetchedTimeLog = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/time-log/client/${id}`)
+      const fetchedTimeLog = await api.get(`/time-log/client/${id}`)
       console.log('fetchedTimeLog.data', fetchedTimeLog.data)
       setTimelogData(fetchedTimeLog.data)
     } catch (error) {
@@ -292,17 +296,17 @@ const TimeSheets = () => {
   const durationsByDate = processDurationsByDate(timelogData, weekDates)
 
   // Update tableData to use date-based keys
- const tableData = [
-   {
-     id: '1',
-     ...weekDates.reduce((acc: { [key: string]: string }, date) => {
-       const dateStr = date.format('YYYY-MM-DD') // Unique key per date
-       const duration = durationsByDate[dateStr] || 0
-       acc[dateStr] = formatDuration(duration) // Use date as key
-       return acc
-     }, {})
-   }
- ]
+  const tableData = [
+    {
+      id: '1',
+      ...weekDates.reduce((acc: { [key: string]: string }, date) => {
+        const dateStr = date.format('YYYY-MM-DD') // Unique key per date
+        const duration = durationsByDate[dateStr] || 0
+        acc[dateStr] = formatDuration(duration) // Use date as key
+        return acc
+      }, {})
+    }
+  ]
 
   // Update tableColumns to use date-based ids
   const tableColumns = weekDates.map(date => {
@@ -319,56 +323,114 @@ const TimeSheets = () => {
     }
   })
 
+  const exportToPDF = async () => {
+    try {
+      setIsLoading(true)
+      const input = document.getElementById('timesheet-content')
+      if (!input) {
+        console.error('Element with id "timesheet-content" not found')
+        alert('Content not found!')
+        return
+      }
+
+      const canvas = await html2canvas(input, {
+        scale: 3,
+        useCORS: true,
+        logging: false,
+        width: input.offsetWidth,
+        height: input.offsetHeight
+      })
+
+      const imgData = canvas.toDataURL('image/png')
+      const doc = new jsPDF('p', 'mm', 'a4')
+      const pdfWidth = 210 // A4 width in mm
+      const pdfHeight = 297 // A4 height in mm
+      const contentWidth = input.offsetWidth
+      const contentHeight = input.offsetHeight
+
+      // Calculate scaling factor to fit content within PDF width
+      const scale = pdfWidth / (contentWidth / 2) // Divide by 2 since canvas.scale is 2
+      const scaledWidth = pdfWidth
+      const scaledHeight = (contentHeight / 2) * scale // Adjust height proportionally
+
+      let heightLeft = scaledHeight
+      let position = 20 // Start below header
+
+      // Add header and image for first page
+      doc.text('Timesheet Report', 10, 10)
+      doc.addImage(imgData, 'PNG', 0, position, scaledWidth, scaledHeight)
+      heightLeft -= pdfHeight - position
+
+      // Handle multi-page PDF
+      while (heightLeft > 0) {
+        position = heightLeft - scaledHeight
+        doc.addPage()
+        doc.text('Timesheet Report', 10, 10)
+        doc.addImage(imgData, 'PNG', 0, position, scaledWidth, scaledHeight)
+        heightLeft -= pdfHeight
+      }
+
+      doc.save('timesheet.pdf')
+    } catch (error) {
+      console.error('Error generating PDF:', error)
+      alert('Failed to generate PDF')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   console.log('WEEK DATES', weekDates)
   console.log('TABLE DATA', tableData)
   console.log('TABLE COLUMNS', tableColumns)
 
   return (
     <>
-      <Card className='h-fit w-[99%] m-2 mt-1 mb-3 shadow-md rounded-lg border-solid border-2'>
-        <div className='grid grid-cols-2 m-4 gap-3'>
-          <DetailItem
-            label='Recipient Name:'
-            value={`${timelogData[0]?.client?.firstName || ''} ${timelogData[0]?.client?.lastName || ''}`}
+      <div id='timesheet-content'>
+        <Card className='h-fit w-[99%] m-2 mt-1 mb-3 shadow-md rounded-lg border-solid border-2'>
+          <div className='grid grid-cols-2 m-4 gap-3'>
+            <DetailItem
+              label='Recipient Name:'
+              value={`${timelogData[0]?.client?.firstName || ''} ${timelogData[0]?.client?.lastName || ''}`}
+            />
+            <DetailItem
+              label='Week Duration:'
+              value={`${weekDates[0]?.format('DD MMMM YYYY') || ''} - ${weekDates[weekDates.length - 1]?.format('DD MMMM YYYY') || ''}`}
+            />
+            <DetailItem
+              label='Caregiver Name:'
+              value={`${timelogData[0]?.caregiver?.firstName || ''} ${timelogData[0]?.caregiver?.lastName || ''}`}
+            />
+          </div>
+          <ReactTable
+            columns={columns}
+            data={timelogData}
+            keyExtractor={user => user.id.toString()}
+            enableRowSelect={false}
+            enablePagination={false}
+            pageSize={5}
+            stickyHeader
+            maxHeight={600}
+            containerStyle={{ borderRadius: 2 }}
           />
-          <DetailItem
-            label='Week Duration:'
-            value={`${weekDates[0]?.format('DD MMMM YYYY') || ''} - ${weekDates[weekDates.length - 1]?.format('DD MMMM YYYY') || ''}`}
-          />
-          <DetailItem
-            label='Caregiver Name:'
-            value={`${timelogData[0]?.caregiver?.firstName || ''} ${timelogData[0]?.caregiver?.lastName || ''}`}
-          />
-        </div>
-        <ReactTable
-          columns={columns}
-          data={timelogData}
-          keyExtractor={user => user.id.toString()}
-          enableRowSelect={false}
-          enablePagination={false}
-          pageSize={5}
-          stickyHeader
-          maxHeight={600}
-          containerStyle={{ borderRadius: 2 }}
-        />
-      </Card>
+        </Card>
 
-      <Card className='h-fit w-[99%] ml-2 mt-3 shadow-md rounded-lg mb-3 border-solid border-2'>
-        <h2 className='text-xl pt-4 ml-4 mb-4'>Total Hours</h2>
-        <ReactTable
-          columns={tableColumns}
-          data={tableData}
-          keyExtractor={row => row.id.toString()}
-          enableRowSelect={false}
-          enablePagination={false}
-          pageSize={5}
-          stickyHeader
-          maxHeight={600}
-          containerStyle={{ borderRadius: 2 }}
-        />
-      </Card>
-      <AcknowledgeSignature data={timelogData} />
-      <AcknowledgeSignatureCaregiver data={timelogData} />
+        <Card className='h-fit w-[99%] ml-2 mt-3 shadow-md rounded-lg mb-3 border-solid border-2'>
+          <h2 className='text-xl pt-4 ml-4 mb-4'>Total Hours</h2>
+          <ReactTable
+            columns={tableColumns}
+            data={tableData}
+            keyExtractor={row => row.id.toString()}
+            enableRowSelect={false}
+            enablePagination={false}
+            pageSize={5}
+            stickyHeader
+            maxHeight={600}
+            containerStyle={{ borderRadius: 2 }}
+          />
+        </Card>
+        <AcknowledgeSignature data={timelogData} />
+        <AcknowledgeSignatureCaregiver data={timelogData} />
+      </div>
       <CardContent className='mt-4 mb-4 flex justify-between'>
         <div className='w-1/2 flex justify-start space-x-6'>
           <Button className='mr-6' variant='contained' onClick={() => {}}>
@@ -382,7 +444,15 @@ const TimeSheets = () => {
           <Button className='bg-[#E89C00] mr-6' variant='contained' onClick={() => {}}>
             Export to CSV
           </Button>
-          <Button className='bg-[#67C932]' variant='contained' onClick={() => {}}>
+          <Button
+            className='bg-[#67C932]'
+            variant='contained'
+            onClick={() => {
+              exportToPDF()
+            }}
+            disabled={isLoading}
+            startIcon={isLoading ? <CircularProgress size={20} color='inherit' /> : null}
+          >
             Export PDF
           </Button>
         </div>

@@ -19,9 +19,11 @@ import CircularProgress from '@mui/material/CircularProgress'
 import CustomTextField from '@core/components/mui/TextField'
 import axios from 'axios'
 import { useParams } from 'next/navigation'
+import api from '@/utils/api'
 
 const ChangePassword = () => {
   // States
+  // RLS DUMMY ID
   const { id } = useParams()
   const [isCurrentPasswordShown, setIsCurrentPasswordShown] = useState(false)
   const [isPasswordShown, setIsPasswordShown] = useState(false)
@@ -31,6 +33,8 @@ const ChangePassword = () => {
   const [success, setSuccess] = useState('')
   const [tenantData, setTenantData] = useState()
   const [adminId, setAdminId] = useState()
+  const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
+  const token = authUser?.backendAccessToken
 
   const [formData, setFormData] = useState({
     currentPassword: '',
@@ -90,7 +94,7 @@ const ChangePassword = () => {
         currentPassword: formData.currentPassword,
         newPassword: formData.newPassword
       }
-      const response = await axios.patch(`${process.env.NEXT_PUBLIC_API_URL}/user/${adminId}/password`, payLoad)
+      const response = await api.patch(`/user/${adminId}/password`, payLoad)
 
       setSuccess('Password updated successfully')
       setFormData({
@@ -109,14 +113,16 @@ const ChangePassword = () => {
     const fetchTenantData = async () => {
       try {
         setLoading(true)
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/tenant/${id}`)
-        const data = response.data
-        console.log('DATATATATATAT in change password', data)
-        setTenantData(data)
-        const admin = data?.users?.find((user: any) => user.role.title === 'Tenant Admin')
-        console.log('ADMIN in change password', admin)
-        console.log('Admin Id in change password', admin.id)
-        setAdminId(admin.id)
+        if (token) {
+          const response = await api.get(`/tenant/${id}`)
+          const data = response.data
+          console.log('DATATATATATAT in change password', data)
+          setTenantData(data)
+          const admin = data?.users?.find((user: any) => user.role.title === 'Tenant Admin')
+          console.log('ADMIN in change password', admin)
+          console.log('Admin Id in change password', admin.id)
+          setAdminId(admin.id)
+        }
       } catch (error) {
         console.error('Error fetching tenant data:', error)
       } finally {

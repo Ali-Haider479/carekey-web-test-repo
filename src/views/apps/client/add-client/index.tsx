@@ -33,6 +33,7 @@ import axios from 'axios'
 import { CardContent, CircularProgress } from '@mui/material'
 import { useRouter } from 'next/navigation'
 import CustomAlert from '@/@core/components/mui/Alter'
+import api from '@/utils/api'
 
 // Vars
 const steps = [
@@ -95,10 +96,7 @@ const AddClientStepper = () => {
       console.log('Files to be uploaded:', fileNames)
 
       // Request pre-signed URLs from the backend
-      const { data: preSignedUrls } = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/upload-document/get-signed-pdf-put-url`,
-        fileNames
-      )
+      const { data: preSignedUrls } = await api.post(`/upload-document/get-signed-pdf-put-url`, fileNames)
 
       console.log('Received Pre-Signed URLs:', preSignedUrls)
 
@@ -129,7 +127,7 @@ const AddClientStepper = () => {
         }
 
         // Store record in backend
-        return axios.post(`${process.env.NEXT_PUBLIC_API_URL}/client/documents`, body)
+        return api.post(`/client/documents`, body)
       })
 
       // Wait for all uploads & database records to complete
@@ -171,17 +169,15 @@ const AddClientStepper = () => {
         pcaChoice: personalDetails.pcaChoice,
         isClient: true,
         isSignatureDraw: true,
-        tenantId: authUser?.tenant?.id
+        tenantId: authUser?.tenant?.id,
+        serviceActivityIds: serviceActivities?.serviceActivities
       }
       const filteredCreateClientBody = Object.fromEntries(
         Object.entries(createClientBody).filter(([key, value]) => value !== undefined && value !== null && value !== '')
       )
       console.log('Filtered Client Body ---> ', filteredCreateClientBody)
 
-      const createClientResponse = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/client`,
-        filteredCreateClientBody
-      )
+      const createClientResponse = await api.post(`/client`, filteredCreateClientBody)
 
       console.log('Create Client Response ---> ', createClientResponse)
 
@@ -217,7 +213,7 @@ const AddClientStepper = () => {
       const clientAddressArray = [clientPrimaryAddressBody, clientSecondaryAddressBody, clientMailingAddressBody]
 
       for (const addressBody of clientAddressArray) {
-        const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/client/address`, addressBody)
+        const response = await api.post(`/client/address`, addressBody)
         console.log('Adding Address Response --> ', response)
       }
 
@@ -229,10 +225,7 @@ const AddClientStepper = () => {
         clientId: clientId
       }
 
-      const createClientResponsibleParty = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/client/responsible-party`,
-        clientResponsiblePartyBody
-      )
+      const createClientResponsibleParty = await api.post(`/client/responsible-party`, clientResponsiblePartyBody)
       console.log('Client Responsible Party Created --> ', createClientResponsibleParty)
 
       const createPhysicianBody = {
@@ -248,10 +241,7 @@ const AddClientStepper = () => {
         clientId: clientId
       }
 
-      const createPhysicianResponse = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/client/physician`,
-        createPhysicianBody
-      )
+      const createPhysicianResponse = await api.post(`/client/physician`, createPhysicianBody)
       console.log('Physician Details --> ', createPhysicianResponse)
 
       const createCaseManagerBody = {
@@ -264,10 +254,7 @@ const AddClientStepper = () => {
         clientId: clientId
       }
 
-      const createCaseManagerResponse = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/client/casemanager`,
-        createCaseManagerBody
-      )
+      const createCaseManagerResponse = await api.post(`/client/casemanager`, createCaseManagerBody)
       console.log('Case Manager Details --> ', createCaseManagerResponse)
 
       const assignCaregiverBody = {
@@ -286,10 +273,7 @@ const AddClientStepper = () => {
         )
       )
 
-      const assignCaregiverResponse = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/user/createClientUser`,
-        filteredAssignCaregiverBody
-      )
+      const assignCaregiverResponse = await api.post(`/user/createClientUser`, filteredAssignCaregiverBody)
       console.log('Assigned Caregiver Details --> ', assignCaregiverResponse)
 
       const createClientServiceBody = {
@@ -297,10 +281,7 @@ const AddClientStepper = () => {
         serviceId: serviceActivities.service,
         clientId: clientId
       }
-      const createClientServiceTypeResponse = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/client/client-service`,
-        createClientServiceBody
-      )
+      const createClientServiceTypeResponse = await api.post(`/client/client-service`, createClientServiceBody)
       console.log('Client Service Type Created --> ', createClientServiceTypeResponse)
 
       const createCarePlanDueBody = {
@@ -317,10 +298,7 @@ const AddClientStepper = () => {
         )
       )
 
-      const createCarePlanDueResponse = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/client/careplan`,
-        createCarePlanDueBody
-      )
+      const createCarePlanDueResponse = await api.post(`/client/careplan`, createCarePlanDueBody)
       console.log('Create Care Plan Due Data --> ', filteredCarePlanDueBody)
 
       console.log('New Docs', Docs)

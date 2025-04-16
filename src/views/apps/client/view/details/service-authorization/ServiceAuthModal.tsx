@@ -24,6 +24,7 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday'
 import { placeOfServiceOptions } from '@/utils/constants'
 import OcrCustomDropDown from '@/@core/components/custom-inputs/OcrCustomDropdown'
+import api from '@/utils/api'
 
 interface ServiceAuthListModalProps {
   open: boolean
@@ -176,7 +177,7 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
         const pdfFormData = new FormData()
         pdfFormData.append('pdf', file)
 
-        const response = await axios.post<any>(`${process.env.NEXT_PUBLIC_API_URL}/client/ocr`, pdfFormData, {
+        const response = await api.post<any>(`/client/ocr`, pdfFormData, {
           headers: {
             'Content-Type': 'multipart/form-data'
           }
@@ -278,9 +279,7 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
       console.log('ONE serviceAuthPayloads', serviceAuthPayloads)
 
       const serviceAuthResponses = await Promise.all(
-        serviceAuthPayloads.map(payload =>
-          axios.post(`${process.env.NEXT_PUBLIC_API_URL}/client/service-auth`, payload)
-        )
+        serviceAuthPayloads.map(payload => api.post(`/client/service-auth`, payload))
       )
 
       const accountHistoryPayLoad = {
@@ -289,7 +288,7 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
         userId: authUser?.id,
         clientId
       }
-      await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/account-history/log`, accountHistoryPayLoad)
+      await api.post(`/account-history/log`, accountHistoryPayLoad)
 
       await fetchClientServiceAuthData()
       handleModalClose()

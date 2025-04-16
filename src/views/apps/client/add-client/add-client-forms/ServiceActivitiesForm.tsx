@@ -25,6 +25,7 @@ import MenuItem from '@mui/material/MenuItem'
 import FormControl from '@mui/material/FormControl'
 import axios from 'axios'
 import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
+import api from '@/utils/api'
 
 type Props = {
   form?: any
@@ -67,7 +68,24 @@ const ServiceActivitiesForm = forwardRef<{ handleSubmit: any }, Props>(({ onFini
   const [lastCompletedDate, setLastCompletedDate] = useState<Date | null>(null)
   const [dueDate, setDueDate] = useState<Date | null>(null)
 
+  const selectedServiceId = watch('service')
   const assignCaregiverEnabled = watch('enableAssignCaregiver')
+
+  console.log('Selected Service ID: ', selectedServiceId)
+
+  const filteredActivities = selectedServiceId
+    ? activities
+        ?.filter(activity => activity?.service?.id === Number(selectedServiceId))
+        .map(activity => ({
+          id: activity?.id, // Convert to string if needed
+          serviceId: activity?.service?.id, // Convert to string
+          title: activity?.title
+        })) || []
+    : activities?.map(activity => ({
+        id: activity?.id,
+        serviceId: activity?.service?.id,
+        title: activity?.title
+      })) || []
 
   const handleEnableChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setValue('enableAssignCaregiver', event.target.checked)
@@ -84,16 +102,19 @@ const ServiceActivitiesForm = forwardRef<{ handleSubmit: any }, Props>(({ onFini
 
   const getAvailableServices = async () => {
     try {
-      const activities = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/activity`)
+      const activities = await api.get(`/activity`)
       setActivities(activities.data)
     } catch (error) {
       console.error('Error getting activities: ', error)
     }
   }
 
+  console.log('service activities =====> ', activities)
+  console.log('Filtered service ativities =====> ', filteredActivities)
+
   const getServiceTypes = async () => {
     try {
-      const serviceTypesResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/service`)
+      const serviceTypesResponse = await api.get(`/service`)
       console.log('Service Types --> ', serviceTypesResponse)
       setServiceTypes(serviceTypesResponse.data)
     } catch (error) {
@@ -103,7 +124,7 @@ const ServiceActivitiesForm = forwardRef<{ handleSubmit: any }, Props>(({ onFini
 
   const getCaregiversList = async () => {
     try {
-      const caregiversListData = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/caregivers`)
+      const caregiversListData = await api.get(`/caregivers`)
       console.log('Caregivers List Data--> ', caregiversListData)
       setCaregiversList(caregiversListData)
     } catch (error) {
@@ -265,7 +286,7 @@ const ServiceActivitiesForm = forwardRef<{ handleSubmit: any }, Props>(({ onFini
               label={'Select Service'}
               error={errors.serviceActivities}
               defaultValue={[]}
-              activities={activities || []}
+              activities={filteredActivities}
             />
           </CardContent>
         </Card>

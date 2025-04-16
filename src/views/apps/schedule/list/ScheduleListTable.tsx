@@ -17,6 +17,7 @@ import MoreVertIcon from '@mui/icons-material/MoreVert'
 import EditIcon from '@mui/icons-material/Edit'
 import { Delete } from '@mui/icons-material'
 import axios from 'axios'
+import api from '@/utils/api'
 
 // Type Definitions
 type User = {
@@ -183,7 +184,7 @@ const ScheduleListTable = ({ events }: { events: any[] }) => {
   const handleDeleteSchedule = async (id: string) => {
     console.log('handleDeleteSchedule Clicked', id)
     try {
-      const deletionRes = await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/schedule/${id}`)
+      const deletionRes = await api.delete(`/schedule/${id}`)
       if (deletionRes) {
         const updatedData = events.filter((item: any) => item.id !== id)
         // setData(updatedData)

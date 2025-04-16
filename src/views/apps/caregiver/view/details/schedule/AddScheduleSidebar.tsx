@@ -13,6 +13,7 @@ import FormModal from '@/@core/components/mui/Modal'
 import { AddEventSidebarType, AddEventType } from '@/types/apps/calendarTypes'
 import { Alert, Grid2 as Grid, TextField } from '@mui/material'
 import { useParams } from 'next/navigation'
+import api from '@/utils/api'
 
 interface PickerProps {
   label?: string
@@ -222,7 +223,8 @@ const AddEventModal = (props: AddEventSidebarType) => {
         assignedHours: assignedHours,
         notes: values.notes,
         location: values.location,
-        payPeriod: props?.payPeriod?.id
+        payPeriod: props?.payPeriod?.id,
+        tenantId: authUser?.tenant?.id
       })
 
       // Move to the next day without modifying endDate
@@ -249,14 +251,14 @@ const AddEventModal = (props: AddEventSidebarType) => {
           const patchBody = {
             ...bulkEvents[0]
           }
-          const updatedSchedule = await axios.patch(`${process.env.NEXT_PUBLIC_API_URL}/schedule/${eventId}`, patchBody)
+          const updatedSchedule = await api.patch(`/schedule/${eventId}`, patchBody)
           const accountHistoryPayLoad = {
             actionType: 'CaregiverScheduleUpdate',
             details: `Caregiver (ID: ${id}) schedule updated by User (ID: ${authUser?.id})`,
             userId: authUser?.id,
             caregiverId: id
           }
-          await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/account-history/log`, accountHistoryPayLoad)
+          await api.post(`/account-history/log`, accountHistoryPayLoad)
           props.handleUpdateEvent(updatedSchedule.data)
         }
       } catch (error) {
@@ -269,7 +271,7 @@ const AddEventModal = (props: AddEventSidebarType) => {
       try {
         // console.log('bulkEvents', bulkEvents)
         if (bulkEvents.length > 0) {
-          const createSchedule = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/schedule`, bulkEvents)
+          const createSchedule = await api.post(`/schedule`, bulkEvents)
           props.handleAddEvent(createSchedule.data)
           const accountHistoryPayLoad = {
             actionType: 'CaregiverScheduleCreation',
@@ -277,7 +279,7 @@ const AddEventModal = (props: AddEventSidebarType) => {
             userId: authUser?.id,
             caregiverId: id
           }
-          await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/account-history/log`, accountHistoryPayLoad)
+          await api.post(`/account-history/log`, accountHistoryPayLoad)
         }
       } catch (error) {
         console.error('Error creating schedule:', error)

@@ -6,6 +6,7 @@ import EvvCompletedShiftsTable from './EvvCompletedShiftsTable'
 import { useEffect, useState } from 'react'
 import axios from 'axios'
 import EvvFilters from './EvvFilter'
+import api from '@/utils/api'
 
 // Component Imports
 
@@ -24,7 +25,7 @@ const EvvCompletedShifts = () => {
 
   const fetchInitialData = async () => {
     try {
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/time-log/completed-timelogs`);
+      const response = await api.get(`/time-log/completed-timelogs`)
       console.log(response)
       setTimeLogData(response.data)
       setIsLoading(false)

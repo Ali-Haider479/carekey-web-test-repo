@@ -14,10 +14,14 @@ import OpenDialogOnElementClick from '@components/dialogs/OpenDialogOnElementCli
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import axios from 'axios'
+import api from '@/utils/api'
 
 const BillingAddress = () => {
+  // RLS DUMMY ID
   const { id } = useParams()
   const [tenantData, setTenantData] = useState<any>([])
+  const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
+  const token = authUser?.backendAccessToken
 
   const buttonProps: ButtonProps = {
     variant: 'contained',
@@ -31,14 +35,15 @@ const BillingAddress = () => {
     // Define an async function inside useEffect
     const fetchTenantData = async () => {
       try {
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/tenant/${id}`)
-        const data = response.data
+        if (token) {
+          const response = await api.get(`/tenant/${id}`)
+          const data = response.data
+          // Optionally save the data to localStorage
+          localStorage.setItem('view-tenant', JSON.stringify(data))
 
-        // Optionally save the data to localStorage
-        localStorage.setItem('view-tenant', JSON.stringify(data))
-
-        // Update the state with fetched data
-        setTenantData(data)
+          // Update the state with fetched data
+          setTenantData(data)
+        }
       } catch (error) {
         console.error('Error fetching tenant data:', error)
       }

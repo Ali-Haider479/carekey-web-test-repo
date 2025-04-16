@@ -6,16 +6,20 @@ import CaregiverTable from './CaregiversTable'
 import CaregiverFilters from './CaregiverFilters'
 import { use, useEffect, useState } from 'react'
 import axios from 'axios'
+import api from '@/utils/api'
 
 // Component Imports
 
 const CaregiverList = () => {
   const [caregiverData, setCaregiverData] = useState<any>([])
   const [isLoading, setIsLoading] = useState(true)
+  const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
+  const token = authUser?.backendAccessToken
 
   const fetchInitialData = async () => {
     try {
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/caregivers`)
+      const response = await api.get(`/caregivers`)
+      console.log('CARGIVER RESPONSE ONE', response)
       setCaregiverData(response.data)
       setIsLoading(false)
     } catch (error) {

@@ -156,26 +156,32 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
   const [data, setData] = useState<any>([])
   const [filteredData, setFilteredData] = useState<any>(data)
   const [globalFilter, setGlobalFilter] = useState('')
-  const [isLoading, setIsLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(false)
   const tenantStore = useSelector((state: { tenantReducer: any }) => state.tenantReducer)
   const [tenantFilteredList, setTenantFilteredList] = useState<any>([])
   const theme = useTheme()
   const dark = theme.palette.mode === 'dark'
+  const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
+  const token = authUser?.backendAccessToken
 
-  const fetchInitialData = async () => {
-    try {
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/tenant`)
+  // const fetchInitialData = async () => {
+  //   console.log('ONE INITIAL')
+  //   try {
+  //     const response = await api.get(`/tenant`, {
+  //       headers: {
+  //         Authorization: `Bearer ${token}`
+  //       }
+  //     })
+  //     setTenantFilteredList(response.data)
+  //     setIsLoading(false)
+  //   } catch (error) {
+  //     console.error('Error fetching initial data:', error)
+  //   }
+  // }
 
-      setTenantFilteredList(response.data)
-      setIsLoading(false)
-    } catch (error) {
-      console.error('Error fetching initial data:', error)
-    }
-  }
-
-  useEffect(() => {
-    fetchInitialData()
-  }, [])
+  // useEffect(() => {
+  //   fetchInitialData()
+  // }, [])
 
   const handleFilteredData = (filteredData: any) => {
     setTenantFilteredList(filteredData)
@@ -185,8 +191,10 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
   const { lang: locale } = useParams()
 
   useEffect(() => {
-    dispatch(fetchTenants())
-  }, [dispatch])
+    if (token) {
+      dispatch(fetchTenants(token))
+    }
+  }, [dispatch, token])
 
   // Update data when tenants change
   useEffect(() => {

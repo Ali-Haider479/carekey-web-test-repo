@@ -1,6 +1,7 @@
 'use client'
 import DataTable from '@/@core/components/mui/DataTable'
 import ReactTable from '@/@core/components/mui/ReactTable'
+import api from '@/utils/api'
 import { Card, Typography } from '@mui/material'
 import { GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
 
@@ -13,7 +14,7 @@ const IncidentsTab = () => {
   const [incidentsData, setIncidentsData] = useState<any>()
 
   const fetchClientIncidents = async () => {
-    const clientIncidentsRes = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/client/${id}/incident-report`)
+    const clientIncidentsRes = await api.get(`/client/${id}/incident-report`)
     console.log('clientIncidentsRes', clientIncidentsRes)
     setIncidentsData(clientIncidentsRes.data)
   }

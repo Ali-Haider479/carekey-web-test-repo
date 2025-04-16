@@ -6,6 +6,7 @@ import axios from 'axios'
 import { EditOutlined, SaveOutlined } from '@mui/icons-material'
 import { EditableField } from '@/@core/components/custom-inputs/CustomEditableTextField'
 import CloseIcon from '@mui/icons-material/Close'
+import api from '@/utils/api'
 
 function ClientAboutCard() {
   const { id } = useParams()
@@ -44,7 +45,7 @@ function ClientAboutCard() {
   const fetchData = async () => {
     try {
       setIsLoading(true)
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/client/detail/${id}`)
+      const response = await api.get(`/client/detail/${id}`)
       console.log('CLIENT RES', response.data)
       setData(response.data)
     } catch (error) {
@@ -158,14 +159,14 @@ function ClientAboutCard() {
   const handleSave = async () => {
     try {
       setIsLoading(true)
-      await axios.put(`${process.env.NEXT_PUBLIC_API_URL}/client/${id}`, formData)
+      await api.put(`/client/${id}`, formData)
       const accountHistoryPayLoad = {
         actionType: 'ClientProfileInfoUpdate',
         details: `Client (ID: ${id}) profile information updated by User (ID: ${authUser?.id})`,
         userId: authUser?.id,
         clientId: id
       }
-      await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/account-history/log`, accountHistoryPayLoad)
+      await api.post(`/account-history/log`, accountHistoryPayLoad)
       console.log('FORM DATA', formData)
       setIsEdit(true)
       fetchData() // Refresh data after update

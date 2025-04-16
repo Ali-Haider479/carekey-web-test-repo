@@ -2,9 +2,9 @@
 import React, { useEffect, useState } from 'react'
 import { Box, Card, CardContent, CardMedia, styled, Typography } from '@mui/material'
 import type { ProfileHeaderType } from '@/types/pages/profileTypes'
-import axios from 'axios'
 import { useParams } from 'next/navigation'
 import ProfileAvatar from '@/@core/components/mui/ProfileAvatar'
+import api from '@/utils/api'
 
 const UploadOverlay = styled(Box)(({ theme }) => ({
   position: 'absolute',
@@ -38,9 +38,7 @@ const ProfileBanner = ({ props }: { props: ProfileHeaderType }) => {
 
   const getProfileImage = async (key: string) => {
     try {
-      const res = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/${props.isClient ? 'client' : 'caregivers'}/getProfileUrl/${key}`
-      )
+      const res = await api.get(`/${props.isClient ? 'client' : 'caregivers'}/getProfileUrl/${key}`)
       setFileUrl(res.data)
     } catch (err) {
       throw Error(`Error in fetching profile image url, ${err}`)
@@ -52,12 +50,12 @@ const ProfileBanner = ({ props }: { props: ProfileHeaderType }) => {
       setLoading(true)
       const formData = new FormData()
       formData.append('image', file)
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/${props.isClient ? 'client' : 'user'}/${id}/profile-image`,
+      const response = await api.post(
+        `/${props.isClient ? 'client' : 'user'}/${id}/profile-image`, // Only the path, since baseURL is already set
         formData,
         {
           headers: {
-            'Content-Type': 'multipart/form-data'
+            'Content-Type': 'multipart/form-data' // Override the default Content-Type
           }
         }
       )
@@ -74,7 +72,7 @@ const ProfileBanner = ({ props }: { props: ProfileHeaderType }) => {
         clientId: props.isClient ? id : null
       }
       console.log('ONE PROFILE PAYLOAD', payLoad)
-      await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/account-history/log`, payLoad)
+      await api.post(`/account-history/log`, payLoad)
       setLoading(false)
     } catch (error) {
       console.error('Update image error:', error)

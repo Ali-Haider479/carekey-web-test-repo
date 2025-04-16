@@ -15,6 +15,7 @@ import DataTable from '@/@core/components/mui/DataTable'
 import { Typography } from '@mui/material'
 import AdUnitsIcon from '@mui/icons-material/AdUnits'
 import { calculateHoursWorked } from '@/utils/helperFunctions'
+import api from '@/utils/api'
 
 const TimeLogTable = () => {
   const { id } = useParams()
@@ -24,7 +25,7 @@ const TimeLogTable = () => {
 
   const fetchTimeLog = async () => {
     try {
-      const fetchedTimeLog = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/time-log/caregiver/${id}`)
+      const fetchedTimeLog = await api.get(`/time-log/caregiver/${id}`)
       setData(fetchedTimeLog.data)
       console.log('Caregiver Timelog Data --> ', fetchedTimeLog)
     } catch (error) {
@@ -35,7 +36,6 @@ const TimeLogTable = () => {
   useEffect(() => {
     fetchTimeLog()
   }, [])
-
 
   const newColumns: GridColDef[] = [
     {

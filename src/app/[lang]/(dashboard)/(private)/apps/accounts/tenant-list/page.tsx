@@ -23,19 +23,19 @@ import { getUserData } from '@/app/server/actions'
 } */
 
 const TenantListApp = async () => {
-    // Vars
-    // const data = await getUserData()
-    // const [data, setData] = useState([])
+  // Vars
+  // const data = await getUserData()
+  // const [data, setData] = useState([])
 
-    // useEffect(() => {
-    //   ;(async () => {
-    //     const tenantData = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/tenant`)
-    //     const data = tenantData.data
-    //     setData(data)
-    //   })()
-    // }, [])
+  // useEffect(() => {
+  //   ;(async () => {
+  //     const tenantData = await api.get(`/tenant`)
+  //     const data = tenantData.data
+  //     setData(data)
+  //   })()
+  // }, [])
 
-    return <TenantList />
+  return <TenantList />
 }
 
 export default TenantListApp
