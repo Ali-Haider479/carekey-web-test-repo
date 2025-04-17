@@ -22,7 +22,7 @@ import { useEffect, useState } from 'react'
 import axios from 'axios'
 import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday'
-import { placeOfServiceOptions } from '@/utils/constants'
+import { placeOfServiceOptions, payerOptions } from '@/utils/constants'
 import OcrCustomDropDown from '@/@core/components/custom-inputs/OcrCustomDropdown'
 import api from '@/utils/api'
 
@@ -54,7 +54,7 @@ interface FormRow {
   placeOfService: string
   caseManagerName?: string // Optional fields from OCR
   recepientName?: string
-  status?: string
+  status?: string,
 }
 
 interface UploadedFile {
@@ -81,6 +81,7 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
   const [billableStates, setBillableStates] = useState<boolean[]>([])
   const [ocrData, setOcrData] = useState<FormRow[]>([])
   const authUser: AuthUser = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
+  const [payerName, setPayerName] = useState<string>('MA')
 
   const initialFormRow: FormRow = {
     providerId: '',
@@ -99,11 +100,11 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
     frequency: '',
     umpiNumber: '',
     taxonomy: '',
-    reimbursement: '',
-    placeOfService: '',
+    reimbursement: 'per unit',
+    placeOfService: 'home',
     caseManagerName: '',
     recepientName: '',
-    status: ''
+    status: '',
   }
 
   useEffect(() => {
@@ -249,7 +250,7 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
     diagnosisCode: enableOcrDataFill ? formData[0]?.diagnosisCode || '' : '',
     taxonomy: enableOcrDataFill ? formData[0]?.taxonomy || '' : '',
     umpiNumber: enableOcrDataFill ? formData[0]?.providerId || '' : '',
-    placeOfService: enableOcrDataFill ? formData[0]?.placeOfService || '' : ''
+    placeOfService: enableOcrDataFill ? formData[0]?.placeOfService || 'home' : ''
   }
 
   const handelSubmit = async (): Promise<void> => {
@@ -258,7 +259,7 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
       // Always use formData for submission to include UI-managed fields like billable and placeOfService
       const dataToSubmit = formData
       const serviceAuthPayloads = dataToSubmit.map((item: FormRow, index: number) => ({
-        payer: 'MA',
+        payer: payerName,
         memberId: Number(item.recipientId || 0),
         serviceAuthNumber: Number(item.agreementNumber || 0),
         procedureCode: item.procedureCode || '',
@@ -298,6 +299,85 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
       setIsLoading(false)
     }
   }
+
+  // Define the input interface
+  interface QuantityPerFrequencyInput {
+    startDate?: string | Date;
+    endDate?: string | Date;
+    quantity?: string | number;
+    frequency?: string;
+  }
+
+  // List of supported frequencies
+  type Frequency = 'daily' | 'weekly' | 'monthly';
+
+  const calculateQuantityPerFrequency = ({
+    startDate,
+    endDate,
+    quantity,
+    frequency,
+  }: QuantityPerFrequencyInput): number => {
+    // Helper function to parse quantity (string or number) into a number
+    const parseQuantity = (qty: string | number | undefined): number => {
+      if (qty === undefined || qty === null) return NaN;
+      if (typeof qty === 'number') return isNaN(qty) ? NaN : qty;
+      // Remove commas and convert string to number
+      const cleaned = qty.replace(/,/g, '');
+      const parsed = parseFloat(cleaned);
+      return isNaN(parsed) ? NaN : parsed;
+    };
+
+    // Parse quantity
+    const parsedQuantity = parseQuantity(quantity);
+
+    // Validate inputs
+    if (!startDate || !endDate || isNaN(parsedQuantity) || !frequency) {
+      return NaN;
+    }
+
+    // Convert dates to Date objects
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    // Check if dates are valid
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      return NaN;
+    }
+
+    // Check if endDate is after startDate
+    if (end <= start) {
+      return NaN;
+    }
+
+    // Calculate time difference in milliseconds
+    const timeDiffMs = end.getTime() - start.getTime();
+
+    // Calculate quantity per frequency
+    let frequencyUnits: number;
+    switch (frequency.toLowerCase() as Frequency) {
+      case 'daily':
+        // Convert time difference to days
+        frequencyUnits = timeDiffMs / (1000 * 60 * 60 * 24);
+        break;
+      case 'weekly':
+        // Convert time difference to weeks
+        frequencyUnits = timeDiffMs / (1000 * 60 * 60 * 24 * 7);
+        break;
+      case 'monthly':
+        // Calculate months (approximate using average days per month: 30.42)
+        frequencyUnits = timeDiffMs / (1000 * 60 * 60 * 24 * 30.42);
+        break;
+      default:
+        return NaN; // Unsupported frequency
+    }
+
+    // Calculate quantity per frequency
+    if (frequencyUnits <= 0) {
+      return NaN;
+    }
+
+    return parsedQuantity / frequencyUnits;
+  };
 
   return (
     <Dialog
@@ -394,7 +474,15 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
             <CardContent>
               <Grid container spacing={4}>
                 <Grid size={{ xs: 12, sm: 4 }}>
-                  <TextField label='Payer' value={commonFields.payer} fullWidth size='small' disabled={isLoading} />
+                  {/* <TextField label='Payer' value={commonFields.payer} fullWidth size='small' disabled={isLoading} /> */}
+                  <OcrCustomDropDown
+                    label='Payer'
+                    name='payer'
+                    value={payerName}
+                    onChange={(e: any) => setPayerName(e.target.value)}
+                    optionList={payerOptions}
+                    disabled={isLoading}
+                  />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 4 }}>
                   <TextField
@@ -541,6 +629,7 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
                             }}
                           />
                         }
+                      // popperPlacement='bottom'
                       />
                     </Grid>
                     <Grid size={{ xs: 12, sm: 3 }}>
@@ -550,6 +639,19 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
                         onChange={e => handleInputChange(index, 'serviceRate', e.target.value)}
                         fullWidth
                         size='small'
+                        disabled={isLoading}
+                      />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 3 }}>
+                      <OcrCustomDropDown
+                        label='Reimbursement'
+                        name={`reimbursement_${index}`}
+                        value={row.reimbursement}
+                        onChange={(e: any) => handleInputChange(index, 'reimbursement', e.target.value as string)}
+                        optionList={[
+                          { key: 1, value: 'per unit', optionString: 'Per Unit' },
+                          { key: 2, value: 'per diem', optionString: 'Per Diem' }
+                        ]}
                         disabled={isLoading}
                       />
                     </Grid>
@@ -578,17 +680,20 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
                       />
                     </Grid>
                     <Grid size={{ xs: 12, sm: 3 }}>
-                      <OcrCustomDropDown
-                        label='Reimbursement'
-                        name={`reimbursement_${index}`}
-                        value={row.reimbursement}
-                        onChange={(e: any) => handleInputChange(index, 'reimbursement', e.target.value as string)}
-                        optionList={[
-                          { key: 1, value: 'per unit', optionString: 'Per Unit' },
-                          { key: 2, value: 'per diem', optionString: 'Per Diem' }
-                        ]}
-                        disabled={isLoading}
-                      />
+                      <Typography sx={{ paddingBottom: 0, marginBottom: -0.8 }}>Quantity per Frequency:{' '}</Typography>
+                      {isNaN(calculateQuantityPerFrequency({
+                        startDate: row.startDate,
+                        endDate: row.endDate,
+                        quantity: row.quantity,
+                        frequency: row.frequency,
+                      }))
+                        ? 'N/A'
+                        : calculateQuantityPerFrequency({
+                          startDate: row.startDate,
+                          endDate: row.endDate,
+                          quantity: row.quantity,
+                          frequency: row.frequency,
+                        }).toFixed(2)}{' '}
                     </Grid>
                   </Grid>
                   {index === formData.length - 1 && (

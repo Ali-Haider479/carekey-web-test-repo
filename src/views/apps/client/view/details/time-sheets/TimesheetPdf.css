@@ -1,0 +1,22 @@
+.light-mode {
+  background-color: #ffffff !important; /* White background */
+  color: #000000 !important; /* Black text */
+}
+
+.light-mode * {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border-color: #000000 !important; /* Ensure borders are visible */
+}
+
+/* Specific overrides for components */
+.light-mode .card {
+  background-color: #ffffff !important;
+  border: 2px solid #000000 !important;
+}
+
+.light-mode h2,
+.light-mode .detail-item,
+.light-mode .react-table {
+  color: #000000 !important;
+}

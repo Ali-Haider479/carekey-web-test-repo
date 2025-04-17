@@ -1,5 +1,5 @@
 'use client'
-import React, { forwardRef, useEffect, useState } from 'react'
+import React, { forwardRef, use, useEffect, useState } from 'react'
 import {
   Card,
   CardHeader,
@@ -20,7 +20,7 @@ import Grid from '@mui/material/Grid2'
 import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
 import axios from 'axios'
 import { Close as CloseIcon } from '@mui/icons-material'
-import { format, parseISO } from 'date-fns' // Core date-fns functions
+import { format, parseISO, set } from 'date-fns' // Core date-fns functions
 import { toZonedTime } from 'date-fns-tz'
 import api from '@/utils/api'
 
@@ -73,6 +73,10 @@ const ManualTimesheet = ({ clientList, caregiverList, serviceList, payPeriod }: 
   const [weekRange, setWeekRange] = useState<any>({})
   const [selectedItems, setSelectedItems] = useState<number[]>([])
   const [activities, setActivities] = useState<any[]>([])
+  const [clientUsers, setClientUsers] = useState<any[]>([])
+  const [serviceType, setServiceType] = useState<any[]>([])
+  const [serviceActivities, setServiceActivities] = useState([])
+  const [clientData, setClientData] = useState<any>()
   const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
 
   const combineDateAndTimeForGMT = (date: any, time: any) => {
@@ -106,6 +110,77 @@ const ManualTimesheet = ({ clientList, caregiverList, serviceList, payPeriod }: 
     const value = event.target.value as number[]
     setSelectedItems(value)
   }
+
+  console.log('Caregiver value', values.caregiver)
+
+  const caregiverId = values.caregiver
+
+  const fetchClientUsers = async () => {
+    try {
+      if (!caregiverId) return // Avoid fetching if caregiverId is not set
+      const response = await api.get(`/user/clientUsers/${caregiverId}`)
+      setClientUsers(response.data)
+      console.log('Client Users ~~----~~---->', response.data)
+    } catch (error) {
+      console.error('Error fetching client users:', error)
+    }
+  }
+
+  console.log('clientUsers in manual ====> ', clientUsers)
+
+  const fetchClientData = async () => {
+    try {
+      if (!values.client) return // Avoid fetching if client is not set
+      const response = await api.get(`/client/${values.client}`)
+      setClientData(response.data)
+    } catch (error) {
+      console.error('Error fetching client data:', error)
+    }
+  }
+
+  useEffect(() => {
+    fetchClientData()
+  }, [values.client])
+  console.log('Client Data', clientData?.serviceActivityIds)
+
+  useEffect(() => {
+    fetchClientUsers()
+  }, [values.caregiver])
+
+  const fetchClientServiceType = async () => {
+    try {
+      if (!values.client) return // Avoid fetching if client is not set
+      const response = await api.get(`/client/${values.client}/services`)
+      setServiceType(response.data)
+    } catch (error) {
+      console.error('Error fetching client service type:', error)
+    }
+  }
+
+  useEffect(() => {
+    fetchClientServiceType()
+  }, [values.client])
+  console.log('Service Type', serviceType)
+
+  const activityIds = clientData?.serviceActivityIds
+  console.log('Activity Ids', activityIds)
+
+  // const clientServiceActivities = async () => {
+  //   try {
+  //     if (!values.client) return // Avoid fetching if service is not set
+  //     const response: any = await api.get(`/activity/activities/${activityIds}`)
+  //     console.log('response of activities -------------> ', response)
+  //     setServiceActivities(response)
+  //   } catch (error) {
+  //     console.error('Error fetching client service activities:', error)
+  //   }
+  // }
+
+  // console.log('Activities --------------> ', serviceActivities)
+
+  // useEffect(() => {
+  //   clientServiceActivities()
+  // }, [values.client])
 
   const getAvailableServices = async () => {
     try {
@@ -242,24 +317,6 @@ const ManualTimesheet = ({ clientList, caregiverList, serviceList, payPeriod }: 
 
             <Grid sx={{ pb: 2 }} size={{ xs: 12, md: 6 }}>
               <FormControl fullWidth size='small' variant='outlined'>
-                <InputLabel id='week-select-label'>Select Client</InputLabel>
-                <Select
-                  labelId='week-select-label'
-                  value={values.client}
-                  label='Select Client'
-                  onChange={e => setValues({ ...values, client: e.target.value })}
-                >
-                  {clientList.map((client: any) => (
-                    <MenuItem key={client.id} value={client.id}>
-                      {`${client.firstName} ${client.lastName}`}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-
-            <Grid sx={{ pb: 2 }} size={{ xs: 12, md: 6 }}>
-              <FormControl fullWidth size='small' variant='outlined'>
                 <InputLabel id='week-select-label'>Select Caregiver</InputLabel>
                 <Select
                   labelId='week-select-label'
@@ -278,6 +335,25 @@ const ManualTimesheet = ({ clientList, caregiverList, serviceList, payPeriod }: 
 
             <Grid sx={{ pb: 2 }} size={{ xs: 12, md: 6 }}>
               <FormControl fullWidth size='small' variant='outlined'>
+                <InputLabel id='week-select-label'>Select Client</InputLabel>
+                <Select
+                  labelId='week-select-label'
+                  value={values.client}
+                  label='Select Client'
+                  onChange={e => setValues({ ...values, client: e.target.value })}
+                  disabled={!values.caregiver}
+                >
+                  {clientUsers.map((client: any) => (
+                    <MenuItem key={client?.client?.id} value={client?.client?.id}>
+                      {`${client?.client?.firstName} ${client?.client?.lastName}`}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+
+            <Grid sx={{ pb: 2 }} size={{ xs: 12, md: 6 }}>
+              <FormControl fullWidth size='small' variant='outlined'>
                 <InputLabel id='week-select-label'>Select Service</InputLabel>
                 <Select
                   labelId='week-select-label'
@@ -285,7 +361,7 @@ const ManualTimesheet = ({ clientList, caregiverList, serviceList, payPeriod }: 
                   label='Select Service'
                   onChange={e => setValues({ ...values, serviceName: e.target.value })}
                 >
-                  {serviceList.map((service: any) => (
+                  {serviceType.map((service: any) => (
                     <MenuItem key={service.id} value={service.name}>
                       {service.name}
                     </MenuItem>
@@ -387,7 +463,7 @@ const ManualTimesheet = ({ clientList, caregiverList, serviceList, payPeriod }: 
                   label='Select Activities'
                   size='small'
                 >
-                  {activities.map(svc => (
+                  {activities?.map((svc: any) => (
                     <MenuItem key={svc.id} value={svc.id}>
                       {svc.title}
                     </MenuItem>

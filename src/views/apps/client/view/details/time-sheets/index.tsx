@@ -10,6 +10,7 @@ import AcknowledgeSignatureCaregiver from './CaregiverSignatureSection'
 import { useParams } from 'next/navigation'
 import axios from 'axios'
 import ReactTable from '@/@core/components/mui/ReactTable'
+import './TimesheetPdf.css'
 import './table.css'
 import { jsPDF } from 'jspdf'
 import html2canvas from 'html2canvas'
@@ -433,15 +434,15 @@ const TimeSheets = () => {
       </div>
       <CardContent className='mt-4 mb-4 flex justify-between'>
         <div className='w-1/2 flex justify-start space-x-6'>
-          <Button className='mr-6' variant='contained' onClick={() => {}}>
+          <Button className='mr-6' variant='contained' onClick={() => { }}>
             Accept Timesheets
           </Button>
-          <Button className='bg-red-600' variant='contained' onClick={() => {}}>
+          <Button className='bg-red-600' variant='contained' onClick={() => { }}>
             Reject Timesheets
           </Button>
         </div>
         <div className='w-1/2 flex justify-end space-x-6'>
-          <Button className='bg-[#E89C00] mr-6' variant='contained' onClick={() => {}}>
+          <Button className='bg-[#E89C00] mr-6' variant='contained' onClick={() => { }}>
             Export to CSV
           </Button>
           <Button

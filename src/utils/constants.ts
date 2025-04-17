@@ -112,3 +112,15 @@ export const placeOfServiceOptions = [
   { key: 49, value: 'independentLaboratory', optionString: 'Independent Laboratory' },
   { key: 50, value: 'otherUnlistedFacility', optionString: 'Other Unlisted Facility' }
 ]
+
+export const payerOptions = [
+  { key: 1, value: 'MA', optionString: 'MA' },
+  { key: 2, value: 'UCare', optionString: 'UCare' },
+  { key: 3, value: 'Medica', optionString: 'Medica' },
+  { key: 4, value: 'BCBS', optionString: 'BCBS' },
+  { key: 5, value: 'Bridge View', optionString: 'Bridge View' },
+  { key: 6, value: 'Health Partners', optionString: 'Health Partners' },
+  { key: 7, value: 'United Healthcare', optionString: 'United Healthcare' },
+  { key: 8, value: 'Hennipin Health', optionString: 'Hennipin Health' },
+  { key: 9, value: 'South Coutry Health', optionString: 'South Coutry Health' }
+]

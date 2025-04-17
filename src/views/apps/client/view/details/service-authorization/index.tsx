@@ -356,9 +356,9 @@ const ServiceAuthorization = () => {
               >
                 ADD SA LIST
               </Button>
-              <Button startIcon={<Add />} className='bg-[#4B0082] text-white h-10' onClick={handleAddNew}>
+              {/* <Button startIcon={<Add />} className='bg-[#4B0082] text-white h-10' onClick={handleAddNew}>
                 ADD SERVICE AUTHORIZATION
-              </Button>
+              </Button> */}
             </div>
           </div>
         </Card>

@@ -16,6 +16,7 @@ const ManualTimesheetPage = () => {
   const [clientList, setClientList] = useState<[] | any>([])
   const [serviceList, setServiceList] = useState<[] | any>([])
   const [payPeriod, setPayPeriod] = useState<[] | any>([])
+  const [clientData, setClientData] = useState<[] | any>([])
   const dispatch = useAppDispatch()
   const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
 
@@ -41,6 +42,10 @@ const ManualTimesheetPage = () => {
       }
     })()
   }, [])
+
+  console.log('caregiverList', caregiverList)
+
+  console.log('clientList', clientList)
 
   return (
     <Grid container spacing={6}>
