@@ -1,10 +1,8 @@
 import type { NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
-
-import { JWT } from 'next-auth/jwt'
 import axios from 'axios'
 
-const MAX_AGE = 1 * 24 * 60 * 60
+const MAX_AGE = 1 * 24 * 60 * 60 // 1 day
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -12,9 +10,7 @@ export const authOptions: NextAuthOptions = {
       name: 'Credentials',
       id: 'credentials',
       credentials: {},
-      async authorize(credentials, req) {
-        console.log('Cred', credentials)
-        // if (credentials == null) return null;
+      async authorize(credentials) {
         const { email, password } = credentials as {
           email: string
           password: string
@@ -23,29 +19,26 @@ export const authOptions: NextAuthOptions = {
         try {
           const response = await axios.post(
             `${process.env.NEXT_PUBLIC_API_URL}/auth/login`,
-            JSON.stringify({ email, password }),
+            { email, password },
             {
               headers: { 'Content-Type': 'application/json' }
             }
           )
-          console.log(response.data)
-          const data = response.data
-          console.log('DATA', data)
 
+          const data = response.data
           if (data) {
-            let user = response?.data?.user
-            const backendToken = response?.data?.backendTokens
-            console.log('backendToken', backendToken)
-            user = { ...user, ...backendToken }
-            console.log('User', user)
-            return user
-          } else {
-            console.log('User not found')
-            return null
-            // throw new Error("User not found");
+            const user = data.user
+            const backendTokens = data.backendTokens
+            return {
+              ...user,
+              accessToken: backendTokens.accessToken,
+              refreshToken: backendTokens.refreshToken,
+              expiresIn: backendTokens.expiresIn
+            }
           }
+          return null
         } catch (err: any) {
-          throw new Error(err)
+          throw new Error(err.response?.data?.message || 'Authentication failed')
         }
       }
     })
@@ -55,8 +48,9 @@ export const authOptions: NextAuthOptions = {
     maxAge: MAX_AGE
   },
   callbacks: {
-    async jwt({ token, user }: { token: JWT; user?: any }) {
+    async jwt({ token, user }) {
       if (user) {
+        // Initial sign-in
         token.id = user.id
         token.userName = user.userName
         token.emailAddress = user.emailAddress
@@ -64,12 +58,40 @@ export const authOptions: NextAuthOptions = {
         token.caregiver = user.caregiver
         token.userRoles = user.userRoles
         token.profileImageUrl = user.profileImageUrl
-        token.backendAccessToken = user.accessToken
-        token.backendAccessExpiresIn = user.expiresIn
+        token.accessToken = user.accessToken
+        token.refreshToken = user.refreshToken
+        token.expiresIn = user.expiresIn
       }
+
+      // Check if access token is expired
+      if (token.expiresIn && Date.now() > token.expiresIn) {
+        try {
+          const response = await axios.post(
+            `${process.env.NEXT_PUBLIC_API_URL}/auth/refresh`,
+            { refreshToken: token.refreshToken },
+            {
+              headers: { 'Content-Type': 'application/json' }
+            }
+          )
+
+          const { accessToken, refreshToken, expiresIn } = response.data
+          token.accessToken = accessToken
+          token.refreshToken = refreshToken // Update refresh token (rotation)
+          token.expiresIn = expiresIn
+        } catch (err) {
+          console.error('Token refresh failed:', err)
+          return { ...token, error: 'RefreshTokenError' }
+        }
+      }
+
       return token
     },
-    async session({ session, token }: { session: any; token: JWT }) {
+    async session({ session, token }) {
+      if (token.error === 'RefreshTokenError') {
+        session.error = 'RefreshTokenError'
+        return session
+      }
+
       session.user.id = token.id
       session.user.userName = token.userName
       session.user.emailAddress = token.emailAddress
@@ -77,8 +99,8 @@ export const authOptions: NextAuthOptions = {
       session.user.caregiver = token.caregiver
       session.user.userRoles = token.userRoles
       session.user.profileImageUrl = token.profileImageUrl
-      session.user.backendAccessToken = token.backendAccessToken
-      session.user.backendAccessExpiresIn = token.backendAccessExpiresIn
+      session.user.accessToken = token.accessToken
+      session.user.expiresIn = token.expiresIn
       return session
     }
   },

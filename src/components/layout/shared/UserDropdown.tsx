@@ -137,7 +137,7 @@ const UserDropdown = () => {
                     <i className='bx-user' />
                     <Typography color='text.primary'>My Profile</Typography>
                   </MenuItem>
-                  {role.includes('Tenant Admin') && (
+                  {role?.includes('Tenant Admin') && (
                     <MenuItem className='gap-3' onClick={e => handleDropdownClose(e, '/apps/user-management')}>
                       <i className='bx-cog' />
                       <Typography color='text.primary'>User Management</Typography>

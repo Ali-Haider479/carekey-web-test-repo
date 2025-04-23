@@ -5,14 +5,12 @@ import Card from '@mui/material/Card'
 import { Button, CircularProgress, Dialog, Grid2 as Grid, IconButton, TextField, Typography } from '@mui/material'
 import ReactTable from '@/@core/components/mui/ReactTable'
 import { combineDateAndTime, formattedDate } from '@/utils/helperFunctions'
-import EvvFilters from '../completed-shifts/EvvFilter'
 import DialogCloseButton from '@/components/dialogs/DialogCloseButton'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
-import axios from 'axios'
 import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
 import ActiveUserFilters from './ActiveUserFilters'
-import { set } from 'date-fns'
 import api from '@/utils/api'
+import { setHours, setMinutes, setSeconds } from 'date-fns'
 
 // Types
 interface Location {
@@ -359,8 +357,8 @@ const EvvActiveUserTable = ({ timeLogData, isLoading, payPeriod, fetchInitialDat
                       showTimeSelectOnly
                       dateFormat='hh:mm aa'
                       id='time-only-picker'
-                      // minTime={new Date()}
-                      // maxTime={selectedUser?.clockIn}
+                      minTime={selectedUser?.clockIn || new Date()}
+                      maxTime={setSeconds(setMinutes(setHours(new Date(), 23), 59), 59)}
                       onChange={(date: Date | null) => {
                         if (date !== null) {
                           // Combine the selected end date with the selected end time

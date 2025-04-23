@@ -131,6 +131,8 @@ const InfoCard = () => {
     console.log('Form Data:', data, id)
     // await new Promise(resolve => setTimeout(resolve, 1000)) // Simulate API request
     // reset() // Reset form after submission
+    const assignedClient = clientList.find((client: any) => client.id === data.clientId)
+    console.log('assignedClient Data:', assignedClient, clientList)
 
     const assignClientBody = {
       userId: currentUser?.id,
@@ -149,8 +151,15 @@ const InfoCard = () => {
       caregiverId: id
     }
 
+    const title = "New Client Assigned";
+    const body = `You have been assigned to ${assignedClient.firstName} ${assignedClient.lastName} starting ${new Date(
+      data.assignmentDate
+    ).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })} for ${data.scheduleHours
+      } hours. Check your details.`;
+
     await api.post(`/user/createClientUser`, assignClientBody)
     await api.post(`/account-history/log`, accountHistoryPayLoad)
+    await api.post(`/notification/send/${currentUser?.id}`, { title, body })
 
     fetchAssignClient()
     reset()

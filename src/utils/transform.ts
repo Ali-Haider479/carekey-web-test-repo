@@ -112,7 +112,6 @@ export function transformTimesheetDataTwo(entries: TimeEntry[]): GroupedTimeEntr
   // Transform each group into a GroupedTimeEntry
   return Object.entries(groupedByPair).map(([key, groupEntries]) => {
     const { caregiver, client } = groupEntries[0]
-
     // Find billing data where claimStatus is 'Approved'
     const approvedBilling = groupEntries.find(entry => entry.billing?.claimStatus === 'Approved')?.billing || {}
     // If only one entry, return it directly without subRows
@@ -148,7 +147,8 @@ export function transformTimesheetDataTwo(entries: TimeEntry[]): GroupedTimeEntr
         clockOut: entry.clockOut,
         signature: entry.signature,
         hrsWorked: calculateHoursWorked(entry.clockIn, entry.clockOut),
-        activities: getActivities(entry)
+        activities: getActivities(entry),
+        billing: entry.billing
       }
     }
 

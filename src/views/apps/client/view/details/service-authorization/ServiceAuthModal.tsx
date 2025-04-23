@@ -25,6 +25,7 @@ import CalendarTodayIcon from '@mui/icons-material/CalendarToday'
 import { placeOfServiceOptions, payerOptions } from '@/utils/constants'
 import OcrCustomDropDown from '@/@core/components/custom-inputs/OcrCustomDropdown'
 import api from '@/utils/api'
+import { extractStructuredTextFromPDF, parseServiceAgreement } from '@/utils/pdfDataExtract'
 
 interface ServiceAuthListModalProps {
   open: boolean
@@ -54,7 +55,7 @@ interface FormRow {
   placeOfService: string
   caseManagerName?: string // Optional fields from OCR
   recepientName?: string
-  status?: string,
+  status?: string
 }
 
 interface UploadedFile {
@@ -76,7 +77,7 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
 }) => {
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [enableOcrDataFill, setEnableOcrDataFill] = useState<boolean>(true)
-  const [formData, setFormData] = useState<FormRow[]>([])
+  const [formData, setFormData] = useState<any>([])
   const [uploadedFile, setUploadedFile] = useState<UploadedFile | null>(null)
   const [billableStates, setBillableStates] = useState<boolean[]>([])
   const [ocrData, setOcrData] = useState<FormRow[]>([])
@@ -104,7 +105,7 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
     placeOfService: 'home',
     caseManagerName: '',
     recepientName: '',
-    status: '',
+    status: ''
   }
 
   useEffect(() => {
@@ -146,7 +147,7 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
 
   const handleCommonFieldChange = (field: string, value: string): void => {
     console.log('ONE Field', field, value)
-    const updatedData = formData.map(item => ({
+    const updatedData = formData.map((item: any) => ({
       ...item,
       [field === 'serviceAuthNumber'
         ? 'agreementNumber'
@@ -174,36 +175,95 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
         extension: file.name.split('.').pop() || '',
         size: (file.size / 1024).toFixed(2) + ' KB'
       })
+
       try {
-        const pdfFormData = new FormData()
-        pdfFormData.append('pdf', file)
+        // Extract text using the helper function
+        const textLines = await extractStructuredTextFromPDF(file)
+        const extractedData = parseServiceAgreement(textLines)
 
-        const response = await api.post<any>(`/client/ocr`, pdfFormData, {
-          headers: {
-            'Content-Type': 'multipart/form-data'
-          }
-        })
-        const extractedData: FormRow[] = response.data.extractedData
+        // If enableOcrDataFill is true, populate form fields with extracted data
+        if (enableOcrDataFill && extractedData.serviceItems.length > 0) {
+          // Map service items to form rows
+          const mappedFormData = extractedData.serviceItems
+            .filter(item => item.status === 'APPROVED') // Only include approved items
+            .map(item => ({
+              procedureCode: item.procedureCode || '',
+              modifier: item.modifiers.includes('PERSONAL') ? '' : item.modifiers,
+              startDate: formatDateString(item.startDate),
+              endDate: formatDateString(item.endDate),
+              serviceRate: item.rateUnit ? `$${item.rateUnit}` : '',
+              quantity: item.quantity ? item.quantity.replace(/,/g, '') : '',
+              // Default values for missing fields
+              frequency: 'daily',
+              taxonomy: '207Q00000X',
+              reimbursement: 'per unit',
+              placeOfService: 'home',
+              // Keep the extracted data for reference
+              providerId: extractedData.header.providerID,
+              recipientId: extractedData.header.recipientID,
+              agreementNumber: extractedData.header.agreementNumber,
+              diagnosisCode: extractedData.header.diagnosisCode
+            }))
 
-        // Store OCR data
-        setOcrData(extractedData)
+          setFormData(mappedFormData)
+          setBillableStates(mappedFormData.map(() => true))
 
-        // If enableOcrDataFill is true, merge OCR data with initialFormRow and preserve placeOfService
-        if (enableOcrDataFill) {
-          const currentPlaceOfService = formData[0]?.placeOfService || ''
-          const mergedData = extractedData.map(item => ({
-            ...initialFormRow,
-            ...item,
-            placeOfService: currentPlaceOfService // Preserve the current placeOfService
-          }))
-          setFormData(mergedData)
-          setBillableStates(mergedData.map(() => true))
+          // Also update other state as needed
+          setPayerName('MA') // Default value
         }
       } catch (error) {
         console.error('Error processing PDF:', error)
       } finally {
         setIsLoading(false)
       }
+    }
+  }
+
+  const formatDateString = (dateStr: string): string => {
+    if (!dateStr || dateStr.trim() === '') return ''
+
+    // Parse MM/DD/YY format
+    const parts = dateStr.split('/')
+    if (parts.length !== 3) return dateStr
+
+    const month = parts[0].padStart(2, '0')
+    const day = parts[1].padStart(2, '0')
+    let year = parts[2]
+
+    // Ensure year is 4 digits
+    if (year.length === 2) {
+      // Assume 20XX for years less than 50, and 19XX for years 50 or greater
+      const prefix = parseInt(year) < 50 ? '20' : '19'
+      year = prefix + year
+    }
+
+    return `${year}-${month}-${day}`
+  }
+
+  // Updated common fields calculation based on the extracted data
+  const getCommonFields = () => {
+    if (!enableOcrDataFill || formData.length === 0) {
+      return {
+        payer: '',
+        serviceAuthNumber: '',
+        memberId: '',
+        diagnosisCode: '',
+        taxonomy: '',
+        umpiNumber: '',
+        placeOfService: 'home'
+      }
+    }
+
+    // Use the first form row as the source of common fields
+    const firstRow = formData[0]
+    return {
+      payer: payerName,
+      serviceAuthNumber: firstRow.agreementNumber || '',
+      memberId: firstRow.recipientId || '',
+      diagnosisCode: firstRow.diagnosisCode || '',
+      taxonomy: firstRow.taxonomy || '207Q00000X',
+      umpiNumber: firstRow.providerId || '',
+      placeOfService: firstRow.placeOfService || 'home'
     }
   }
 
@@ -219,7 +279,7 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
 
   const handleRemoveRow = (index: number): void => {
     if (formData.length > 1) {
-      const updatedData = formData.filter((_, i) => i !== index)
+      const updatedData = formData.filter((_: any, i: any) => i !== index)
       const updatedBillableStates = billableStates.filter((_, i) => i !== index)
       setFormData(updatedData)
       setBillableStates(updatedBillableStates)
@@ -243,46 +303,40 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
     setFormData(updatedFormData)
   }
 
-  const commonFields = {
-    payer: enableOcrDataFill && formData[0]?.providerId ? 'MA' : '',
-    serviceAuthNumber: enableOcrDataFill ? formData[0]?.agreementNumber || '' : '',
-    memberId: enableOcrDataFill ? formData[0]?.recipientId || '' : '',
-    diagnosisCode: enableOcrDataFill ? formData[0]?.diagnosisCode || '' : '',
-    taxonomy: enableOcrDataFill ? formData[0]?.taxonomy || '' : '',
-    umpiNumber: enableOcrDataFill ? formData[0]?.providerId || '' : '',
-    placeOfService: enableOcrDataFill ? formData[0]?.placeOfService || 'home' : ''
-  }
+  const commonFields = getCommonFields()
 
+  // Updated handelSubmit function
   const handelSubmit = async (): Promise<void> => {
     try {
       setIsLoading(true)
-      // Always use formData for submission to include UI-managed fields like billable and placeOfService
-      const dataToSubmit = formData
-      const serviceAuthPayloads = dataToSubmit.map((item: FormRow, index: number) => ({
+
+      // Prepare service auth payloads
+      const serviceAuthPayloads = formData.map((item: FormRow, index: number) => ({
         payer: payerName,
-        memberId: Number(item.recipientId || 0),
-        serviceAuthNumber: Number(item.agreementNumber || 0),
+        memberId: item.recipientId ? Number(item.recipientId) : 0,
+        serviceAuthNumber: item.agreementNumber ? Number(item.agreementNumber) : 0,
         procedureCode: item.procedureCode || '',
         modifierCode: item.modifier || '',
         startDate: item.startDate ? new Date(item.startDate) : undefined,
         endDate: item.endDate ? new Date(item.endDate) : undefined,
-        serviceRate: Number(item.serviceRate.replace('$', '')),
-        units: Number(item.quantity || 0),
+        serviceRate: item.serviceRate ? Number(item.serviceRate.replace(/[$,]/g, '')) : 0,
+        units: item.quantity ? Number(item.quantity.replace(/,/g, '')) : 0,
         diagnosisCode: item.diagnosisCode || '',
         umpiNumber: item.providerId || '',
-        reimbursementType: item.reimbursement || '',
-        taxonomy: item.taxonomy || '',
-        frequency: item.frequency || '',
+        reimbursementType: item.reimbursement || 'per unit',
+        taxonomy: item.taxonomy || '207Q00000X',
+        frequency: item.frequency || 'daily',
         clientId: clientId,
         billable: billableStates[index],
-        placeOfService: item.placeOfService || ''
+        placeOfService: item.placeOfService || 'home'
       }))
-      console.log('ONE serviceAuthPayloads', serviceAuthPayloads)
+
+      console.log('Service Auth Payloads:', serviceAuthPayloads)
 
       const serviceAuthResponses = await Promise.all(
-        serviceAuthPayloads.map(payload => api.post(`/client/service-auth`, payload))
+        serviceAuthPayloads.map((payload: any) => api.post(`/client/service-auth`, payload))
       )
-
+      console.log('RESPONSE OCR', serviceAuthResponses)
       const accountHistoryPayLoad = {
         actionType: 'ClientServiceAuthCreate',
         details: `Service authorization list created for Client (ID: ${clientId}) by User (ID: ${authUser?.id})`,
@@ -302,82 +356,82 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
 
   // Define the input interface
   interface QuantityPerFrequencyInput {
-    startDate?: string | Date;
-    endDate?: string | Date;
-    quantity?: string | number;
-    frequency?: string;
+    startDate?: string | Date
+    endDate?: string | Date
+    quantity?: string | number
+    frequency?: string
   }
 
   // List of supported frequencies
-  type Frequency = 'daily' | 'weekly' | 'monthly';
+  type Frequency = 'daily' | 'weekly' | 'monthly'
 
   const calculateQuantityPerFrequency = ({
     startDate,
     endDate,
     quantity,
-    frequency,
+    frequency
   }: QuantityPerFrequencyInput): number => {
     // Helper function to parse quantity (string or number) into a number
     const parseQuantity = (qty: string | number | undefined): number => {
-      if (qty === undefined || qty === null) return NaN;
-      if (typeof qty === 'number') return isNaN(qty) ? NaN : qty;
+      if (qty === undefined || qty === null) return NaN
+      if (typeof qty === 'number') return isNaN(qty) ? NaN : qty
       // Remove commas and convert string to number
-      const cleaned = qty.replace(/,/g, '');
-      const parsed = parseFloat(cleaned);
-      return isNaN(parsed) ? NaN : parsed;
-    };
+      const cleaned = qty.replace(/,/g, '')
+      const parsed = parseFloat(cleaned)
+      return isNaN(parsed) ? NaN : parsed
+    }
 
     // Parse quantity
-    const parsedQuantity = parseQuantity(quantity);
+    const parsedQuantity = parseQuantity(quantity)
 
     // Validate inputs
     if (!startDate || !endDate || isNaN(parsedQuantity) || !frequency) {
-      return NaN;
+      return NaN
     }
 
     // Convert dates to Date objects
-    const start = new Date(startDate);
-    const end = new Date(endDate);
+    const start = new Date(startDate)
+    const end = new Date(endDate)
 
     // Check if dates are valid
     if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-      return NaN;
+      return NaN
     }
 
     // Check if endDate is after startDate
     if (end <= start) {
-      return NaN;
+      return NaN
     }
 
     // Calculate time difference in milliseconds
-    const timeDiffMs = end.getTime() - start.getTime();
+    const timeDiffMs = end.getTime() - start.getTime()
 
     // Calculate quantity per frequency
-    let frequencyUnits: number;
+    let frequencyUnits: number
     switch (frequency.toLowerCase() as Frequency) {
       case 'daily':
         // Convert time difference to days
-        frequencyUnits = timeDiffMs / (1000 * 60 * 60 * 24);
-        break;
+        frequencyUnits = timeDiffMs / (1000 * 60 * 60 * 24)
+        break
       case 'weekly':
         // Convert time difference to weeks
-        frequencyUnits = timeDiffMs / (1000 * 60 * 60 * 24 * 7);
-        break;
+        frequencyUnits = timeDiffMs / (1000 * 60 * 60 * 24 * 7)
+        break
       case 'monthly':
         // Calculate months (approximate using average days per month: 30.42)
-        frequencyUnits = timeDiffMs / (1000 * 60 * 60 * 24 * 30.42);
-        break;
+        frequencyUnits = timeDiffMs / (1000 * 60 * 60 * 24 * 30.42)
+        break
       default:
-        return NaN; // Unsupported frequency
+        return NaN // Unsupported frequency
     }
 
     // Calculate quantity per frequency
     if (frequencyUnits <= 0) {
-      return NaN;
+      return NaN
     }
 
-    return parsedQuantity / frequencyUnits;
-  };
+    return parsedQuantity / frequencyUnits
+  }
 
   return (
     <Dialog
@@ -629,7 +683,7 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
                             }}
                           />
                         }
-                      // popperPlacement='bottom'
+                        // popperPlacement='bottom'
                       />
                     </Grid>
                     <Grid size={{ xs: 12, sm: 3 }}>
@@ -680,20 +734,22 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
                       />
                     </Grid>
                     <Grid size={{ xs: 12, sm: 3 }}>
-                      <Typography sx={{ paddingBottom: 0, marginBottom: -0.8 }}>Quantity per Frequency:{' '}</Typography>
-                      {isNaN(calculateQuantityPerFrequency({
-                        startDate: row.startDate,
-                        endDate: row.endDate,
-                        quantity: row.quantity,
-                        frequency: row.frequency,
-                      }))
-                        ? 'N/A'
-                        : calculateQuantityPerFrequency({
+                      <Typography sx={{ paddingBottom: 0, marginBottom: -0.8 }}>Quantity per Frequency </Typography>
+                      {isNaN(
+                        calculateQuantityPerFrequency({
                           startDate: row.startDate,
                           endDate: row.endDate,
                           quantity: row.quantity,
-                          frequency: row.frequency,
-                        }).toFixed(2)}{' '}
+                          frequency: row.frequency
+                        })
+                      )
+                        ? 'N/A'
+                        : calculateQuantityPerFrequency({
+                            startDate: row.startDate,
+                            endDate: row.endDate,
+                            quantity: row.quantity,
+                            frequency: row.frequency
+                          }).toFixed(2)}{' '}
                     </Grid>
                   </Grid>
                   {index === formData.length - 1 && (

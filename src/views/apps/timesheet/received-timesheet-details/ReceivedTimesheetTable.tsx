@@ -122,7 +122,7 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
   const [selectedUser, setSelectedUser] = useState<any | null>(null)
   const [editingId, setEditingId] = useState<string | number | null>(null)
   const [editedValues, setEditedValues] = useState<{ [key: string]: any }>({})
-  const [currentEditedData, setCurrentEditedData] = useState<any>(null)
+  // const [currentEditedData, setCurrentEditedData] = useState<any>(null)
   const [alertOpen, setAlertOpen] = useState(false)
   const [alertProps, setAlertProps] = useState<any>()
   const [selectedRows, setSelectedRows] = useState<any[]>([])
@@ -133,9 +133,62 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
   const [deletingId, setDeletingId] = useState<string | number | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
   const [rowsToDelete, setRowsToDelete] = useState<any[]>([])
+  const [deleteReason, setDeleteReason] = useState<string>('')
   const clockInDate = watch('clockInDate')
   const clockInTime = watch('clockInTime')
+  const clockOutDate = watch('clockOutDate')
+  const tsApprovalStatus = watch('tsApprovalStatus')
   const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
+
+  useEffect(() => {
+    // Skip validation on initial render or when not editing
+    if (!modalData || !isEditing || tsApprovalStatus === undefined) return
+
+    // Store previous value to check if it actually changed
+    const prevStatus = modalData.tsApprovalStatus
+
+    // Only run validation when the status actually changes from the initial value
+    if (tsApprovalStatus !== prevStatus) {
+      // Check if signature is pending
+      if (modalData?.signature?.signatureStatus === 'Pending') {
+        setAlertOpen(true)
+        setAlertProps({
+          message: 'Please approve the signature before changing status.',
+          severity: 'error'
+        })
+        // Reset to previous value
+        setValue('tsApprovalStatus', prevStatus)
+        return
+      }
+
+      // Check if service auth is missing
+      if (!modalData?.client?.serviceAuth || modalData?.client?.serviceAuth?.length === 0) {
+        setAlertOpen(true)
+        setAlertProps({
+          message: 'Please complete the service authorization before changing status.',
+          severity: 'error'
+        })
+        // Reset to previous value
+        setValue('tsApprovalStatus', prevStatus)
+        return
+      }
+
+      // Check if service auth is expired
+      if (
+        modalData?.client?.serviceAuth?.length > 0 &&
+        new Date(modalData.client.serviceAuth[0].endDate) < new Date()
+      ) {
+        setAlertOpen(true)
+        setAlertProps({
+          message: 'The service authorization has expired. Please update the end date before changing status.',
+          severity: 'error'
+        })
+        // Reset to previous value
+        setValue('tsApprovalStatus', prevStatus)
+        return
+      }
+    }
+  }, [tsApprovalStatus, modalData, isEditing])
 
   const toggleEditing = () => {
     if (isEditing) {
@@ -194,24 +247,45 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
 
   const parseTimeStringToDate = (timeString: string): Date | null => {
     if (!timeString) return null
-    const [time, period] = timeString.split(' ')
-    const [hours, minutes] = time.split(':')
-    const date = new Date()
-    let hoursNum = parseInt(hours, 10)
 
-    // Convert to 24-hour format
-    if (period) {
-      if (period.toLowerCase() === 'pm' && hoursNum !== 12) {
-        hoursNum += 12
-      } else if (period.toLowerCase() === 'am' && hoursNum === 12) {
-        hoursNum = 0
+    let hours: number,
+      minutes: number,
+      seconds: number = 0
+    const date = new Date()
+
+    // Handle "hh:mm aa" format (e.g., "08:40 AM")
+    if (timeString.includes(' ')) {
+      const [time, period] = timeString.split(' ')
+      const [h, m] = time.split(':')
+      hours = parseInt(h, 10)
+      minutes = parseInt(m, 10)
+
+      if (isNaN(hours) || isNaN(minutes)) return null
+
+      // Convert to 24-hour format
+      if (period) {
+        if (period.toLowerCase() === 'pm' && hours !== 12) {
+          hours += 12
+        } else if (period.toLowerCase() === 'am' && hours === 12) {
+          hours = 0
+        }
       }
+    } else {
+      // Handle "HH:mm:ss" format (e.g., "08:40:00")
+      const [h, m, s = '00'] = timeString.split(':')
+      hours = parseInt(h, 10)
+      minutes = parseInt(m, 10)
+      seconds = parseInt(s, 10)
+
+      if (isNaN(hours) || isNaN(minutes)) return null
     }
 
-    date.setHours(hoursNum)
-    date.setMinutes(parseInt(minutes, 10))
-    date.setSeconds(0)
-    return date
+    date.setHours(hours)
+    date.setMinutes(minutes)
+    date.setSeconds(seconds)
+    date.setMilliseconds(0)
+
+    return isNaN(date.getTime()) ? null : date
   }
 
   const handleViewDetails = (user: any) => {
@@ -329,6 +403,21 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
         return convertedUTCTime.toISOString()
       }
 
+      // Create a payload with only changed fields
+      const payload: any = {
+        id: formData.id
+      }
+
+      // Track if anything changed
+      let hasChanges = false
+
+      // Check if tsApprovalStatus changed
+      const tsStatusChanged = formData.tsApprovalStatus !== modalData.tsApprovalStatus
+      if (tsStatusChanged) {
+        payload.tsApprovalStatus = formData.tsApprovalStatus
+        hasChanges = true
+      }
+
       const originalClockIn = modalData?.clockIn || ''
       const originalClockOut = modalData?.clockOut || ''
 
@@ -342,35 +431,66 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
       const clockOutDateChanged = formData.clockOutDate !== originalClockOutDate
       const clockOutTimeChanged = formData.clockOutTime !== originalClockOutTime
 
-      const clockIn =
-        clockInDateChanged || clockInTimeChanged
-          ? formatTimeToISO(formData.clockInDate, formData.clockInTime)
-          : originalClockIn
-
-      // Format clockOut only if it has changed
-      const clockOut =
-        clockOutDateChanged || clockOutTimeChanged
-          ? formatTimeToISO(formData.clockOutDate, formData.clockOutTime)
-          : originalClockOut
-
-      console.log('CLOCK IN', clockIn)
-      console.log('CLOCK OUT', clockOut)
-
-      const payload = {
-        id: formData.id,
-        tsApprovalStatus: formData.tsApprovalStatus,
-        userId,
-        clockIn: clockIn,
-        clockOut: clockOut,
-        dateOfService: formData.dateOfService,
-        serviceName: formData.serviceName,
-        updatedBy: formData.updatedBy,
-        updatedAt: formData.updatedAt,
-        notes: formData.notes,
-        reason: formData.reason
+      if (clockInDateChanged || clockInTimeChanged) {
+        payload.clockIn = formatTimeToISO(formData.clockInDate, formData.clockInTime)
+        hasChanges = true
       }
 
+      if (clockOutDateChanged || clockOutTimeChanged) {
+        payload.clockOut = formatTimeToISO(formData.clockOutDate, formData.clockOutTime)
+        hasChanges = true
+      }
+      // Check if notes or reason changed
+      if (formData.notes !== modalData.notes) {
+        payload.notes = formData.notes
+        hasChanges = true
+      }
+
+      if (formData.reason !== modalData.reason) {
+        payload.reason = formData.reason
+        hasChanges = true
+      }
+
+      // Add service name if changed
+      if (formData.serviceName !== modalData.serviceName) {
+        payload.serviceName = formData.serviceName
+        hasChanges = true
+      }
+
+      // SET THIS DATE OF SERVICE TO TRUE MANUALLY
+      payload.dateOfService = formData.dateOfService
+      // Always include userId for tracking who made the change
+      payload.userId = userId
+
+      // If nothing changed, show a message and return
+      if (!hasChanges) {
+        setAlertOpen(true)
+        setAlertProps({
+          message: 'No changes detected to save.',
+          severity: 'info'
+        })
+        return
+      }
       await api.patch(`/time-log/update-timelog`, payload)
+
+      if (tsStatusChanged && formData.tsApprovalStatus === 'Approved') {
+        const hrs = calculateHoursWorked(payload.clockIn || modalData.clockIn, payload.clockOut || modalData.clockOut)
+        const billedAmount = parseFloat(hrs) * modalData.client.serviceAuth[0].serviceRate
+
+        const response = api.post(`/time-log/billing`, {
+          timeLogId: formData.id,
+          claimDate: null,
+          billedAmount: Number(billedAmount.toFixed(2)),
+          receivedAmount: 0,
+          claimStatus: 'Pending',
+          billedStatus: 'Pending'
+        })
+      } else if (
+        tsStatusChanged &&
+        (formData.tsApprovalStatus === 'Pending' || formData.tsApprovalStatus === 'Rejected')
+      ) {
+        await api.delete(`/time-log/remove-billing/${modalData?.billing?.id}`)
+      }
       await fetchInitialData()
       setIsModalShow(false)
       setModalData(null)
@@ -385,7 +505,8 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
     }
   }
 
-  const handleSave = async () => {
+  const handleSave = async (currentEditedData: any) => {
+    console.log('HANDLE SAVE CURRENT EDITED DATA--------', currentEditedData)
     const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
     const userId = authUser?.id
     const findUser = (data: any[], targetId: string | number): { user: any; isDummyRow: boolean } => {
@@ -463,15 +584,20 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
     }
 
     try {
+      console.log('INSIDE HANDLE SAVE TRY BLOCK ------------> ')
+
       const basePayload = {
         tsApprovalStatus: currentEditedData.tsApprovalStatus,
         userId
       }
 
+      console.log('HANDLE SAVE BASE PAYLOAD --------->', basePayload)
+
       let updatePromises: Promise<any>[] = []
       let rowsToUpdate: any[] = []
 
       if (isDummyRow) {
+        console.log('INSIDE DUMMY ROW IF BLOCK -----> ')
         const selectedSubRowIds = selectedRows
           .filter(
             row => row.id !== currentEditedData.id && currentUser.subRows.some((subRow: any) => subRow.id === row.id)
@@ -486,6 +612,7 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
           })
           return
         }
+        console.log('HANDLE SAVE ROWS TO UPDATE --------->')
 
         rowsToUpdate = currentUser.subRows.filter((subRow: any) => selectedSubRowIds.includes(subRow.id))
 
@@ -494,9 +621,13 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
           ...basePayload
         }))
 
+        console.log('INSIDE HANDLE SAVE UPDATE CALL ~~~~~~~> ')
+
         updatePromises = subRowUpdates.map((payload: any) => api.patch(`/time-log/update-ts-approval`, payload))
       } else {
+        console.log('OUTSIDE DUMMY ROW IF BLOCK -----> ')
         rowsToUpdate = [currentUser]
+        console.log('HANDLE SAVE ROWS TO UPDATE --------->', rowsToUpdate)
         updatePromises.push(
           api.patch(`/time-log/update-ts-approval`, {
             id: currentEditedData.id,
@@ -551,6 +682,7 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
       setEditingId(null)
       setSelectedUser(null)
       setEditedValues({})
+      setIsEditing(false)
     } catch (error) {
       console.error('Error saving data', error)
       setAlertOpen(true)
@@ -565,7 +697,7 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
     setSelectedUser(user)
     setEditingId(user.id)
     setIsEditing(true)
-    setCurrentEditedData(user)
+    // setCurrentEditedData(user)
     // Reset any deleting state
     setDeletingId(null)
     setIsDeleting(false)
@@ -581,17 +713,25 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
     setRowSelection({}) // Reset row selection)
   }
 
-  const onDelete = async (row: any) => {
+  const onDelete = async (rows: any[], reason: string) => {
     try {
       const tenantId = authUser?.tenant?.id
-      console.log('DELETE TS', row)
-      if (row?.[0].subRows?.length) {
-        const deletelogsIds = row?.[0].subRows.map((el: any) => el.id)
-        await api.patch(`/time-log/delete-log/${tenantId}`, deletelogsIds)
-        console.log('DELETE Multiple', deletelogsIds)
+      console.log('DELETE TS', rows, 'REASON', reason)
+      if (rows?.[0].subRows?.length) {
+        const deleteLogsIds = rows[0].subRows.map((el: any) => el.id)
+        // Send the reason with the API call
+        await api.patch(`/time-log/delete-log/${tenantId}`, {
+          ids: deleteLogsIds,
+          reason
+        })
+        console.log('DELETE Multiple', deleteLogsIds, 'REASON', reason)
       } else {
-        console.log('DELETE SINGLE', [row[0].id])
-        await api.patch(`/time-log/delete-log/${tenantId}`, [row[0].id])
+        // Send the reason with the API call
+        await api.patch(`/time-log/delete-log/${tenantId}`, {
+          ids: [rows[0].id],
+          reason
+        })
+        console.log('DELETE SINGLE', [rows[0].id], 'REASON', reason)
       }
       await fetchInitialData()
     } catch (error) {
@@ -610,13 +750,15 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
     setEditingId(null)
     setIsEditing(false)
     setSelectedRows([])
+    setDeleteReason('')
   }
 
-  const handleConfirmDelete = async () => {
+  const handleConfirmDelete = async (reason: string) => {
     try {
-      // Call the onDelete function with the IDs of rows to delete
-      await onDelete(rowsToDelete)
-      // await onDelete(rowsToDelete.map(row => row.id))
+      // Store the reason in state
+      setDeleteReason(reason)
+      // Call the onDelete function with the rows to delete and the reason
+      await onDelete(rowsToDelete, reason)
       // Refresh the table data
       await fetchInitialData()
       // Reset delete state
@@ -624,6 +766,7 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
       setIsDeleting(false)
       setSelectedUser(null)
       setRowsToDelete([])
+      setDeleteReason('') // Reset delete reason
       setRowSelection({}) // Reset row selection
       setAlertOpen(true)
       setAlertProps({
@@ -647,6 +790,7 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
     setSelectedUser(null)
     setRowsToDelete([])
     setRowSelection({}) // Reset row selection
+    setDeleteReason('')
   }
 
   const columns = [
@@ -780,7 +924,6 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
         if (!user?.updatedBy || !user?.updatedAt) {
           return <Typography className='font-normal text-base'>---</Typography>
         } else {
-          console.log('OYE JANI', user)
           return (
             <>
               <Typography className='font-normal text-base'>{user?.updatedBy?.userName || 'N/A'}</Typography>
@@ -803,7 +946,6 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
       render: (user: any) => (
         <ActionButton
           handleEdit={handleEdit}
-          handleSave={handleSave}
           handleDelete={handleDelete} // Pass delete handler
           handleConfirmDelete={handleConfirmDelete} // Pass confirm delete handler
           handleCancelDelete={handleCancelDelete} // Pass cancel delete handler
@@ -833,7 +975,8 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
   }
 
   const handleEditChange = (updatedRow: any) => {
-    setCurrentEditedData(updatedRow)
+    // setCurrentEditedData(updatedRow)
+    handleSave(updatedRow)
   }
 
   const handleSelect = (selectedRowsData: any) => {
@@ -856,7 +999,7 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
             maxHeight={600}
             containerStyle={{ borderRadius: 2 }}
             editingId={editingId}
-            onSave={handleSave}
+            // onSave={handleSave}
             onEditChange={handleEditChange}
             onSelectionChange={handleSelect}
           />
@@ -912,6 +1055,7 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
                       control={control}
                       label={'Service Name'}
                       isRequired={false}
+                      disabled={true}
                       optionList={[
                         {
                           key: 1,
@@ -924,7 +1068,7 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
                           optionString: 'Individual Home Service (IHS)'
                         }
                       ]}
-                      disabled={!isEditing}
+                      // disabled={!isEditing}
                     />
                   </Grid>
                   <Grid size={{ xs: 12, sm: 6 }}>
@@ -1005,8 +1149,8 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
                           clockInDate &&
                           watch('clockOutDate') &&
                           new Date(clockInDate).toDateString() === new Date(watch('clockOutDate')).toDateString()
-                            ? parseTimeStringToDate(clockInTime) || undefined
-                            : undefined
+                            ? parseTimeStringToDate(watch('clockInTime')) || undefined
+                            : setHours(setMinutes(setSeconds(new Date(), 0), 0), 0) // Default to 00:00:00 if no minTime
                         }
                         maxTime={setSeconds(setMinutes(setHours(new Date(), 23), 59), 59)}
                         // filterTime={filterPassedTime}
@@ -1046,16 +1190,18 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
                     />
                   </Grid>
                   <Grid size={{ xs: 12, sm: 6 }}>
-                    <CustomTextField
-                      label='Approval Status'
-                      name='tsApprovalStatus'
-                      type='text'
+                    <CustomDropDown
+                      name={'tsApprovalStatus'}
                       control={control}
-                      error={errors.tsApprovalStatus}
+                      label={'Approval Status'}
                       isRequired={false}
-                      placeHolder={'Approval Status'}
-                      defaultValue={''}
-                      disabled
+                      optionList={[
+                        { key: 1, value: 'Pending', optionString: 'Pending' },
+                        { key: 2, value: 'Approved', optionString: 'Approved' },
+                        { key: 3, value: 'Rejected', optionString: 'Rejected' }
+                      ]}
+                      disabled={!isEditing}
+                      defaultValue={modalData?.tsApprovalStatus || ''}
                     />
                   </Grid>
                   <Grid size={{ xs: 12, sm: 6 }}>
@@ -1084,17 +1230,6 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
                       defaultValue={''}
                     />
                   </Grid>
-                  {/* <Grid size={{ xs: 12 }}>
-                    <ServiceActivities
-                      name={'serviceActivities'}
-                      control={control}
-                      label={'Select Activities'}
-                      error={errors.serviceActivities}
-                      defaultValue={[]}
-                      activities={activities || []}
-                      isRequired={false}
-                    />
-                  </Grid> */}
                   <Grid size={{ xs: 12 }}>
                     <ControlledTextArea
                       label='Notes'

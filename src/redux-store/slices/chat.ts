@@ -25,7 +25,7 @@ const initialState: ChatDataType = {
   error: undefined
 }
 
-export const fetchChatRooms = createAsyncThunk('chat/fetchChatRooms', async (userId: number) => {
+export const fetchChatRooms = createAsyncThunk('chat/fetchChatRooms', async (userId: any) => {
   const response = await api.get(`/chatroom/list/${userId}`)
   const chatRooms = response.data
   console.log('REDUX CHATS ONE', chatRooms)
@@ -128,7 +128,7 @@ export const chatSlice = createSlice({
   reducers: {
     updateProfileFromSession: (
       state,
-      action: PayloadAction<{ id: number; userName: string; profileImageUrl: string; role: string }>
+      action: PayloadAction<{ id: any; userName: any; profileImageUrl: any; role: any }>
     ) => {
       state.profileUser = {
         ...state.profileUser,

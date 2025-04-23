@@ -23,6 +23,7 @@ import { Close as CloseIcon } from '@mui/icons-material'
 import { format, parseISO, set } from 'date-fns' // Core date-fns functions
 import { toZonedTime } from 'date-fns-tz'
 import api from '@/utils/api'
+import { setHours, setMinutes, setSeconds } from 'date-fns'
 
 interface DefaultStateType {
   currentWeek: string
@@ -111,16 +112,13 @@ const ManualTimesheet = ({ clientList, caregiverList, serviceList, payPeriod }: 
     setSelectedItems(value)
   }
 
-  console.log('Caregiver value', values.caregiver)
-
-  const caregiverId = values.caregiver
-
   const fetchClientUsers = async () => {
     try {
-      if (!caregiverId) return // Avoid fetching if caregiverId is not set
-      const response = await api.get(`/user/clientUsers/${caregiverId}`)
+      const filterCg = caregiverList.filter((ele: any) => ele.id === values.caregiver)
+      const caregiverUserId = filterCg[0]?.user?.id
+      if (!caregiverUserId) return // Avoid fetching if caregiverUserId is not set
+      const response = await api.get(`/user/clientUsers/${caregiverUserId}`)
       setClientUsers(response.data)
-      console.log('Client Users ~~----~~---->', response.data)
     } catch (error) {
       console.error('Error fetching client users:', error)
     }
@@ -325,7 +323,7 @@ const ManualTimesheet = ({ clientList, caregiverList, serviceList, payPeriod }: 
                   onChange={e => setValues({ ...values, caregiver: e.target.value })}
                 >
                   {caregiverList.map((caregiver: any) => (
-                    <MenuItem key={caregiver.id} value={caregiver.id}>
+                    <MenuItem key={caregiver?.id} value={caregiver?.id}>
                       {`${caregiver.firstName} ${caregiver.lastName}`}
                     </MenuItem>
                   ))}
@@ -430,11 +428,13 @@ const ManualTimesheet = ({ clientList, caregiverList, serviceList, payPeriod }: 
                 startDate={new Date()}
                 showTimeSelectOnly
                 dateFormat='hh:mm aa'
+                minTime={values.clockIn || new Date()}
+                maxTime={setSeconds(setMinutes(setHours(new Date(), 23), 59), 59)}
                 id='time-only-picker'
                 onChange={(date: Date | null) => {
                   if (date !== null) {
                     const combinedDate = combineDateAndTimeForGMT(values.dateOfService, date)
-                    // Combine the selected end date with the selected end time
+                    // Combine the seleime end time
                     setValues({
                       ...values,
                       clockOut: date

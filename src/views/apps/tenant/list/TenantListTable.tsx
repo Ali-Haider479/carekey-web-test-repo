@@ -191,10 +191,10 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
   const { lang: locale } = useParams()
 
   useEffect(() => {
-    if (token) {
-      dispatch(fetchTenants(token))
-    }
-  }, [dispatch, token])
+    // if (token) {
+    dispatch(fetchTenants(token))
+    // }
+  }, [dispatch])
 
   // Update data when tenants change
   useEffect(() => {
