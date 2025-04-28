@@ -164,7 +164,7 @@ importers:
         version: 3.9.0
       material-react-table:
         specifier: ^3.1.0
-        version: 3.1.0(hywyp5b4djha6uizuglom6schu)
+        version: 3.1.0(60b79abfb983c30557a43908e899977c)
       moment:
         specifier: ^2.30.1
         version: 2.30.1
@@ -7813,7 +7813,7 @@ snapshots:
       punycode.js: 2.3.1
       uc.micro: 2.1.0
 
-  material-react-table@3.1.0(hywyp5b4djha6uizuglom6schu):
+  material-react-table@3.1.0(60b79abfb983c30557a43908e899977c):
     dependencies:
       '@emotion/react': 11.14.0(@types/react@18.3.18)(react@18.3.1)
       '@emotion/styled': 11.14.0(@emotion/react@11.14.0(@types/react@18.3.18)(react@18.3.1))(@types/react@18.3.18)(react@18.3.1)

@@ -34,6 +34,10 @@ const ControlledTextArea = (props: Props) => {
           disabled={props.disabled}
           error={!!error} // Highlight the field if there's an error
           helperText={error ? error.message : ''} // Show validation error message
+          onChange={e => {
+            let value = e.target.value.trimStart()
+            field.onChange(value) // Update the field value
+          }}
           fullWidth
           size='small'
           label={

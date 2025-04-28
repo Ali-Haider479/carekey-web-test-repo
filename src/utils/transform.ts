@@ -170,6 +170,9 @@ export function transformTimesheetDataTwo(entries: TimeEntry[]): GroupedTimeEntr
 
     const dateRange = `${formatDate(startDate)} - ${formatDate(endDate)}`
     const hasAllSameStatus = sortedEntries.every(entry => entry.tsApprovalStatus === sortedEntries[0].tsApprovalStatus)
+    const hasAllSameSignatureStatus = sortedEntries.every(
+      entry => entry.signature.signatureStatus === sortedEntries[0].signature.signatureStatus
+    )
     const latestEndLocation = sortedEntries[sortedEntries.length - 1].endLocation
     const latestStartLocation = sortedEntries[sortedEntries.length - 1].startLocation
     const mostRecentSignature = sortedEntries[sortedEntries.length - 1].signature
@@ -212,7 +215,10 @@ export function transformTimesheetDataTwo(entries: TimeEntry[]): GroupedTimeEntr
       clockOut: '',
       hrsWorked,
       activities: parentActivities,
-      signature: mostRecentSignature,
+      signature: {
+        ...mostRecentSignature,
+        signatureStatus: hasAllSameSignatureStatus ? sortedEntries[0].signature.signatureStatus : 'Mixed'
+      },
       subRows: subRowsWithActivities,
       startLocation: latestStartLocation,
       endLocation: latestEndLocation,

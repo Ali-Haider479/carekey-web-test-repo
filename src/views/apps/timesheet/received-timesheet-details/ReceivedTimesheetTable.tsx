@@ -104,7 +104,13 @@ interface PickerProps {
 const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: SignatureStatusTableProps, user: any) => {
   const methods = useForm<any>({
     mode: 'onSubmit',
-    reValidateMode: 'onChange'
+    reValidateMode: 'onChange',
+    defaultValues: {
+      clockInDate: '',
+      clockOutDate: '',
+      clockInTime: '',
+      clockOutTime: ''
+    }
   })
 
   const {
@@ -1090,8 +1096,14 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
                         control={control}
                         label={'Clock In Date'}
                         defaultValue={''}
-                        isRequired={false}
+                        isRequired={true}
                         disabled={!isEditing}
+                        selected={clockInDate}
+                        endDate={clockOutDate || undefined}
+                        startDate={clockInDate || undefined}
+                        rules={{
+                          required: 'Clock In Date is required'
+                        }}
                       />
                     </Grid>
                     <Grid size={{ xs: 12, sm: 3 }}>
@@ -1131,9 +1143,19 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
                         control={control}
                         label={'Clock Out Date'}
                         defaultValue={''}
-                        minDate={clockInDate || undefined} // Restrict to clockInDate or later
-                        isRequired={false}
+                        isRequired={true}
                         disabled={!isEditing}
+                        selected={clockOutDate}
+                        minDate={clockInDate || undefined} // Restrict to clockInDate or later
+                        rules={{
+                          required: 'Clock Out Date is required',
+                          validate: (value: any) => {
+                            if (!clockInDate || !value) return true // Skip if either is empty
+                            return new Date(value) >= new Date(clockInDate)
+                              ? true
+                              : 'Clock Out Date must be on or after Clock In Date'
+                          }
+                        }}
                       />
                     </Grid>
                     <Grid size={{ xs: 12, sm: 3 }}>
@@ -1147,13 +1169,12 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
                         selected={parseTimeStringToDate(watch('clockOutTime'))}
                         minTime={
                           clockInDate &&
-                          watch('clockOutDate') &&
-                          new Date(clockInDate).toDateString() === new Date(watch('clockOutDate')).toDateString()
+                          clockOutDate &&
+                          new Date(clockInDate).toDateString() === new Date(clockOutDate).toDateString()
                             ? parseTimeStringToDate(watch('clockInTime')) || undefined
-                            : setHours(setMinutes(setSeconds(new Date(), 0), 0), 0) // Default to 00:00:00 if no minTime
+                            : setHours(setMinutes(setSeconds(new Date(), 0), 0), 0)
                         }
                         maxTime={setSeconds(setMinutes(setHours(new Date(), 23), 59), 59)}
-                        // filterTime={filterPassedTime}
                         onChange={(date: Date | null) => {
                           if (date) {
                             const timeString = date.toLocaleTimeString('en-US', {

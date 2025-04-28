@@ -143,7 +143,52 @@ const AddEventModal = (props: AddEventSidebarType) => {
   const [values, setValues] = useState<DefaultStateType>(defaultState)
   const [alertOpen, setAlertOpen] = useState<boolean>(false)
   const [alertMessage, setAlertMessage] = useState<any>()
+  const [clientUsers, setClientUsers] = useState<any>([])
+  const [serviceType, setServiceType] = useState<any[]>([])
+  const [serviceActivities, setServiceActivities] = useState<any>([])
   const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
+
+  const fetchClientUsers = async () => {
+    try {
+      const filterCg = props?.caregiverList?.filter((ele: any) => ele.id === values.caregiver)
+      const caregiverUserId = filterCg[0]?.user?.id
+      if (!caregiverUserId) return // Avoid fetching if caregiverUserId is not set
+      const response = await api.get(`/user/clientUsers/${caregiverUserId}`)
+      setClientUsers(response.data)
+    } catch (error) {
+      console.error('error fetching client users: ', error)
+    }
+  }
+
+  useEffect(() => {
+    fetchClientUsers()
+  }, [values.caregiver])
+
+  const fetchClientServiceType = async () => {
+    try {
+      if (!values.client) return // Avoid fetching if client is not set
+      const response = await api.get(`/client/${values.client}/services`)
+      setServiceType(response.data)
+    } catch (error) {
+      console.error('Error fetching client service type:', error)
+    }
+  }
+
+  const clientServiceActivities = async () => {
+    try {
+      const activityIds = clientUsers[0]?.client?.serviceActivityIds
+      if (!values.client) return // Avoid fetching if service is not set
+      const response: any = await api.get(`/activity/activities/${activityIds}`)
+      setServiceActivities(response?.data)
+    } catch (error) {
+      console.error('Error fetching client service activities:', error)
+    }
+  }
+
+  useEffect(() => {
+    fetchClientServiceType()
+    clientServiceActivities()
+  }, [values.client])
 
   const PickersComponent = forwardRef(({ ...props }: PickerProps, ref) => {
     return (
@@ -244,8 +289,8 @@ const AddEventModal = (props: AddEventSidebarType) => {
         clientId: values.client,
         serviceId: values.service,
         assignedHours: assignedHours,
-        notes: values.notes,
-        location: values.location,
+        notes: values.notes || '',
+        location: values.location || '',
         payPeriod: props?.payPeriod?.id,
         tenantId: authUser?.tenant?.id
       })
@@ -379,15 +424,16 @@ const AddEventModal = (props: AddEventSidebarType) => {
               select
               fullWidth
               className='mbe-3'
-              label='Event type'
-              value={values?.service}
-              id='service-schedule'
-              onChange={e => setValues({ ...values, service: e.target.value })}
+              label='Caregiver'
+              disabled={isEdited && calendarStore.selectedEvent}
+              value={values?.caregiver}
+              id='caregiver-schedule'
+              onChange={e => setValues({ ...values, caregiver: e.target.value })}
             >
-              {props?.serviceList?.length > 0 ? (
-                props.serviceList.map((service: any) => (
-                  <MenuItem key={service.id} value={service.id}>
-                    {service.name}
+              {props?.caregiverList.length > 0 ? (
+                props?.caregiverList.map((caregiver: any) => (
+                  <MenuItem key={caregiver.id} value={caregiver.id}>
+                    {`${caregiver.firstName} ${caregiver.lastName}`}
                   </MenuItem>
                 ))
               ) : (
@@ -405,10 +451,10 @@ const AddEventModal = (props: AddEventSidebarType) => {
               id='client-schedule'
               onChange={e => setValues({ ...values, client: e.target.value })}
             >
-              {props?.clientList?.length > 0 ? (
-                props?.clientList.map((client: any) => (
-                  <MenuItem key={client.id} value={client.id}>
-                    {`${client.firstName} ${client.lastName}`}
+              {clientUsers?.length > 0 ? (
+                clientUsers.map((client: any) => (
+                  <MenuItem key={client.client.id} value={client.client.id}>
+                    {`${client.client.firstName} ${client.client.lastName}`}
                   </MenuItem>
                 ))
               ) : (
@@ -420,16 +466,15 @@ const AddEventModal = (props: AddEventSidebarType) => {
               select
               fullWidth
               className='mbe-3'
-              label='Caregiver'
-              disabled={isEdited && calendarStore.selectedEvent}
-              value={values?.caregiver}
-              id='caregiver-schedule'
-              onChange={e => setValues({ ...values, caregiver: e.target.value })}
+              label='Event type'
+              value={values?.service}
+              id='service-schedule'
+              onChange={e => setValues({ ...values, service: e.target.value })}
             >
-              {props?.caregiverList.length > 0 ? (
-                props?.caregiverList.map((caregiver: any) => (
-                  <MenuItem key={caregiver.id} value={caregiver.id}>
-                    {`${caregiver.firstName} ${caregiver.lastName}`}
+              {serviceType?.length > 0 ? (
+                serviceType?.map((service: any) => (
+                  <MenuItem key={service.id} value={service.id}>
+                    {service.name}
                   </MenuItem>
                 ))
               ) : (

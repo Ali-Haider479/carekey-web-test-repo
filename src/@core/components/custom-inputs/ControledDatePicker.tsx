@@ -13,43 +13,43 @@ type Props = {
   disabled?: boolean
   minDate?: Date
   maxDate?: Date
+  startDate?: Date
+  endDate?: Date
+  selected?: Date
+  rules?: any // Add rules prop to support validation
 }
 
 const ControlledDatePicker = (props: Props) => {
-  const { isRequired = true } = props
-  const defaultDate = Date.now()
-  let defaultFormattedDate: any = new Date(defaultDate)
-
-  const year = defaultFormattedDate.getFullYear()
-  const month = String(defaultFormattedDate.getMonth() + 1).padStart(2, '0') // Months are 0-indexed
-  const day = String(defaultFormattedDate.getDate()).padStart(2, '0')
-
-  defaultFormattedDate = `${month}/${day}/${year}`
+  const { isRequired = true, rules } = props
 
   return (
     <Controller
       name={props.name}
       control={props.control}
       defaultValue={props.defaultValue}
-      rules={{ required: isRequired ? `${props.label} is required` : false }}
-      render={({ field }) => (
+      // rules={{ required: isRequired ? `${props.label} is required` : false }}
+      rules={rules} // Apply validation rules
+      render={({ field, fieldState: { error } }) => (
         <AppReactDatepicker
-          selected={field.value}
+          selected={field.value ? new Date(field.value) : null}
           onChange={date => field.onChange(date)} // Pass the date to react-hook-form
           placeholderText='MM/DD/YYYY'
           disabled={props.disabled}
           showYearDropdown
           showMonthDropdown
+          endDate={props.endDate}
+          startDate={props.startDate}
           minDate={props.minDate}
           maxDate={props.maxDate}
+          dateFormat='MM/dd/yyyy'
           customInput={
             <TextField
               fullWidth
-              error={props.error}
-              helperText={props.error && 'please select a date'}
+              error={!!error}
+              helperText={error ? error.message : 'Please select a date'}
               size='small'
               label={
-                isRequired === true ? (
+                isRequired ? (
                   <div className='flex flex-row'>
                     <Typography>{props.label}</Typography>
                     <Typography className='text-red-500 ml-1'>*</Typography>

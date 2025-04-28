@@ -149,7 +149,7 @@ const AddClientStepper = () => {
         firstName: personalDetails.firstName,
         middleName: personalDetails.middleName,
         lastName: personalDetails.lastName,
-        admissionDate: personalDetails.admissionDate,
+        admissionDate: personalDetails.admissionDate || new Date(),
         dischargeDate: personalDetails.dateOfDischarge,
         dateOfBirth: personalDetails.dateOfBirth,
         pmiNumber: personalDetails.pmiNumber,
@@ -263,7 +263,7 @@ const AddClientStepper = () => {
         userId: serviceActivities.caregiverId,
         assignmentDate: serviceActivities.assignmentDate,
         unassignmentDate: serviceActivities.unassignmentDate,
-        notes: serviceActivities.assignmentNotes,
+        notes: serviceActivities.assignmentNotes || '',
         scheduleHours: serviceActivities.scheduleHours
       }
 

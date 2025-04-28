@@ -32,9 +32,10 @@ interface TimeLogData {
 interface Props {
   timeLogData: TimeLogData[]
   isLoading: boolean
+  onFilterApplied: (filteredData: TimeLogData[]) => void // Callback to send filtered data to parent
 }
 
-const EvvMissedShiftsTable = ({ timeLogData, isLoading }: Props) => {
+const EvvMissedShiftsTable = ({ timeLogData, isLoading, onFilterApplied }: Props) => {
   const [filteredData, setFilteredData] = useState<TimeLogData[]>([])
 
   useEffect(() => {
@@ -118,7 +119,7 @@ const EvvMissedShiftsTable = ({ timeLogData, isLoading }: Props) => {
   return (
     <Card sx={{ borderRadius: 1, boxShadow: 3 }}>
       <div className='p-4 my-2'>
-        <MissedShiftFilters onFilterApplied={handleFilteredData} />
+        <MissedShiftFilters missedShifts={timeLogData} onFilterApplied={handleFilteredData} />
       </div>
       {isLoading ? (
         <div className='flex items-center justify-center p-10'>
@@ -127,7 +128,7 @@ const EvvMissedShiftsTable = ({ timeLogData, isLoading }: Props) => {
       ) : (
         <ReactTable
           columns={columns}
-          data={filteredData}
+          data={timeLogData}
           keyExtractor={user => user.id.toString()}
           enableRowSelect
           enablePagination

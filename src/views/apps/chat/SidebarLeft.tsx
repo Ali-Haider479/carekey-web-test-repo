@@ -41,6 +41,7 @@ import { useSession } from 'next-auth/react'
 import api from '@/utils/api'
 import { useMqttClient } from '@/hooks/useMqtt'
 import { renderChat } from './RenderChat'
+import CustomAlert from '@/@core/components/mui/Alter'
 
 export const statusObj: StatusObjType = {
   busy: 'error',
@@ -100,6 +101,8 @@ const SidebarLeft = (props: Props) => {
   const [clients, setClients] = useState<any>([])
   const [caregivers, setCaregivers] = useState<any>([])
   const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
+  const [alertOpen, setAlertOpen] = useState(false)
+  const [alertProps, setAlertProps] = useState<any>()
 
   // MQTT Hook
   const { subscribe, isConnected } = useMqttClient({
@@ -188,17 +191,22 @@ const SidebarLeft = (props: Props) => {
     handleSubmit,
     reset,
     formState: { errors, isSubmitting }
-  } = useForm<FormItems>()
+  } = useForm({
+    defaultValues: {
+      clientId: null,
+      otherUser: null
+    }
+  })
 
   const handleModalClose = () => {
     setIsModalShow(false)
   }
 
-  const onSubmit = async (data: FormItems) => {
+  const onSubmit = async (data: any) => {
     const { otherUser, clientId } = data
     const chatRoomName = `chatroom-${Math.min(authUser?.id, Number(otherUser))}-${Math.max(authUser?.id, Number(otherUser))}-${clientId}`
 
-    await dispatch(
+    const response: any = await dispatch(
       createChatRoom({
         chatRoomName,
         userId: authUser?.id,
@@ -206,12 +214,25 @@ const SidebarLeft = (props: Props) => {
         otherUserId: Number(otherUser)
       })
     )
+
+    if (response?.error?.message?.includes('Chatroom already exists')) {
+      setAlertOpen(true)
+      setAlertProps({
+        message: 'Chatroom already exists',
+        severity: 'error'
+      })
+      return
+    }
+
     await dispatch(fetchChatRooms(authUser?.id))
     handleModalClose()
+    reset() // Reset form fields after successful submission
   }
 
   return (
     <>
+      <CustomAlert AlertProps={alertProps} openAlert={alertOpen} setOpenAlert={setAlertOpen} />
+
       <Drawer
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}

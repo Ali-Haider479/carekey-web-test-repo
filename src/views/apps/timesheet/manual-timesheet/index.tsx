@@ -13,8 +13,8 @@ import api from '@/utils/api'
 
 const ManualTimesheetPage = () => {
   const [caregiverList, setCaregiverList] = useState<[] | any>([])
-  const [clientList, setClientList] = useState<[] | any>([])
-  const [serviceList, setServiceList] = useState<[] | any>([])
+  // const [clientList, setClientList] = useState<[] | any>([])
+  // const [serviceList, setServiceList] = useState<[] | any>([])
   const [payPeriod, setPayPeriod] = useState<[] | any>([])
   const [clientData, setClientData] = useState<[] | any>([])
   const dispatch = useAppDispatch()
@@ -29,14 +29,14 @@ const ManualTimesheetPage = () => {
       try {
         const response = await Promise.all([
           api.get(`/caregivers`),
-          api.get(`/client`),
-          api.get(`/service`),
+          // api.get(`/client`),
+          // api.get(`/service`),
           api.get(`/pay-period/tenant/${authUser?.tenant?.id}`)
         ])
         setCaregiverList(response[0].data)
-        setClientList(response[1].data)
-        setServiceList(response[2].data)
-        setPayPeriod(response[3].data)
+        // setClientList(response[1].data)
+        // setServiceList(response[2].data)
+        setPayPeriod(response[1].data)
       } catch (error) {
         console.log('ERROR', error)
       }
@@ -45,15 +45,13 @@ const ManualTimesheetPage = () => {
 
   console.log('caregiverList', caregiverList)
 
-  console.log('clientList', clientList)
-
   return (
     <Grid container spacing={6}>
       <Grid size={{ xs: 12 }}>
         <ManualTimesheet
           caregiverList={caregiverList}
-          clientList={clientList}
-          serviceList={serviceList}
+          // clientList={clientList}
+          // serviceList={serviceList}
           payPeriod={payPeriod}
         />
       </Grid>

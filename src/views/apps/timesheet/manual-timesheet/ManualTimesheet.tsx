@@ -1,5 +1,5 @@
 'use client'
-import React, { forwardRef, use, useEffect, useState } from 'react'
+import React, { forwardRef, useEffect, useState } from 'react'
 import {
   Card,
   CardHeader,
@@ -18,10 +18,7 @@ import {
 import Button from '@mui/material/Button'
 import Grid from '@mui/material/Grid2'
 import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
-import axios from 'axios'
 import { Close as CloseIcon } from '@mui/icons-material'
-import { format, parseISO, set } from 'date-fns' // Core date-fns functions
-import { toZonedTime } from 'date-fns-tz'
 import api from '@/utils/api'
 import { setHours, setMinutes, setSeconds } from 'date-fns'
 
@@ -68,16 +65,14 @@ interface PickerProps {
   placeholder?: string
 }
 
-const ManualTimesheet = ({ clientList, caregiverList, serviceList, payPeriod }: any) => {
+const ManualTimesheet = ({ caregiverList, payPeriod }: any) => {
   const [values, setValues] = useState<DefaultStateType>(defaultState)
   const [openSuccessSnackbar, setOpenSuccessSnackbar] = useState(false)
   const [weekRange, setWeekRange] = useState<any>({})
   const [selectedItems, setSelectedItems] = useState<number[]>([])
-  const [activities, setActivities] = useState<any[]>([])
-  const [clientUsers, setClientUsers] = useState<any[]>([])
+  const [clientUsers, setClientUsers] = useState<any>([])
   const [serviceType, setServiceType] = useState<any[]>([])
-  const [serviceActivities, setServiceActivities] = useState([])
-  const [clientData, setClientData] = useState<any>()
+  const [serviceActivities, setServiceActivities] = useState<any>([])
   const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
 
   const combineDateAndTimeForGMT = (date: any, time: any) => {
@@ -124,23 +119,6 @@ const ManualTimesheet = ({ clientList, caregiverList, serviceList, payPeriod }: 
     }
   }
 
-  console.log('clientUsers in manual ====> ', clientUsers)
-
-  const fetchClientData = async () => {
-    try {
-      if (!values.client) return // Avoid fetching if client is not set
-      const response = await api.get(`/client/${values.client}`)
-      setClientData(response.data)
-    } catch (error) {
-      console.error('Error fetching client data:', error)
-    }
-  }
-
-  useEffect(() => {
-    fetchClientData()
-  }, [values.client])
-  console.log('Client Data', clientData?.serviceActivityIds)
-
   useEffect(() => {
     fetchClientUsers()
   }, [values.caregiver])
@@ -157,41 +135,19 @@ const ManualTimesheet = ({ clientList, caregiverList, serviceList, payPeriod }: 
 
   useEffect(() => {
     fetchClientServiceType()
+    clientServiceActivities()
   }, [values.client])
-  console.log('Service Type', serviceType)
 
-  const activityIds = clientData?.serviceActivityIds
-  console.log('Activity Ids', activityIds)
-
-  // const clientServiceActivities = async () => {
-  //   try {
-  //     if (!values.client) return // Avoid fetching if service is not set
-  //     const response: any = await api.get(`/activity/activities/${activityIds}`)
-  //     console.log('response of activities -------------> ', response)
-  //     setServiceActivities(response)
-  //   } catch (error) {
-  //     console.error('Error fetching client service activities:', error)
-  //   }
-  // }
-
-  // console.log('Activities --------------> ', serviceActivities)
-
-  // useEffect(() => {
-  //   clientServiceActivities()
-  // }, [values.client])
-
-  const getAvailableServices = async () => {
+  const clientServiceActivities = async () => {
     try {
-      const activities = await api.get(`/activity`)
-      setActivities(activities.data)
+      const activityIds = clientUsers[0]?.client?.serviceActivityIds
+      if (!values.client) return // Avoid fetching if service is not set
+      const response: any = await api.get(`/activity/activities/${activityIds}`)
+      setServiceActivities(response?.data)
     } catch (error) {
-      console.error('Error getting activities: ', error)
+      console.error('Error fetching client service activities:', error)
     }
   }
-
-  useEffect(() => {
-    getAvailableServices()
-  }, [])
 
   useEffect(() => {
     if (Object.keys(payPeriod).length > 0) {
@@ -199,8 +155,6 @@ const ManualTimesheet = ({ clientList, caregiverList, serviceList, payPeriod }: 
       setWeekRange(range)
     }
   }, [payPeriod])
-
-  console.log('Available Activities', activities)
 
   const calculateStartAndEndDate = (range: any) => {
     // Ensure correct parsing of the start date in UTC
@@ -215,8 +169,6 @@ const ManualTimesheet = ({ clientList, caregiverList, serviceList, payPeriod }: 
       endDate: endDate.toISOString().split('T')[0]
     }
   }
-
-  console.log(weekRange)
 
   const PickersComponent = forwardRef(({ ...props }: PickerProps, ref) => {
     return (
@@ -236,11 +188,8 @@ const ManualTimesheet = ({ clientList, caregiverList, serviceList, payPeriod }: 
 
   const onDiscard = () => {
     setValues(defaultState)
+    setSelectedItems([])
   }
-
-  console.log('CLOCKIN', values.clockIn?.toISOString())
-  console.log('CLOCKOUT', values.clockOut?.toISOString())
-  console.log('DATEOFSERVICE', values.dateOfService)
 
   const onSubmit = async () => {
     try {
@@ -278,11 +227,11 @@ const ManualTimesheet = ({ clientList, caregiverList, serviceList, payPeriod }: 
           signatureId: signResponse.data.id,
           tenantId: authUser?.tenant?.id
         }
-        const updateSchedule = await api.post(`/time-log`, modifiedEvent)
+        await api.post(`/time-log`, modifiedEvent)
       }
       // Reset form and show success message
       setValues(defaultState)
-      setActivities([])
+      setSelectedItems([])
       setOpenSuccessSnackbar(true)
     } catch (error) {
       console.log('Error:', error)
@@ -404,7 +353,8 @@ const ManualTimesheet = ({ clientList, caregiverList, serviceList, payPeriod }: 
                     const combinedDate = combineDateAndTimeForGMT(values.dateOfService, date)
                     setValues({
                       ...values,
-                      clockIn: date
+                      clockIn: date,
+                      clockOut: null
                     })
                   }
                 }}
@@ -463,7 +413,7 @@ const ManualTimesheet = ({ clientList, caregiverList, serviceList, payPeriod }: 
                   label='Select Activities'
                   size='small'
                 >
-                  {activities?.map((svc: any) => (
+                  {serviceActivities?.map((svc: any) => (
                     <MenuItem key={svc.id} value={svc.id}>
                       {svc.title}
                     </MenuItem>
@@ -473,7 +423,7 @@ const ManualTimesheet = ({ clientList, caregiverList, serviceList, payPeriod }: 
                 {/* Render chips BELOW the select */}
                 <Box className='flex flex-wrap gap-2 mt-2'>
                   {selectedItems.map(item => {
-                    const service = activities.find(s => s.id === item)
+                    const service = serviceActivities.find((s: any) => s.id === item)
                     return (
                       <Chip
                         key={item}
@@ -501,7 +451,7 @@ const ManualTimesheet = ({ clientList, caregiverList, serviceList, payPeriod }: 
                 onChange={e => {
                   setValues({
                     ...values,
-                    reason: e.target.value
+                    reason: e.target.value.trimStart()
                   })
                 }}
               />
@@ -520,7 +470,7 @@ const ManualTimesheet = ({ clientList, caregiverList, serviceList, payPeriod }: 
                 onChange={e => {
                   setValues({
                     ...values,
-                    notes: e.target.value
+                    notes: e.target.value.trimStart()
                   })
                 }}
               />

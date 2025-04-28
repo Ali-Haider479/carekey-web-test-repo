@@ -164,7 +164,7 @@ const SignatureStatusTable = ({ data, isLoading }: SignatureStatusTableProps) =>
       sortable: true,
       render: (user: any) => (
         <Chip
-          label={user?.signature?.signatureStatus.toUpperCase() || 'PENDING'}
+          label={user?.signature?.signatureStatus.toUpperCase() || 'MIXED'}
           sx={{
             backgroundColor:
               user?.signature?.signatureStatus === 'Taken'

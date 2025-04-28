@@ -96,6 +96,7 @@ const AppCalendar = () => {
       caregiverEvents: isClient ? prev.caregiverEvents : [...(prev.caregiverEvents || []), ...newEvent],
       clientEvents: isClient ? [...(prev.clientEvents || []), ...newEvent] : prev.clientEvents
     }))
+    setIsEdited(false)
     dispatch(addEvent(newEvent))
   }
 

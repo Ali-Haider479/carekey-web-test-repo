@@ -2,8 +2,6 @@ import React, { useState } from 'react'
 import { Card, CardHeader, CardContent, MenuItem, Button, TextField, Typography } from '@mui/material'
 import Grid from '@mui/material/Grid2'
 import { useForm } from 'react-hook-form'
-import axios from 'axios'
-import api from '@/utils/api'
 
 interface DefaultStateType {
   caregiverName: string
@@ -16,12 +14,11 @@ const defaultState: DefaultStateType = {
 }
 
 interface EVVFiltersProps {
-  onFilterApplied: (data: any) => void
+  missedShifts: any[] // The full dataset of missed shifts
+  onFilterApplied: (data: any[]) => void // Callback to pass filtered data
 }
 
-// const MissedShiftFilters = ({ onFilterApplied }: SignatureStatusFiltersProps) => {
-const MissedShiftFilters = ({ onFilterApplied }: EVVFiltersProps) => {
-  const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
+const MissedShiftFilters = ({ missedShifts, onFilterApplied }: EVVFiltersProps) => {
   const [filterData, setFilterData] = useState<DefaultStateType>(defaultState)
 
   // Hooks
@@ -30,34 +27,30 @@ const MissedShiftFilters = ({ onFilterApplied }: EVVFiltersProps) => {
     formState: { errors }
   } = useForm({ defaultValues: { title: '' } })
 
-  const onSubmit = async () => {
-    try {
-      // Only add parameters that have values
-      const queryParams = new URLSearchParams()
-      if (filterData.caregiverName) queryParams.append('caregiverName', filterData.caregiverName)
-      if (filterData.status) queryParams.append('caregiverStatus', filterData.status)
-      // if (filterData.tsApprovalStatus) queryParams.append('tsApprovalStatus', filterData.tsApprovalStatus)
-      queryParams.append('screenType', 'missed')
-      queryParams.append('page', '1')
-      queryParams.append('limit', '10')
-      // If no filters are applied, fetch all data
-      if (queryParams.toString() === 'page=1&limit=10') {
-        const response = await api.get(`/time-log/dashboard/missed-shifts/${authUser?.tenant?.id}`)
-        onFilterApplied(response.data.data)
-        return
-      }
-      // Fetch filtered data
-      const filterResponse = await api.get(`/time-log/filtered/?${queryParams.toString()}`)
-      onFilterApplied(filterResponse.data.data)
-    } catch (error) {
-      console.error('Error applying filters:', error)
+  const onSubmit = () => {
+    // Apply filters on the frontend
+    let filteredData = [...missedShifts] // Create a copy of the original data
+
+    // Filter by caregiverName (case-insensitive partial match)
+    if (filterData.caregiverName) {
+      filteredData = filteredData.filter(shift =>
+        shift.caregiverName?.toLowerCase().includes(filterData.caregiverName.toLowerCase())
+      )
     }
+
+    // Filter by status
+    if (filterData.status) {
+      filteredData = filteredData.filter(shift => shift.status === filterData.status)
+    }
+
+    // Pass the filtered data to the parent component
+    onFilterApplied(filteredData)
   }
 
-  const handleReset = async () => {
+  const handleReset = () => {
+    // Reset filters and pass the original data back
     setFilterData(defaultState)
-    const response = await api.get(`/time-log/dashboard/missed-shifts/${authUser?.tenant?.id}`)
-    onFilterApplied(response.data.data)
+    onFilterApplied(missedShifts)
   }
 
   return (
@@ -72,18 +65,16 @@ const MissedShiftFilters = ({ onFilterApplied }: EVVFiltersProps) => {
             placeholder='Caregiver Name'
             label='Caregiver Name'
             size='small'
-            // className='mbe-6'
             id='event-title'
             {...(errors.title && { error: true, helperText: 'This field is required' })}
           />
         </Grid>
 
-        {/* Billing Period Dropdown */}
+        {/* Status Dropdown */}
         <Grid size={{ xs: 12, md: 4 }} sx={{ pb: 2 }}>
           <TextField
             select
             fullWidth
-            // className='mbe-6'
             placeholder='Status'
             label='Status'
             size='small'
@@ -95,6 +86,7 @@ const MissedShiftFilters = ({ onFilterApplied }: EVVFiltersProps) => {
             <MenuItem value='Inactive'>Inactive</MenuItem>
           </TextField>
         </Grid>
+
         <Grid container spacing={12}>
           <Grid size={{ xs: 12, sm: 4 }}>
             <Button type='submit' variant='outlined' className='p-1'>

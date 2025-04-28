@@ -357,7 +357,13 @@ const EvvActiveUserTable = ({ timeLogData, isLoading, payPeriod, fetchInitialDat
                       showTimeSelectOnly
                       dateFormat='hh:mm aa'
                       id='time-only-picker'
-                      minTime={selectedUser?.clockIn || new Date()}
+                      minTime={
+                        values?.dateOfService &&
+                        selectedUser?.clockIn &&
+                        new Date(values.dateOfService).toDateString() === new Date(selectedUser.clockIn).toDateString()
+                          ? new Date(selectedUser.clockIn) // Same day: use clockIn time
+                          : setHours(setMinutes(setSeconds(new Date(), 0), 0), 0) // Different day: start of day (12:00 AM)
+                      }
                       maxTime={setSeconds(setMinutes(setHours(new Date(), 23), 59), 59)}
                       onChange={(date: Date | null) => {
                         if (date !== null) {
