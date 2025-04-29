@@ -7,46 +7,6 @@ import ReactTable from '@/@core/components/mui/ReactTable'
 import { calculateHoursWorked, formattedDate } from '@/utils/helperFunctions'
 import EvvFilters from './EvvFilter'
 
-// Updated interfaces to match your data structure
-const dummyData = [
-  {
-    id: 1,
-    clientName: 'Cody Fisher',
-    caregiverName: 'Kathryn Murphy',
-    service: 'Physical therapy',
-    location: 'Lahore, Pakistan',
-    status: 'Active',
-    clockIn: '04/15/2024'
-  },
-  {
-    id: 2,
-    clientName: 'Robert Fox',
-    caregiverName: 'Leslie Alexander',
-    service: 'Physical therapy',
-    location: 'Lahore, Pakistan',
-    status: 'Active',
-    clockIn: '04/15/2024'
-  },
-  {
-    id: 3,
-    clientName: 'Esther Howard',
-    caregiverName: 'Courtney Henry',
-    service: 'Physical therapy',
-    location: 'Lahore, Pakistan',
-    status: 'Active',
-    clockIn: '04/15/2024'
-  },
-  {
-    id: 4,
-    clientName: 'Jenny Wilson',
-    caregiverName: 'Kristin Watson',
-    service: 'Physical therapy',
-    location: 'Lahore, Pakistan',
-    status: 'Active',
-    clockIn: '04/15/2024'
-  }
-]
-
 interface Caregiver {
   firstName: string
   lastName: string
@@ -74,10 +34,16 @@ interface Props {
 
 const EvvCompletedShiftsTable = ({ timeLogData, isLoading }: Props) => {
   const [filteredData, setFilteredData] = useState<TimeLogData[]>([])
+  const [isFilterApplied, setIsFilterApplied] = useState(false) // Track if filter is applied
 
   useEffect(() => {
     setFilteredData(timeLogData)
   }, [timeLogData])
+
+  const handleFilteredData = (status: any) => {
+    setFilteredData(status)
+    setIsFilterApplied(true) // Set flag when filter is applied
+  }
 
   const columns = [
     {
@@ -128,10 +94,6 @@ const EvvCompletedShiftsTable = ({ timeLogData, isLoading }: Props) => {
     }
   ]
 
-  const handleFilteredData = (status: any) => {
-    setFilteredData(status)
-  }
-
   return (
     <Card sx={{ borderRadius: 1, boxShadow: 3 }}>
       <div className='p-4 my-2'>
@@ -144,7 +106,7 @@ const EvvCompletedShiftsTable = ({ timeLogData, isLoading }: Props) => {
       ) : (
         <ReactTable
           columns={columns}
-          data={filteredData}
+          data={isFilterApplied ? filteredData : timeLogData} // Conditional data prop
           keyExtractor={user => user.id.toString()}
           enableRowSelect
           enablePagination

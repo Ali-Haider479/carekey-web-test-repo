@@ -26,7 +26,7 @@ const EvvCompletedShifts = () => {
   const fetchInitialData = async () => {
     try {
       const response = await api.get(`/time-log/completed-timelogs`)
-      console.log(response)
+      console.log('COMPLETED SHIFT DATA BEFORE STORIG IN STATE ------->> ', response)
       setTimeLogData(response.data)
       setIsLoading(false)
     } catch (error) {
@@ -34,6 +34,8 @@ const EvvCompletedShifts = () => {
       setIsLoading(false)
     }
   }
+
+  console.log('TIME LOG DATA', timeLogData)
 
   // // Handler for filter updates
   // const handleFilteredData = (filteredData: any) => {

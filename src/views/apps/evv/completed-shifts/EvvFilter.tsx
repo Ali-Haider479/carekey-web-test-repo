@@ -40,8 +40,9 @@ const EvvFilters = ({ onFilterApplied }: EVVFiltersProps) => {
       queryParams.append('page', '1')
       queryParams.append('limit', '10')
       // If no filters are applied, fetch all data
-      if (queryParams.toString() === 'page=1&limit=10') {
+      if (queryParams.toString() === 'screenType=completed&page=1&limit=10') {
         const response = await api.get(`/time-log/completed-timelogs`)
+        console.log('Filtered data response ------->> ', response.data)
         onFilterApplied(response.data)
         return
       }

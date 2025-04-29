@@ -2,7 +2,23 @@
 
 import React, { useState, useEffect, useMemo, useCallback, forwardRef } from 'react'
 import Card from '@mui/material/Card'
-import { Button, CircularProgress, Dialog, Grid2 as Grid, IconButton, TextField, Typography } from '@mui/material'
+import {
+  Box,
+  Button,
+  Chip,
+  CircularProgress,
+  Dialog,
+  FormControl,
+  Grid2 as Grid,
+  IconButton,
+  InputLabel,
+  MenuItem,
+  Select,
+  SelectChangeEvent,
+  TextField,
+  Typography
+} from '@mui/material'
+import { Close as CloseIcon } from '@mui/icons-material'
 import ReactTable from '@/@core/components/mui/ReactTable'
 import { combineDateAndTime, formattedDate } from '@/utils/helperFunctions'
 import DialogCloseButton from '@/components/dialogs/DialogCloseButton'
@@ -31,6 +47,7 @@ interface Caregiver {
 interface Client {
   firstName: string
   lastName: string
+  serviceActivityIds: number[]
 }
 
 interface TimeLogData {
@@ -117,16 +134,46 @@ const EvvActiveUserTable = ({ timeLogData, isLoading, payPeriod, fetchInitialDat
   const [values, setValues] = useState<any>()
   const [weekRange, setWeekRange] = useState<any>({})
   const [filteredData, setFilteredData] = useState<any>()
+  const [selectedItems, setSelectedItems] = useState<number[]>([])
+  const [serviceActivities, setServiceActivities] = useState<any>([])
   const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
 
   const handleModalClose = () => {
     setIsModalShow(false)
   }
 
+  const handleChange = (event: SelectChangeEvent<number[]>) => {
+    const value = event.target.value as number[]
+    setSelectedItems(value)
+  }
+
+  const handleDelete = (itemToRemove: number) => {
+    setSelectedItems(prev => prev.filter(item => item !== itemToRemove))
+  }
+
+  const clientServiceActivities = async () => {
+    try {
+      const activityIds = selectedUser?.client?.serviceActivityIds
+      if (!selectedUser?.client) return // Avoid fetching if service is not set
+      const response: any = await api.get(`/activity/activities/${activityIds}`)
+      setServiceActivities(response?.data)
+    } catch (error) {
+      console.error('Error fetching client service activities:', error)
+    }
+  }
+
+  useEffect(() => {
+    if (selectedUser?.client?.serviceActivityIds) {
+      clientServiceActivities()
+    }
+  }, [selectedUser])
+
   const handleModalOpen = (user: any) => {
     setIsModalShow(true)
     setSelectedUser(user)
   }
+
+  console.log('Client Data', timeLogData[0]?.client)
 
   const calculateStartAndEndDate = (range: any) => {
     // Ensure correct parsing of the start date in UTC
@@ -143,6 +190,8 @@ const EvvActiveUserTable = ({ timeLogData, isLoading, payPeriod, fetchInitialDat
   }
 
   console.log('Tg data-------------------', payPeriod)
+
+  console.log('Time Log Active User Data', timeLogData)
 
   useEffect(() => {
     if (payPeriod && Object?.keys(payPeriod).length > 0) {
@@ -176,15 +225,23 @@ const EvvActiveUserTable = ({ timeLogData, isLoading, payPeriod, fetchInitialDat
 
         signResponse = await api.post(`/signatures`, payLoad)
       }
-      const payload = {
-        id: selectedUser.id,
-        notes: clockOutReason,
-        clockOut: combineDateAndTime(values?.dateOfService, values?.clockIn),
-        signatureId:
-          currentClientPendingSigns.length > 0 ? currentClientPendingSigns[0].signatureId : signResponse?.data?.id
+
+      const checkedActivityRes = await api.post(`/activity`, {
+        activityIds: selectedItems
+      })
+
+      if (checkedActivityRes.status === 201) {
+        const payload = {
+          id: selectedUser.id,
+          notes: clockOutReason,
+          clockOut: combineDateAndTime(values?.dateOfService, values?.clockIn),
+          checkedActivityId: checkedActivityRes.data.id,
+          signatureId:
+            currentClientPendingSigns.length > 0 ? currentClientPendingSigns[0].signatureId : signResponse?.data?.id
+        }
+        const res = await api.patch(`/time-log`, payload)
+        console.log('RESPONSE', res)
       }
-      const res = await api.patch(`/time-log`, payload)
-      console.log('RESPONSE', res)
       await fetchInitialData()
       // Reset states
       setSelectedUser(null)
@@ -383,6 +440,41 @@ const EvvActiveUserTable = ({ timeLogData, isLoading, payPeriod, fetchInitialDat
                         />
                       }
                     />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 12 }}>
+                    <FormControl fullWidth className='relative'>
+                      <InputLabel size='small'>Select Activities</InputLabel>
+                      <Select
+                        multiple
+                        value={selectedItems}
+                        onChange={handleChange} // Fixed: Pass the function directly
+                        renderValue={() => ''}
+                        label='Select Activities'
+                        size='small'
+                      >
+                        {serviceActivities?.map((svc: any) => (
+                          <MenuItem key={svc.id} value={svc.id}>
+                            {svc.title}
+                          </MenuItem>
+                        ))}
+                      </Select>
+
+                      {/* Render chips BELOW the select */}
+                      <Box className='flex flex-wrap gap-2 mt-2'>
+                        {selectedItems.map((item: any) => {
+                          const service = serviceActivities.find((s: any) => s.id === item)
+                          return (
+                            <Chip
+                              key={item}
+                              onDelete={() => handleDelete(item)}
+                              label={service?.title}
+                              deleteIcon={<CloseIcon sx={{ fontSize: '14px', color: '#8592A3' }} />}
+                              className='mt-2 text-[#8592A3] text-sm py-1'
+                            />
+                          )
+                        })}
+                      </Box>
+                    </FormControl>
                   </Grid>
                   <Grid size={{ xs: 12, sm: 12 }}>
                     <TextField

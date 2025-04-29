@@ -28,22 +28,26 @@ const MissedShiftFilters = ({ missedShifts, onFilterApplied }: EVVFiltersProps) 
   } = useForm({ defaultValues: { title: '' } })
 
   const onSubmit = () => {
-    // Apply filters on the frontend
-    let filteredData = [...missedShifts] // Create a copy of the original data
+    let filteredData = [...missedShifts]
 
-    // Filter by caregiverName (case-insensitive partial match)
+    // Filter by caregiverName (first + last name match)
     if (filterData.caregiverName) {
+      const search = filterData.caregiverName.toLowerCase()
       filteredData = filteredData.filter(shift =>
-        shift.caregiverName?.toLowerCase().includes(filterData.caregiverName.toLowerCase())
+        `${shift.caregiver?.firstName ?? ''} ${shift.caregiver?.lastName ?? ''}`.toLowerCase().includes(search)
       )
     }
 
-    // Filter by status
+    // Filter by status - assuming this exists (add null check or remove if not applicable)
     if (filterData.status) {
-      filteredData = filteredData.filter(shift => shift.status === filterData.status)
+      filteredData = filteredData.filter(shift => shift.caregiver?.user?.accountStatus === filterData.status)
     }
 
-    // Pass the filtered data to the parent component
+    // If no filters are applied, return all
+    if (filterData.caregiverName === '' && filterData.status === '') {
+      filteredData = missedShifts
+    }
+
     onFilterApplied(filteredData)
   }
 

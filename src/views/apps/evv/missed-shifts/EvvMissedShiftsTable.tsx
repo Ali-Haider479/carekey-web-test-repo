@@ -128,7 +128,7 @@ const EvvMissedShiftsTable = ({ timeLogData, isLoading, onFilterApplied }: Props
       ) : (
         <ReactTable
           columns={columns}
-          data={timeLogData}
+          data={filteredData}
           keyExtractor={user => user.id.toString()}
           enableRowSelect
           enablePagination
