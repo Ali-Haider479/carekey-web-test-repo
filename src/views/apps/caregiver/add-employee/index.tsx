@@ -256,7 +256,7 @@ const EmployeeStepper = () => {
     } finally {
       setTimeout(() => {
         setIsLoading(false)
-        router.replace('/apps/caregiver/list')
+        router.replace('/en/apps/caregiver/list')
       }, 3000)
     }
   }
@@ -290,7 +290,7 @@ const EmployeeStepper = () => {
   }
 
   const handleCancel = () => {
-    router.replace('/apps/caregiver/list')
+    router.replace('/en/apps/caregiver/list')
   }
 
   const onPersonalDetailsSubmit = (values: FormDataType, data: any) => {

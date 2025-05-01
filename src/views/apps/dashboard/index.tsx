@@ -22,16 +22,65 @@ import CallIcon from '@mui/icons-material/Call'
 import MobileFriendlyIcon from '@mui/icons-material/MobileFriendly'
 import { dark } from '@mui/material/styles/createPalette'
 import { Avatar } from '@mui/material'
+import { useEffect, useState } from 'react'
+import api from '@/utils/api'
+
+interface DashboardData {
+  caregiverCount: number;
+  clientCount: number;
+  clientsWithoutServiceAuthCount: number;
+  clientsWithoutServiceAuth: { name: string; email: string | null }[];
+}
+
+interface ShiftsData {
+  activeShiftsCount: number;
+  missedShiftsCount: number;
+}
 
 const AppDashboard = () => {
   // const { title, stats, trendNumber, avatarIcon, color } = props
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  const [shiftsData, setShiftsData] = useState<ShiftsData | null>(null);
+  const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
+
+  const tenantId = authUser?.tenant?.id
+
+  // Fetch data from backend
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Fetch dashboard data (Clients, Caregivers, Waiting for SA)
+        const dashboardResponse = await api.get(`/tenant/dashboard-data/${tenantId}`);
+        const dashboardData = dashboardResponse.data;
+
+        // Fetch shifts data (Active Shifts, Missed Shifts)
+        const shiftsResponse = await api.get(`/time-log/dashboard/active-missed-shifts/${tenantId}`);
+        const shiftsData = shiftsResponse.data;
+
+        setDashboardData({
+          caregiverCount: dashboardData.caregiverCount,
+          clientCount: dashboardData.clientCount,
+          clientsWithoutServiceAuthCount: dashboardData.clientsWithoutServiceAuthCount,
+          clientsWithoutServiceAuth: dashboardData.clientsWithoutServiceAuth,
+        });
+        setShiftsData({
+          activeShiftsCount: shiftsData.activeShiftsCount,
+          missedShiftsCount: shiftsData.missedShiftsCount,
+        });
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   return (
     <Grid container spacing={6}>
       <Grid size={{ xs: 12, md: 3 }}>
         <HorizontalWithBorder
           title='Clients'
-          stats='11'
+          stats={dashboardData?.clientCount?.toString() || '0'}
           avatarIcon={
             <Avatar variant='rounded' className='items-center'>
               <ClientsSvg color={`${dark ? '#7112B7' : '#4B0082'}`} scale={1.5} />
@@ -42,7 +91,7 @@ const AppDashboard = () => {
       <Grid size={{ xs: 12, md: 3 }}>
         <HorizontalWithBorder
           title='Caregivers'
-          stats='11'
+          stats={dashboardData?.caregiverCount?.toString() || '0'}
           avatarIcon={
             <Avatar variant='rounded' className='items-center'>
               <CaregiverSvg scale={1.3} />
@@ -53,8 +102,8 @@ const AppDashboard = () => {
       </Grid>
       <Grid size={{ xs: 12, md: 3 }}>
         <HorizontalWithBorder
-          title='Active app users'
-          stats='11'
+          title='Active App users'
+          stats={shiftsData?.activeShiftsCount?.toString() || '0'}
           avatarIcon={
             <Avatar variant='rounded' className='items-center'>
               <UserSvg scale={1.3} />
@@ -66,7 +115,7 @@ const AppDashboard = () => {
       <Grid size={{ xs: 12, md: 3 }}>
         <HorizontalWithBorder
           title='Missed Clients'
-          stats='11'
+          stats={shiftsData?.missedShiftsCount?.toString() || '0'}
           avatarIcon={
             <Avatar variant='rounded' className='items-center'>
               <MissedUserSVG scale={1.2} />
@@ -86,7 +135,7 @@ const AppDashboard = () => {
           <Grid size={{ xs: 12, sm: 6, md: 3, lg: 4 }}>
             <SalesInfoCard
               title='Waiting for SA'
-              value='3'
+              value={dashboardData?.clientsWithoutServiceAuthCount?.toString() || '0'}
               icon={
                 <Avatar variant='rounded' className='items-center'>
                   <CalendarMonth className='text-[#FF3E1D]' />
@@ -157,7 +206,7 @@ const AppDashboard = () => {
         </Grid>
       </Grid>
       <Grid size={{ xs: 12, lg: 4 }}>
-        <PopularInstructors />
+        <PopularInstructors clientsWithoutServiceAuth={dashboardData?.clientsWithoutServiceAuth || []} />
         <DueInformationCard />
       </Grid>
     </Grid>

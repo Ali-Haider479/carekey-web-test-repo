@@ -1,10 +1,8 @@
 import React, { useEffect, useState } from 'react'
-import { Card, CardHeader, CardContent, MenuItem, Button, TextField, IconButton } from '@mui/material'
-import Grid from '@mui/material/Grid2'
+import { Card, CardHeader, CardContent, MenuItem, Button, TextField, IconButton, Grid2 as Grid } from '@mui/material'
 import { useForm } from 'react-hook-form'
-import axios from 'axios'
-import SearchIcon from '@mui/icons-material/Search'
 import api from '@/utils/api'
+
 interface DefaultStateType {
   clientName: string
   caregiverName: string
@@ -21,13 +19,18 @@ const defaultState: DefaultStateType = {
 
 interface SignatureStatusFiltersProps {
   onFilterApplied: (data: any) => void
+  selectedRows: any[] // Add prop for selected rows
+  onBulkStatusUpdate: (status: 'Approved' | 'Rejected') => void // Add prop for status update
 }
 
-const ReceivedTimesheetFilters = ({ onFilterApplied }: SignatureStatusFiltersProps) => {
+const ReceivedTimesheetFilters = ({
+  onFilterApplied,
+  selectedRows,
+  onBulkStatusUpdate
+}: SignatureStatusFiltersProps) => {
   const [filterData, setFilterData] = useState<DefaultStateType>(defaultState)
   const [payPeriod, setPayPeriod] = useState<any[]>([])
 
-  // Hooks
   const {
     handleSubmit,
     formState: { errors }
@@ -46,28 +49,21 @@ const ReceivedTimesheetFilters = ({ onFilterApplied }: SignatureStatusFiltersPro
     fetchPayPeriod()
   }, [])
 
-  console.log('Pay Period Data --> ', payPeriod)
-
   const onSubmit = async () => {
     try {
-      // Only add parameters that have values
       const queryParams = new URLSearchParams()
-
       if (filterData.clientName) queryParams.append('clientName', filterData.clientName)
       if (filterData.caregiverName) queryParams.append('caregiverName', filterData.caregiverName)
       if (filterData.week) queryParams.append('payPeriodHistoryId', filterData.week)
-      // if (filterData.tsApprovalStatus) queryParams.append('tsApprovalStatus', filterData.tsApprovalStatus)
       queryParams.append('page', '1')
       queryParams.append('limit', '10')
 
-      // If no filters are applied, fetch all data
       if (queryParams.toString() === 'page=1&limit=10') {
         const response = await api.get(`/time-log`)
         onFilterApplied(response.data)
         return
       }
 
-      // Fetch filtered data
       const filterResponse = await api.get(`/time-log/filtered/?${queryParams.toString()}`)
       onFilterApplied(filterResponse.data.data)
     } catch (error) {
@@ -85,18 +81,20 @@ const ReceivedTimesheetFilters = ({ onFilterApplied }: SignatureStatusFiltersPro
     }
   }
 
+  const handleApprove = () => {
+    onBulkStatusUpdate('Approved')
+  }
+
+  const handleReject = () => {
+    onBulkStatusUpdate('Rejected')
+  }
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} autoComplete='off'>
       <Card className='w-full' sx={{ p: 2, borderRadius: 1, boxShadow: 2 }}>
-        {/* Card Header */}
         <CardHeader title='Filters' titleTypographyProps={{ variant: 'h6', sx: { fontWeight: 500 } }} />
-
-        {/* Card Content */}
         <CardContent>
-          {/* <Grid size={{ xs: 12, md:6 }} sx={{ pb: 2 }}> */}
-
           <Grid container spacing={4}>
-            {/* Search Client Name */}
             <Grid size={{ xs: 12, md: 4 }} sx={{ pb: 2 }}>
               <TextField
                 value={filterData?.clientName}
@@ -105,13 +103,10 @@ const ReceivedTimesheetFilters = ({ onFilterApplied }: SignatureStatusFiltersPro
                 placeholder='Client Name'
                 label='Client Name'
                 size='small'
-                // className='mbe-6'
                 id='event-title'
                 {...(errors.title && { error: true, helperText: 'This field is required' })}
               />
             </Grid>
-
-            {/* Search Caregiver Name */}
             <Grid size={{ xs: 12, md: 4 }} sx={{ pb: 2 }}>
               <TextField
                 value={filterData?.caregiverName}
@@ -120,18 +115,14 @@ const ReceivedTimesheetFilters = ({ onFilterApplied }: SignatureStatusFiltersPro
                 placeholder='Caregiver Name'
                 label='Caregiver Name'
                 size='small'
-                // className='mbe-6'
                 id='event-title'
                 {...(errors.title && { error: true, helperText: 'This field is required' })}
               />
             </Grid>
-
-            {/* Week Dropdown */}
             <Grid size={{ xs: 12, md: 4 }} sx={{ pb: 2 }}>
               <TextField
                 select
                 fullWidth
-                // className='mbe-6'
                 placeholder='Week'
                 label='Week'
                 size='small'
@@ -146,16 +137,41 @@ const ReceivedTimesheetFilters = ({ onFilterApplied }: SignatureStatusFiltersPro
                 ))}
               </TextField>
             </Grid>
-            <Grid container spacing={12}>
-              <Grid size={{ xs: 12, sm: 4 }}>
-                <Button type='submit' variant='outlined' className='p-1'>
-                  Apply
-                </Button>
+            <Grid container spacing={195}>
+              <Grid container spacing={12}>
+                <Grid size={{ xs: 12, sm: 4 }}>
+                  <Button type='submit' variant='outlined' className='p-1'>
+                    Apply
+                  </Button>
+                </Grid>
+                <Grid size={{ xs: 12, sm: 4 }}>
+                  <Button onClick={handleReset} color='error' variant='outlined' className='p-1'>
+                    Reset
+                  </Button>
+                </Grid>
               </Grid>
-              <Grid size={{ xs: 12, sm: 4 }}>
-                <Button onClick={handleReset} color='error' variant='outlined' className='p-1'>
-                  Reset
-                </Button>
+              <Grid container spacing={12}>
+                <Grid size={{ xs: 12, sm: 4 }}>
+                  <Button
+                    variant='outlined'
+                    className='p-1'
+                    onClick={handleApprove}
+                    disabled={selectedRows.length === 0}
+                  >
+                    Approve
+                  </Button>
+                </Grid>
+                <Grid size={{ xs: 12, sm: 4 }}>
+                  <Button
+                    color='error'
+                    variant='outlined'
+                    className='p-1'
+                    onClick={handleReject}
+                    disabled={selectedRows.length === 0}
+                  >
+                    Reject
+                  </Button>
+                </Grid>
               </Grid>
             </Grid>
           </Grid>

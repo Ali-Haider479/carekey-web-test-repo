@@ -2,13 +2,14 @@ import { MenuItem, Typography } from '@mui/material'
 import CustomTextField from './TextField'
 
 type OptionListType = {
-  key: number
+  key: any
   value: string | number
   displayValue: string
 }
 
 type DropDownProps = {
   value: string | number
+  placeholder?: any
   setValue: any
   options: OptionListType[]
   className?: string
@@ -17,12 +18,12 @@ type DropDownProps = {
   size?: 'small' | 'medium'
 }
 
-const Dropdown = ({ value, setValue, options, className, disabled, onChange, size }: DropDownProps) => {
+const Dropdown = ({ value, setValue, options, className, disabled, onChange, size, placeholder }: DropDownProps) => {
   return (
     <CustomTextField
       select
       id='select-item'
-      placeholder='status'
+      placeholder={placeholder}
       className={className || 'w-full'}
       value={value}
       onChange={onChange || (e => setValue(e.target.value as string | number))}

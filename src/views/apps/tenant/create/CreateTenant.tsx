@@ -184,7 +184,7 @@ const CreateTenant = (props: Props) => {
       }
       const payperiod = await api.post(`/pay-period`, payload)
       console.log('Payperiod res', payperiod)
-      router.replace(`/apps/accounts/tenant-list`)
+      router.replace(`/en/apps/accounts/tenant-list`)
     } catch (error) {
       console.log('ERROR', error)
     }
@@ -427,7 +427,7 @@ const CreateTenant = (props: Props) => {
                     confirmPassword: ''
                   })
                   setTouched({})
-                  router.replace('/apps/accounts/tenant-list')
+                  router.replace('/en/apps/accounts/tenant-list')
                 }}
               >
                 Cancel

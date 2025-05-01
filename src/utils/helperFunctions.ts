@@ -82,3 +82,13 @@ export function combineDateAndTime(dateOfService: any, clockIn: any) {
   // Return the combined date and time in ISO 8601 format
   return serviceDate.toISOString()
 }
+
+export const generateOptions = (
+  documents: { id: number; fileName: string; fileKey: string; uploadDate: string; fileSize: number }[]
+) => {
+  return documents.map(doc => ({
+    key: doc.id,
+    value: doc.fileKey,
+    displayValue: doc.fileName.replace('.pdf', '')
+  }))
+}

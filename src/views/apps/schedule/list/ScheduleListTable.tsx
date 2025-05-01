@@ -205,7 +205,7 @@ const ScheduleListTable = ({ events }: { events: any[] }) => {
             variant='contained'
             className='max-sm:is-full'
             sx={{ backgroundColor: '#4B0082' }}
-            href={getLocalizedUrl('/apps/schedules/calendar-view', locale as Locale)}
+            href={getLocalizedUrl('/en/apps/schedules/calendar-view', locale as Locale)}
           >
             CALENDAR
           </Button>

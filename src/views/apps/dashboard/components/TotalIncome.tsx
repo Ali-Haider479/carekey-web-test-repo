@@ -17,6 +17,8 @@ import type { ApexOptions } from 'apexcharts'
 // Components Imports
 import OptionMenu from '@core/components/option-menu'
 import CustomAvatar from '@core/components/mui/Avatar'
+import { useEffect, useState } from 'react'
+import api from '@/utils/api'
 
 // Styled Component Imports
 const AppReactApexCharts = dynamic(() => import('@/libs/styles/AppReactApexCharts'))
@@ -68,6 +70,33 @@ const reportData: ReportDataType[] = [
 const TotalIncome = () => {
   // Hooks
   const theme = useTheme()
+  const [chartData, setChartData] = useState<{
+    series: { name: string; data: number[] }[];
+    categories: string[];
+  }>({
+    series: [{ name: 'Hours', data: [0, 0, 0, 0, 0, 0, 0] }],
+    categories: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+  });
+  const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
+
+  // Fetch data from backend
+  useEffect(() => {
+    const fetchWeeklyReport = async () => {
+      try {
+        const tenantId = authUser?.tenant?.id
+        const response = await api.get(`/caregivers/weekly-report/${tenantId}`)
+        const data = response.data
+        setChartData({
+          series: data.series,
+          categories: data.categories,
+        });
+      } catch (error) {
+        console.error('Error fetching weekly report:', error);
+      }
+    };
+
+    fetchWeeklyReport();
+  }, []);
 
   const options: ApexOptions = {
     chart: {
@@ -122,7 +151,7 @@ const TotalIncome = () => {
     xaxis: {
       axisTicks: { show: false },
       axisBorder: { show: false },
-      categories: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+      categories: chartData.categories, // Use dynamic categories
       labels: {
         style: {
           fontSize: '13px',
@@ -154,7 +183,7 @@ const TotalIncome = () => {
             action={<OptionMenu options={['Share', 'Refresh', 'Delete']} />}
           />
           <CardContent className='flex flex-col gap-y-6'>
-            <AppReactApexCharts type='area' height={299} width='100%' series={series} options={options} />
+            <AppReactApexCharts type='area' height={299} width='100%' series={chartData.series} options={options} />
           </CardContent>
         </Grid>
       </Grid>

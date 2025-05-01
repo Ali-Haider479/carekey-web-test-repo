@@ -327,7 +327,7 @@ const AddClientStepper = () => {
     } finally {
       setTimeout(() => {
         setIsLoading(false)
-        router.replace('/apps/client/list')
+        router.replace('/en/apps/client/list')
       }, 3000)
     }
   }
@@ -478,7 +478,7 @@ const AddClientStepper = () => {
             <CardContent>
               <Grid size={{ xs: 12, md: 12 }} className='flex justify-between'>
                 <div>
-                  <Button variant='outlined' onClick={() => router.replace('/apps/client/list')} color='secondary'>
+                  <Button variant='outlined' onClick={() => router.replace('/en/apps/client/list')} color='secondary'>
                     Cancel
                   </Button>
                 </div>

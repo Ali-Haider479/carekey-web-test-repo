@@ -362,7 +362,7 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
               variant='contained'
               startIcon={<i className='bx-plus' />}
               component={Link}
-              href={getLocalizedUrl('/apps/accounts/create-tenant', locale as Locale)}
+              href={getLocalizedUrl('/en/apps/accounts/create-tenant', locale as Locale)}
               className='mt-4'
               sx={{ backgroundColor: '#4B0082' }}
             >
@@ -395,7 +395,7 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
                 <Button
                   variant='contained'
                   startIcon={<i className='bx-plus' />}
-                  href={getLocalizedUrl('/apps/accounts/create-tenant', locale as Locale)}
+                  href={getLocalizedUrl('/en/apps/accounts/create-tenant', locale as Locale)}
                   className='max-sm:is-full'
                   sx={{ backgroundColor: '#4B0082' }}
                 >

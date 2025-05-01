@@ -90,6 +90,8 @@ interface SignatureStatusTableProps {
   data: []
   isLoading: boolean
   fetchInitialData: any
+  setSelectedRows: any
+  selectedRows: any
 }
 
 interface PickerProps {
@@ -101,7 +103,10 @@ interface PickerProps {
   placeholder?: string
 }
 
-const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: SignatureStatusTableProps, user: any) => {
+const ReceivedTimesheetTable = (
+  { data, isLoading, fetchInitialData, setSelectedRows, selectedRows }: SignatureStatusTableProps,
+  user: any
+) => {
   const methods = useForm<any>({
     mode: 'onSubmit',
     reValidateMode: 'onChange',
@@ -131,7 +136,7 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
   // const [currentEditedData, setCurrentEditedData] = useState<any>(null)
   const [alertOpen, setAlertOpen] = useState(false)
   const [alertProps, setAlertProps] = useState<any>()
-  const [selectedRows, setSelectedRows] = useState<any[]>([])
+  // const [selectedRows, setSelectedRows] = useState<any[]>([])
   const [isModalShow, setIsModalShow] = useState(false)
   const [modalData, setModalData] = useState<any>(null)
   const [activities, setActivities] = useState<any[]>()
@@ -199,7 +204,7 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
   const toggleEditing = () => {
     if (isEditing) {
       console.log('inside edit cancel')
-      reset()
+      // reset()
     }
     setIsEditing(!isEditing)
   }
@@ -222,13 +227,6 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
   useEffect(() => {
     getAvailableServices()
   }, [])
-
-  const handleModalClose = () => {
-    setIsModalShow(false)
-    setIsEditing(false)
-    reset()
-    handleCloseMenu()
-  }
 
   const handleCloseMenu = () => {
     setAnchorEl(null)
@@ -294,9 +292,65 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
     return isNaN(date.getTime()) ? null : date
   }
 
-  const handleViewDetails = (user: any) => {
+  const handleOpenModal = (user: any, mode: 'edit' | 'view') => {
     setModalData(user)
     setIsModalShow(true)
+    setIsEditing(mode === 'edit') // Set isEditing based on mode
+
+    // Reset any deleting state
+    setDeletingId(null)
+    setIsDeleting(false)
+    setRowsToDelete([])
+
+    // Split clockIn into date and time
+    let clockInDate = ''
+    let clockInTime = ''
+    if (user.clockIn) {
+      const [datePart, timePart] = user.clockIn.split('T')
+      clockInDate = datePart
+      clockInTime = timePart
+    }
+
+    // Split clockOut into date and time
+    let clockOutDate = ''
+    let clockOutTime = ''
+    if (user.clockOut) {
+      const [datePart, timePart] = user.clockOut.split('T')
+      clockOutDate = datePart
+      clockOutTime = timePart
+    }
+
+    const localClockInTime = new Date(user.clockIn).toISOString()
+    const localClockOutTime = new Date(user.clockOut).toISOString()
+
+    // Set form values
+    setValue('id', user.id)
+    setValue('tsApprovalStatus', user.tsApprovalStatus || 'Pending')
+    setValue('clockInDate', localClockInTime.split('T')[0])
+    setValue('clockInTime', localClockInTime.split('T')[1])
+    setValue('clockOutDate', localClockOutTime.split('T')[0])
+    setValue('clockOutTime', localClockOutTime.split('T')[1])
+    setValue('hoursWorked', calculateHoursWorked(user.clockIn, user.clockOut) || user.hrsWorked || '')
+    setValue('dateOfService', user.dateOfService ? new Date(user.dateOfService).toISOString().split('T')[0] : '')
+    setValue('serviceName', user.serviceName || '')
+    setValue('updatedBy', user.updatedBy?.userName || 'N/A')
+    setValue('updatedAt', user.updatedAt ? new Date(user.updatedAt).toISOString().split('T')[0] : '')
+    setValue('notes', user.notes || '')
+    setValue('reason', user.reason || '')
+
+    // Reset anchorEl and selectedUser
+    setAnchorEl(null)
+    setSelectedUser(null)
+  }
+
+  const handleViewDetails = (user: any, mode: 'edit' | 'view') => {
+    setModalData(user)
+    setIsModalShow(true)
+    setIsEditing(mode === 'edit')
+
+    setDeletingId(null)
+    setIsDeleting(false)
+    setRowsToDelete([])
 
     // Split clockIn into date and time
     let clockInDate = ''
@@ -351,6 +405,18 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
     setValue('notes', user.notes || '')
     setValue('reason', user.reason || '')
     handleCloseMenu()
+    setAnchorEl(null)
+    setSelectedUser(null)
+  }
+
+  const handleModalClose = () => {
+    setIsModalShow(false)
+    setIsEditing(false)
+    setModalData(null)
+    reset()
+    handleCloseMenu()
+    setAnchorEl(null)
+    setSelectedUser(null)
   }
 
   const onSubmit = async (formData: EditDetailsPayload) => {
@@ -606,9 +672,10 @@ const ReceivedTimesheetTable = ({ data, isLoading, fetchInitialData }: Signature
         console.log('INSIDE DUMMY ROW IF BLOCK -----> ')
         const selectedSubRowIds = selectedRows
           .filter(
-            row => row.id !== currentEditedData.id && currentUser.subRows.some((subRow: any) => subRow.id === row.id)
+            (row: any) =>
+              row.id !== currentEditedData.id && currentUser.subRows.some((subRow: any) => subRow.id === row.id)
           )
-          .map(row => row.id)
+          .map((row: any) => row.id)
 
         if (selectedSubRowIds.length === 0) {
           setAlertOpen(true)

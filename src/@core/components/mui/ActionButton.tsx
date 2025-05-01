@@ -1,5 +1,5 @@
 import React from 'react'
-import { Box, Button, Dialog, IconButton, Menu, MenuItem, Typography } from '@mui/material'
+import { Box, Button, Dialog, IconButton, Menu, MenuItem, Typography, Grid2 as Grid } from '@mui/material'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
 import EditIcon from '@mui/icons-material/Edit'
 import DeleteIcon from '@mui/icons-material/Delete'
@@ -82,7 +82,7 @@ const ActionButton = ({
 
   return (
     <>
-      <IconButton onClick={e => handleActionClick(e, user)} size='small' disabled={disabled}>
+      {/* <IconButton onClick={e => handleActionClick(e, user)} size='small' disabled={disabled}>
         <MoreVertIcon />
       </IconButton>
       <Menu
@@ -102,7 +102,39 @@ const ActionButton = ({
           <DeleteIcon sx={{ mr: 1 }} fontSize='small' color='error' />
           <Typography className='font-semibold'>Delete</Typography>
         </MenuItem>
-      </Menu>
+      </Menu> */}
+      <Grid container spacing={0}>
+        <Grid size={{ xs: 12, sm: 3 }}>
+          <Button
+            sx={{ padding: 0 }}
+            size='small'
+            onClick={() => handleViewDetails(user, 'view')}
+            disabled={!!user.subRows && user.subRows.length > 0}
+          >
+            <Visibility sx={{ mr: 1 }} fontSize='small' />
+          </Button>
+        </Grid>
+        <Grid size={{ xs: 12, sm: 3 }}>
+          <Button
+            sx={{ padding: 0 }}
+            size='small'
+            onClick={() => handleViewDetails(user, 'edit')}
+            disabled={!!user.subRows && user.subRows.length > 0}
+          >
+            <EditIcon sx={{ mr: 1 }} fontSize='small' />
+          </Button>
+        </Grid>
+        <Grid size={{ xs: 12, sm: 3 }}>
+          <Button
+            sx={{ padding: 0 }}
+            onClick={handleDeleteClick}
+            size='small'
+            disabled={!!user.subRows && user.subRows.length > 0}
+          >
+            <DeleteIcon sx={{ mr: 1 }} fontSize='small' color='error' />
+          </Button>
+        </Grid>
+      </Grid>
       <FormProvider {...methods}>
         <Dialog
           open={isDeleteModalShow}
