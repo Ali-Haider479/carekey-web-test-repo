@@ -5,11 +5,9 @@ import {
   Grid2 as Grid,
   Dialog,
   Typography,
-  MenuItem,
   TextField,
   Divider,
   Box,
-  Select,
   CircularProgress,
   IconButton,
   Card,
@@ -19,7 +17,6 @@ import {
   Checkbox
 } from '@mui/material'
 import { useEffect, useState } from 'react'
-import axios from 'axios'
 import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday'
 import { placeOfServiceOptions, payerOptions } from '@/utils/constants'
@@ -180,7 +177,7 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
         // Extract text using the helper function
         const textLines = await extractStructuredTextFromPDF(file)
         const extractedData = parseServiceAgreement(textLines)
-
+        console.log('EXTRCTED DATA', extractedData)
         // If enableOcrDataFill is true, populate form fields with extracted data
         if (enableOcrDataFill && extractedData.serviceItems.length > 0) {
           // Map service items to form rows
@@ -195,7 +192,7 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
               quantity: item.quantity ? item.quantity.replace(/,/g, '') : '',
               // Default values for missing fields
               frequency: 'daily',
-              taxonomy: '207Q00000X',
+              taxonomy: '',
               reimbursement: 'per unit',
               placeOfService: 'home',
               // Keep the extracted data for reference
@@ -261,7 +258,7 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
       serviceAuthNumber: firstRow.agreementNumber || '',
       memberId: firstRow.recipientId || '',
       diagnosisCode: firstRow.diagnosisCode || '',
-      taxonomy: firstRow.taxonomy || '207Q00000X',
+      taxonomy: firstRow.taxonomy || '',
       umpiNumber: firstRow.providerId || '',
       placeOfService: firstRow.placeOfService || 'home'
     }
@@ -324,7 +321,7 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
         diagnosisCode: item.diagnosisCode || '',
         umpiNumber: item.providerId || '',
         reimbursementType: item.reimbursement || 'per unit',
-        taxonomy: item.taxonomy || '207Q00000X',
+        taxonomy: item.taxonomy,
         frequency: item.frequency || 'daily',
         clientId: clientId,
         billable: billableStates[index],

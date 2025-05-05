@@ -32,7 +32,7 @@ type EditUserInfoProps = {
   open: boolean
   setOpen: (open: boolean) => void
   data?: EditUserInfoData
-  onSuccess?: () => void
+  onSuccess?: (payload: any) => void
 }
 
 const status = ['Active', 'Canceled', 'Suspended']
@@ -56,7 +56,7 @@ const EditTenantInfo = ({ open, setOpen, data, onSuccess }: EditUserInfoProps) =
 
   const handleClose = () => {
     setOpen(false)
-    setUserData(data || {})
+    setUserData(userData || {})
     setError('')
     setSuccess('')
   }
@@ -85,7 +85,9 @@ const EditTenantInfo = ({ open, setOpen, data, onSuccess }: EditUserInfoProps) =
       // }
 
       setSuccess('Tenant information updated successfully')
-      onSuccess?.()
+      onSuccess?.(response.data)
+
+      setUserData(response.data)
 
       const tenantData = getInitialData()
 

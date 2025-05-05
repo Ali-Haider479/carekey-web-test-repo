@@ -71,15 +71,15 @@ const SubmittedCheckList = ({ onShowForms }: ChecklistCardProps) => {
           </Button>
         </div>
       </CardContent>
-      <CardContent className='mt-3'>
-        <CustomCheckList listTitle='Client Intake Forms' tenantDocuments={documents} />
+      {/* <CardContent className='mt-3'>
+        <CustomCheckList listTitle='Client Intake Forms' tenantDocuments={documents} menu={renderMenu} />
       </CardContent>
       <CardContent className='mt-3'>
-        <CustomCheckList listTitle='Client Consistent Form' tenantDocuments={documents} />
+        <CustomCheckList listTitle='Client Consistent Form' tenantDocuments={documents} menu={renderMenu} />
       </CardContent>
       <CardContent className='mt-3'>
-        <CustomCheckList listTitle='Miscellaneous Forms' tenantDocuments={documents} />
-      </CardContent>
+        <CustomCheckList listTitle='Miscellaneous Forms' tenantDocuments={documents} menu={renderMenu} />
+      </CardContent> */}
     </Card>
   )
 }

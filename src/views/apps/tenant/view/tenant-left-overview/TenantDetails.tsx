@@ -21,6 +21,7 @@ import { CircularProgress } from '@mui/material'
 import ProfileAvatar from '@/@core/components/mui/ProfileAvatar'
 import CustomAlert from '@/@core/components/mui/Alter'
 import api from '@/utils/api'
+import { set } from 'date-fns'
 
 const TenantDetails = ({ tenantData }: any) => {
   const { id } = useParams()
@@ -28,11 +29,15 @@ const TenantDetails = ({ tenantData }: any) => {
   const [fileUrl, setFileUrl] = useState<string>('')
   const [loading, setLoading] = useState<boolean>(true)
   const [refreshTrigger, setRefreshTrigger] = useState<number>(0)
+  const [localTenantData, setLocalTenantData] = useState<any>(tenantData)
+  const [editCompleted, setEditCompleted] = useState<boolean>(false)
   const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
   const token = authUser?.backendAccessToken
   const [alertOpen, setAlertOpen] = useState(false)
   const [alertProps, setAlertProps] = useState({ message: '', severity: 'info' })
   const router = useRouter()
+
+  console.log('Tenant Data', tenantData)
 
   // Vars
   const buttonProps = (
@@ -54,6 +59,8 @@ const TenantDetails = ({ tenantData }: any) => {
     }
   }
 
+  console.log('IMG URL', fileUrl)
+
   // Fetch tenant data
   useEffect(() => {
     const fetchTenantData = async () => {
@@ -65,14 +72,16 @@ const TenantDetails = ({ tenantData }: any) => {
         const data = response.data
         console.log('DATATATATATAT', data)
         // setTenantData(data)
+        setLocalTenantData(data)
 
-        const admin = tenantData?.users?.find((user: any) => user.role.title === 'Tenant Admin')
+        const admin = data?.users?.find((user: any) => user.role.title === 'Tenant Admin')
         console.log('ADMIN', admin)
 
         if (admin?.userName) {
           setAdminUserName(admin.userName)
         }
 
+        console.log('TENANT ADMIN IMG URL: ', admin?.profileImageUrl)
         // Update image URL if available
         if (admin?.profileImageUrl) {
           updateImageUrl(admin.profileImageUrl) // Assuming updateImageUrl is defined elsewhere
@@ -105,7 +114,24 @@ const TenantDetails = ({ tenantData }: any) => {
     }
 
     fetchTenantData()
-  }, [id, token, router]) // Add router to dependencies
+  }, [id, token, router, refreshTrigger]) // Add router to dependencies
+
+  const handleEditSuccess = async (updatedData: any) => {
+    // try {
+    //   const response = await api.get(`/tenant/${id}`)
+    //   setLocalTenantData(response.data)
+    // } catch (error) {
+    //   console.error('Error updating tenant data:', error)
+    // }
+    setLocalTenantData((prev: any) => ({ ...prev, ...updatedData }))
+    setEditCompleted(true)
+  }
+
+  useEffect(() => {
+    if (editCompleted) {
+      setEditCompleted(false) // Reset the flag after updating
+    }
+  }, [editCompleted])
 
   const handleImageChange = async (file: File) => {
     try {
@@ -113,7 +139,13 @@ const TenantDetails = ({ tenantData }: any) => {
       const formData = new FormData()
       formData.append('image', file)
 
-      const response = await api.post(`/user/${tenantData?.users[0]?.id}/profile-image`, formData, {
+      console.log('Before finding admin')
+
+      const admin = tenantData?.users?.find((user: any) => user.role.title === 'Tenant Admin')
+
+      console.log('Tenant Admin', admin)
+
+      const response = await api.post(`/user/${admin.id}/profile-image`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
@@ -122,6 +154,8 @@ const TenantDetails = ({ tenantData }: any) => {
       if (response.data?.profileImageUrl) {
         // Update the image URL immediately
         updateImageUrl(response.data.profileImageUrl)
+
+        console.log('Image data updated successfully')
 
         // Trigger a refresh of tenant data
         setRefreshTrigger(prev => prev + 1)
@@ -198,31 +232,31 @@ const TenantDetails = ({ tenantData }: any) => {
             <div className='flex flex-col gap-2'>
               <div className='flex items-center flex-wrap gap-x-1.5'>
                 <Typography variant='h6'>Tenant Name:</Typography>
-                <Typography>{tenantData.companyName}</Typography>
+                <Typography>{localTenantData.companyName}</Typography>
               </div>
               <div className='flex items-center flex-wrap gap-x-1.5'>
                 <Typography variant='h6'>Billing Email:</Typography>
-                <Typography>{tenantData.billingEmail}</Typography>
+                <Typography>{localTenantData.billingEmail}</Typography>
               </div>
               <div className='flex items-center flex-wrap gap-x-1.5'>
                 <Typography variant='h6'>Status</Typography>
-                <Typography color='text.primary'>{tenantData.status}</Typography>
+                <Typography color='text.primary'>{localTenantData.status}</Typography>
               </div>
               <div className='flex items-center flex-wrap gap-x-1.5'>
                 <Typography variant='h6'>Tax ID:</Typography>
-                <Typography color='text.primary'>{tenantData.taxonomyNumber}</Typography>
+                <Typography color='text.primary'>{localTenantData.taxonomyNumber}</Typography>
               </div>
               <div className='flex items-center flex-wrap gap-x-1.5'>
                 <Typography variant='h6'>Contact:</Typography>
-                <Typography color='text.primary'>{tenantData.contactNumber}</Typography>
+                <Typography color='text.primary'>{localTenantData.contactNumber}</Typography>
               </div>
               <div className='flex items-center flex-wrap gap-x-1.5'>
                 <Typography variant='h6'>FAX:</Typography>
-                <Typography color='text.primary'>{tenantData.faxNumber}</Typography>
+                <Typography color='text.primary'>{localTenantData.faxNumber}</Typography>
               </div>
               <div className='flex items-center flex-wrap gap-x-1.5'>
                 <Typography variant='h6'>Address:</Typography>
-                <Typography color='text.primary'>{tenantData.address}</Typography>
+                <Typography color='text.primary'>{localTenantData.address}</Typography>
               </div>
             </div>
           </div>
@@ -231,7 +265,7 @@ const TenantDetails = ({ tenantData }: any) => {
               element={Button}
               elementProps={buttonProps('Edit', 'secondary', 'contained', '#4B0082')}
               dialog={EditTenantInfo}
-              dialogProps={{ data: tenantData }}
+              dialogProps={{ data: localTenantData, onSuccess: handleEditSuccess }}
             />
             <OpenDialogOnElementClick
               element={Button}

@@ -21,11 +21,11 @@ const Forms = () => {
         <InfoCard />
       </Grid>
       <Grid size={{ xs: 12, sm: 6, md: 8 }}>
-        {showChecklist ? (
+        {/* {showChecklist ? (
           <SubmittedCheckList onShowForms={handleShowForms} />
-        ) : (
-          <SubmittedFormCard onShowChecklist={handleShowChecklist} />
-        )}
+        ) : ( */}
+        <SubmittedFormCard onShowChecklist={handleShowChecklist} />
+        {/* )} */}
       </Grid>
     </Grid>
   )

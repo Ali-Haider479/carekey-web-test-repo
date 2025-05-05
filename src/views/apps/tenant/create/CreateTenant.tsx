@@ -76,6 +76,13 @@ const CreateTenant = (props: Props) => {
   const emailAddress = watch('emailAddress')
   const billingEmail = watch('billingEmail')
 
+  const localDate = new Date()
+  localDate.setHours(0, 0, 0, 0)
+  console.log('Local time ------>> ', localDate.toISOString())
+  const IsoString = new Date(localDate).toISOString()
+
+  console.log('ISO STRING WRAPPED IN NEW DTE FUNCTION ------>> ', IsoString)
+
   const handleClickShowPassword = () => {
     setShowPassword(!showPassword)
   }
@@ -128,6 +135,8 @@ const CreateTenant = (props: Props) => {
   //   return isValid
   // }
 
+  // console.log('Current Date ----->> ', new Date().toISOString())
+
   const onSubmit = async (data: any) => {
     const tenantPayload = {
       firstName: data.firstName,
@@ -176,12 +185,22 @@ const CreateTenant = (props: Props) => {
       }
       const response = await api.post(`/tenant`, tenantPayload)
       console.log('RESPONSE TENANT', response)
+
+      const localDate = new Date()
+      localDate.setHours(0, 0, 0, 0)
+      console.log('Local time ------>> ', localDate.toISOString())
+      const IsoString = new Date(localDate.toISOString())
+      const localTime = localDate.toISOString().split('T')[1].split('.')[0]
+
       const payload = {
-        startDate: new Date(),
+        startDate: IsoString,
+        startTime: localTime,
         endDate: null,
+        endTime: null,
         tenantId: response?.data?.id,
         numberOfWeeks: 1
       }
+      console.log('PAY PERIOD PAYLOAD ----->> ', payload)
       const payperiod = await api.post(`/pay-period`, payload)
       console.log('Payperiod res', payperiod)
       router.replace(`/en/apps/accounts/tenant-list`)
@@ -322,6 +341,7 @@ const CreateTenant = (props: Props) => {
                     type={'text'}
                     error={errors.address}
                     control={control}
+                    maxLength={60}
                   />
                 </Grid>
                 <Grid size={{ xs: 12, md: 4 }}>

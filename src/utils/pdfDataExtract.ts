@@ -130,10 +130,10 @@ function parseHeaderInformation(lines: string[]): ServiceAgreementHeader {
     caseManager: ''
   }
 
-  // Extract provider ID
+  // Extract Provider ID
   const providerIDLine = lines.find(line => line.includes('Provider ID'))
   if (providerIDLine) {
-    const match = providerIDLine.match(/Provider ID\s+(\d+)/)
+    const match = providerIDLine.match(/Provider ID\s+([A-Za-z0-9]+)/)
     if (match) header.providerID = match[1]
   }
 
@@ -168,7 +168,7 @@ function parseHeaderInformation(lines: string[]): ServiceAgreementHeader {
   // Extract diagnosis code
   const diagnosisLine = lines.find(line => line.includes('ICD-10 DIAGNOSIS CODE:'))
   if (diagnosisLine) {
-    const match = diagnosisLine.match(/ICD-10 DIAGNOSIS CODE:\s+([A-Z0-9]+)/)
+    const match = diagnosisLine.match(/ICD-10 DIAGNOSIS CODE:\s+([A-Z]\d{1,2}(?:\.?\d)?)/)
     if (match) header.diagnosisCode = match[1]
   }
 
@@ -210,7 +210,7 @@ function parseServiceItems(lines: string[]): ServiceItem[] {
       headerIndex
     ) + 1
 
-  console.log('Starting service item parsing at index:', startIndex)
+  console.log('Extracted Starting service item parsing at index:', startIndex)
 
   // Process lines after the header
   for (let i = startIndex; i < lines.length; i++) {
@@ -224,7 +224,7 @@ function parseServiceItems(lines: string[]): ServiceItem[] {
     const serviceLineMatch = line.match(/^(\d+)\s+(APPROVED|DENIED)\s+([A-Z0-9]+)(?:\s+([A-Z0-9]*))?\s+(.+)$/i)
 
     if (serviceLineMatch) {
-      console.log('Found service item match:', serviceLineMatch)
+      console.log('Extracted Found service item match:', serviceLineMatch)
 
       const lineNumber = serviceLineMatch[1]
       const status = serviceLineMatch[2]

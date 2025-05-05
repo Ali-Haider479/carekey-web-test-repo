@@ -26,7 +26,7 @@ import api from '@/utils/api'
 type Props = {
   listTitle?: string
   tenantDocuments: any
-  loading?: any
+  loading: any
   onDocumentDeleted?: any
 }
 

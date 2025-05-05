@@ -68,10 +68,13 @@ interface FormErrors {
   [key: string]: string
 }
 
-const UserManagementList = () => {
+interface UserManagementListProps {
+  usersData: UserManagement[]
+}
+
+const UserManagementList = ({ usersData }: UserManagementListProps) => {
   const [search, setSearch] = useState('')
   const [rolesData, setRolesData] = useState<Role[]>([])
-  const [usersData, setUsersData] = useState<any>([])
   const [permissionData, setPermissionData] = useState<any>([])
   const [isModalShow, setIsModalShow] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -91,18 +94,21 @@ const UserManagementList = () => {
 
   const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
 
+  const tenantId = authUser?.tenant?.id
+  console.log('tenantId', tenantId)
+
   useEffect(() => {
     fetchData()
   }, [])
 
   const fetchData = async () => {
     try {
-      const userData = await api.get(`/user`)
+      const userData = await api.get(`/user/tenant/${tenantId}`)
       const roleData = await api.get(`/role`)
       const permission = await api.get(`/permission`)
       const roles = roleData.data.filter((role: any) => role.id !== 1)
       const users = userData.data.filter((user: any) => user.role?.title !== 'Super Admin')
-      setUsersData(users)
+      // setUsersData(users)
       setRolesData(roles)
       setPermissionData(permission.data)
     } catch (error) {
@@ -318,7 +324,7 @@ const UserManagementList = () => {
 
         return (
           <Grid key={`privileges-${params.id}`} className='flex flex-row gap-2 mt-2'>
-            {firstTwoPrivileges.map((privilege: string, index: number) => (
+            {firstTwoPrivileges?.map((privilege: string, index: number) => (
               <div
                 key={`privilege-${index}-${privilege}`}
                 className='px-1 border border-[#666CFF] border-opacity-[50%] rounded-sm'
@@ -467,7 +473,6 @@ const UserManagementList = () => {
               columns={columns}
               data={usersData}
               keyExtractor={user => user.id.toString()}
-              enableRowSelect={false}
               enablePagination
               pageSize={5}
               stickyHeader

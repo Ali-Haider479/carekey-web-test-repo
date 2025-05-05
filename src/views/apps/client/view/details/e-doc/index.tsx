@@ -9,7 +9,7 @@ import SentFilesTab from './SentFilesTab'
 import RecievedFilesTab from './RecievedFilesTab'
 import TabPanel from '@mui/lab/TabPanel'
 import TabContext from '@mui/lab/TabContext'
-import { PDFDocument } from 'pdf-lib'
+import { PDFDocument, PDFTextField, PDFRadioGroup, PDFCheckBox, PDFDropdown, PDFOptionList, PDFButton } from 'pdf-lib'
 import axios from 'axios'
 import DialogCloseButton from '@/components/dialogs/DialogCloseButton'
 import { FormProvider, useForm } from 'react-hook-form'
@@ -190,11 +190,25 @@ const E_Document = () => {
   const [tenantDocuments, setTenantDocuments] = useState<any>([])
   const [clientDocuments, setClientDocuments] = useState<any>([])
   const [pdfFields, setPdfFields] = useState<PdfField[]>([])
+  const [clientData, setClientData] = useState<any>(null)
   const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
   const [alertOpen, setAlertOpen] = useState(false)
   const [alertProps, setAlertProps] = useState<any>()
   const { id } = useParams()
 
+  useEffect(() => {
+    fetchData()
+  }, [])
+
+  const fetchData = async () => {
+    try {
+      const response = await api.get(`/client/detail/${id}`)
+      console.log('CLIENT RES', response.data)
+      setClientData(response.data)
+    } catch (error) {
+      console.error('Error fetching data', error)
+    }
+  }
   // Handle tab change
   const handleTabChange = (_event: React.SyntheticEvent, newValue: string) => {
     setActiveTab(newValue)
@@ -243,6 +257,7 @@ const E_Document = () => {
   }, [])
 
   // Load and extract PDF fields
+
   const GetPrePopulatedPdf = async (key: any) => {
     try {
       setLoading(true)
@@ -253,22 +268,133 @@ const E_Document = () => {
       const pdfDoc = await PDFDocument.load(existingPdf)
       const form = pdfDoc.getForm()
       const fields = form.getFields()
-      const extractedFields: PdfField[] = fields.map(field => ({
-        name: field.getName(),
-        type: field.constructor.name
-      }))
+
+      const extractedFields: PdfField[] = fields.map(field => {
+        let type = 'unknown'
+        if (field instanceof PDFTextField) {
+          type = 'PDFTextField'
+        } else if (field instanceof PDFRadioGroup) {
+          type = 'PDFRadioGroup'
+        } else if (field instanceof PDFCheckBox) {
+          type = 'PDFCheckBox'
+        } else if (field instanceof PDFDropdown) {
+          type = 'PDFDropdown'
+        } else if (field instanceof PDFOptionList) {
+          type = 'PDFOptionList'
+        } else if (field instanceof PDFButton) {
+          type = 'PDFButton'
+        }
+        return {
+          name: field.getName(),
+          type
+        }
+      })
+
       setPdfFields(extractedFields)
 
-      // Pre-populate some fields (example)
+      // Pre-populate fields with client data
       const nameField = form.getTextField('4recip-info-name 2')
       const pmiField = form.getTextField('7recip-info-PMI 2')
       const genderField = form.getRadioGroup('5recip-info-gender')
       const dobField = form.getTextField('6recip-info-DOB 2')
+      const phoneField = form.getTextField('8recip-info-phone 2')
+      const addressField = form.getTextField('9recip-info-address 2')
+      const cityField = form.getTextField('10recip-info-city 2')
+      const stateField = form.getTextField('12recip-info-state 2')
+      const zipField = form.getTextField('13recip-info-zip 2')
+      const primaryContactField = form.getTextField('14recip-info-primary-contact 2')
+      const primaryContactPhoneField = form.getTextField('15recip-info-primary-contact-phone 2')
+      const physicianNameField = form.getTextField('30physician-name 2')
+      const physicianClinicField = form.getTextField('31physician-clinic-name 2')
+      const physicianPhoneField = form.getTextField('32physician-phone-number 2')
+      const physicianAddressField = form.getTextField('33physician-street-address 2')
+      const physicianCityField = form.getTextField('34physician-city 2')
+      const physicianStateField = form.getTextField('35physician-state 2')
+      const physicianZipField = form.getTextField('36physician-zip 2')
 
-      nameField.setText('John Doe')
-      pmiField.setText('PMI-3010')
-      dobField.setText('26 Feb,2025')
-      genderField.select('Male')
+      // Set client name
+      nameField.setText(`${clientData?.firstName} ${clientData?.lastName}`)
+      nameField.setFontSize(8)
+      // nameField.setTextColor(rgb(0, 0, 0))
+
+      // Set PMI number
+      pmiField.setText(clientData?.pmiNumber || 'PMI-3010')
+      pmiField.setFontSize(8)
+      // pmiField.setTextColor(rgb(0, 0, 0))
+
+      // Set date of birth
+      dobField.setText(clientData?.dateOfBirth || '26 Feb,2025')
+      dobField.setFontSize(8)
+      // dobField.setTextColor(rgb(0, 0, 0))
+
+      // Set gender
+      const genderValue = clientData?.gender?.toLowerCase() === 'female' ? 'Female' : 'Male'
+      genderField.select(genderValue)
+
+      // Set phone number
+      phoneField.setText(clientData?.primaryPhoneNumber || '')
+      phoneField.setFontSize(8)
+      // phoneField.setTextColor(rgb(0, 0, 0))
+
+      // Set address (prefer Residential address)
+      const residentialAddress = clientData?.addresses?.find(
+        (addr: any) => addr.address.addressType === 'Residential'
+      )?.address
+      addressField.setText(residentialAddress?.address || clientData?.addresses?.[0]?.address?.address || '')
+      addressField.setFontSize(8)
+      // addressField.setTextColor(rgb(0, 0, 0))
+
+      cityField.setText(residentialAddress?.city || clientData?.addresses?.[0]?.address?.city || '')
+      cityField.setFontSize(8)
+      // cityField.setTextColor(rgb(0, 0, 0))
+
+      stateField.setText(residentialAddress?.state || clientData?.addresses?.[0]?.address?.state || '')
+      stateField.setFontSize(8)
+      // stateField.setTextColor(rgb(0, 0, 0))
+
+      zipField.setText(residentialAddress?.zipCode || clientData?.addresses?.[0]?.address?.zipCode || '')
+      zipField.setFontSize(8)
+      // zipField.setTextColor(rgb(0, 0, 0))
+
+      // Set primary contact (emergency contact)
+      primaryContactField.setText(clientData?.emergencyContactName || '')
+      primaryContactField.setFontSize(8)
+      // primaryContactField.setTextColor(rgb(0, 0, 0))
+
+      primaryContactPhoneField.setText(clientData?.emergencyContactNumber || '')
+      primaryContactPhoneField.setFontSize(8)
+      // primaryContactPhoneField.setTextColor(rgb(0, 0, 0))
+
+      // Set physician details
+      physicianNameField.setText(clientData?.clientPhysician?.name || '')
+      physicianNameField.setFontSize(8)
+      // physicianNameField.setTextColor(rgb(0, 0, 0))
+
+      physicianClinicField.setText(clientData?.clientPhysician?.clinicName || '')
+      physicianClinicField.setFontSize(8)
+      // physicianClinicField.setTextColor(rgb(0, 0, 0))
+
+      physicianPhoneField.setText(
+        clientData?.clientPhysician?.phoneNumber || clientData?.clientPhysician?.primaryPhoneNumber || ''
+      )
+      physicianPhoneField.setFontSize(8)
+      // physicianPhoneField.setTextColor(rgb(0, 0, 0))
+
+      physicianAddressField.setText(clientData?.clientPhysician?.address || '')
+      physicianAddressField.setFontSize(8)
+      // physicianAddressField.setTextColor(rgb(0, 0, 0))
+
+      physicianCityField.setText(clientData?.clientPhysician?.city || '')
+      physicianCityField.setFontSize(8)
+      // physicianCityField.setTextColor(rgb(0, 0, 0))
+
+      physicianStateField.setText(clientData?.clientPhysician?.state || '')
+      physicianStateField.setFontSize(8)
+      // physicianStateField.setTextColor(rgb(0, 0, 0))
+
+      physicianZipField.setText(clientData?.clientPhysician?.zipCode || '')
+      physicianZipField.setFontSize(8)
+      // physicianZipField.setTextColor(rgb(0, 0, 0))
 
       const pdfBytes = await pdfDoc.save()
       const blob = new Blob([pdfBytes], { type: 'application/pdf' })
@@ -288,12 +414,16 @@ const E_Document = () => {
       console.log('Form Data:', data)
       const pdfDoc = await PDFDocument.load(pdfObj)
       const form = pdfDoc.getForm()
+      console.log('EDOCS EXTRACTED FIELDS DURING SAVE', pdfFields)
 
       // Update PDF fields based on form data
       pdfFields.forEach(field => {
         try {
           if (field.type === 'PDFTextField' && data[field.name]) {
-            form.getTextField(field.name).setText(data[field.name])
+            const textField = form.getTextField(field.name)
+            textField.setText(data[field.name])
+            textField.setFontSize(8)
+            // textField.setTextColor(rgb(0, 0, 0))
           } else if (field.type === 'PDFRadioGroup' && data[field.name]) {
             form.getRadioGroup(field.name).select(data[field.name])
           } else if (field.type === 'PDFCheckBox' && data[field.name]) {
@@ -388,15 +518,110 @@ const E_Document = () => {
   })
 
   // Render form field
+  // const renderFormField = (field: PdfField) => {
+  //   console.log("FIELDS--------",field);
+  //   const label = fieldLabels[field.name] || field.name
+  //   const error = errors[field.name]
+
+  //   if (field.type === 'PDFTextField') {
+  //     let maxLength: number | undefined
+  //     // if (field.name.includes('state') || field.name.includes('State')) {
+  //     //   maxLength = 2
+  //     // }
+  //     return (
+  //       <Grid
+  //         size={{ xs: 12, sm: field.name.includes('state') || field.name.includes('zip') ? 3 : 6 }}
+  //         key={field.name}
+  //       >
+  //         <CustomTextField
+  //           label={label}
+  //           placeHolder={label}
+  //           name={field.name}
+  //           defaultValue=''
+  //           type='text'
+  //           maxLength={maxLength}
+  //           error={error}
+  //           control={control}
+  //           isRequired={true}
+  //         />
+  //       </Grid>
+  //     )
+  //   } else if (field.type === 'PDFRadioGroup' || field.name.includes('major-program')) {
+  //     const options = fieldOptions[field.name] || fieldOptions['major-program'] || []
+  //     return (
+  //       <Grid size={{ xs: 12, sm: 6 }} key={field.name}>
+  //         <CustomDropDown
+  //           name={field.name}
+  //           control={control}
+  //           error={error}
+  //           label={label}
+  //           optionList={options}
+  //           defaultValue=''
+  //           isRequired={false}
+  //         />
+  //       </Grid>
+  //     )
+  //   } else if (field.type === 'PDFCheckBox') {
+  //     // Checkboxes are handled via dropdown for major-program
+  //     return null // Skip individual checkboxes as they are grouped in dropdown
+  //   }
+  //   return null
+  // }
+
   const renderFormField = (field: PdfField) => {
+    console.log('FIELDS--------', field)
     const label = fieldLabels[field.name] || field.name
     const error = errors[field.name]
 
+    // Determine default value based on clientData
+    let defaultValue = ''
+    const residentialAddress = clientData?.addresses?.find(
+      (addr: any) => addr.address.addressType === 'Residential'
+    )?.address
+
+    if (field.name === '4recip-info-name 2') {
+      defaultValue = `${clientData?.firstName || ''} ${clientData?.lastName || ''}`
+    } else if (field.name === '7recip-info-PMI 2') {
+      defaultValue = clientData?.pmiNumber || 'PMI-3010'
+    } else if (field.name === '6recip-info-DOB 2') {
+      defaultValue = clientData?.dateOfBirth || '26 Feb,2025'
+    } else if (field.name === '8recip-info-phone 2') {
+      defaultValue = clientData?.primaryPhoneNumber || ''
+    } else if (field.name === '9recip-info-address 2') {
+      defaultValue = residentialAddress?.address || clientData?.addresses?.[0]?.address?.address || ''
+    } else if (field.name === '10recip-info-city 2') {
+      defaultValue = residentialAddress?.city || clientData?.addresses?.[0]?.address?.city || ''
+    } else if (field.name === '12recip-info-state 2') {
+      defaultValue = residentialAddress?.state || clientData?.addresses?.[0]?.address?.state || ''
+    } else if (field.name === '13recip-info-zip 2') {
+      defaultValue = residentialAddress?.zipCode || clientData?.addresses?.[0]?.address?.zipCode || ''
+    } else if (field.name === '14recip-info-primary-contact 2') {
+      defaultValue = clientData?.emergencyContactName || ''
+    } else if (field.name === '15recip-info-primary-contact-phone 2') {
+      defaultValue = clientData?.emergencyContactNumber || ''
+    } else if (field.name === '30physician-name 2') {
+      defaultValue = clientData?.clientPhysician?.name || ''
+    } else if (field.name === '31physician-clinic-name 2') {
+      defaultValue = clientData?.clientPhysician?.clinicName || ''
+    } else if (field.name === '32physician-phone-number 2') {
+      defaultValue = clientData?.clientPhysician?.phoneNumber || clientData?.clientPhysician?.primaryPhoneNumber || ''
+    } else if (field.name === '33physician-street-address 2') {
+      defaultValue = clientData?.clientPhysician?.address || ''
+    } else if (field.name === '34physician-city 2') {
+      defaultValue = clientData?.clientPhysician?.city || ''
+    } else if (field.name === '35physician-state 2') {
+      defaultValue = clientData?.clientPhysician?.state || ''
+    } else if (field.name === '36physician-zip 2') {
+      defaultValue = clientData?.clientPhysician?.zipCode || ''
+    } else if (field.name === '5recip-info-gender') {
+      defaultValue = clientData?.gender?.toLowerCase() === 'female' ? 'Female' : 'Male'
+    }
+
     if (field.type === 'PDFTextField') {
       let maxLength: number | undefined
-      // if (field.name.includes('state') || field.name.includes('State')) {
-      //   maxLength = 2
-      // }
+      if (field.name.includes('state') || field.name.includes('State')) {
+        maxLength = 2
+      }
       return (
         <Grid
           size={{ xs: 12, sm: field.name.includes('state') || field.name.includes('zip') ? 3 : 6 }}
@@ -406,7 +631,7 @@ const E_Document = () => {
             label={label}
             placeHolder={label}
             name={field.name}
-            defaultValue=''
+            defaultValue={defaultValue}
             type='text'
             maxLength={maxLength}
             error={error}
@@ -425,7 +650,7 @@ const E_Document = () => {
             error={error}
             label={label}
             optionList={options}
-            defaultValue=''
+            defaultValue={defaultValue}
             isRequired={false}
           />
         </Grid>
