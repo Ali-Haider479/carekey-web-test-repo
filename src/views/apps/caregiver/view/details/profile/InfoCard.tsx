@@ -1,9 +1,21 @@
 'use client'
 import React, { useEffect, useState } from 'react'
-import { Avatar, Button, Card, Dialog, Grid2 as Grid, IconButton, Typography } from '@mui/material'
+import {
+  Avatar,
+  Button,
+  Card,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  Grid2 as Grid,
+  IconButton,
+  Typography
+} from '@mui/material'
 import axios from 'axios'
 import { useParams } from 'next/navigation'
-import { Add } from '@mui/icons-material'
+import { Add, Remove } from '@mui/icons-material'
 import CustomDropDown from '@/@core/components/custom-inputs/CustomDropDown'
 import ControlledDatePicker from '@/@core/components/custom-inputs/ControledDatePicker'
 import ControlledTextArea from '@/@core/components/custom-inputs/ControlledTextArea'
@@ -27,6 +39,9 @@ const InfoCard = () => {
   const [currentUser, setCurrentUser] = useState<any>(null)
   const [clientList, setClientList] = useState<any>()
   const [isModalShow, setIsModalShow] = useState(false)
+  const [selectedUserId, setSelectedUserId] = useState<number | null>(null)
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false)
+
   const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
   const [formData, setFormData] = useState<FormItems>()
   const methods = useForm<FormItems>({
@@ -71,7 +86,6 @@ const InfoCard = () => {
   const fetchAssignClient = async () => {
     try {
       const { data: fetchedClient } = await api.get(`/user/clientUsers/${currentUser?.id}`)
-      console.log('fetched client', { data: fetchedClient })
       const fetchedClientsWithPhotos = await Promise.all(
         fetchedClient.map(async (item: any) => {
           const profileImgUrl = item?.client?.profileImgUrl
@@ -151,11 +165,12 @@ const InfoCard = () => {
       caregiverId: id
     }
 
-    const title = "New Client Assigned";
+    const title = 'New Client Assigned'
     const body = `You have been assigned to ${assignedClient.firstName} ${assignedClient.lastName} starting ${new Date(
       data.assignmentDate
-    ).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })} for ${data.scheduleHours
-      } hours. Check your details.`;
+    ).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })} for ${
+      data.scheduleHours
+    } hours. Check your details.`
 
     await api.post(`/user/createClientUser`, assignClientBody)
     await api.post(`/account-history/log`, accountHistoryPayLoad)
@@ -171,150 +186,200 @@ const InfoCard = () => {
   }
 
   console.log('Caregiver info card, profile data', data)
+  const handleDeleteConfirm = async () => {
+    if (selectedUserId) {
+      try {
+        await api.post(`/user/unassign-clientUsers/${selectedUserId}`)
+      } catch (error) {
+        console.error('Error deleting document:', error)
+      }
+    }
+    fetchAssignClient()
+    setOpenDeleteDialog(false)
+    setSelectedUserId(null)
+  }
+
+  const handleDeleteCancel = () => {
+    setOpenDeleteDialog(false)
+    setSelectedUserId(null)
+  }
 
   return (
-    <FormProvider {...methods}>
-      <Card className='max-w-md ml-0 mr-4 shadow-md rounded-lg p-6'>
-        <div className='mb-4'>
-          <div className='flex justify-between text-sm text-gray-400 mb-2'>
-            <Typography>Role:</Typography>
-            <Typography className='text-gray-400'>
-              {data?.data?.caregiverLevel ? data?.data?.caregiverLevel : '---'}
-            </Typography>
-          </div>
-          <div className='flex justify-between text-sm text-gray-400 mb-2'>
-            <Typography>Caregiver ID:</Typography>
-            <Typography className='text-gray-400'>{id}</Typography>
-          </div>
-        </div>
-
-        {/* Assigned Caregivers */}
-        <div className='border-t pt-4'>
-          <div className='flex flex-row items-center justify-between'>
-            <Typography variant='h3' className='mt-1 text-xl font-semibold mb-2'>
-              Assigned Clients ({assignedClients?.length})
-            </Typography>
-            <IconButton
-              className='h-6 w-6 bg-[#4B0082]'
-              onClick={() => {
-                setIsModalShow(true)
-              }}
-            >
-              <Add className='text-white' />
-            </IconButton>
+    <>
+      <FormProvider {...methods}>
+        <Card className='max-w-md ml-0 mr-4 shadow-md rounded-lg p-6'>
+          <div className='mb-4'>
+            <div className='flex justify-between text-sm text-gray-400 mb-2'>
+              <Typography>Role:</Typography>
+              <Typography className='text-gray-400'>
+                {data?.data?.caregiverLevel ? data?.data?.caregiverLevel : '---'}
+              </Typography>
+            </div>
+            <div className='flex justify-between text-sm text-gray-400 mb-2'>
+              <Typography>Caregiver ID:</Typography>
+              <Typography className='text-gray-400'>{id}</Typography>
+            </div>
           </div>
 
-          <ul className=''>
-            {assignedClients?.map((data: any, index: number) => (
-              <li key={index} className='flex items-center justify-between mb-4 last:mb-0'>
-                <div className='flex items-center space-x-3'>
-                  <Avatar
-                    alt={`${data?.client?.firstName} ${data?.client?.lastName}`}
-                    src={data?.client?.profileImgUrl || data?.client?.firstName}
-                    className='w-10 h-10'
-                  />
-                  <div>
-                    <Typography className='text-sm font-medium text-gray-400'>{`${data.client.firstName} ${data.client.lastName}`}</Typography>
-                    <Typography className='text-sm text-green-600'>
-                      {data.client.service ? data.client.service : ''}
-                    </Typography>
+          {/* Assigned Caregivers */}
+          <div className='border-t pt-4'>
+            <div className='flex flex-row items-center justify-between'>
+              <Typography variant='h3' className='mt-1 text-xl font-semibold mb-2'>
+                Assigned Clients ({assignedClients?.length})
+              </Typography>
+              <IconButton
+                className='h-6 w-6 bg-[#4B0082]'
+                onClick={() => {
+                  setIsModalShow(true)
+                }}
+              >
+                <Add className='text-white' />
+              </IconButton>
+            </div>
+
+            <ul className=''>
+              {assignedClients?.map((data: any, index: number) => (
+                <li key={index} className='flex items-center justify-between mb-4 last:mb-0'>
+                  <div className='flex items-center space-x-3'>
+                    <Avatar
+                      alt={`${data?.client?.firstName} ${data?.client?.lastName}`}
+                      src={data?.client?.profileImgUrl || data?.client?.firstName}
+                      className='w-10 h-10'
+                    />
+                    <div>
+                      <Typography className='text-sm font-medium text-gray-400'>{`${data.client.firstName} ${data.client.lastName}`}</Typography>
+                      <Typography className='text-sm text-green-600'>
+                        {data.client.service ? data.client.service : ''}
+                      </Typography>
+                    </div>
                   </div>
-                </div>
-                <img
+                  <IconButton
+                    className='h-6 w-6 bg-[#4B0082]'
+                    onClick={() => {
+                      setOpenDeleteDialog(true)
+                      setSelectedUserId(data?.id)
+                    }}
+                  >
+                    <Remove className='text-white' />
+                  </IconButton>
+
+                  {/* <img
                   className='bg-[#666CFF] bg-opacity-20 h-7 border-4 border-transparent rounded-full mt-1'
                   src='/assets/svg-icons/openLink.svg'
                   alt=''
-                />
-              </li>
-            ))}
-          </ul>
-          <Dialog
-            open={isModalShow}
-            onClose={handleModalClose}
-            closeAfterTransition={false}
-            sx={{ '& .MuiDialog-paper': { overflow: 'visible' } }}
-          >
-            <DialogCloseButton onClick={() => setIsModalShow(false)} disableRipple>
-              <i className='bx-x' />
-            </DialogCloseButton>
-            <div className='flex items-center justify-center pt-[10px] pb-[5px] w-full px-5'>
-              <form onSubmit={handleSubmit(onSubmit)} autoComplete='off'>
-                <div>
-                  <h2 className='text-xl font-semibold mt-10 mb-6'>Assign Client</h2>
-                  <Grid container spacing={4}>
-                    <Grid size={{ xs: 12, sm: 4 }}>
-                      <CustomDropDown
-                        label='Select a client'
-                        optionList={
-                          clientList?.map((item: any) => {
-                            return {
-                              key: `${item?.id}-${item.firstName}`,
-                              value: item.id,
-                              optionString: `${item.firstName} ${item.lastName}`
-                            }
-                          }) || []
-                        }
-                        name={'clientId'}
+                /> */}
+                </li>
+              ))}
+            </ul>
+            <Dialog
+              open={isModalShow}
+              onClose={handleModalClose}
+              closeAfterTransition={false}
+              sx={{ '& .MuiDialog-paper': { overflow: 'visible' } }}
+            >
+              <DialogCloseButton onClick={() => setIsModalShow(false)} disableRipple>
+                <i className='bx-x' />
+              </DialogCloseButton>
+              <div className='flex items-center justify-center pt-[10px] pb-[5px] w-full px-5'>
+                <form onSubmit={handleSubmit(onSubmit)} autoComplete='off'>
+                  <div>
+                    <h2 className='text-xl font-semibold mt-10 mb-6'>Assign Client</h2>
+                    <Grid container spacing={4}>
+                      <Grid size={{ xs: 12, sm: 4 }}>
+                        <CustomDropDown
+                          label='Select a client'
+                          optionList={
+                            clientList?.map((item: any) => {
+                              return {
+                                key: `${item?.id}-${item.firstName}`,
+                                value: item.id,
+                                optionString: `${item.firstName} ${item.lastName}`
+                              }
+                            }) || []
+                          }
+                          name={'clientId'}
+                          control={control}
+                          error={errors.clientId}
+                          defaultValue={''}
+                        />
+                      </Grid>
+                      <Grid size={{ xs: 12, sm: 4 }}>
+                        <ControlledDatePicker
+                          name={'assignmentDate'}
+                          control={control}
+                          error={errors.assignmentDate}
+                          label={'Assignment Date'}
+                          defaultValue={undefined}
+                        />
+                      </Grid>
+                      <Grid size={{ xs: 12, sm: 4 }}>
+                        <ControlledDatePicker
+                          name={'unassignmentDate'}
+                          control={control}
+                          error={errors.unassignmentDate}
+                          label={'Unassignment Date'}
+                          defaultValue={undefined}
+                          isRequired={false}
+                        />
+                      </Grid>
+                      <Grid size={{ xs: 12, sm: 4 }}>
+                        <CustomTextField
+                          label={'Scheduled Hours'}
+                          placeHolder={'Scheduled Hours'}
+                          name={'scheduleHours'}
+                          defaultValue={''}
+                          type={'number'}
+                          error={errors.scheduleHours}
+                          control={control}
+                        />
+                      </Grid>
+                    </Grid>
+                    <Grid container spacing={4} sx={{ marginTop: 4 }}>
+                      <ControlledTextArea
+                        name={'assignmentNotes'}
                         control={control}
-                        error={errors.clientId}
+                        label={'Assignment Notes'}
+                        placeHolder={'Assignment Notes'}
                         defaultValue={''}
                       />
                     </Grid>
-                    <Grid size={{ xs: 12, sm: 4 }}>
-                      <ControlledDatePicker
-                        name={'assignmentDate'}
-                        control={control}
-                        error={errors.assignmentDate}
-                        label={'Assignment Date'}
-                        defaultValue={undefined}
-                      />
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 4 }}>
-                      <ControlledDatePicker
-                        name={'unassignmentDate'}
-                        control={control}
-                        error={errors.unassignmentDate}
-                        label={'Unassignment Date'}
-                        defaultValue={undefined}
-                        isRequired={false}
-                      />
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 4 }}>
-                      <CustomTextField
-                        label={'Scheduled Hours'}
-                        placeHolder={'Scheduled Hours'}
-                        name={'scheduleHours'}
-                        defaultValue={''}
-                        type={'number'}
-                        error={errors.scheduleHours}
-                        control={control}
-                      />
-                    </Grid>
-                  </Grid>
-                  <Grid container spacing={4} sx={{ marginTop: 4 }}>
-                    <ControlledTextArea
-                      name={'assignmentNotes'}
-                      control={control}
-                      label={'Assignment Notes'}
-                      placeHolder={'Assignment Notes'}
-                      defaultValue={''}
-                    />
-                  </Grid>
-                </div>
-                <div className='flex gap-4 justify-end mt-4 mb-4'>
-                  <Button variant='outlined' color='secondary' onClick={handleModalClose}>
-                    CANCEL
-                  </Button>
-                  <Button type='submit' variant='contained' className='bg-[#4B0082]'>
-                    Assign Client
-                  </Button>
-                </div>
-              </form>
-            </div>
-          </Dialog>
-        </div>
-      </Card>
-    </FormProvider>
+                  </div>
+                  <div className='flex gap-4 justify-end mt-4 mb-4'>
+                    <Button variant='outlined' color='secondary' onClick={handleModalClose}>
+                      CANCEL
+                    </Button>
+                    <Button type='submit' variant='contained' className='bg-[#4B0082]'>
+                      Assign Client
+                    </Button>
+                  </div>
+                </form>
+              </div>
+            </Dialog>
+          </div>
+        </Card>
+      </FormProvider>
+      <Dialog
+        open={openDeleteDialog}
+        onClose={handleDeleteCancel}
+        aria-labelledby='delete-dialog-title'
+        aria-describedby='delete-dialog-description'
+      >
+        <DialogTitle id='delete-dialog-title'>Confirm Unassign</DialogTitle>
+        <DialogContent>
+          <DialogContentText id='delete-dialog-description'>
+            Are you sure you want to unassign this client?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDeleteCancel} color='primary'>
+            Cancel
+          </Button>
+          <Button onClick={handleDeleteConfirm} color='error' autoFocus>
+            Unassign
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </>
   )
 }
 

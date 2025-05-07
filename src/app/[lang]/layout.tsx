@@ -12,6 +12,7 @@ import type { ChildrenType } from '@core/types'
 import type { Locale } from '@configs/i18n'
 
 // Component Imports
+import ClientWrapper from './ClientWrapper' // New client-side wrapper
 
 // HOC Imports
 import TranslationWrapper from '@/hocs/TranslationWrapper'
@@ -35,7 +36,6 @@ export const metadata = {
 
 const RootLayout = async (props: ChildrenType & { params: Promise<{ lang: Locale }> }) => {
   const params = await props.params
-
   const { children } = props
 
   // Vars
@@ -48,7 +48,7 @@ const RootLayout = async (props: ChildrenType & { params: Promise<{ lang: Locale
       <html id='__next' lang={params.lang} dir={direction} suppressHydrationWarning>
         <body className='flex is-full min-bs-full flex-auto flex-col'>
           <InitColorSchemeScript attribute='data' defaultMode={systemMode} />
-          {children}
+          <ClientWrapper>{children}</ClientWrapper>
         </body>
       </html>
     </TranslationWrapper>

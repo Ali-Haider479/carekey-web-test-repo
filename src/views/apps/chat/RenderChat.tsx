@@ -35,6 +35,7 @@ export const renderChat = (props: RenderChatType) => {
 
   return sortedChats.map(chat => {
     const contact = chatStore.contacts.find(contact => contact.chatRoomId === chat.id)
+    console.log("CONNTACT", contact);
     if (!contact) return null
     const isChatActive = chatStore.activeUser?.chatRoomId === contact.chatRoomId
 

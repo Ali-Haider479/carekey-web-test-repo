@@ -66,7 +66,6 @@ const AssignedServiceTable = () => {
       const caregivers = await api.get(`/caregivers/caregiver/${id}`)
       console.log('CAREGIVER USER ', caregivers)
       // setCurrentUser(caregivers?.data?.user)
-      console.log('url', `/user/clientUsers/${caregivers?.data?.user?.id}`)
       const clientResponse = await api.get(`/user/clientUsers/${caregivers?.data?.user?.id}`)
       const fetchedClient = clientResponse.data
 

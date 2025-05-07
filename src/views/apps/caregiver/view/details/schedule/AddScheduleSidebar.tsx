@@ -128,7 +128,19 @@ const AddEventModal = (props: AddEventSidebarType) => {
   const [values, setValues] = useState<DefaultStateType>(defaultState)
   const [alertOpen, setAlertOpen] = useState<boolean>(false)
   const [alertMessage, setAlertMessage] = useState<any>()
+  const [clientList, setClientList] = useState<[] | any>([])
+  const [serviceTypes, setServiceTypes] = useState<[] | any>([])
+  const { id } = useParams()
   const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
+
+  useEffect(() => {
+    fetchClientUsers()
+  }, [addEventSidebarOpen])
+
+  useEffect(() => {
+    fetchClientServiceType()
+  }, [values.client])
+
   const PickersComponent = forwardRef(({ ...props }: PickerProps, ref) => {
     return (
       <CustomTextField
@@ -142,7 +154,26 @@ const AddEventModal = (props: AddEventSidebarType) => {
       />
     )
   })
-  const { id } = useParams()
+
+  const fetchClientUsers = async () => {
+    try {
+      const caregiverUserId = props.data.user.id
+      const response = await api.get(`/user/clientUsers/${caregiverUserId}`)
+      setClientList(response.data)
+    } catch (error) {
+      console.error('error fetching client users: ', error)
+    }
+  }
+
+  const fetchClientServiceType = async () => {
+    try {
+      if (!values.client) return // Avoid fetching if client is not set
+      const response = await api.get(`/client/${values.client}/services`)
+      setServiceTypes(response.data)
+    } catch (error) {
+      console.error('Error fetching client service type:', error)
+    }
+  }
 
   const {
     handleSubmit,
@@ -176,6 +207,8 @@ const AddEventModal = (props: AddEventSidebarType) => {
 
   const handleModalClose = () => {
     setValues(defaultState)
+    setServiceTypes([])
+    setClientList([])
     dispatch(selectedEvent(null))
     handleAddEventSidebarToggle()
   }
@@ -209,7 +242,7 @@ const AddEventModal = (props: AddEventSidebarType) => {
     for (let i = 0; i < totalDays; i++) {
       const eventStartDate = new Date(currentDate)
       const finalStartDate = mergeDateWithTime(eventStartDate, values.startTime)
-      const finalEndDate = new Date(finalStartDate.getTime() + assignedHours * 60 * 60 * 1000)
+      const finalEndDate = new Date(finalStartDate.getTime() + assignedHours * 60 * 60 * 1000) 
 
       bulkEvents.push({
         display: 'block',
@@ -221,8 +254,8 @@ const AddEventModal = (props: AddEventSidebarType) => {
         clientId: values.client,
         serviceId: values.service,
         assignedHours: assignedHours,
-        notes: values.notes,
-        location: values.location,
+        notes: values.notes || '',
+        location: values.location || '',
         payPeriod: props?.payPeriod?.id,
         tenantId: authUser?.tenant?.id
       })
@@ -354,40 +387,6 @@ const AddEventModal = (props: AddEventSidebarType) => {
             id='event-title'
             onChange={e => setValues({ ...values, title: e.target.value })}
           />
-
-          <CustomTextField
-            select
-            fullWidth
-            className='mbe-3'
-            label='Event type'
-            value={values?.service}
-            id='service-schedule'
-            onChange={e => setValues({ ...values, service: e.target.value })}
-          >
-            {props?.serviceList.map((service: any) => (
-              <MenuItem key={service.id} value={service.id}>
-                {service.name}
-              </MenuItem>
-            ))}
-          </CustomTextField>
-
-          <CustomTextField
-            select
-            fullWidth
-            className='mbe-3'
-            label='Client'
-            value={values?.client}
-            id='client-schedule'
-            onChange={e => setValues({ ...values, client: e.target.value })}
-            disabled={props.isEdited && calendarStore.selectedEvent}
-          >
-            {props?.clientList.map((client: any) => (
-              <MenuItem key={client.id} value={client.id}>
-                {`${client.firstName} ${client.lastName}`}
-              </MenuItem>
-            ))}
-          </CustomTextField>
-
           {caregiver && (
             <CustomTextField
               fullWidth
@@ -398,6 +397,39 @@ const AddEventModal = (props: AddEventSidebarType) => {
               disabled={true}
             />
           )}
+          <CustomTextField
+            select
+            fullWidth
+            className='mbe-3'
+            label='Client'
+            value={values?.client}
+            id='client-schedule'
+            onChange={e => setValues({ ...values, client: e.target.value })}
+            disabled={props.isEdited && calendarStore.selectedEvent}
+          >
+            {clientList.map((client: any) => (
+              <MenuItem key={client.client.id} value={client.client.id}>
+                {`${client.client.firstName} ${client.client.lastName}`}
+              </MenuItem>
+            ))}
+          </CustomTextField>
+
+          <CustomTextField
+            select
+            fullWidth
+            className='mbe-3'
+            label='Event type'
+            value={values?.service}
+            id='service-schedule'
+            onChange={e => setValues({ ...values, service: e.target.value })}
+          >
+            {serviceTypes.map((service: any) => (
+              <MenuItem key={service.id} value={service.id}>
+                {service.name}
+              </MenuItem>
+            ))}
+          </CustomTextField>
+
           <Grid container spacing={3}>
             <Grid size={{ xs: 12, md: 6 }}>
               <AppReactDatepicker

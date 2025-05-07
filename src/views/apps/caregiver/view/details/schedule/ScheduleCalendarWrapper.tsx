@@ -43,9 +43,9 @@ const AppCalendar = () => {
   // States
   const [calendarApi, setCalendarApi] = useState<null | any>(null)
   const [currentCaregiverData, setCurrentCaregiverData] = useState<any>()
-  const [caregiverList, setCaregiverList] = useState<[] | any>([])
-  const [clientList, setClientList] = useState<[] | any>([])
-  const [serviceList, setServiceList] = useState<[] | any>([])
+  // const [caregiverList, setCaregiverList] = useState<[] | any>([])
+  // const [clientList, setClientList] = useState<[] | any>([])
+  // const [serviceList, setServiceList] = useState<[] | any>([])
   const [leftSidebarOpen, setLeftSidebarOpen] = useState<boolean>(false)
   const [addEventSidebarOpen, setAddEventSidebarOpen] = useState<boolean>(false)
   const [isEdited, setIsEdited] = useState<boolean>(false)
@@ -71,17 +71,14 @@ const AppCalendar = () => {
     ;(async () => {
       try {
         const response = await Promise.all([
-          api.get(`/caregivers`),
-          api.get(`/client`),
-          api.get(`/service`),
-          api.get(`/pay-period/tenant/${authUser?.tenant?.id}`),
-          api.get(`/caregivers/${id}`)
+          api.get(`/caregivers/${id}`),
+          // api.get(`/user/clientUsers/${id}`),
+          api.get(`/pay-period/tenant/${authUser?.tenant?.id}`)
         ])
-        setCaregiverList(response[0].data)
-        setClientList(response[1].data)
-        setServiceList(response[2].data)
-        setPayPeriod(response[3].data)
-        setCurrentCaregiverData(response[4].data)
+        // setCaregiverList(response[0].data)
+        setCurrentCaregiverData(response[0].data)
+        // setClientList(response[1].data)
+        setPayPeriod(response[1].data)
       } catch (error) {
         console.log('ERROR', error)
       }
@@ -173,9 +170,9 @@ const AppCalendar = () => {
         }}
         addEventSidebarOpen={addEventSidebarOpen}
         handleAddEventSidebarToggle={handleAddEventSidebarToggle}
-        caregiverList={caregiverList}
-        clientList={clientList}
-        serviceList={serviceList}
+        // caregiverList={caregiverList}
+        // clientList={clientList}
+        // serviceList={serviceList}
         setIsEditedOff={isEditedOff}
         isEdited={isEdited}
         handleAddEvent={handleAddEvent}

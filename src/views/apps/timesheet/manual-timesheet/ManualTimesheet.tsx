@@ -24,7 +24,7 @@ import { setHours, setMinutes, setSeconds } from 'date-fns'
 
 interface DefaultStateType {
   currentWeek: string
-  dateOfService: Date | null
+  dateOfService: any
   caregiver: string | undefined
   client: string
   service: string
@@ -33,8 +33,8 @@ interface DefaultStateType {
   serviceName: string
   payPeriodHistoryId: number
   signatureId: number
-  clockIn: Date | null
-  clockOut: Date | null
+  clockIn: any
+  clockOut: any
   checkedActivityId: number
   reason: string
 }
@@ -210,11 +210,23 @@ const ManualTimesheet = ({ caregiverList, payPeriod }: any) => {
       // Make the API call only if client does not exist in taken or pending
       const signResponse: any = await api.post(`/signatures`, payLoad)
       if (checkedActivityRes.status === 201) {
+        // Extract the date part from dateOfService
+        const serviceDate = new Date(values.dateOfService)
+
+        // Create new Date objects for clockIn and clockOut
+        let newClockIn = new Date(values.clockIn)
+        let newClockOut = new Date(values.clockOut)
+
+        // Set the date part of clockIn and clockOut to match dateOfService
+        // while keeping their original time values
+        newClockIn.setFullYear(serviceDate.getFullYear(), serviceDate.getMonth(), serviceDate.getDate())
+        newClockOut.setFullYear(serviceDate.getFullYear(), serviceDate.getMonth(), serviceDate.getDate())
+
         const modifiedEvent = {
-          dateOfService: values.dateOfService,
+          dateOfService: values?.dateOfService,
           manualEntry: true,
-          clockIn: values.clockIn?.toISOString(),
-          clockOut: values.clockOut?.toISOString(),
+          clockIn: newClockIn.toISOString(),
+          clockOut: newClockOut.toISOString(),
           tsApprovalStatus: 'Pending',
           notes: values.notes,
           reason: values.reason,
@@ -324,16 +336,20 @@ const ManualTimesheet = ({ caregiverList, payPeriod }: any) => {
                 endDate={values.dateOfService !== null ? values.dateOfService : weekRange.endDate}
                 selected={values.dateOfService}
                 startDate={values.dateOfService !== null ? values.dateOfService : weekRange.startDate}
-                showTimeSelect={!values.dateOfService}
-                dateFormat={!values.dateOfService ? 'yyyy-MM-dd hh:mm' : 'yyyy-MM-dd'}
+                // showTimeSelect={!values.dateOfService}
+                dateFormat={'yyyy-MM-dd'}
                 minDate={weekRange.startDate} // Set the minimum selectable date
                 maxDate={weekRange.endDate}
                 customInput={
-                  <PickersComponent label='Date Of Service' registername='dateOfService' id='event-start-date' />
+                  <TextField
+                    fullWidth
+                    size='small'
+                    label={'Date Of Service'}
+                    placeholder='MM/DD/YYYY'
+                    id='event-start-date'
+                  />
                 }
-                onChange={(date: Date | null) =>
-                  date !== null && setValues({ ...values, dateOfService: new Date(date) })
-                }
+                onChange={(date: Date | null) => date !== null && setValues({ ...values, dateOfService: date })}
               />
             </Grid>
 

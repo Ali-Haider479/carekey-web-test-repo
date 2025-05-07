@@ -117,7 +117,6 @@ const SidebarLeft = (props: Props) => {
       subscribe(wildcardTopic, (message: string) => {
         try {
           const parsedMessage = JSON.parse(message)
-          console.log('LAYYAH MSG RECEIVED', message)
           const { chatRoomId, message: text, senderId, time } = parsedMessage
 
           // Skip if sent by current user

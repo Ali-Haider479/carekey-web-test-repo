@@ -168,13 +168,6 @@ export const chatSlice = createSlice({
       })
     },
 
-    setUserStatus: (state, action: PayloadAction<{ status: StatusType }>) => {
-      state.profileUser = {
-        ...state.profileUser,
-        status: action.payload.status
-      }
-    },
-
     sendMsg: (state, action: PayloadAction<{ msg: string }>) => {
       const { msg } = action.payload
       const existingChat = state.chats.find(chat => chat.id === state.activeUser?.chatRoomId)
@@ -236,6 +229,13 @@ export const chatSlice = createSlice({
             chat.unseenMsgs += 1
           }
         }
+      }
+    },
+
+    setUserStatus: (state, action: PayloadAction<{ status: StatusType }>) => {
+      state.profileUser = {
+        ...state.profileUser,
+        status: action.payload.status
       }
     }
   },

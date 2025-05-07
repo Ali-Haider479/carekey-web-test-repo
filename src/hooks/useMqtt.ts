@@ -78,6 +78,7 @@ export const useMqttClient = (config: MqttConfig) => {
         })
 
         clientRef.current.on('message', (topic, message) => {
+          console.log("Connect Message", topic, message)
           // Handle exact topic match
           const exactHandler = messageHandlers.current.get(topic)
           if (exactHandler) {
@@ -140,6 +141,21 @@ export const useMqttClient = (config: MqttConfig) => {
     }
   }
 
+  const unsubscribe = (topic: string) => {
+    if (messageHandlers.current.has(topic)) {
+      messageHandlers.current.delete(topic)
+      if (clientRef.current?.connected) {
+        clientRef.current.unsubscribe(topic, err => {
+          if (err) {
+            console.error('Unsubscribe error:', err)
+          } else {
+            console.log('Successfully unsubscribed from:', topic)
+          }
+        })
+      }
+    }
+  }
+
   const publish = (topic: string, message: string) => {
     if (!topic || !message) return
 
@@ -158,5 +174,5 @@ export const useMqttClient = (config: MqttConfig) => {
     }
   }
 
-  return { subscribe, publish, isConnected }
+  return { subscribe, unsubscribe, publish, isConnected }
 }

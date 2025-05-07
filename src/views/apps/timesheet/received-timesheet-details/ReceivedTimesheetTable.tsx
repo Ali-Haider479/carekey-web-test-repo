@@ -398,7 +398,16 @@ const ReceivedTimesheetTable = (
     setValue('clockOutDate', localClockOutTime.split('T')[0])
     setValue('clockOutTime', localClockOutTime.split('T')[1])
     setValue('hoursWorked', calculateHoursWorked(user.clockIn, user.clockOut) || user.hrsWorked || '')
-    setValue('dateOfService', user.dateOfService ? new Date(user.dateOfService).toISOString().split('T')[0] : '')
+    setValue(
+      'dateOfService',
+      user.dateOfService
+        ? new Date(user?.dateOfService).toLocaleDateString('en-US', {
+            month: '2-digit',
+            day: '2-digit',
+            year: 'numeric'
+          })
+        : ''
+    )
     setValue('serviceName', user.serviceName || '')
     setValue('updatedBy', user.updatedBy?.userName || 'N/A')
     setValue('updatedAt', user.updatedAt ? new Date(user.updatedAt).toISOString().split('T')[0] : '')
@@ -1137,7 +1146,7 @@ const ReceivedTimesheetTable = (
                         },
                         {
                           key: 2,
-                          value: 'Individual Home Service (IHS)',
+                          value: 'Individualized Home Supports (IHS)',
                           optionString: 'Individual Home Service (IHS)'
                         }
                       ]}

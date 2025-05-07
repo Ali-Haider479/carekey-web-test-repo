@@ -39,6 +39,10 @@ import { useSettings } from '@core/hooks/useSettings'
 
 // Util Imports
 import { getInitials } from '@/utils/getInitials'
+import api from '@/utils/api'
+import { useDispatch, useSelector } from 'react-redux'
+import { RootState } from '@/redux-store'
+import { setNotificationsData, setNotificationCount } from '@/redux-store/slices/notification'
 
 export type NotificationsType = {
   title: string
@@ -46,28 +50,28 @@ export type NotificationsType = {
   time: string
   read: boolean
 } & (
-  | {
+    | {
       avatarImage?: string
       avatarIcon?: never
       avatarText?: never
       avatarColor?: never
       avatarSkin?: never
     }
-  | {
+    | {
       avatarIcon?: string
       avatarColor?: ThemeColor
       avatarSkin?: CustomAvatarProps['skin']
       avatarImage?: never
       avatarText?: never
     }
-  | {
+    | {
       avatarText?: string
       avatarColor?: ThemeColor
       avatarSkin?: CustomAvatarProps['skin']
       avatarImage?: never
       avatarIcon?: never
     }
-)
+  )
 
 const ScrollWrapper = ({ children, hidden }: { children: ReactNode; hidden: boolean }) => {
   if (hidden) {
@@ -103,14 +107,15 @@ const getAvatar = (
   }
 }
 
-const NotificationDropdown = ({ notifications }: { notifications: NotificationsType[] }) => {
+const NotificationDropdown = () => {
+  const dispatch = useDispatch();
+  const notificationCount = useSelector((state: RootState) => state.notificationReducer.notificationCount);
+  const notificationsData = useSelector((state: RootState) => state.notificationReducer.notificationsData);
   // States
   const [open, setOpen] = useState(false)
-  const [notificationsState, setNotificationsState] = useState(notifications)
 
   // Vars
-  const notificationCount = notificationsState.filter(notification => !notification.read).length
-  const readAll = notificationsState.every(notification => notification.read)
+  const readAll = notificationsData.every(notification => notification.is_read)
 
   // Refs
   const anchorRef = useRef<HTMLButtonElement>(null)
@@ -121,6 +126,26 @@ const NotificationDropdown = ({ notifications }: { notifications: NotificationsT
   const isSmallScreen = useMediaQuery((theme: Theme) => theme.breakpoints.down('sm'))
   const { settings } = useSettings()
 
+  const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
+
+  useEffect(() => {
+    const fetchNotificationData = async () => {
+      try {
+        const [notificationsRes, notificationCountRes] = await Promise.all([
+          api.get(`notification/list/${authUser.id}`),
+          api.get(`notification/unread-count/${authUser.id}`),
+        ]);
+
+        dispatch(setNotificationsData(notificationsRes.data.notifications));
+        dispatch(setNotificationCount(notificationCountRes.data));
+      } catch (error: any) {
+        if (error.name === 'AbortError') return;
+        console.error('Failed to fetch notification data:', error);
+      }
+    }
+    fetchNotificationData();
+  }, [dispatch])
+
   const handleClose = () => {
     setOpen(false)
   }
@@ -129,33 +154,22 @@ const NotificationDropdown = ({ notifications }: { notifications: NotificationsT
     setOpen(prevOpen => !prevOpen)
   }
 
-  // Read notification when notification is clicked
-  const handleReadNotification = (event: MouseEvent<HTMLElement>, value: boolean, index: number) => {
-    event.stopPropagation()
-    const newNotifications = [...notificationsState]
 
-    newNotifications[index].read = value
-    setNotificationsState(newNotifications)
-  }
-
-  // Remove notification when close icon is clicked
-  const handleRemoveNotification = (event: MouseEvent<HTMLElement>, index: number) => {
-    event.stopPropagation()
-    const newNotifications = [...notificationsState]
-
-    newNotifications.splice(index, 1)
-    setNotificationsState(newNotifications)
-  }
-
-  // Read or unread all notifications when read all icon is clicked
-  const readAllNotifications = () => {
-    const newNotifications = [...notificationsState]
-
-    newNotifications.forEach(notification => {
-      notification.read = !readAll
-    })
-    setNotificationsState(newNotifications)
-  }
+  const readAllNotifications = async () => {
+    try {
+      const response = await api.patch(`/notification/read/${authUser.id}`)
+      console.log(response.data)
+      const newNotificationsData = notificationsData.map(notification => ({
+        ...notification,
+        is_read: true, // Mark all as read
+      }));
+      console.log('Updated notifications:', newNotificationsData);
+      dispatch(setNotificationsData(newNotificationsData));
+      dispatch(setNotificationCount(0))
+    } catch (error) {
+      console.error('Failed to fetch notifications:', error);
+    }
+  };
 
   useEffect(() => {
     const adjustPopoverHeight = () => {
@@ -196,16 +210,16 @@ const NotificationDropdown = ({ notifications }: { notifications: NotificationsT
         anchorEl={anchorRef.current}
         {...(isSmallScreen
           ? {
-              className: 'is-full !mbs-4 z-[1] max-bs-[550px] bs-[550px]',
-              modifiers: [
-                {
-                  name: 'preventOverflow',
-                  options: {
-                    padding: themeConfig.layoutPadding
-                  }
+            className: 'is-full !mbs-4 z-[1] max-bs-[550px] bs-[550px]',
+            modifiers: [
+              {
+                name: 'preventOverflow',
+                options: {
+                  padding: themeConfig.layoutPadding
                 }
-              ]
-            }
+              }
+            ]
+          }
           : { className: 'is-96 !mbs-4 z-[1] max-bs-[550px] bs-[550px]' })}
       >
         {({ TransitionProps, placement }) => (
@@ -234,7 +248,7 @@ const NotificationDropdown = ({ notifications }: { notifications: NotificationsT
                         }
                       }}
                     >
-                      {notificationsState.length > 0 ? (
+                      {notificationsData.length > 0 ? (
                         <IconButton size='small' onClick={() => readAllNotifications()} className='text-textPrimary'>
                           <i className={readAll ? 'bx-envelope' : 'bx-envelope-open'} />
                         </IconButton>
@@ -245,61 +259,61 @@ const NotificationDropdown = ({ notifications }: { notifications: NotificationsT
                   </div>
                   <Divider />
                   <ScrollWrapper hidden={hidden}>
-                    {notificationsState.map((notification, index) => {
+                    {notificationsData.map((notification, index) => {
                       const {
                         title,
-                        subtitle,
-                        time,
-                        read,
-                        avatarImage,
-                        avatarIcon,
-                        avatarText,
-                        avatarColor,
-                        avatarSkin
+                        body,
+                        created_at,
+                        is_read,
                       } = notification
-
+                      const formattedDate = new Date(created_at).toLocaleString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric',
+                        hour: 'numeric',
+                        minute: 'numeric',
+                        hour12: true
+                      });
                       return (
                         <div
                           key={index}
                           className={classnames('flex plb-3 pli-5 gap-3 cursor-pointer hover:bg-actionHover group', {
-                            'border-be': index !== notificationsState.length - 1
+                            'border-be': index !== notificationsData.length - 1
                           })}
-                          onClick={e => handleReadNotification(e, true, index)}
                         >
-                          {getAvatar({ avatarImage, avatarIcon, title, avatarText, avatarColor, avatarSkin })}
+                          {/* {getAvatar({ avatarImage, avatarIcon, title, avatarText, avatarColor, avatarSkin })} */}
                           <div className='flex flex-col flex-auto'>
                             <Typography variant='body2' className='font-medium mbe-1' color='text.primary'>
                               {title}
                             </Typography>
                             <Typography variant='caption' color='text.secondary' className='mbe-2'>
-                              {subtitle}
+                              {body}
                             </Typography>
-                            <Typography variant='caption'>{time}</Typography>
+                            <Typography variant='caption'>{formattedDate}</Typography>
                           </div>
                           <div className='flex flex-col items-end gap-2'>
                             <Badge
                               variant='dot'
-                              color={read ? 'secondary' : 'primary'}
-                              onClick={e => handleReadNotification(e, !read, index)}
+                              color={is_read ? 'secondary' : 'primary'}
                               className={classnames('mlb-1 mie-1', {
-                                'invisible group-hover:visible': read
+                                'invisible group-hover:visible': is_read
                               })}
                             />
-                            <i
+                            {/* <i
                               className='bx-x text-xl invisible group-hover:visible'
                               onClick={e => handleRemoveNotification(e, index)}
-                            />
+                            /> */}
                           </div>
                         </div>
                       )
                     })}
                   </ScrollWrapper>
                   <Divider />
-                  <div className='plb-4 pli-5'>
+                  {/* <div className='plb-4 pli-5'>
                     <Button fullWidth variant='contained' size='small'>
                       View All Notifications
                     </Button>
-                  </div>
+                  </div> */}
                 </div>
               </ClickAwayListener>
             </Paper>
