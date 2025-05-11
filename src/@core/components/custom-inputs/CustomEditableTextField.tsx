@@ -9,10 +9,10 @@ export const EditableField = ({ label, value, isEdit, onChange, name, disabled }
     <div className='flex justify-between text-sm text-gray-500 items-center'>
       <Typography>{label}:</Typography>
       {isEdit ? (
-        <Typography>{value || '---'}</Typography>
+        <Typography>{value || ''}</Typography>
       ) : (
         <TextField
-          defaultValue={value || '---'}
+          defaultValue={value || ''}
           variant='standard'
           className='outline-none'
           onChange={handleChange}

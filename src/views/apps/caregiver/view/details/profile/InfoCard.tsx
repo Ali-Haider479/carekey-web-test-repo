@@ -53,8 +53,12 @@ const InfoCard = () => {
     control,
     handleSubmit,
     reset,
+    watch,
+    setValue,
     formState: { errors }
   } = methods
+
+  const assignmentDate = watch('assignmentDate')
 
   const getProfileImage = async (key: string | null) => {
     if (!key) return
@@ -183,6 +187,9 @@ const InfoCard = () => {
 
   const handleModalClose = () => {
     setIsModalShow(false)
+    setValue('assignmentDate', new Date())
+    setValue('unassignmentDate', new Date())
+    reset()
   }
 
   console.log('Caregiver info card, profile data', data)
@@ -277,7 +284,7 @@ const InfoCard = () => {
               closeAfterTransition={false}
               sx={{ '& .MuiDialog-paper': { overflow: 'visible' } }}
             >
-              <DialogCloseButton onClick={() => setIsModalShow(false)} disableRipple>
+              <DialogCloseButton onClick={handleModalClose} disableRipple>
                 <i className='bx-x' />
               </DialogCloseButton>
               <div className='flex items-center justify-center pt-[10px] pb-[5px] w-full px-5'>
@@ -320,6 +327,15 @@ const InfoCard = () => {
                           label={'Unassignment Date'}
                           defaultValue={undefined}
                           isRequired={false}
+                          minDate={new Date()}
+                          rules={{
+                            required: 'Un Assignment Date is required',
+                            validate: (value: any) => {
+                              return new Date(value) >= new Date(assignmentDate)
+                                ? true
+                                : 'unassignment date must be greater than assignment date'
+                            }
+                          }}
                         />
                       </Grid>
                       <Grid size={{ xs: 12, sm: 4 }}>

@@ -1,16 +1,13 @@
 'use client'
-import { useState, FormEvent } from 'react'
+import { useState } from 'react'
 import Grid from '@mui/material/Grid2'
 import Card from '@mui/material/Card'
 import CardHeader from '@mui/material/CardHeader'
 import CardContent from '@mui/material/CardContent'
-import { TextField, Button, InputAdornment, IconButton } from '@mui/material'
-import axios from 'axios'
+import { Button, InputAdornment, IconButton } from '@mui/material'
 import { useRouter } from 'next/navigation'
-import { Visibility, VisibilityOff } from '@mui/icons-material'
 import { FormProvider, useForm } from 'react-hook-form'
 import CustomTextField from '@/@core/components/custom-inputs/CustomTextField'
-import CustomMaskedInput from '@/@core/components/custom-inputs/CustomMaskedInput'
 import api from '@/utils/api'
 
 type Props = {
@@ -78,7 +75,6 @@ const CreateTenant = (props: Props) => {
 
   const localDate = new Date()
   localDate.setHours(0, 0, 0, 0)
-  console.log('Local time ------>> ', localDate.toISOString())
   const IsoString = new Date(localDate).toISOString()
 
   console.log('ISO STRING WRAPPED IN NEW DTE FUNCTION ------>> ', IsoString)
@@ -184,11 +180,8 @@ const CreateTenant = (props: Props) => {
         roleId: 2
       }
       const response = await api.post(`/tenant`, tenantPayload)
-      console.log('RESPONSE TENANT', response)
-
       const localDate = new Date()
       localDate.setHours(0, 0, 0, 0)
-      console.log('Local time ------>> ', localDate.toISOString())
       const IsoString = new Date(localDate.toISOString())
       const localTime = localDate.toISOString().split('T')[1].split('.')[0]
 
@@ -200,9 +193,7 @@ const CreateTenant = (props: Props) => {
         tenantId: response?.data?.id,
         numberOfWeeks: 1
       }
-      console.log('PAY PERIOD PAYLOAD ----->> ', payload)
       const payperiod = await api.post(`/pay-period`, payload)
-      console.log('Payperiod res', payperiod)
       router.replace(`/en/apps/accounts/tenant-list`)
     } catch (error) {
       console.log('ERROR', error)
@@ -276,6 +267,7 @@ const CreateTenant = (props: Props) => {
                     error={errors.password}
                     control={control}
                     minLength={8}
+                    maxLength={10}
                     slotProps={{
                       input: {
                         endAdornment: (
@@ -302,6 +294,8 @@ const CreateTenant = (props: Props) => {
                     type={showConfirmPassword ? 'text' : 'password'}
                     error={errors.confirmPassword}
                     control={control}
+                    minLength={8}
+                    maxLength={10}
                     slotProps={{
                       input: {
                         endAdornment: (
@@ -341,7 +335,6 @@ const CreateTenant = (props: Props) => {
                     type={'text'}
                     error={errors.address}
                     control={control}
-                    maxLength={60}
                   />
                 </Grid>
                 <Grid size={{ xs: 12, md: 4 }}>
@@ -364,6 +357,8 @@ const CreateTenant = (props: Props) => {
                     placeHolder={'123456'}
                     name={'taxonomyNumber'}
                     defaultValue={''}
+                    maxLength={10}
+                    minLength={10}
                     type={'number'}
                     error={errors.taxonomyNumber}
                     control={control}
@@ -379,6 +374,8 @@ const CreateTenant = (props: Props) => {
                     type={'number'}
                     error={errors.einNumber}
                     control={control}
+                    maxLength={10}
+                    minLength={10}
                   />
                 </Grid>
                 {/* Company Email */}

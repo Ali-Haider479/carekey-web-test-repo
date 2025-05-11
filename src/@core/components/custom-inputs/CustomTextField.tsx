@@ -107,11 +107,11 @@ const CustomTextField = (props: Props, e: any) => {
           required: isRequired ? `${props.label} is required` : false,
           minLength: {
             value: props.minLength || 1,
-            message: `${props.label} should be atleast ${props.minLength} characters`
+            message: props.minLength ? `${props.label} should be atleast ${props.minLength} characters` : ''
           },
           maxLength: {
-            value: props.maxLength || 30,
-            message: `${props.label} cannot exceed ${props.maxLength} characters`
+            value: props.maxLength || 524288,
+            message: props.maxLength ? `${props.label} cannot exceed ${props.maxLength} characters` : ''
           },
           ...(props.type === 'email' && {
             pattern: {

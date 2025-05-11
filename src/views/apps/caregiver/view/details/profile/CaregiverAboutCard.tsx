@@ -110,7 +110,7 @@ function CaregiverAboutCard() {
     const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
     if (name === 'emailAddress' && !emailPattern.test(value)) {
       setEmailError(true)
-    } else if (name === 'emergencyEmailId' && !emailPattern.test(value)) {
+    } else if (name === 'emergencyEmailId' && value.length > 0 && !emailPattern.test(value)) {
       setEmergencyEmailError(true)
     } else {
       setEmailError(false)
@@ -131,7 +131,7 @@ function CaregiverAboutCard() {
       return
     }
 
-    if (name === 'emergencyContactNumber') {
+    if (name === 'emergencyContactNumber' && value.length > 0) {
       const digits = value.replace(/\D/g, '')
       const formattedNumber = formatPhoneNumber(digits)
 
@@ -142,6 +142,8 @@ function CaregiverAboutCard() {
         [name]: formattedNumber // Store formatted number in state
       }))
       return
+    } else if (name === 'emergencyContactNumber' && value.length === 0) {
+      setEmergencyPhoneNumberError(false)
     }
 
     // Handle all other fields normally

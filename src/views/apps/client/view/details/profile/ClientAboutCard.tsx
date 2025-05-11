@@ -113,9 +113,9 @@ function ClientAboutCard() {
 
   const handleFieldChange = (name: string, value: any) => {
     const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
-    if (!emailPattern.test(formData.emailId)) {
+    if (!emailPattern.test(formData.emailId) && name.includes('emergencyEmailId')) {
       setEmailError(true)
-    } else if (!emailPattern.test(formData.emergencyEmailId)) {
+    } else if (value.length > 0 && !emailPattern.test(formData.emergencyEmailId) && name.includes('emergencyEmailId')) {
       setEmergencyEmailError(true)
     } else {
       setEmailError(false)
@@ -136,7 +136,7 @@ function ClientAboutCard() {
       return
     }
 
-    if (name === 'emergencyContactNumber') {
+    if (name === 'emergencyContactNumber' && value.length > 0) {
       const digits = value.replace(/\D/g, '')
       const formattedNumber = formatPhoneNumber(digits)
 
@@ -147,6 +147,8 @@ function ClientAboutCard() {
         [name]: formattedNumber // Store formatted number in state
       }))
       return
+    } else if (name === 'emergencyContactNumber' && value.length === 0) {
+      setEmergencyPhoneNumberError(false)
     }
 
     // Handle all other fields normally

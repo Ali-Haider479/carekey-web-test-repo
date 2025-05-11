@@ -386,8 +386,11 @@ const ReceivedTimesheetTable = (
     console.log('LOCAL CLOCK IN TIME', localClockInTime)
 
     const UTCTimeClockOut = new Date(user.clockOut)
+    const UTCDateOfService = new Date(user.dateOfService)
     const timezoneOffsetClockOut = UTCTimeClockOut.getTimezoneOffset() * 60 * 1000 // Offset in milliseconds
+    const timezoneOffsetDateOfService = UTCDateOfService.getTimezoneOffset() * 60 * 1000 // Offset in milliseconds
     const localClockOutTime = new Date(UTCTimeClockOut.getTime() - timezoneOffsetClockOut).toISOString()
+    const localDateOfService = new Date(UTCDateOfService.getTime() - timezoneOffsetDateOfService).toISOString()
 
     console.log('LOCAL CLOCKOUT TIME', localClockOutTime)
 
@@ -398,16 +401,7 @@ const ReceivedTimesheetTable = (
     setValue('clockOutDate', localClockOutTime.split('T')[0])
     setValue('clockOutTime', localClockOutTime.split('T')[1])
     setValue('hoursWorked', calculateHoursWorked(user.clockIn, user.clockOut) || user.hrsWorked || '')
-    setValue(
-      'dateOfService',
-      user.dateOfService
-        ? new Date(user?.dateOfService).toLocaleDateString('en-US', {
-            month: '2-digit',
-            day: '2-digit',
-            year: 'numeric'
-          })
-        : ''
-    )
+    setValue('dateOfService', localDateOfService.split('T')[0])
     setValue('serviceName', user.serviceName || '')
     setValue('updatedBy', user.updatedBy?.userName || 'N/A')
     setValue('updatedAt', user.updatedAt ? new Date(user.updatedAt).toISOString().split('T')[0] : '')
@@ -1200,6 +1194,7 @@ const ReceivedTimesheetTable = (
                               hour12: false
                             })
                             setValue('clockInTime', timeString)
+                            setValue('clockOutTime', null) // Set clockOutDate to clockInDate
                           }
                         }}
                         customInput={

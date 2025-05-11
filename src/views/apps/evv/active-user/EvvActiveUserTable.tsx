@@ -27,6 +27,7 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
 import ActiveUserFilters from './ActiveUserFilters'
 import api from '@/utils/api'
 import { setHours, setMinutes, setSeconds } from 'date-fns'
+import CustomAlert from '@/@core/components/mui/Alter'
 
 // Types
 interface Location {
@@ -137,9 +138,14 @@ const EvvActiveUserTable = ({ timeLogData, isLoading, payPeriod, fetchInitialDat
   const [selectedItems, setSelectedItems] = useState<number[]>([])
   const [serviceActivities, setServiceActivities] = useState<any>([])
   const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
+  const [alertOpen, setAlertOpen] = useState(false)
+  const [alertProps, setAlertProps] = useState<any>()
 
   const handleModalClose = () => {
     setIsModalShow(false)
+    setValues(null)
+    setSelectedItems([])
+    setClockOutReason('')
   }
 
   const handleChange = (event: SelectChangeEvent<number[]>) => {
@@ -203,6 +209,14 @@ const EvvActiveUserTable = ({ timeLogData, isLoading, payPeriod, fetchInitialDat
   }, [payPeriod])
 
   const handleSave = async () => {
+    if (selectedItems.length === 0) {
+      setAlertOpen(true)
+      setAlertProps({
+        message: 'Please select at least one activity.',
+        severity: 'error'
+      })
+      return
+    }
     const pendingSignatures: any = await api.get(
       `/signatures/${selectedUser.caregiver?.id}/pending-signatures-count/${selectedUser?.payPeriodHistory?.id}`
     )
@@ -349,6 +363,8 @@ const EvvActiveUserTable = ({ timeLogData, isLoading, payPeriod, fetchInitialDat
   console.log('Updated values', values)
   return (
     <Card sx={{ borderRadius: 1, boxShadow: 3 }}>
+      <CustomAlert AlertProps={alertProps} openAlert={alertOpen} setOpenAlert={setAlertOpen} />
+
       <div className='p-4 my-2'>
         <ActiveUserFilters onFilterApplied={handleFilteredData} />
       </div>
@@ -377,7 +393,7 @@ const EvvActiveUserTable = ({ timeLogData, isLoading, payPeriod, fetchInitialDat
             sx={{ '& .MuiDialog-paper': { overflow: 'visible' } }}
             maxWidth='md'
           >
-            <DialogCloseButton onClick={() => setIsModalShow(false)} disableRipple>
+            <DialogCloseButton onClick={handleModalClose} disableRipple>
               <i className='bx-x' />
             </DialogCloseButton>
             <div className='flex items-center justify-center w-full px-5 flex-col'>

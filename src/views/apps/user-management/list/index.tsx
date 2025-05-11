@@ -39,7 +39,7 @@ const UserManagementView = () => {
         <UserManagementFilters onFilterApplied={handleFilterApplied} />
       </div>
       <div className='mt-5'>
-        <UserManagementList usersData={usersData} />
+        <UserManagementList usersData={usersData} fetchInitialData={fetchInitialData}/>
       </div>
     </div>
   )

@@ -16,7 +16,6 @@ import {
   InputAdornment,
   InputLabel,
   MenuItem,
-  OutlinedInput,
   Select,
   SelectChangeEvent,
   Switch,
@@ -24,8 +23,6 @@ import {
   Typography
 } from '@mui/material'
 import { dark } from '@mui/material/styles/createPalette'
-import axios from 'axios'
-import { useRouter } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
 import CloseIcon from '@mui/icons-material/Close'
 import api from '@/utils/api'
@@ -70,9 +67,10 @@ interface FormErrors {
 
 interface UserManagementListProps {
   usersData: UserManagement[]
+  fetchInitialData: () => void
 }
 
-const UserManagementList = ({ usersData }: UserManagementListProps) => {
+const UserManagementList = ({ usersData, fetchInitialData }: UserManagementListProps) => {
   const [search, setSearch] = useState('')
   const [rolesData, setRolesData] = useState<Role[]>([])
   const [permissionData, setPermissionData] = useState<any>([])
@@ -103,14 +101,11 @@ const UserManagementList = ({ usersData }: UserManagementListProps) => {
 
   const fetchData = async () => {
     try {
-      const userData = await api.get(`/user/tenant/${tenantId}`)
-      const roleData = await api.get(`/role`)
-      const permission = await api.get(`/permission`)
-      const roles = roleData.data.filter((role: any) => role.id !== 1)
-      const users = userData.data.filter((user: any) => user.role?.title !== 'Super Admin')
-      // setUsersData(users)
-      setRolesData(roles)
-      setPermissionData(permission.data)
+      await Promise.all([api.get(`/role`), api.get(`/permission`)]).then(([role, permission]) => {
+        const roles = role.data.filter((role: any) => role.id !== 1)
+        setRolesData(roles)
+        setPermissionData(permission.data)
+      })
     } catch (error) {
       console.error('Error fetching roles:', error)
     }
@@ -147,8 +142,18 @@ const UserManagementList = ({ usersData }: UserManagementListProps) => {
     }
   }
 
-  const handleChange = (field: keyof FormData) => (event: React.ChangeEvent<HTMLInputElement | { value: unknown }>) => {
+  const handleChange = (field: keyof FormData) => (event: React.ChangeEvent<HTMLInputElement | { value: string }>) => {
     const value = event.target.value
+    const restrictedRoles = ['Tenant Admin', 'Super Admin', 'Caregiver', 'Case Manager', 'Qualified Professional']
+
+    if (restrictedRoles.includes(value)) {
+      setErrors(prev => ({
+        ...prev,
+        [field]: 'This role already exists'
+      }))
+      return
+    }
+
     setFormData(prev => ({
       ...prev,
       [field]: value
@@ -215,6 +220,7 @@ const UserManagementList = ({ usersData }: UserManagementListProps) => {
       const response = await api.post(`/user/user-management`, payload)
       await fetchData()
       setIsModalShow(false)
+      fetchInitialData()
       setFormData({
         userName: '',
         emailAddress: '',
