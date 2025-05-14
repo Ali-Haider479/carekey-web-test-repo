@@ -69,7 +69,7 @@ interface GroupedTimeEntry {
 
 export function transformTimesheetDataTwo(entries: TimeEntry[]): GroupedTimeEntry[] {
   if (!Array.isArray(entries) || !entries.length) {
-    throw new Error('No entries provided')
+    return []
   }
   console.log('ENTRIES', entries)
 

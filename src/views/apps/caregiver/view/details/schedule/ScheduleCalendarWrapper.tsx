@@ -4,7 +4,7 @@
 import { useEffect, useState } from 'react'
 
 // MUI Imports
-import { useMediaQuery } from '@mui/material'
+import { CircularProgress, useMediaQuery } from '@mui/material'
 import type { Theme } from '@mui/material/styles'
 
 // Third-party Imports
@@ -128,7 +128,7 @@ const AppCalendar = () => {
     }
   }, [isEdited])
 
-  return (
+  return currentCaregiverData ? (
     <>
       <ScheduleSidebarLeft
         mdAbove={mdAbove}
@@ -181,6 +181,10 @@ const AppCalendar = () => {
         data={currentCaregiverData}
       />
     </>
+  ) : (
+    <div className='flex items-center justify-center h-full w-full'>
+      <CircularProgress />
+    </div>
   )
 }
 

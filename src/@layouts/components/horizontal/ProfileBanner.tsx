@@ -51,7 +51,7 @@ const ProfileBanner = ({ props }: { props: ProfileHeaderType }) => {
       const formData = new FormData()
       formData.append('image', file)
       const response = await api.post(
-        `/${props.isClient ? 'client' : 'user'}/${id}/profile-image`, // Only the path, since baseURL is already set
+        `/${props.isClient ? 'client' : 'user'}/${props.isClient ? id : props.userId}/profile-image`, // Only the path, since baseURL is already set
         formData,
         {
           headers: {

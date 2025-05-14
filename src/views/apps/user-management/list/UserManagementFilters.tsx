@@ -1,5 +1,5 @@
 'use client'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Card, Typography, Grid2 as Grid, MenuItem, Button } from '@mui/material'
 import CustomTextField from '@core/components/mui/TextField'
 import { useForm } from 'react-hook-form'
@@ -17,14 +17,35 @@ const defaultState: DefaultStateType = {
 
 interface UserManagementFiltersProps {
   onFilterApplied: (filteredData: any) => void
+  rolesData: any[]
 }
 
-const UserManagementFilters = ({ onFilterApplied }: UserManagementFiltersProps) => {
+const UserManagementFilters = ({ onFilterApplied, rolesData }: UserManagementFiltersProps) => {
   const [filterData, setFilterData] = useState<DefaultStateType>(defaultState)
 
   const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
 
   const tenantId = authUser?.tenant?.id
+
+  // const getRolesData = async () => {
+  //   try {
+  //     const response = await api.get(`/role/${tenantId}`)
+
+  //     // Filter roles based on tenant ID
+  //     const filteredRoles = response.data.filter((role: any) => {
+  //       // Check if role has any users from the current tenant
+  //       return role.id !== 1
+  //     })
+
+  //     setRolesData(filteredRoles)
+  //   } catch (error) {
+  //     console.error('Error fetching roles data:', error)
+  //   }
+  // }
+
+  // useEffect(() => {
+  //   getRolesData()
+  // }, [])
 
   const {
     handleSubmit,
@@ -78,6 +99,8 @@ const UserManagementFilters = ({ onFilterApplied }: UserManagementFiltersProps) 
     }
   }
 
+  console.log('Roles Data: ', rolesData)
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} autoComplete='off'>
       <Card className='p-4'>
@@ -97,10 +120,15 @@ const UserManagementFilters = ({ onFilterApplied }: UserManagementFiltersProps) 
               }}
             >
               <MenuItem value=''>Select Role</MenuItem>
-              <MenuItem value='Tenant Admin'>Tenant Admin</MenuItem>
+              {/* <MenuItem value='Tenant Admin'>Tenant Admin</MenuItem>
               <MenuItem value='Caregiver'>Caregiver</MenuItem>
               <MenuItem value='Case Manager'>Case Manager</MenuItem>
-              <MenuItem value='Qualified Professional'>Qualified Professional</MenuItem>
+              <MenuItem value='Qualified Professional'>Qualified Professional</MenuItem> */}
+              {rolesData?.map((role: any) => (
+                <MenuItem key={role.id} value={role.title}>
+                  {role.title}
+                </MenuItem>
+              ))}
             </CustomTextField>
           </Grid>
           <Grid size={{ sm: 12, md: 4 }}>

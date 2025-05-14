@@ -8,6 +8,8 @@ import { useDispatch, useSelector } from 'react-redux'
 import { addNotification, setChatUnReadMessageStatus, setNotificationCount } from '@/redux-store/slices/notification'
 import { RootState } from '@/redux-store'
 
+const notificationSound = new Audio('/sounds/bell-notification.mp3');
+
 interface AuthUser {
     id?: string
     [key: string]: any
@@ -132,6 +134,11 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
                         //         router.push(notification.data.path) // Navigate to path in data
                         //     }
                         // }
+                        onOpen: () => {
+                            notificationSound.play().catch((error) => {
+                                console.error('Error playing notification sound:', error);
+                            });
+                        },
                     })
                 } catch (error) {
                     console.error('Error parsing MQTT notification:', error)

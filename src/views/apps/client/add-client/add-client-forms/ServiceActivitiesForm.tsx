@@ -71,6 +71,10 @@ const ServiceActivitiesForm = forwardRef<{ handleSubmit: any }, Props>(({ onFini
   const selectedServiceId = watch('service')
   const assignCaregiverEnabled = watch('enableAssignCaregiver')
 
+  useEffect(() => {
+    setValue('serviceActivities', '')
+  }, [selectedServiceId])
+
   console.log('Selected Service ID: ', selectedServiceId)
 
   const filteredActivities = selectedServiceId

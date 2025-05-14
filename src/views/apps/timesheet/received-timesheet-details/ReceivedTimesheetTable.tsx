@@ -1,22 +1,11 @@
 'use client'
 
-import { useState, useMemo, useEffect, forwardRef } from 'react'
+import { useState, useEffect, forwardRef } from 'react'
 import Card from '@mui/material/Card'
-import {
-  Box,
-  Button,
-  Chip,
-  CircularProgress,
-  Dialog,
-  Grid2 as Grid,
-  TextField,
-  Tooltip,
-  Typography
-} from '@mui/material'
+import { Button, Chip, CircularProgress, Dialog, Grid2 as Grid, TextField, Tooltip, Typography } from '@mui/material'
 import ActionButton from '@/@core/components/mui/ActionButton'
 import ReactTable from '@/@core/components/mui/ReactTable'
-import axios from 'axios'
-import { calculateHoursWorked, formatDate, formatDateTime, formatToLocalTime } from '@/utils/helperFunctions'
+import { calculateHoursWorked, formatToLocalTime } from '@/utils/helperFunctions'
 import { dark } from '@mui/material/styles/createPalette'
 import CustomAlert from '@/@core/components/mui/Alter'
 import DialogCloseButton from '@/components/dialogs/DialogCloseButton'
@@ -24,9 +13,7 @@ import { FormProvider, useForm } from 'react-hook-form'
 import CustomTextField from '@/@core/components/custom-inputs/CustomTextField'
 import ControlledTextArea from '@/@core/components/custom-inputs/ControlledTextArea'
 import CustomDropDown from '@/@core/components/custom-inputs/CustomDropDown'
-import ServiceActivities from '@/@core/components/custom-inputs/ServiceAcitvitesDropDown'
 import ControlledDatePicker from '@/@core/components/custom-inputs/ControledDatePicker'
-import { Edit } from '@mui/icons-material'
 import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
 import { setHours, setMinutes, setSeconds } from 'date-fns'
 import api from '@/utils/api'
@@ -145,9 +132,8 @@ const ReceivedTimesheetTable = (
   const [isDeleting, setIsDeleting] = useState(false)
   const [rowsToDelete, setRowsToDelete] = useState<any[]>([])
   const [deleteReason, setDeleteReason] = useState<string>('')
-  const clockInDate = watch('clockInDate')
-  const clockInTime = watch('clockInTime')
-  const clockOutDate = watch('clockOutDate')
+  const clockInDateString = new Date(watch('clockInDate'))
+  const clockOutDateString = new Date(watch('clockOutDate'))
   const tsApprovalStatus = watch('tsApprovalStatus')
   const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
 
@@ -202,10 +188,6 @@ const ReceivedTimesheetTable = (
   }, [tsApprovalStatus, modalData, isEditing])
 
   const toggleEditing = () => {
-    if (isEditing) {
-      console.log('inside edit cancel')
-      // reset()
-    }
     setIsEditing(!isEditing)
   }
 
@@ -359,8 +341,6 @@ const ReceivedTimesheetTable = (
       const [datePart, timePart] = user.clockIn.split('T')
       clockInDate = datePart // DD-MM-YYYY
       clockInTime = timePart // hh:mm:aa
-      console.log('CLOCK IN DATE', clockInDate)
-      console.log('CLOCK IN TIME', clockInTime)
     }
 
     // Split clockOut into date and time
@@ -375,15 +355,9 @@ const ReceivedTimesheetTable = (
     const convertedClockInTime = formatToLocalTime(user.clockIn)
     const convertedClockOutTime = formatToLocalTime(user.clockOut)
 
-    console.log('CONVERTED CLOCK IN TIME', convertedClockInTime)
-    console.log('CONVERTED CLOCK OUT TIME', convertedClockOutTime)
-
     const UTCTimeClockIn = new Date(user.clockIn)
     const timezoneOffsetClockIn = UTCTimeClockIn.getTimezoneOffset() * 60 * 1000 // Offset in milliseconds
-    console.log('UTC TIME', UTCTimeClockIn)
     const localClockInTime = new Date(UTCTimeClockIn.getTime() - timezoneOffsetClockIn).toISOString()
-
-    console.log('LOCAL CLOCK IN TIME', localClockInTime)
 
     const UTCTimeClockOut = new Date(user.clockOut)
     const UTCDateOfService = new Date(user.dateOfService)
@@ -391,8 +365,6 @@ const ReceivedTimesheetTable = (
     const timezoneOffsetDateOfService = UTCDateOfService.getTimezoneOffset() * 60 * 1000 // Offset in milliseconds
     const localClockOutTime = new Date(UTCTimeClockOut.getTime() - timezoneOffsetClockOut).toISOString()
     const localDateOfService = new Date(UTCDateOfService.getTime() - timezoneOffsetDateOfService).toISOString()
-
-    console.log('LOCAL CLOCKOUT TIME', localClockOutTime)
 
     setValue('id', user.id)
     setValue('tsApprovalStatus', user.tsApprovalStatus || 'Pending')
@@ -533,7 +505,7 @@ const ReceivedTimesheetTable = (
       }
 
       // SET THIS DATE OF SERVICE TO TRUE MANUALLY
-      payload.dateOfService = formData.dateOfService
+      payload.dateOfService = formData.clockInDate
       // Always include userId for tracking who made the change
       payload.userId = userId
 
@@ -581,7 +553,6 @@ const ReceivedTimesheetTable = (
   }
 
   const handleSave = async (currentEditedData: any) => {
-    console.log('HANDLE SAVE CURRENT EDITED DATA--------', currentEditedData)
     const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
     const userId = authUser?.id
     const findUser = (data: any[], targetId: string | number): { user: any; isDummyRow: boolean } => {
@@ -659,20 +630,15 @@ const ReceivedTimesheetTable = (
     }
 
     try {
-      console.log('INSIDE HANDLE SAVE TRY BLOCK ------------> ')
-
       const basePayload = {
         tsApprovalStatus: currentEditedData.tsApprovalStatus,
         userId
       }
 
-      console.log('HANDLE SAVE BASE PAYLOAD --------->', basePayload)
-
       let updatePromises: Promise<any>[] = []
       let rowsToUpdate: any[] = []
 
       if (isDummyRow) {
-        console.log('INSIDE DUMMY ROW IF BLOCK -----> ')
         const selectedSubRowIds = selectedRows
           .filter(
             (row: any) =>
@@ -688,7 +654,6 @@ const ReceivedTimesheetTable = (
           })
           return
         }
-        console.log('HANDLE SAVE ROWS TO UPDATE --------->')
 
         rowsToUpdate = currentUser.subRows.filter((subRow: any) => selectedSubRowIds.includes(subRow.id))
 
@@ -697,13 +662,9 @@ const ReceivedTimesheetTable = (
           ...basePayload
         }))
 
-        console.log('INSIDE HANDLE SAVE UPDATE CALL ~~~~~~~> ')
-
         updatePromises = subRowUpdates.map((payload: any) => api.patch(`/time-log/update-ts-approval`, payload))
       } else {
-        console.log('OUTSIDE DUMMY ROW IF BLOCK -----> ')
         rowsToUpdate = [currentUser]
-        console.log('HANDLE SAVE ROWS TO UPDATE --------->', rowsToUpdate)
         updatePromises.push(
           api.patch(`/time-log/update-ts-approval`, {
             id: currentEditedData.id,
@@ -712,7 +673,7 @@ const ReceivedTimesheetTable = (
         )
       }
 
-      const updateResponses = await Promise.all(updatePromises)
+      await Promise.all(updatePromises)
 
       // Handle billing creation or removal based on tsApprovalStatus
       if (currentEditedData.tsApprovalStatus === 'Approved') {
@@ -734,7 +695,7 @@ const ReceivedTimesheetTable = (
           )
         }
 
-        const billingResponses = await Promise.all(billingPromises)
+        await Promise.all(billingPromises)
       } else {
         // } else if (currentUser?.billing?.id) {
         const billingDeletePromises = []
@@ -747,10 +708,7 @@ const ReceivedTimesheetTable = (
         }
 
         if (billingDeletePromises.length > 0) {
-          const billingDeleteResponses = await Promise.all(billingDeletePromises)
-          console.log('INSIDE CALL Billing delete responses:', billingDeleteResponses)
-        } else {
-          console.log('INSIDE CALL NO BILLING TO DELETE')
+          await Promise.all(billingDeletePromises)
         }
       }
 
@@ -792,7 +750,6 @@ const ReceivedTimesheetTable = (
   const onDelete = async (rows: any[], reason: string) => {
     try {
       const tenantId = authUser?.tenant?.id
-      console.log('DELETE TS', rows, 'REASON', reason)
       if (rows?.[0].subRows?.length) {
         const deleteLogsIds = rows[0].subRows.map((el: any) => el.id)
         // Send the reason with the API call
@@ -800,14 +757,12 @@ const ReceivedTimesheetTable = (
           ids: deleteLogsIds,
           reason
         })
-        console.log('DELETE Multiple', deleteLogsIds, 'REASON', reason)
       } else {
         // Send the reason with the API call
         await api.patch(`/time-log/delete-log/${tenantId}`, {
           ids: [rows[0].id],
           reason
         })
-        console.log('DELETE SINGLE', [rows[0].id], 'REASON', reason)
       }
       await fetchInitialData()
     } catch (error) {
@@ -1149,13 +1104,16 @@ const ReceivedTimesheetTable = (
                   </Grid>
                   <Grid size={{ xs: 12, sm: 6 }}>
                     <ControlledDatePicker
-                      name={'dateOfService'}
+                      name={'clockInDate'}
                       error={errors.dateOfService}
                       control={control}
                       label={'Date of Service'}
                       defaultValue={''}
-                      isRequired={false}
-                      disabled={!isEditing}
+                      isRequired={true}
+                      disabled={true}
+                      rules={{
+                        required: 'Date of service is required'
+                      }}
                     />
                   </Grid>
                   <Grid container spacing={2}>
@@ -1168,9 +1126,9 @@ const ReceivedTimesheetTable = (
                         defaultValue={''}
                         isRequired={true}
                         disabled={!isEditing}
-                        selected={clockInDate}
-                        endDate={clockOutDate || undefined}
-                        startDate={clockInDate || undefined}
+                        selected={clockInDateString}
+                        endDate={clockOutDateString || undefined}
+                        startDate={clockInDateString || undefined}
                         rules={{
                           required: 'Clock In Date is required'
                         }}
@@ -1181,6 +1139,7 @@ const ReceivedTimesheetTable = (
                         showTimeSelect
                         showTimeSelectOnly
                         timeIntervals={15}
+                        required
                         dateFormat='hh:mm aa'
                         id='clock-in-time-picker'
                         disabled={!isEditing}
@@ -1216,13 +1175,13 @@ const ReceivedTimesheetTable = (
                         defaultValue={''}
                         isRequired={true}
                         disabled={!isEditing}
-                        selected={clockOutDate}
-                        minDate={clockInDate || undefined} // Restrict to clockInDate or later
+                        selected={clockOutDateString}
+                        minDate={clockInDateString || undefined} // Restrict to clockInDate or later
                         rules={{
                           required: 'Clock Out Date is required',
                           validate: (value: any) => {
-                            if (!clockInDate || !value) return true // Skip if either is empty
-                            return new Date(value) >= new Date(clockInDate)
+                            if (!clockInDateString || !value) return true // Skip if either is empty
+                            return new Date(value) >= clockInDateString
                               ? true
                               : 'Clock Out Date must be on or after Clock In Date'
                           }
@@ -1235,16 +1194,41 @@ const ReceivedTimesheetTable = (
                         showTimeSelectOnly
                         timeIntervals={15}
                         dateFormat='hh:mm aa'
+                        required
                         id='clock-out-time-picker'
                         disabled={!isEditing}
                         selected={parseTimeStringToDate(watch('clockOutTime'))}
-                        minTime={
-                          clockInDate &&
-                          clockOutDate &&
-                          new Date(clockInDate).toDateString() === new Date(clockOutDate).toDateString()
-                            ? parseTimeStringToDate(watch('clockInTime')) || undefined
-                            : setHours(setMinutes(setSeconds(new Date(), 0), 0), 0)
-                        }
+                        minTime={(() => {
+                          if (!clockInDateString || !clockOutDateString) return new Date()
+                          const clockInTime: any = parseTimeStringToDate(watch('clockInTime'))
+                          // Check if dates are the same
+                          const isSameDate = clockInDateString.toDateString() === clockOutDateString.toDateString()
+
+                          if (isSameDate) {
+                            const minutes = clockInTime?.getMinutes()
+                            const roundedMinutes = Math.ceil(minutes / 15) * 15
+                            const nextInterval = new Date(
+                              clockInDateString.getFullYear(),
+                              clockInDateString.getMonth(),
+                              clockInDateString.getDate(),
+                              clockInTime?.getHours(),
+                              clockInTime?.getMinutes(),
+                              clockInTime?.getSeconds(),
+                              clockInTime?.getMilliseconds()
+                            )
+
+                            if (minutes === roundedMinutes) {
+                              nextInterval.setMinutes(minutes + 15)
+                            } else {
+                              nextInterval.setMinutes(roundedMinutes)
+                            }
+
+                            return nextInterval
+                          } else {
+                            // If different date, start from beginning of day
+                            return setSeconds(setMinutes(setHours(new Date(), 0), 0), 0)
+                          }
+                        })()}
                         maxTime={setSeconds(setMinutes(setHours(new Date(), 23), 59), 59)}
                         onChange={(date: Date | null) => {
                           if (date) {

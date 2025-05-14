@@ -2,47 +2,66 @@
 import React, { useEffect, useState } from 'react'
 import UserManagementList from './UserManagementTable'
 import UserManagementFilters from './UserManagementFilters'
-import { Typography } from '@mui/material'
 import api from '@/utils/api'
 
-const UserManagementView = () => {
+const UserManagementPage = () => {
   const [usersData, setUsersData] = useState<any[]>([])
+  const [rolesData, setRolesData] = useState<any[]>([])
+  const [currentPage, setCurrentPage] = useState(0)
+  const [refreshRoles, setRefreshRoles] = useState(false)
   const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
   const tenantId = authUser?.tenant?.id
 
   const fetchInitialData = async () => {
     try {
       const response = await api.get(`/user/tenant/${tenantId}`)
-      const users = response.data.filter((user: any) => user.role?.title !== 'Super Admin')
-      setUsersData(users)
+      setUsersData(Array.isArray(response.data) ? response.data : response.data.data || [])
     } catch (error) {
-      console.error('Error fetching initial data:', error)
+      console.error('Error fetching initial users data:', error)
+    }
+  }
+
+  const fetchRolesData = async () => {
+    try {
+      const response = await api.get(`/role/${tenantId}`)
+      const filteredRoles = response.data.filter((role: any) => role.id !== 1)
+      setRolesData(filteredRoles)
+    } catch (error) {
+      console.error('Error fetching roles data:', error)
     }
   }
 
   useEffect(() => {
     fetchInitialData()
+    fetchRolesData()
   }, [])
 
-  const handleFilterApplied = (filteredData: any) => {
+  useEffect(() => {
+    if (refreshRoles) {
+      fetchRolesData()
+      setRefreshRoles(false)
+    }
+  }, [refreshRoles])
+
+  const handleFilterApplied = (filteredData: any[]) => {
     setUsersData(filteredData)
+    setCurrentPage(0)
   }
 
   return (
     <div>
-      <div>
-        <Typography variant='h3' className='mb-5'>
-          Admin User Management
-        </Typography>
-      </div>
-      <div>
-        <UserManagementFilters onFilterApplied={handleFilterApplied} />
-      </div>
-      <div className='mt-5'>
-        <UserManagementList usersData={usersData} fetchInitialData={fetchInitialData}/>
-      </div>
+      <UserManagementFilters onFilterApplied={handleFilterApplied} rolesData={rolesData} />
+      <UserManagementList
+        usersData={usersData}
+        fetchInitialData={fetchInitialData}
+        currentPage={currentPage}
+        setCurrentPage={setCurrentPage}
+        rolesData={rolesData}
+        setRolesData={setRolesData}
+        setRefreshRoles={setRefreshRoles}
+      />
     </div>
   )
 }
 
-export default UserManagementView
+export default UserManagementPage

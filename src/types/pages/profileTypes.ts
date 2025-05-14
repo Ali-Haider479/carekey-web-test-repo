@@ -21,6 +21,7 @@ export type ProfileHeaderType = {
   designation?: string
   designationIcon?: string
   isClient?: boolean
+  userId?: number
 }
 export type ProfileAvatarGroupType = {
   name: string

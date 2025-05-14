@@ -329,8 +329,11 @@ const InfoCard = () => {
                           isRequired={false}
                           minDate={new Date()}
                           rules={{
-                            required: 'Un Assignment Date is required',
+                            // required: 'Un Assignment Date is required',
                             validate: (value: any) => {
+                              if (!value) {
+                                return true
+                              }
                               return new Date(value) >= new Date(assignmentDate)
                                 ? true
                                 : 'unassignment date must be greater than assignment date'

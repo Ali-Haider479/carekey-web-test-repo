@@ -223,7 +223,7 @@ const EvvActiveUserTable = ({ timeLogData, isLoading, payPeriod, fetchInitialDat
     const currentClientPendingSigns = pendingSignatures.data.pendingClients.filter(
       (el: any) => el.clientId === selectedUser.client.id
     )
-    console.log('ONE EVV currentClientPendingSigns', currentClientPendingSigns)
+
     let signResponse: any
     try {
       if (currentClientPendingSigns.length === 0) {
@@ -407,8 +407,7 @@ const EvvActiveUserTable = ({ timeLogData, isLoading, payPeriod, fetchInitialDat
                       endDate={values?.dateOfService !== null ? values?.dateOfService : weekRange.endDate}
                       selected={values?.dateOfService}
                       startDate={values?.dateOfService !== null ? values?.dateOfService : weekRange.startDate}
-                      showTimeSelect={!values?.dateOfService}
-                      dateFormat={!values?.dateOfService ? 'yyyy-MM-dd hh:mm' : 'yyyy-MM-dd'}
+                      dateFormat={'yyyy-MM-dd'}
                       minDate={selectedUser?.clockIn} // Set the minimum selectable date
                       maxDate={weekRange.endDate}
                       customInput={
@@ -430,17 +429,38 @@ const EvvActiveUserTable = ({ timeLogData, isLoading, payPeriod, fetchInitialDat
                       showTimeSelectOnly
                       dateFormat='hh:mm aa'
                       id='time-only-picker'
-                      minTime={
-                        values?.dateOfService &&
-                        selectedUser?.clockIn &&
-                        new Date(values.dateOfService).toDateString() === new Date(selectedUser.clockIn).toDateString()
-                          ? new Date(selectedUser.clockIn) // Same day: use clockIn time
-                          : setHours(setMinutes(setSeconds(new Date(), 0), 0), 0) // Different day: start of day (12:00 AM)
-                      }
+                      minTime={(() => {
+                        if (!selectedUser?.clockIn || !values?.dateOfService) return new Date()
+
+                        const clockInTime = new Date(selectedUser.clockIn)
+                        const selectedDate = values.dateOfService
+
+                        // Check if dates are the same
+                        const isSameDate =
+                          clockInTime.getFullYear() === selectedDate.getFullYear() &&
+                          clockInTime.getMonth() === selectedDate.getMonth() &&
+                          clockInTime.getDate() === selectedDate.getDate()
+
+                        if (isSameDate) {
+                          const minutes = clockInTime.getMinutes()
+                          const roundedMinutes = Math.ceil(minutes / 15) * 15
+                          const nextInterval = new Date(clockInTime)
+
+                          if (minutes === roundedMinutes) {
+                            nextInterval.setMinutes(minutes + 15)
+                          } else {
+                            nextInterval.setMinutes(roundedMinutes)
+                          }
+
+                          return nextInterval
+                        } else {
+                          // If different date, start from beginning of day
+                          return setSeconds(setMinutes(setHours(new Date(), 0), 0), 0)
+                        }
+                      })()}
                       maxTime={setSeconds(setMinutes(setHours(new Date(), 23), 59), 59)}
                       onChange={(date: Date | null) => {
                         if (date !== null) {
-                          // Combine the selected end date with the selected end time
                           setValues({
                             ...values,
                             clockIn: date

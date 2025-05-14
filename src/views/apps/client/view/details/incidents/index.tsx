@@ -79,7 +79,7 @@ const IncidentsTab = () => {
       id: 'incidentDate',
       label: 'INCIDENT DATE',
       minWidth: 170,
-      render: (item: any) => <Typography>{new Date(item?.incidentDate).toLocaleString()}</Typography>
+      render: (item: any) => <Typography>{new Date(item?.incidentDate).toLocaleDateString()}</Typography>
     },
     {
       id: 'reportedToClientFamily',

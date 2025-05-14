@@ -246,18 +246,26 @@ const EmployeeStepper = () => {
         message: 'Caregiver created successfully.',
         severity: 'success'
       })
-    } catch (error) {
-      setAlertOpen(true)
-      setAlertProps({
-        message: 'An unexpected error occurred. Please try again later.',
-        severity: 'error'
-      })
-      console.error('Error in document upload process:', error)
-    } finally {
       setTimeout(() => {
         setIsLoading(false)
         router.replace('/en/apps/caregiver/list')
       }, 3000)
+    } catch (error: any) {
+      if (error.response?.data?.message?.includes('Email already exists')) {
+        setAlertOpen(true)
+        setAlertProps({
+          message: 'Email already exists',
+          severity: 'error'
+        })
+        setIsLoading(false)
+      } else {
+        setAlertOpen(true)
+        setAlertProps({
+          message: 'An unexpected error occurred. Please try again later.',
+          severity: 'error'
+        })
+      }
+      console.error('Error in document upload process:', error)
     }
   }
 

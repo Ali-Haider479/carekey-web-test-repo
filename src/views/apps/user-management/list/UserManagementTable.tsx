@@ -20,12 +20,16 @@ import {
   SelectChangeEvent,
   Switch,
   TextField,
+  Tooltip,
   Typography
 } from '@mui/material'
 import { dark } from '@mui/material/styles/createPalette'
 import React, { useEffect, useState } from 'react'
 import CloseIcon from '@mui/icons-material/Close'
 import api from '@/utils/api'
+import CustomAlert from '@/@core/components/mui/Alter'
+import { set } from 'date-fns'
+import { useForm } from 'react-hook-form'
 
 type Permission = {
   id: number
@@ -68,15 +72,29 @@ interface FormErrors {
 interface UserManagementListProps {
   usersData: UserManagement[]
   fetchInitialData: () => void
+  currentPage: number
+  setCurrentPage: (page: number) => void
+  rolesData: Role[] // Add rolesData prop
+  setRolesData: (roles: Role[]) => void // Add setRolesData prop
+  setRefreshRoles: (value: boolean) => void
 }
 
-const UserManagementList = ({ usersData, fetchInitialData }: UserManagementListProps) => {
+const UserManagementList = ({
+  usersData,
+  fetchInitialData,
+  currentPage,
+  setCurrentPage,
+  rolesData,
+  setRolesData,
+  setRefreshRoles
+}: UserManagementListProps) => {
   const [search, setSearch] = useState('')
-  const [rolesData, setRolesData] = useState<Role[]>([])
   const [permissionData, setPermissionData] = useState<any>([])
   const [isModalShow, setIsModalShow] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  const [alertOpen, setAlertOpen] = useState(false)
+  const [alertProps, setAlertProps] = useState<any>()
   const [customRole, setCustomRole] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [touched, setTouched] = useState<Record<string, boolean>>({})
@@ -101,7 +119,7 @@ const UserManagementList = ({ usersData, fetchInitialData }: UserManagementListP
 
   const fetchData = async () => {
     try {
-      await Promise.all([api.get(`/role`), api.get(`/permission`)]).then(([role, permission]) => {
+      await Promise.all([api.get(`/role/${tenantId}`), api.get(`/permission`)]).then(([role, permission]) => {
         const roles = role.data.filter((role: any) => role.id !== 1)
         setRolesData(roles)
         setPermissionData(permission.data)
@@ -144,21 +162,18 @@ const UserManagementList = ({ usersData, fetchInitialData }: UserManagementListP
 
   const handleChange = (field: keyof FormData) => (event: React.ChangeEvent<HTMLInputElement | { value: string }>) => {
     const value = event.target.value
-    const restrictedRoles = ['Tenant Admin', 'Super Admin', 'Caregiver', 'Case Manager', 'Qualified Professional']
-
-    if (restrictedRoles.includes(value)) {
-      setErrors(prev => ({
-        ...prev,
-        [field]: 'This role already exists'
-      }))
-      return
-    }
-
+    // const restrictedRoles = ['Tenant Admin', 'Super Admin', 'Caregiver', 'Case Manager', 'Qualified Professional']
+    // if (restrictedRoles.includes(value)) {
+    //   setErrors(prev => ({
+    //     ...prev,
+    //     [field]: 'This role already exists'
+    //   }))
+    //   return
+    // }
     setFormData(prev => ({
       ...prev,
       [field]: value
     }))
-
     if (errors[field]) {
       setErrors(prev => ({
         ...prev,
@@ -185,12 +200,29 @@ const UserManagementList = ({ usersData, fetchInitialData }: UserManagementListP
       isValid = false
     }
 
+    if (!formData.password) {
+      newErrors.password = 'This field is required'
+      isValid = false
+    } else if (formData.password.length < 8) {
+      // newErrors.password = 'Password must be at least 8 characters long'
+      // isValid = false
+      setErrors(prev => ({
+        ...prev,
+        password: 'Password must be at least 8 characters long'
+      }))
+    }
+
     setErrors(newErrors)
     return isValid
   }
 
+  console.log('Auth User Tenant ID', authUser?.tenant?.id)
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!validateForm()) {
+      return // Stop submission if validation fails
+    }
     try {
       let payload
 
@@ -228,8 +260,39 @@ const UserManagementList = ({ usersData, fetchInitialData }: UserManagementListP
         role: '',
         customPermissions: []
       })
-    } catch (error) {
+      setRefreshRoles(true)
+    } catch (error: any) {
+      console.log('Inside catch block')
       console.log('ERROR', error)
+
+      if (
+        error.response?.data?.message?.includes('Email already exists') &&
+        error.response?.data?.message?.includes('Role already exists')
+      ) {
+        setErrors(prev => ({
+          ...prev,
+          emailAddress: 'Email already exists',
+          role: 'Role already exists'
+        }))
+      }
+
+      if (error.response?.data?.message?.includes('Email already exists')) {
+        setErrors(prev => ({
+          ...prev,
+          emailAddress: 'Email already exists'
+        }))
+      } else if (error.response?.data?.message?.includes('Role already exists')) {
+        setErrors(prev => ({
+          ...prev,
+          role: 'Role already exists'
+        }))
+      } else {
+        setAlertOpen(true)
+        setAlertProps({
+          message: 'An unexpected error occurred. Please try again later.',
+          severity: 'error'
+        })
+      }
     }
   }
 
@@ -291,7 +354,7 @@ const UserManagementList = ({ usersData, fetchInitialData }: UserManagementListP
   const columns = [
     {
       id: 'adminName',
-      label: 'ADMIN NAME',
+      label: 'NAME',
       minWidth: 170,
       render: (params: any) => {
         return (
@@ -329,25 +392,38 @@ const UserManagementList = ({ usersData, fetchInitialData }: UserManagementListP
         const remainingPrivilegesCount = privileges?.length - 2 // Count of remaining permissions
 
         return (
-          <Grid key={`privileges-${params.id}`} className='flex flex-row gap-2 mt-2'>
-            {firstTwoPrivileges?.map((privilege: string, index: number) => (
-              <div
-                key={`privilege-${index}-${privilege}`}
-                className='px-1 border border-[#666CFF] border-opacity-[50%] rounded-sm'
-              >
-                <Typography className={`${dark ? 'text-[#7112B7]' : 'text-[#4B0082]'}`}>{privilege}</Typography>
+          <Tooltip
+            placement='top'
+            title={
+              <div>
+                <Typography className='text-white font-semibold'>Remaining Privileges:</Typography>
+                {privileges?.slice(2).map((privilege: any, index: any) => (
+                  <Typography className='text-white' key={`tooltip-privilege-${index}`}>
+                    {privilege}
+                  </Typography>
+                ))}
               </div>
-            ))}
-
-            {/* Show remaining privileges count if there are more than two */}
-            {remainingPrivilegesCount > 0 && (
-              <div className='px-1 border border-[#666CFF] border-opacity-[50%] rounded-sm'>
-                <Typography className={`${dark ? 'text-[#7112B7]' : 'text-[#4B0082]'}`}>
-                  + {remainingPrivilegesCount} more
-                </Typography>
-              </div>
-            )}
-          </Grid>
+            }
+          >
+            <Grid key={`privileges-${params.id}`} className='flex flex-row gap-2 mt-2'>
+              {firstTwoPrivileges?.map((privilege: string, index: number) => (
+                <div
+                  key={`privilege-${index}-${privilege}`}
+                  className='px-1 border border-[#666CFF] border-opacity-[50%] rounded-sm'
+                >
+                  <Typography className={`${dark ? 'text-[#7112B7]' : 'text-[#4B0082]'}`}>{privilege}</Typography>
+                </div>
+              ))}
+              {/* Show remaining privileges count if there are more than two */}
+              {remainingPrivilegesCount > 0 && (
+                <div className='px-1 border border-[#666CFF] border-opacity-[50%] rounded-sm'>
+                  <Typography className={`${dark ? 'text-[#7112B7]' : 'text-[#4B0082]'}`}>
+                    + {remainingPrivilegesCount} more
+                  </Typography>
+                </div>
+              )}
+            </Grid>
+          </Tooltip>
         )
       }
     },
@@ -399,6 +475,7 @@ const UserManagementList = ({ usersData, fetchInitialData }: UserManagementListP
               open={open}
               onOpen={() => setOpen(true)}
               onClose={() => setOpen(false)}
+              required={true}
             >
               {permissionData.map((permission: Permission) => (
                 <MenuItem key={permission.id} value={permission.id}>
@@ -439,6 +516,7 @@ const UserManagementList = ({ usersData, fetchInitialData }: UserManagementListP
 
   return (
     <div>
+      <CustomAlert AlertProps={alertProps} openAlert={alertOpen} setOpenAlert={setAlertOpen} />
       <Card>
         <Grid container spacing={2} alignItems='center' sx={{ mb: 2, p: 10 }}>
           <Grid size={{ xs: 12, md: 6 }}>
@@ -484,6 +562,8 @@ const UserManagementList = ({ usersData, fetchInitialData }: UserManagementListP
               stickyHeader
               maxHeight={600}
               containerStyle={{ borderRadius: 2 }}
+              page={currentPage}
+              onPageChange={setCurrentPage}
             />
           )}
         </div>
@@ -493,7 +573,16 @@ const UserManagementList = ({ usersData, fetchInitialData }: UserManagementListP
           open={isModalShow}
           onClose={handleModalClose}
           closeAfterTransition={false}
-          sx={{ '& .MuiDialog-paper': { overflow: 'visible' } }}
+          sx={{
+            '& .MuiDialog-paper': {
+              width: '100%',
+              maxWidth: '87vh', // Adjust as needed
+              maxHeight: '85vh', // Limit modal height to 80% of viewport height
+              overflow: 'visible',
+              borderRadius: '8px',
+              padding: '3px'
+            }
+          }}
         >
           <DialogCloseButton onClick={handleModalClose} disableRipple>
             <i className='bx-x' />
@@ -526,7 +615,7 @@ const UserManagementList = ({ usersData, fetchInitialData }: UserManagementListP
                   <TextField
                     fullWidth
                     required
-                    label='Admin User Name'
+                    label='Name'
                     placeholder='John'
                     value={formData.userName}
                     onChange={handleChange('userName')}
@@ -541,7 +630,7 @@ const UserManagementList = ({ usersData, fetchInitialData }: UserManagementListP
                     fullWidth
                     required
                     type='email'
-                    label='Admin Email Address'
+                    label='Email Address'
                     placeholder='admin@example.com'
                     value={formData.emailAddress}
                     onChange={handleChange('emailAddress')}
@@ -564,6 +653,9 @@ const UserManagementList = ({ usersData, fetchInitialData }: UserManagementListP
                     error={touched.password && !!errors.password}
                     helperText={touched.password && errors.password}
                     sx={textFieldSx}
+                    inputProps={{
+                      minLength: 8 // Add minimum length requirement
+                    }}
                     InputProps={{
                       endAdornment: (
                         <InputAdornment position='end'>
@@ -608,17 +700,19 @@ const UserManagementList = ({ usersData, fetchInitialData }: UserManagementListP
                       helperText={touched.role && errors.role}
                       sx={textFieldSx}
                     >
-                      {rolesData.map(role => (
-                        <MenuItem key={role.id} value={role.id}>
-                          {role.title}
-                        </MenuItem>
-                      ))}
+                      {rolesData
+                        .filter(role => role.title !== 'Caregiver')
+                        .map(role => (
+                          <MenuItem key={role.id} value={role.id}>
+                            {role.title}
+                          </MenuItem>
+                        ))}
                     </TextField>
                   )}
                 </Grid>
                 {renderPermissionsSection()}
               </Grid>
-              <div className='flex gap-4 justify-end mt-4 mb-4'>
+              <div className='flex gap-4 justify-end mt-5 mb-4'>
                 <Button variant='outlined' color='secondary' onClick={handleModalClose}>
                   CANCEL
                 </Button>

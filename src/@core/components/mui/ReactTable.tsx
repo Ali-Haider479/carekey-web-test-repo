@@ -64,6 +64,8 @@ interface ReactTableProps<T extends { subRows?: T[] }> {
   onSave?: any
   editingId?: any
   onEditChange?: any
+  page?: number
+  onPageChange?: (page: number) => void
 }
 
 function ReactTable<T extends { subRows?: T[] }>({
@@ -88,11 +90,13 @@ function ReactTable<T extends { subRows?: T[] }>({
   dense = false,
   size = 'medium',
   editingId = null,
-  onEditChange
+  onEditChange,
+  page: externalPage = 0, // Default to 0
+  onPageChange
 }: ReactTableProps<T>) {
   const [selected, setSelected] = useState<string[]>([])
   const [expanded, setExpanded] = useState<string[]>([])
-  const [page, setPage] = useState(0)
+  const [page, setPage] = useState(externalPage)
   const [rowsPerPage, setRowsPerPage] = useState(pageSize)
   const [sortConfig, setSortConfig] = useState<{ columnId: string; direction: 'asc' | 'desc' } | null>({
     columnId: 'id',
@@ -107,6 +111,10 @@ function ReactTable<T extends { subRows?: T[] }>({
       setEditedData({})
     }
   }, [editingId])
+
+  useEffect(() => {
+    setPage(externalPage)
+  }, [externalPage])
 
   // Initialize default sorting by id in ascending order
   useEffect(() => {
@@ -324,11 +332,13 @@ function ReactTable<T extends { subRows?: T[] }>({
 
   const handleChangePage = (event: unknown, newPage: number) => {
     setPage(newPage)
+    onPageChange?.(newPage)
   }
 
   const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
     setRowsPerPage(parseInt(event.target.value, 10))
     setPage(0)
+    onPageChange?.(0)
   }
 
   const renderRow = (item: T, level: number = 0, parentExpanded: boolean = true) => {

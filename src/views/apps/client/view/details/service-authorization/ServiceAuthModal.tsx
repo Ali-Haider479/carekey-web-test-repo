@@ -23,6 +23,7 @@ import { placeOfServiceOptions, payerOptions } from '@/utils/constants'
 import OcrCustomDropDown from '@/@core/components/custom-inputs/OcrCustomDropdown'
 import api from '@/utils/api'
 import { extractStructuredTextFromPDF, parseServiceAgreement } from '@/utils/pdfDataExtract'
+import { useTheme } from '@emotion/react'
 
 interface ServiceAuthListModalProps {
   open: boolean
@@ -80,6 +81,7 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
   const [ocrData, setOcrData] = useState<FormRow[]>([])
   const authUser: AuthUser = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
   const [payerName, setPayerName] = useState<string>('MA')
+  const theme: any = useTheme()
 
   const initialFormRow: FormRow = {
     providerId: '',
@@ -597,11 +599,32 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
                 </Grid>
               </Grid>
             </CardContent>
-          </Card>
 
-          {/* Services Card */}
-          <Card sx={{ mx: 2, mb: 4, boxShadow: 'rgba(0, 0, 0, 0.35) 0px 5px 20px' }}>
-            <CardHeader title='Services' />
+            <Box
+              sx={{
+                height: '20px',
+                position: 'relative',
+                '&::before': {
+                  content: '""',
+                  position: 'absolute',
+                  left: '-16px',
+                  right: '-16px',
+                  height: '5px',
+                  backgroundColor: theme.palette.mode === 'light' ? '#C1C1C1' : '#212131',
+                  boxShadow: 'rgba(0, 0, 0, 0.1) 0px -2px 5px, rgba(0, 0, 0, 0.1) 0px 2px 5px',
+                  zIndex: 0
+                }
+              }}
+            />
+
+            <Typography
+              variant='h5'
+              sx={{
+                marginInlineStart: '25px'
+              }}
+            >
+              Services
+            </Typography>
             <CardContent>
               {formData.map((row: FormRow, index: number) => (
                 <Box key={index} sx={{ mb: 4, position: 'relative' }}>
@@ -609,7 +632,7 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
                     <Grid size={{ xs: 12 }}>
                       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2 }}>
                         <Divider sx={{ flex: 1 }} />
-                        <Typography variant='h6' sx={{ textAlign: 'center', minWidth: '2rem', color: '#fff' }}>
+                        <Typography variant='h6' sx={{ textAlign: 'center', minWidth: '2rem' }}>
                           {index + 1}
                         </Typography>
                         <Divider sx={{ flex: 1 }} />

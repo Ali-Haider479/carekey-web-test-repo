@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation'
 import { FormProvider, useForm } from 'react-hook-form'
 import CustomTextField from '@/@core/components/custom-inputs/CustomTextField'
 import api from '@/utils/api'
+import CustomAlert from '@/@core/components/mui/Alter'
 
 type Props = {
   open: boolean
@@ -66,6 +67,8 @@ const CreateTenant = (props: Props) => {
 
   const [touched, setTouched] = useState<{ [key: string]: boolean }>({})
   const [showPassword, setShowPassword] = useState(false)
+  const [alertOpen, setAlertOpen] = useState(false)
+  const [alertProps, setAlertProps] = useState<any>()
   const [error, setError] = useState('')
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const router = useRouter()
@@ -195,8 +198,21 @@ const CreateTenant = (props: Props) => {
       }
       const payperiod = await api.post(`/pay-period`, payload)
       router.replace(`/en/apps/accounts/tenant-list`)
-    } catch (error) {
+    } catch (error: any) {
       console.log('ERROR', error)
+      if (error.response?.data?.message?.includes('Email already exists')) {
+        setAlertOpen(true)
+        setAlertProps({
+          message: 'Email already exists',
+          severity: 'error'
+        })
+      } else {
+        setAlertOpen(true)
+        setAlertProps({
+          message: 'An unexpected error occurred. Please try again later.',
+          severity: 'error'
+        })
+      }
     }
   }
 
@@ -215,6 +231,8 @@ const CreateTenant = (props: Props) => {
 
   return (
     <FormProvider {...methods}>
+      <CustomAlert AlertProps={alertProps} openAlert={alertOpen} setOpenAlert={setAlertOpen} />
+
       <form onSubmit={handleSubmit(onSubmit)} className='flex flex-col gap-6'>
         <Card>
           <CardHeader title='Tenant/Accounts' titleTypographyProps={{ sx: { fontSize: '24px' } }} />
@@ -402,6 +420,8 @@ const CreateTenant = (props: Props) => {
                     isPhoneNumber={true}
                     error={errors.contactNumber}
                     control={control}
+                    minLength={10}
+                    // maxLength={10}
                   />
                 </Grid>
                 {/* Fax Number */}
@@ -415,6 +435,8 @@ const CreateTenant = (props: Props) => {
                     isPhoneNumber={true}
                     error={errors.faxNumber}
                     control={control}
+                    minLength={10}
+                    // maxLength={10}
                   />
                 </Grid>
               </Grid>

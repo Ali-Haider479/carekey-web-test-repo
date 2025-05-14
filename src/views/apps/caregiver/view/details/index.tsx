@@ -15,7 +15,6 @@ import CustomTabList from '@core/components/mui/TabList'
 import ProfileBanner from '@/@layouts/components/horizontal/ProfileBanner'
 import { Typography } from '@mui/material'
 import { useParams, useRouter } from 'next/navigation'
-import axios from 'axios'
 import api from '@/utils/api'
 import CustomAlert from '@/@core/components/mui/Alter'
 
@@ -83,7 +82,7 @@ const CaregiverDetails = ({ tabContentList }: BottomBodyProps) => {
 
   const fullName = [data?.firstName || '', data?.middleName || '', data?.lastName || ''].filter(Boolean).join(' ')
 
-  console.log(data)
+  console.log('Caregiver Data ------------->> ', data)
 
   return (
     <>
@@ -106,7 +105,8 @@ const CaregiverDetails = ({ tabContentList }: BottomBodyProps) => {
             location: data?.addresses[0]?.address?.state ? data?.addresses[0]?.address?.state : '---',
             profileImg: data?.user?.profileImageUrl,
             status: 'CAREGIVER',
-            isClient: false
+            isClient: false,
+            userId: data?.user?.id
           }}
         />
         <Grid container spacing={6}>

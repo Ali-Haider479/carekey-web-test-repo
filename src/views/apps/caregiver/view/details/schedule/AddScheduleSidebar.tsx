@@ -157,7 +157,7 @@ const AddEventModal = (props: AddEventSidebarType) => {
 
   const fetchClientUsers = async () => {
     try {
-      const caregiverUserId = props.data.user.id
+      const caregiverUserId = props?.data?.user?.id
       const response = await api.get(`/user/clientUsers/${caregiverUserId}`)
       setClientList(response.data)
     } catch (error) {
@@ -242,7 +242,7 @@ const AddEventModal = (props: AddEventSidebarType) => {
     for (let i = 0; i < totalDays; i++) {
       const eventStartDate = new Date(currentDate)
       const finalStartDate = mergeDateWithTime(eventStartDate, values.startTime)
-      const finalEndDate = new Date(finalStartDate.getTime() + assignedHours * 60 * 60 * 1000) 
+      const finalEndDate = new Date(finalStartDate.getTime() + assignedHours * 60 * 60 * 1000)
 
       bulkEvents.push({
         display: 'block',

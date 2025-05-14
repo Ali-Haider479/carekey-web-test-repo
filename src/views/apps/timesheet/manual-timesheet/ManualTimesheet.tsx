@@ -66,7 +66,16 @@ interface PickerProps {
 }
 
 const ManualTimesheet = ({ caregiverList, payPeriod }: any) => {
-  const [values, setValues] = useState<DefaultStateType>(defaultState)
+  const [values, setValues] = useState(defaultState)
+  const [errors, setErrors] = useState({
+    caregiver: false,
+    client: false,
+    serviceName: false,
+    dateOfService: false,
+    clockIn: false,
+    clockOut: false,
+    activities: false
+  })
   const [openSuccessSnackbar, setOpenSuccessSnackbar] = useState(false)
   const [weekRange, setWeekRange] = useState<any>({})
   const [selectedItems, setSelectedItems] = useState<number[]>([])
@@ -75,13 +84,25 @@ const ManualTimesheet = ({ caregiverList, payPeriod }: any) => {
   const [serviceActivities, setServiceActivities] = useState<any>([])
   const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
 
+  // Validation function to check required fields
+  const validateForm = () => {
+    const newErrors = {
+      caregiver: !values.caregiver,
+      client: !values.client,
+      serviceName: !values.serviceName,
+      dateOfService: !values.dateOfService,
+      clockIn: !values.clockIn,
+      clockOut: !values.clockOut,
+      activities: selectedItems.length === 0
+    }
+    setErrors(newErrors)
+    return !Object.values(newErrors).some(error => error)
+  }
+
   const combineDateAndTimeForGMT = (date: any, time: any) => {
     if (!date || !time) return null
-
     const datePart = new Date(date)
     const timePart = new Date(time)
-
-    // Create a GMT date by setting hours/minutes in UTC context
     const combined = new Date(
       Date.UTC(
         datePart.getUTCFullYear(),
@@ -93,25 +114,25 @@ const ManualTimesheet = ({ caregiverList, payPeriod }: any) => {
         0
       )
     )
-
     return combined.toISOString()
   }
 
-  // Helper function to remove a specific item from the array
   const handleDelete = (itemToRemove: number) => {
     setSelectedItems(prev => prev.filter(item => item !== itemToRemove))
+    setErrors(prev => ({ ...prev, activities: false }))
   }
 
   const handleChange = (event: SelectChangeEvent<number[]>) => {
     const value = event.target.value as number[]
     setSelectedItems(value)
+    setErrors(prev => ({ ...prev, activities: value.length === 0 }))
   }
 
   const fetchClientUsers = async () => {
     try {
       const filterCg = caregiverList.filter((ele: any) => ele.id === values.caregiver)
       const caregiverUserId = filterCg[0]?.user?.id
-      if (!caregiverUserId) return // Avoid fetching if caregiverUserId is not set
+      if (!caregiverUserId) return
       const response = await api.get(`/user/clientUsers/${caregiverUserId}`)
       setClientUsers(response.data)
     } catch (error) {
@@ -120,12 +141,12 @@ const ManualTimesheet = ({ caregiverList, payPeriod }: any) => {
   }
 
   useEffect(() => {
-    fetchClientUsers()
+    if (values.caregiver) fetchClientUsers()
   }, [values.caregiver])
 
   const fetchClientServiceType = async () => {
     try {
-      if (!values.client) return // Avoid fetching if client is not set
+      if (!values.client) return
       const response = await api.get(`/client/${values.client}/services`)
       setServiceType(response.data)
     } catch (error) {
@@ -133,21 +154,30 @@ const ManualTimesheet = ({ caregiverList, payPeriod }: any) => {
     }
   }
 
-  useEffect(() => {
-    fetchClientServiceType()
-    clientServiceActivities()
-  }, [values.client])
-
   const clientServiceActivities = async () => {
     try {
-      const activityIds = clientUsers[0]?.client?.serviceActivityIds
-      if (!values.client) return // Avoid fetching if service is not set
+      // Find the selected client from clientUsers array
+      const selectedClient = clientUsers.find((client: any) => client?.client?.id === values.client)
+      const activityIds = selectedClient?.client?.serviceActivityIds
+
+      // Only fetch if we have a client and activity IDs
+      if (!values.client || !activityIds) return
+
       const response: any = await api.get(`/activity/activities/${activityIds}`)
       setServiceActivities(response?.data)
     } catch (error) {
       console.error('Error fetching client service activities:', error)
     }
   }
+
+  useEffect(() => {
+    if (values.client) {
+      setSelectedItems([])
+      setServiceActivities([])
+      fetchClientServiceType()
+      clientServiceActivities()
+    }
+  }, [values.client])
 
   useEffect(() => {
     if (Object.keys(payPeriod).length > 0) {
@@ -157,20 +187,17 @@ const ManualTimesheet = ({ caregiverList, payPeriod }: any) => {
   }, [payPeriod])
 
   const calculateStartAndEndDate = (range: any) => {
-    // Ensure correct parsing of the start date in UTC
     const [year, month, day] = range?.startDate?.split('-')
-    const startDate = new Date(Date.UTC(year, month - 1, day)) // Use UTC to avoid time zone issues
-
+    const startDate = new Date(Date.UTC(year, month - 1, day))
     const endDate = new Date(startDate)
-    endDate.setUTCDate(startDate.getUTCDate() + range.numberOfWeeks * 7) // Update in UTC as well
-
+    endDate.setUTCDate(startDate.getUTCDate() + range.numberOfWeeks * 7)
     return {
-      startDate: startDate.toISOString().split('T')[0], // Get ISO date in YYYY-MM-DD format
+      startDate: startDate.toISOString().split('T')[0],
       endDate: endDate.toISOString().split('T')[0]
     }
   }
 
-  const PickersComponent = forwardRef(({ ...props }: PickerProps, ref) => {
+  const PickersComponent = forwardRef(({ ...props }: any, ref) => {
     return (
       <TextField
         inputRef={ref}
@@ -182,6 +209,7 @@ const ManualTimesheet = ({ caregiverList, payPeriod }: any) => {
         placeholder={props.placeholder}
         id={props.id}
         error={props.error}
+        helperText={props.error ? 'This field is required' : ''}
       />
     )
   })
@@ -189,36 +217,52 @@ const ManualTimesheet = ({ caregiverList, payPeriod }: any) => {
   const onDiscard = () => {
     setValues(defaultState)
     setSelectedItems([])
+    setErrors({
+      caregiver: false,
+      client: false,
+      serviceName: false,
+      dateOfService: false,
+      clockIn: false,
+      clockOut: false,
+      activities: false
+    })
   }
 
   const onSubmit = async () => {
+    if (!validateForm()) {
+      return
+    }
+
     try {
+      let signResponse: any
+      const pendingSignatures: any = await api.get(
+        `/signatures/${values.caregiver}/pending-signatures-count/${payPeriod.id}`
+      )
+      const currentClientPendingSigns = pendingSignatures.data.pendingClients.filter(
+        (el: any) => el.clientId === values.client
+      )
+      if (currentClientPendingSigns.length === 0) {
+        const payLoad = {
+          clientSignature: '',
+          caregiverSignature: '',
+          duration: '',
+          caregiverId: values.caregiver,
+          clientId: values.client,
+          tenantId: authUser?.tenant?.id,
+          signatureStatus: 'Pending'
+        }
+        signResponse = await api.post(`/signatures`, payLoad)
+      }
+
       const checkedActivityRes = await api.post(`/activity`, {
         activityIds: selectedItems
       })
-
-      const payLoad = {
-        clientSignature: '',
-        caregiverSignature: '',
-        duration: '',
-        caregiverId: values.caregiver,
-        clientId: values.client,
-        tenantId: authUser?.tenant?.id,
-        signatureStatus: 'Pending'
-      }
-
       // Make the API call only if client does not exist in taken or pending
-      const signResponse: any = await api.post(`/signatures`, payLoad)
+      // const signResponse: any = await api.post(`/signatures`, payLoad)
       if (checkedActivityRes.status === 201) {
-        // Extract the date part from dateOfService
         const serviceDate = new Date(values.dateOfService)
-
-        // Create new Date objects for clockIn and clockOut
         let newClockIn = new Date(values.clockIn)
         let newClockOut = new Date(values.clockOut)
-
-        // Set the date part of clockIn and clockOut to match dateOfService
-        // while keeping their original time values
         newClockIn.setFullYear(serviceDate.getFullYear(), serviceDate.getMonth(), serviceDate.getDate())
         newClockOut.setFullYear(serviceDate.getFullYear(), serviceDate.getMonth(), serviceDate.getDate())
 
@@ -236,52 +280,72 @@ const ManualTimesheet = ({ caregiverList, payPeriod }: any) => {
           checkedActivityId: checkedActivityRes.data.id,
           serviceName: values.serviceName,
           payPeriodHistoryId: payPeriod.id,
-          signatureId: signResponse.data.id,
+          signatureId:
+            currentClientPendingSigns.length > 0 ? currentClientPendingSigns[0].signatureId : signResponse?.data?.id,
           tenantId: authUser?.tenant?.id
         }
         await api.post(`/time-log`, modifiedEvent)
       }
-      // Reset form and show success message
       setValues(defaultState)
       setSelectedItems([])
+      setErrors({
+        caregiver: false,
+        client: false,
+        serviceName: false,
+        dateOfService: false,
+        clockIn: false,
+        clockOut: false,
+        activities: false
+      })
       setOpenSuccessSnackbar(true)
     } catch (error) {
       console.log('Error:', error)
     }
   }
 
+  // Check if form is valid to enable/disable submit button
+  const isFormValid = () => {
+    return (
+      values.caregiver &&
+      values.client &&
+      values.serviceName &&
+      values.dateOfService &&
+      values.clockIn &&
+      values.clockOut &&
+      selectedItems.length > 0
+    )
+  }
+
   return (
     <>
       <Card className='w-full h-fit' sx={{ p: 2, borderRadius: 1, boxShadow: 2 }}>
-        {/* Card Header */}
         <CardHeader
           title='Add Your Manually Timesheet Details'
           titleTypographyProps={{ variant: 'h6', sx: { fontWeight: 500 } }}
         />
-
-        {/* Card Content */}
         <CardContent>
           <Grid container spacing={4}>
-            {/* Week Dropdown */}
             <Grid sx={{ pb: 2 }} size={{ xs: 12, md: 6 }}>
               <TextField
                 label={'Current Week'}
                 value={`${weekRange.startDate} to ${weekRange.endDate}`}
-                onChange={e => setValues({ ...values, currentWeek: `${weekRange.startDate} to ${weekRange.endDate}` })}
-                disabled={true}
+                disabled
                 size='small'
                 fullWidth
-              >{`${weekRange.startDate} to ${weekRange.endDate}`}</TextField>
+              />
             </Grid>
 
             <Grid sx={{ pb: 2 }} size={{ xs: 12, md: 6 }}>
-              <FormControl fullWidth size='small' variant='outlined'>
-                <InputLabel id='week-select-label'>Select Caregiver</InputLabel>
+              <FormControl required fullWidth size='small' variant='outlined' error={errors.caregiver}>
+                <InputLabel id='caregiver-select-label'>Select Caregiver</InputLabel>
                 <Select
-                  labelId='week-select-label'
+                  labelId='caregiver-select-label'
                   value={values.caregiver}
-                  label='Select Caregiver'
-                  onChange={e => setValues({ ...values, caregiver: e.target.value })}
+                  label='Select Caregiver *'
+                  onChange={e => {
+                    setValues({ ...values, caregiver: e.target.value, client: '' })
+                    setErrors(prev => ({ ...prev, caregiver: !e.target.value }))
+                  }}
                 >
                   {caregiverList.map((caregiver: any) => (
                     <MenuItem key={caregiver?.id} value={caregiver?.id}>
@@ -289,18 +353,28 @@ const ManualTimesheet = ({ caregiverList, payPeriod }: any) => {
                     </MenuItem>
                   ))}
                 </Select>
+                {errors.caregiver && <span style={{ color: 'red', fontSize: '12px' }}>This field is required</span>}
               </FormControl>
             </Grid>
 
             <Grid sx={{ pb: 2 }} size={{ xs: 12, md: 6 }}>
-              <FormControl fullWidth size='small' variant='outlined'>
-                <InputLabel id='week-select-label'>Select Client</InputLabel>
+              <FormControl
+                required
+                fullWidth
+                size='small'
+                variant='outlined'
+                error={errors.client}
+                disabled={!values.caregiver}
+              >
+                <InputLabel id='client-select-label'>Select Client</InputLabel>
                 <Select
-                  labelId='week-select-label'
+                  labelId='client-select-label'
                   value={values.client}
-                  label='Select Client'
-                  onChange={e => setValues({ ...values, client: e.target.value })}
-                  disabled={!values.caregiver}
+                  label='Select Client *'
+                  onChange={e => {
+                    setValues({ ...values, client: e.target.value })
+                    setErrors(prev => ({ ...prev, client: !e.target.value }))
+                  }}
                 >
                   {clientUsers.map((client: any) => (
                     <MenuItem key={client?.client?.id} value={client?.client?.id}>
@@ -308,17 +382,21 @@ const ManualTimesheet = ({ caregiverList, payPeriod }: any) => {
                     </MenuItem>
                   ))}
                 </Select>
+                {errors.client && <span style={{ color: 'red', fontSize: '12px' }}>This field is required</span>}
               </FormControl>
             </Grid>
 
             <Grid sx={{ pb: 2 }} size={{ xs: 12, md: 6 }}>
-              <FormControl fullWidth size='small' variant='outlined'>
-                <InputLabel id='week-select-label'>Select Service</InputLabel>
+              <FormControl required fullWidth size='small' variant='outlined' error={errors.serviceName}>
+                <InputLabel id='service-select-label'>Select Service</InputLabel>
                 <Select
-                  labelId='week-select-label'
+                  labelId='service-select-label'
                   value={values.serviceName}
-                  label='Select Service'
-                  onChange={e => setValues({ ...values, serviceName: e.target.value })}
+                  label='Select Service *'
+                  onChange={e => {
+                    setValues({ ...values, serviceName: e.target.value })
+                    setErrors(prev => ({ ...prev, serviceName: !e.target.value }))
+                  }}
                 >
                   {serviceType.map((service: any) => (
                     <MenuItem key={service.id} value={service.name}>
@@ -326,6 +404,7 @@ const ManualTimesheet = ({ caregiverList, payPeriod }: any) => {
                     </MenuItem>
                   ))}
                 </Select>
+                {errors.serviceName && <span style={{ color: 'red', fontSize: '12px' }}>This field is required</span>}
               </FormControl>
             </Grid>
 
@@ -336,9 +415,8 @@ const ManualTimesheet = ({ caregiverList, payPeriod }: any) => {
                 endDate={values.dateOfService !== null ? values.dateOfService : weekRange.endDate}
                 selected={values.dateOfService}
                 startDate={values.dateOfService !== null ? values.dateOfService : weekRange.startDate}
-                // showTimeSelect={!values.dateOfService}
                 dateFormat={'yyyy-MM-dd'}
-                minDate={weekRange.startDate} // Set the minimum selectable date
+                minDate={weekRange.startDate}
                 maxDate={weekRange.endDate}
                 customInput={
                   <TextField
@@ -347,9 +425,15 @@ const ManualTimesheet = ({ caregiverList, payPeriod }: any) => {
                     label={'Date Of Service'}
                     placeholder='MM/DD/YYYY'
                     id='event-start-date'
+                    required
+                    error={errors.dateOfService}
+                    helperText={errors.dateOfService ? 'This field is required' : ''}
                   />
                 }
-                onChange={(date: Date | null) => date !== null && setValues({ ...values, dateOfService: date })}
+                onChange={(date: Date | null) => {
+                  setValues({ ...values, dateOfService: date })
+                  setErrors(prev => ({ ...prev, dateOfService: !date }))
+                }}
               />
             </Grid>
 
@@ -362,16 +446,15 @@ const ManualTimesheet = ({ caregiverList, payPeriod }: any) => {
                 startDate={new Date()}
                 showTimeSelectOnly
                 dateFormat='hh:mm aa'
-                id='time-only-picker'
+                id='clock-in-picker'
                 onChange={(date: any | null) => {
                   if (date !== null) {
-                    // Combine the selected end date with the selected end time
-                    const combinedDate = combineDateAndTimeForGMT(values.dateOfService, date)
                     setValues({
                       ...values,
                       clockIn: date,
                       clockOut: null
                     })
+                    setErrors(prev => ({ ...prev, clockIn: !date }))
                   }
                 }}
                 customInput={
@@ -379,7 +462,9 @@ const ManualTimesheet = ({ caregiverList, payPeriod }: any) => {
                     label='Clock-In Time'
                     registername='clockIn'
                     className='mbe-3'
-                    id='event-end-time'
+                    id='clock-in-time'
+                    required
+                    error={errors.clockIn}
                   />
                 }
               />
@@ -394,17 +479,33 @@ const ManualTimesheet = ({ caregiverList, payPeriod }: any) => {
                 startDate={new Date()}
                 showTimeSelectOnly
                 dateFormat='hh:mm aa'
-                minTime={values.clockIn || new Date()}
+                minTime={(() => {
+                  if (!values?.clockIn) return new Date()
+
+                  const clockInTime = new Date(values.clockIn)
+                  const minutes = clockInTime.getMinutes()
+                  const roundedMinutes = Math.ceil(minutes / 15) * 15
+
+                  const nextInterval = new Date(clockInTime)
+
+                  // If minutes and roundedMinutes are same, add 15 minutes
+                  if (minutes === roundedMinutes) {
+                    nextInterval.setMinutes(minutes + 15)
+                  } else {
+                    nextInterval.setMinutes(roundedMinutes)
+                  }
+
+                  return nextInterval
+                })()}
                 maxTime={setSeconds(setMinutes(setHours(new Date(), 23), 59), 59)}
-                id='time-only-picker'
+                id='clock-out-picker'
                 onChange={(date: Date | null) => {
                   if (date !== null) {
-                    const combinedDate = combineDateAndTimeForGMT(values.dateOfService, date)
-                    // Combine the seleime end time
                     setValues({
                       ...values,
                       clockOut: date
                     })
+                    setErrors(prev => ({ ...prev, clockOut: !date }))
                   }
                 }}
                 customInput={
@@ -412,21 +513,24 @@ const ManualTimesheet = ({ caregiverList, payPeriod }: any) => {
                     label='Clock-Out Time'
                     registername='clockOut'
                     className='mbe-3'
-                    id='event-end-time'
+                    id='clock-out-time'
+                    required
+                    error={errors.clockOut}
                   />
                 }
               />
             </Grid>
 
             <Box className='w-full pb-1'>
-              <FormControl fullWidth className='relative'>
-                <InputLabel size='small'>Select Activities</InputLabel>
+              <FormControl fullWidth className='relative' error={errors.activities}>
+                <InputLabel size='small'>Select Activities *</InputLabel>
                 <Select
                   multiple
+                  required
                   value={selectedItems}
-                  onChange={handleChange} // Fixed: Pass the function directly
+                  onChange={handleChange}
                   renderValue={() => ''}
-                  label='Select Activities'
+                  label='Select Activities *'
                   size='small'
                 >
                   {serviceActivities?.map((svc: any) => (
@@ -435,8 +539,9 @@ const ManualTimesheet = ({ caregiverList, payPeriod }: any) => {
                     </MenuItem>
                   ))}
                 </Select>
-
-                {/* Render chips BELOW the select */}
+                {errors.activities && (
+                  <span style={{ color: 'red', fontSize: '12px' }}>At least one activity is required</span>
+                )}
                 <Box className='flex flex-wrap gap-2 mt-2'>
                   {selectedItems.map(item => {
                     const service = serviceActivities.find((s: any) => s.id === item)
@@ -484,15 +589,11 @@ const ManualTimesheet = ({ caregiverList, payPeriod }: any) => {
                 rows={3}
                 type='text'
                 onChange={e => {
-                  setValues({
-                    ...values,
-                    notes: e.target.value.trimStart()
-                  })
+                  setValues({ ...values, notes: e.target.value.trimStart() })
                 }}
               />
             </Grid>
 
-            {/* Buttons Section */}
             <Grid
               size={{ xs: 12 }}
               sx={{
@@ -505,7 +606,7 @@ const ManualTimesheet = ({ caregiverList, payPeriod }: any) => {
               <Button variant='outlined' color='secondary' onClick={onDiscard}>
                 DISCARD
               </Button>
-              <Button variant='contained' color='primary' onClick={onSubmit}>
+              <Button variant='contained' color='primary' onClick={onSubmit} disabled={!isFormValid()}>
                 ADD LOG
               </Button>
             </Grid>

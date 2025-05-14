@@ -100,20 +100,47 @@ const CareKeyLogin = () => {
 
       if (res?.status === 200) {
         // Success Case
-        setAlertOpen(true)
-        setAlertProps({
-          message: 'Login Successful!',
-          severity: 'success'
-        })
+        // setAlertOpen(true)
+        // setAlertProps({
+        //   message: 'Login Successful!',
+        //   severity: 'success'
+        // })
 
         const session = await getSession()
         console.log('Session Login', session)
-
-        if (session?.user) {
+        console.log('Tenant Id', session?.user?.tenant?.id)
+        if (session?.user?.userRoles?.title === 'Super Admin') {
+          setAlertOpen(true)
+          setAlertProps({
+            message: 'Login Successful!',
+            severity: 'success'
+          })
           const role = session?.user?.userRoles?.title
           localStorage.setItem('AuthUser', JSON.stringify(session?.user))
           console.log('SESSION ROLEE', session?.user?.userRoles?.title)
           role.includes('Super Admin') || role.includes('Tenant Admin') ? router.push('/') : router.push('/en/apps/rcm')
+        } else {
+          if (session?.user?.tenant?.status === 'Active') {
+            setAlertOpen(true)
+            setAlertProps({
+              message: 'Login Successful!',
+              severity: 'success'
+            })
+            if (session?.user) {
+              const role = session?.user?.userRoles?.title
+              localStorage.setItem('AuthUser', JSON.stringify(session?.user))
+              console.log('SESSION ROLEE', session?.user?.userRoles?.title)
+              role.includes('Super Admin') || role.includes('Tenant Admin')
+                ? router.push('/')
+                : router.push('/en/apps/rcm')
+            }
+          } else {
+            setAlertOpen(true)
+            setAlertProps({
+              message: 'Tenant is not Active. Please contact support.',
+              severity: 'error'
+            })
+          }
         }
       } else {
         // Error Case

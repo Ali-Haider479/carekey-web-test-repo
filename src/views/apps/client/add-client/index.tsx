@@ -317,12 +317,20 @@ const AddClientStepper = () => {
         message: 'Client created successfully.',
         severity: 'success'
       })
-    } catch (error) {
-      setAlertOpen(true)
-      setAlertProps({
-        message: 'An unexpected error occurred. Please try again later.',
-        severity: 'error'
-      })
+    } catch (error: any) {
+      if (error.response?.data?.message?.includes('Email already exists')) {
+        setAlertOpen(true)
+        setAlertProps({
+          message: 'Email already exists',
+          severity: 'error'
+        })
+      } else {
+        setAlertOpen(true)
+        setAlertProps({
+          message: 'An unexpected error occurred. Please try again later.',
+          severity: 'error'
+        })
+      }
       console.error('Error saving data: ', error)
     } finally {
       setTimeout(() => {

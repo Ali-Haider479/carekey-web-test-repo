@@ -38,6 +38,7 @@ import ReactTable from '@/@core/components/mui/ReactTable'
 import TenantActionButton from '@/@core/components/mui/TenantActionButton'
 import axios from 'axios'
 import { CarekeyTenantDarkLogo, CarekeyTenantLightLogo } from '@/@core/svg/CarekeyTenantLogo'
+import api from '@/utils/api'
 
 type UserRoleType = {
   [key: string]: { icon: string; color: string }
@@ -210,6 +211,20 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
     console.log(' CLICKED EDIT')
   }
 
+  const handleDelete = async (tenantId: any) => {
+    console.log(' DELETE TENANT ID', tenantId)
+    try {
+      const payload = {
+        status: 'Suspended'
+      }
+      const response = await api.patch(`/tenant/${tenantId}`, payload)
+      console.log('Tenant deleted successfully:', response.data)
+      dispatch(fetchTenants(token))
+    } catch (error) {
+      console.error('Error deleting tenant:', error)
+    }
+  }
+
   const handleDownload = () => {
     console.log(' CLICKED DOWNLOAD')
   }
@@ -295,10 +310,10 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
       minWidth: 170,
       render: (user: any) => (
         <div
-          className={`flex items-center justify-center rounded-md ${
-            user?.tsApprovalStatus === 'Pending'
-              ? 'bg-[#FDB528]'
-              : user?.tsApprovalStatus === 'Inactive'
+          className={`flex p-1 items-center justify-center rounded-md ${
+            user?.status === 'Suspended'
+              ? 'bg-[#fee8c3]'
+              : user?.status === 'Inactive'
                 ? 'bg-[#6D788D]'
                 : 'bg-[#eefbe5]'
           }`}
@@ -306,14 +321,14 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
           <Typography
             color='primary'
             className={`font-semibold !text-opacity-100 !opacity-100 ${
-              user?.tsApprovalStatus === 'Pending'
+              user?.status === 'Suspended'
                 ? 'text-[#FFAB00]'
-                : user?.tsApprovalStatus === 'Inactive'
+                : user?.status === 'Inactive'
                   ? 'text-[#8592A3]'
                   : 'text-[#71DD37]'
             }`}
           >
-            {user?.tsApprovalStatus || 'Active'}
+            {user?.status || 'Active'}
           </Typography>
         </div>
       )
@@ -328,7 +343,9 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
           row={row}
           locale={locale as any}
           getLocalizedUrl={getLocalizedUrl}
-          onDelete={row => setData(data?.filter((product: any) => product.id !== row.id))}
+          onDelete={() => {
+            handleDelete(row.id)
+          }}
           onEdit={handleEdit}
           onDownload={handleDownload}
           showEdit={false}
