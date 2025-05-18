@@ -2,7 +2,8 @@
 import DataTable from '@/@core/components/mui/DataTable'
 import ReactTable from '@/@core/components/mui/ReactTable'
 import api from '@/utils/api'
-import { Card, Typography } from '@mui/material'
+import { Avatar, Card, Typography } from '@mui/material'
+import type { ClientTypes } from '@/types/apps/clientTypes'
 import { GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
 
 import axios from 'axios'
@@ -12,6 +13,7 @@ import { useEffect, useState } from 'react'
 const IncidentsTab = () => {
   const { id } = useParams()
   const [incidentsData, setIncidentsData] = useState<any>()
+  const [dataWithProfileImg, setDataWithProfileImg] = useState<ClientTypes[]>([])
 
   const fetchClientIncidents = async () => {
     const clientIncidentsRes = await api.get(`/client/${id}/incident-report`)
@@ -22,6 +24,40 @@ const IncidentsTab = () => {
   useEffect(() => {
     fetchClientIncidents()
   }, [])
+
+  const getProfileImage = async (key: string) => {
+    try {
+      const res = await api.get(`/caregivers/getProfileUrl/${key}`)
+      return res.data
+    } catch (err) {
+      throw Error(`Error in fetching profile image url, ${err}`)
+    }
+  }
+
+  const fetchProfileImages = async () => {
+    if (incidentsData) {
+      const dataWithPhotoUrls = await Promise.all(
+        incidentsData?.map(async (item: any) => {
+          const profileImageUrl =
+            item?.caregiver?.user?.profileImageUrl !== null
+              ? await getProfileImage(item?.caregiver?.user?.profileImageUrl)
+              : item?.caregiver?.user?.profileImageUrl
+          return {
+            ...item,
+            profileImageUrl: profileImageUrl
+          }
+        })
+      )
+      setDataWithProfileImg(dataWithPhotoUrls)
+      setIncidentsData(dataWithPhotoUrls)
+    }
+  }
+
+  useEffect(() => {
+    if (incidentsData?.length > 0) {
+      fetchProfileImages()
+    }
+  }, [incidentsData?.length > 0])
 
   const getInitials = (fullName: string): string => {
     const names = fullName?.trim().split(' ').filter(Boolean) // Split and remove extra spaces
@@ -44,11 +80,21 @@ const IncidentsTab = () => {
       minWidth: 170,
       render: (item: any) => (
         <div className='flex flex-row'>
-          <div className='bg-[#BDBDBD] rounded-md flex items-center justify-center h-10 w-10 p-2'>
-            <Typography className='text-lg font-semibold text-white'>
-              {getInitials(`${item?.caregiver?.firstName} ${item?.caregiver?.lastName}`)}
-            </Typography>
-          </div>
+          {item?.caregiver?.user?.profileImageUrl !== null ? (
+            <div className='rounded-md flex items-center justify-center h-10 w-10 p-2'>
+              <Avatar
+                className='rounded-md h-11 w-11'
+                alt={`${item?.caregiver?.firstName} ${item?.caregiver?.lastName}`}
+                src={item?.profileImageUrl}
+              />
+            </div>
+          ) : (
+            <div className='bg-[#BDBDBD] rounded-md flex items-center justify-center h-10 w-10 p-2'>
+              <Typography className='text-lg font-semibold text-white'>
+                {getInitials(`${item?.caregiver?.firstName} ${item?.caregiver?.lastName}`)}
+              </Typography>
+            </div>
+          )}
           <div className='ml-2'>
             <Typography className={`font-semibold text-sm`} color='primary'>
               {`${item?.caregiver?.firstName} ${item?.caregiver?.lastName}`}

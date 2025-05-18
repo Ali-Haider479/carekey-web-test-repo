@@ -21,7 +21,8 @@ import {
   Switch,
   TextField,
   Tooltip,
-  Typography
+  Typography,
+  useTheme
 } from '@mui/material'
 import { dark } from '@mui/material/styles/createPalette'
 import React, { useEffect, useState } from 'react'
@@ -88,6 +89,8 @@ const UserManagementList = ({
   setRolesData,
   setRefreshRoles
 }: UserManagementListProps) => {
+  const theme = useTheme()
+  console.log('THEME', theme)
   const [search, setSearch] = useState('')
   const [permissionData, setPermissionData] = useState<any>([])
   const [isModalShow, setIsModalShow] = useState(false)
@@ -391,22 +394,67 @@ const UserManagementList = ({
         const firstTwoPrivileges = privileges?.slice(0, 2) // First two permissions
         const remainingPrivilegesCount = privileges?.length - 2 // Count of remaining permissions
 
-        return (
-          <Tooltip
-            placement='top'
-            title={
-              <div>
-                <Typography className='text-white font-semibold'>Remaining Privileges:</Typography>
-                {privileges?.slice(2).map((privilege: any, index: any) => (
-                  <Typography className='text-white' key={`tooltip-privilege-${index}`}>
-                    {privilege}
+        if (remainingPrivilegesCount > 0) {
+          return (
+            <Tooltip
+              placement='top'
+              arrow
+              color='white'
+              slotProps={{
+                tooltip: {
+                  sx: {
+                    backgroundColor: theme.palette.mode === 'dark' ? '#333447' : '#fafafc'
+                  }
+                },
+                arrow: {
+                  sx: {
+                    color: theme.palette.mode === 'dark' ? '#333447' : '#fafafc'
+                  }
+                }
+              }}
+              title={
+                <div>
+                  <Typography
+                    className={`${theme.palette.mode === 'dark' ? 'text-gray-400' : 'text-[#626970]'} font-semibold`}
+                    font-semibold
+                  >
+                    Remaining Privileges:
                   </Typography>
+                  {privileges?.slice(2).map((privilege: any, index: any) => (
+                    <Typography
+                      className={`${theme.palette.mode === 'dark' ? 'text-gray-400' : 'text-[#626970]'}`}
+                      key={`tooltip-privilege-${index}`}
+                    >
+                      {privilege}
+                    </Typography>
+                  ))}
+                </div>
+              }
+            >
+              <Grid key={`privileges-${params.id}`} className='flex flex-row gap-2 mt-2'>
+                {firstTwoPrivileges?.map((privilege: string, index: number) => (
+                  <div
+                    key={`privilege-${index}-${privilege}`}
+                    className='px-1 border border-[#666CFF] border-opacity-[50%] rounded-sm'
+                  >
+                    <Typography className={`${dark ? 'text-[#7112B7]' : 'text-[#4B0082]'}`}>{privilege}</Typography>
+                  </div>
                 ))}
-              </div>
-            }
-          >
+                {/* Show remaining privileges count if there are more than two */}
+                {remainingPrivilegesCount > 0 && (
+                  <div className='px-1 border border-[#666CFF] border-opacity-[50%] rounded-sm'>
+                    <Typography className={`${dark ? 'text-[#7112B7]' : 'text-[#4B0082]'}`}>
+                      + {remainingPrivilegesCount} more
+                    </Typography>
+                  </div>
+                )}
+              </Grid>
+            </Tooltip>
+          )
+        } else {
+          return (
             <Grid key={`privileges-${params.id}`} className='flex flex-row gap-2 mt-2'>
-              {firstTwoPrivileges?.map((privilege: string, index: number) => (
+              {privileges?.map((privilege: string, index: number) => (
                 <div
                   key={`privilege-${index}-${privilege}`}
                   className='px-1 border border-[#666CFF] border-opacity-[50%] rounded-sm'
@@ -414,17 +462,9 @@ const UserManagementList = ({
                   <Typography className={`${dark ? 'text-[#7112B7]' : 'text-[#4B0082]'}`}>{privilege}</Typography>
                 </div>
               ))}
-              {/* Show remaining privileges count if there are more than two */}
-              {remainingPrivilegesCount > 0 && (
-                <div className='px-1 border border-[#666CFF] border-opacity-[50%] rounded-sm'>
-                  <Typography className={`${dark ? 'text-[#7112B7]' : 'text-[#4B0082]'}`}>
-                    + {remainingPrivilegesCount} more
-                  </Typography>
-                </div>
-              )}
             </Grid>
-          </Tooltip>
-        )
+          )
+        }
       }
     },
     {

@@ -14,7 +14,9 @@ const ReceivedTimesheetDetails = () => {
   const [isLoading, setIsLoading] = useState(true)
   const [alertOpen, setAlertOpen] = useState(false)
   const [alertProps, setAlertProps] = useState<any>()
+  const [payPeriod, setPayPeriod] = useState<[] | any>([])
   const [selectedRows, setSelectedRows] = useState<any[]>([]) // Track selected rows
+  const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
 
   useEffect(() => {
     fetchInitialData()
@@ -22,12 +24,13 @@ const ReceivedTimesheetDetails = () => {
 
   const fetchInitialData = async () => {
     try {
-      const response = await api.get(`/time-log`)
+      const response = await Promise.all([api.get(`/time-log`), api.get(`/pay-period/tenant/${authUser?.tenant?.id}`)])
       setTimeLogData(
-        response?.data?.length > 0
-          ? transformTimesheetDataTwo(response.data.filter((item: any) => item.clockOut != null))
+        response[0]?.data?.length > 0
+          ? transformTimesheetDataTwo(response[0]?.data.filter((item: any) => item.clockOut != null))
           : []
       )
+      setPayPeriod(response[1].data)
       setIsLoading(false)
     } catch (error) {
       console.error('Error fetching initial data:', error)
@@ -254,6 +257,7 @@ const ReceivedTimesheetDetails = () => {
           fetchInitialData={fetchInitialData}
           setSelectedRows={setSelectedRows}
           selectedRows={selectedRows}
+          payPeriod={payPeriod}
         />
       </Grid>
     </Grid>

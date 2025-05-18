@@ -5,7 +5,7 @@ import Card from '@mui/material/Card'
 import { Button, Chip, CircularProgress, Dialog, Grid2 as Grid, TextField, Tooltip, Typography } from '@mui/material'
 import ActionButton from '@/@core/components/mui/ActionButton'
 import ReactTable from '@/@core/components/mui/ReactTable'
-import { calculateHoursWorked, formatToLocalTime } from '@/utils/helperFunctions'
+import { calculateHoursWorked, calculateStartAndEndDate, formatToLocalTime } from '@/utils/helperFunctions'
 import { dark } from '@mui/material/styles/createPalette'
 import CustomAlert from '@/@core/components/mui/Alter'
 import DialogCloseButton from '@/components/dialogs/DialogCloseButton'
@@ -79,6 +79,7 @@ interface SignatureStatusTableProps {
   fetchInitialData: any
   setSelectedRows: any
   selectedRows: any
+  payPeriod: any
 }
 
 interface PickerProps {
@@ -91,7 +92,7 @@ interface PickerProps {
 }
 
 const ReceivedTimesheetTable = (
-  { data, isLoading, fetchInitialData, setSelectedRows, selectedRows }: SignatureStatusTableProps,
+  { data, isLoading, fetchInitialData, setSelectedRows, selectedRows, payPeriod }: SignatureStatusTableProps,
   user: any
 ) => {
   const methods = useForm<any>({
@@ -128,6 +129,7 @@ const ReceivedTimesheetTable = (
   const [modalData, setModalData] = useState<any>(null)
   const [activities, setActivities] = useState<any[]>()
   const [isEditing, setIsEditing] = useState(false)
+  const [weekRange, setWeekRange] = useState<any>({})
   const [deletingId, setDeletingId] = useState<string | number | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
   const [rowsToDelete, setRowsToDelete] = useState<any[]>([])
@@ -186,6 +188,13 @@ const ReceivedTimesheetTable = (
       }
     }
   }, [tsApprovalStatus, modalData, isEditing])
+
+  useEffect(() => {
+    if (Object.keys(payPeriod).length > 0) {
+      const range = calculateStartAndEndDate(payPeriod)
+      setWeekRange(range)
+    }
+  }, [payPeriod])
 
   const toggleEditing = () => {
     setIsEditing(!isEditing)
@@ -1129,6 +1138,8 @@ const ReceivedTimesheetTable = (
                         selected={clockInDateString}
                         endDate={clockOutDateString || undefined}
                         startDate={clockInDateString || undefined}
+                        minDate={new Date(weekRange.startDate)}
+                        maxDate={new Date(weekRange.endDate)}
                         rules={{
                           required: 'Clock In Date is required'
                         }}
@@ -1176,7 +1187,8 @@ const ReceivedTimesheetTable = (
                         isRequired={true}
                         disabled={!isEditing}
                         selected={clockOutDateString}
-                        minDate={clockInDateString || undefined} // Restrict to clockInDate or later
+                        minDate={clockInDateString || undefined}
+                        maxDate={new Date(weekRange.endDate)}
                         rules={{
                           required: 'Clock Out Date is required',
                           validate: (value: any) => {

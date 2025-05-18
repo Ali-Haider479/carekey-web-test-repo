@@ -317,6 +317,7 @@ const AddClientStepper = () => {
         message: 'Client created successfully.',
         severity: 'success'
       })
+      router.replace('/en/apps/client/list')
     } catch (error: any) {
       if (error.response?.data?.message?.includes('Email already exists')) {
         setAlertOpen(true)
@@ -335,7 +336,6 @@ const AddClientStepper = () => {
     } finally {
       setTimeout(() => {
         setIsLoading(false)
-        router.replace('/en/apps/client/list')
       }, 3000)
     }
   }

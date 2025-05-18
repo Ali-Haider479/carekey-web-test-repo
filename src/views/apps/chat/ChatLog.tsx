@@ -255,6 +255,7 @@ const ChatLog = ({ chatStore, isBelowLgScreen, isBelowMdScreen, isBelowSmScreen 
                 )}
                 <div
                   className={classnames('flex flex-col gap-2', {
+                    'items-start': !isSender,
                     'items-end': isSender,
                     'max-is-[65%]': !isBelowMdScreen,
                     'max-is-[75%]': isBelowMdScreen && !isBelowSmScreen,

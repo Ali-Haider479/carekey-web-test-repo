@@ -146,6 +146,7 @@ const EvvActiveUserTable = ({ timeLogData, isLoading, payPeriod, fetchInitialDat
     setValues(null)
     setSelectedItems([])
     setClockOutReason('')
+    setSelectedUser(null)
   }
 
   const handleChange = (event: SelectChangeEvent<number[]>) => {
@@ -195,10 +196,6 @@ const EvvActiveUserTable = ({ timeLogData, isLoading, payPeriod, fetchInitialDat
     }
   }
 
-  console.log('Tg data-------------------', payPeriod)
-
-  console.log('Time Log Active User Data', timeLogData)
-
   useEffect(() => {
     if (payPeriod && Object?.keys(payPeriod).length > 0) {
       const range = calculateStartAndEndDate(payPeriod)
@@ -217,10 +214,21 @@ const EvvActiveUserTable = ({ timeLogData, isLoading, payPeriod, fetchInitialDat
       })
       return
     }
-    const pendingSignatures: any = await api.get(
-      `/signatures/${selectedUser.caregiver?.id}/pending-signatures-count/${selectedUser?.payPeriodHistory?.id}`
-    )
-    const currentClientPendingSigns = pendingSignatures.data.pendingClients.filter(
+    const response: any = await Promise.all([
+      api.get(`/time-log/admin-clockout/${selectedUser?.id}`),
+      api.get(`/signatures/${selectedUser.client.id}/pending-signatures-count/${selectedUser?.payPeriodHistory?.id}`)
+    ])
+
+    if (response[0].data[0].clockOut !== null) {
+      setAlertOpen(true)
+      setAlertProps({
+        message: 'The user has already clocked out.',
+        severity: 'error'
+      })
+      return
+    }
+
+    const currentClientPendingSigns = response[1].data.pendingClients.filter(
       (el: any) => el.clientId === selectedUser.client.id
     )
 
@@ -250,17 +258,15 @@ const EvvActiveUserTable = ({ timeLogData, isLoading, payPeriod, fetchInitialDat
           notes: clockOutReason,
           clockOut: combineDateAndTime(values?.dateOfService, values?.clockIn),
           checkedActivityId: checkedActivityRes.data.id,
+          adminOverride: true,
           signatureId:
             currentClientPendingSigns.length > 0 ? currentClientPendingSigns[0].signatureId : signResponse?.data?.id
         }
-        const res = await api.patch(`/time-log`, payload)
-        console.log('RESPONSE', res)
+        await api.patch(`/time-log`, payload)
       }
       await fetchInitialData()
       // Reset states
-      setSelectedUser(null)
-      setIsModalShow(false)
-      setClockOutReason('')
+      handleModalClose()
     } catch (error) {
       console.error('Error saving data', error)
     }

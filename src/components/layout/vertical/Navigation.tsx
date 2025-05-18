@@ -8,7 +8,7 @@ import Link from 'next/link'
 import { useParams } from 'next/navigation'
 
 // MUI Imports
-import { styled, useColorScheme, useTheme } from '@mui/material/styles'
+import { styled, useTheme } from '@mui/material/styles'
 
 // Type Imports
 import type { getDictionary } from '@/utils/getDictionary'
@@ -30,7 +30,6 @@ import { getLocalizedUrl } from '@/utils/i18n'
 
 // Style Imports
 import navigationCustomStyles from '@core/styles/vertical/navigationCustomStyles'
-import { Typography } from '@mui/material'
 import KeyLogoDark from '@/@core/svg/KeyLogoDark'
 import KeyLogoLight from '@/@core/svg/KeyLogoLight'
 
@@ -64,13 +63,12 @@ const MenuToggle = (
 
 const Navigation = (props: Props) => {
   // Props
-  const { dictionary, mode } = props
+  const { dictionary } = props
 
   // Hooks
   const verticalNavOptions = useVerticalNav()
   const { updateSettings, settings } = useSettings()
   const { lang: locale } = useParams()
-  const { mode: muiMode, systemMode: muiSystemMode } = useColorScheme()
   const theme = useTheme()
 
   // Refs
@@ -79,10 +77,6 @@ const Navigation = (props: Props) => {
   // Vars
   const { isCollapsed, isHovered, collapseVerticalNav, isBreakpointReached } = verticalNavOptions
   const isSemiDark = settings.semiDark
-
-  const currentMode = muiMode === 'system' ? muiSystemMode : muiMode || mode
-
-  const isDark = currentMode === 'dark'
 
   const scrollMenu = (container: any, isPerfectScrollbar: boolean) => {
     container = isBreakpointReached || !isPerfectScrollbar ? container.target : container
@@ -109,29 +103,30 @@ const Navigation = (props: Props) => {
   }, [settings.layout])
 
   return (
-    // eslint-disable-next-line lines-around-comment
     // Sidebar Vertical Menu
     <VerticalNav
       customStyles={navigationCustomStyles(verticalNavOptions, theme, settings)}
       collapsedWidth={85}
       backgroundColor='var(--mui-palette-background-paper)'
-      // eslint-disable-next-line lines-around-comment
-      // The following condition adds the data-dark attribute to the VerticalNav component
-      // when semiDark is enabled and the mode or systemMode is light
+      // Apply data-dark attribute only when semiDark is enabled and app mode is light
       {...(isSemiDark &&
-        !isDark && {
+        settings.mode === 'light' && {
           'data-dark': ''
         })}
     >
-      {/* Nav Header including Logo & nav toggle icons  */}
+      {/* Nav Header including Logo & nav toggle icons */}
       <NavHeader>
         <Link href={getLocalizedUrl('/', locale as Locale)} className='-ml-3'>
-          <span className={`hidden dark:block cursor-pointer duration-500 ${!isCollapsed && 'rotate-[360deg]'}`}>
-            {isCollapsed && !isHovered ? <KeyLogoDark /> : <CareKeyLogoDark />}
-          </span>
-          <span className={`block dark:hidden cursor-pointer duration-500 ${!isCollapsed && 'rotate-[360deg]'}`}>
-            {isCollapsed && !isHovered ? <KeyLogoLight /> : <CareKeyLogoLight />}
-          </span>
+          {/* Render logo based on app's settings.mode */}
+          {settings.mode === 'dark' || theme.palette.mode === 'dark' ? (
+            <span className={`cursor-pointer duration-500 ${!isCollapsed && 'rotate-[360deg]'}`}>
+              {isCollapsed && !isHovered ? <KeyLogoDark /> : <CareKeyLogoDark />}
+            </span>
+          ) : (
+            <span className={`cursor-pointer duration-500 ${!isCollapsed && 'rotate-[360deg]'}`}>
+              {isCollapsed && !isHovered ? <KeyLogoLight /> : <CareKeyLogoLight />}
+            </span>
+          )}
         </Link>
         {!(isCollapsed && !isHovered) && (
           <NavCollapseIcons

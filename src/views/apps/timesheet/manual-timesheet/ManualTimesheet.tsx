@@ -21,6 +21,7 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
 import { Close as CloseIcon } from '@mui/icons-material'
 import api from '@/utils/api'
 import { setHours, setMinutes, setSeconds } from 'date-fns'
+import { calculateStartAndEndDate } from '@/utils/helperFunctions'
 
 interface DefaultStateType {
   currentWeek: string
@@ -78,6 +79,7 @@ const ManualTimesheet = ({ caregiverList, payPeriod }: any) => {
   })
   const [openSuccessSnackbar, setOpenSuccessSnackbar] = useState(false)
   const [weekRange, setWeekRange] = useState<any>({})
+  const [isLoading, setIsLoading] = useState(false)
   const [selectedItems, setSelectedItems] = useState<number[]>([])
   const [clientUsers, setClientUsers] = useState<any>([])
   const [serviceType, setServiceType] = useState<any[]>([])
@@ -186,17 +188,6 @@ const ManualTimesheet = ({ caregiverList, payPeriod }: any) => {
     }
   }, [payPeriod])
 
-  const calculateStartAndEndDate = (range: any) => {
-    const [year, month, day] = range?.startDate?.split('-')
-    const startDate = new Date(Date.UTC(year, month - 1, day))
-    const endDate = new Date(startDate)
-    endDate.setUTCDate(startDate.getUTCDate() + range.numberOfWeeks * 7)
-    return {
-      startDate: startDate.toISOString().split('T')[0],
-      endDate: endDate.toISOString().split('T')[0]
-    }
-  }
-
   const PickersComponent = forwardRef(({ ...props }: any, ref) => {
     return (
       <TextField
@@ -234,6 +225,7 @@ const ManualTimesheet = ({ caregiverList, payPeriod }: any) => {
     }
 
     try {
+      setIsLoading(true)
       let signResponse: any
       const pendingSignatures: any = await api.get(
         `/signatures/${values.caregiver}/pending-signatures-count/${payPeriod.id}`
@@ -298,7 +290,9 @@ const ManualTimesheet = ({ caregiverList, payPeriod }: any) => {
         activities: false
       })
       setOpenSuccessSnackbar(true)
+      setIsLoading(false)
     } catch (error) {
+      setIsLoading(false)
       console.log('Error:', error)
     }
   }
@@ -606,7 +600,7 @@ const ManualTimesheet = ({ caregiverList, payPeriod }: any) => {
               <Button variant='outlined' color='secondary' onClick={onDiscard}>
                 DISCARD
               </Button>
-              <Button variant='contained' color='primary' onClick={onSubmit} disabled={!isFormValid()}>
+              <Button variant='contained' color='primary' onClick={onSubmit} disabled={!isFormValid() || isLoading}>
                 ADD LOG
               </Button>
             </Grid>

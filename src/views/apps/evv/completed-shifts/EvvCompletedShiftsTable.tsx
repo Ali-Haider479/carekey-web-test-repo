@@ -6,6 +6,7 @@ import { CircularProgress, Typography } from '@mui/material'
 import ReactTable from '@/@core/components/mui/ReactTable'
 import { calculateHoursWorked, formattedDate } from '@/utils/helperFunctions'
 import EvvFilters from './EvvFilter'
+import { useSettings } from '@/@core/hooks/useSettings'
 
 interface Caregiver {
   firstName: string
@@ -36,6 +37,8 @@ const EvvCompletedShiftsTable = ({ timeLogData, isLoading }: Props) => {
   const [filteredData, setFilteredData] = useState<TimeLogData[]>([])
   const [isFilterApplied, setIsFilterApplied] = useState(false) // Track if filter is applied
 
+  const { settings } = useSettings()
+
   useEffect(() => {
     setFilteredData(timeLogData)
   }, [timeLogData])
@@ -64,6 +67,33 @@ const EvvCompletedShiftsTable = ({ timeLogData, isLoading }: Props) => {
       sortable: true,
       render: (user: any) => (
         <Typography color='primary'>{`${user?.client?.firstName} ${user?.client?.lastName}`}</Typography>
+      )
+    },
+    {
+      id: 'serviceName',
+      label: 'SERVICE TYPE',
+      minWidth: 170,
+      editable: true,
+      sortable: true,
+      render: (user: any) => <Typography color='primary'>{user?.serviceName}</Typography>
+    },
+    {
+      id: 'evv',
+      label: 'EVV',
+      minWidth: 170,
+      editable: true,
+      sortable: true,
+      render: (user: any) => (
+        <div
+          className={`${settings.mode === 'light' ? (user?.checkedActivity?.activities?.[0]?.service?.evv === true ? 'bg-[#b8f093]' : 'bg-[#ffa6a3]') : user?.checkedActivity?.activities?.[0]?.service?.evv === true ? 'bg-[#4f8634]' : 'bg-[#953d45]'} justify-center items-center rounded-2xl py-1 px-4`}
+        >
+          <Typography
+            color='primary'
+            className={`${settings.mode === 'light' ? (user?.checkedActivity?.activities?.[0]?.service?.evv === true ? 'text-green-600' : 'text-red-600') : user?.checkedActivity?.activities?.[0]?.service?.evv === true ? 'text-green-400' : 'text-red-400'} font-semibold`}
+          >
+            {user?.checkedActivity?.activities?.[0]?.service?.evv === true ? 'YES' : 'NO'}
+          </Typography>
+        </div>
       )
     },
     {

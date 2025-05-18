@@ -92,3 +92,14 @@ export const generateOptions = (
     displayValue: doc.fileName.replace('.pdf', '')
   }))
 }
+
+export const calculateStartAndEndDate = (range: any) => {
+  const [year, month, day] = range?.startDate?.split('-')
+  const startDate = new Date(Date.UTC(year, month - 1, day))
+  const endDate = new Date(startDate)
+  endDate.setUTCDate(startDate.getUTCDate() + range.numberOfWeeks * 7)
+  return {
+    startDate: startDate.toISOString().split('T')[0],
+    endDate: endDate.toISOString().split('T')[0]
+  }
+}
