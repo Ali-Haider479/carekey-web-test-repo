@@ -9,7 +9,8 @@ import {
   DialogActions,
   Typography,
   Menu,
-  MenuItem
+  MenuItem,
+  CircularProgress
 } from '@mui/material'
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf'
 import LinearProgress from '@mui/material/LinearProgress'
@@ -26,6 +27,7 @@ const SubmittedFormCard = ({ onShowChecklist }: FormCardProps) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const [selectedDoc, setSelectedDoc] = useState<string | null>(null)
   const [loading, setLoading] = useState<boolean | null>(false)
+  const [submitButtonLoading, setSubmitButtonLoading] = useState<boolean | null>(false)
   const [open, setOpen] = useState(false)
   const [documents, setDocuments] = useState<File | null>(null)
   const [tenantDocuments, setTenantDocuments] = useState<File | null>(null)
@@ -67,6 +69,7 @@ const SubmittedFormCard = ({ onShowChecklist }: FormCardProps) => {
     handleMenuClose()
   }
   const handelUpload = async () => {
+    setSubmitButtonLoading(true)
     if (!documents || !(documents instanceof File)) {
       console.error('No valid file selected. Expected a File object, got:', documents)
       return
@@ -87,6 +90,8 @@ const SubmittedFormCard = ({ onShowChecklist }: FormCardProps) => {
     } catch (error) {
       console.error('ERROR Uploading tenant documents:', error)
       setOpen(false)
+    } finally {
+      setSubmitButtonLoading(false)
     }
   }
   const renderMenu = () => (
@@ -186,8 +191,9 @@ const SubmittedFormCard = ({ onShowChecklist }: FormCardProps) => {
           <Button
             variant='contained'
             onClick={handelUpload}
+            startIcon={submitButtonLoading ? <CircularProgress size={20} color='inherit' /> : null}
             type='submit'
-            disabled={!documents || !(documents instanceof File)}
+            disabled={!documents || !(documents instanceof File) || submitButtonLoading === true}
           >
             Submit
           </Button>

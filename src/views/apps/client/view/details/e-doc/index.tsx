@@ -240,16 +240,21 @@ const E_Document = () => {
   const fetchClientsForm = async () => {
     try {
       setClientDocsLoading(true)
+      setLoading(true)
       const clientDocs = await api.get(`/client/client-documents/${id}`)
       const clientData = await api.get(`/client/case-manager/${id}`)
       setCaseManagerEmail(clientData?.data?.clientCaseManager?.caseManagerEmail)
       setClientDocuments(clientDocs?.data)
       setClientDocsLoading(false)
+      setLoading(false)
     } catch (error) {
       setClientDocsLoading(false)
+      setLoading(false)
       console.error('Error fetching initial data:', error)
     }
   }
+
+  console.log('Case Manager Email', caseManagerEmail)
 
   useEffect(() => {
     fetchInitialData()
@@ -769,6 +774,7 @@ const E_Document = () => {
                       variant='contained'
                       onClick={hanleFillReferenceButton}
                       startIcon={loading ? <CircularProgress size={20} color='inherit' /> : null}
+                      disabled={loading}
                     >
                       Fill Reference Form
                     </Button>

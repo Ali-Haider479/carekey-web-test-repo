@@ -8,7 +8,15 @@ const AcknowledgeSignatureCaregiver = ({ data }: any) => {
   const [signatureText, setSignatureText] = useState('') // State for plain text signature
 
   useEffect(() => {
-    const signature = data?.[0]?.signature?.caregiverSignature
+    // const signature = data?.[0]?.signature?.caregiverSignature
+    const signature =
+      data?.length > 0
+        ? data
+            .filter((item: any) => item?.signature?.caregiverSignature) // Filter out items without a valid caregiverSignature
+            .sort(
+              (a: any, b: any) => new Date(b.signature.createdAt).getTime() - new Date(a.signature.createdAt).getTime()
+            )[0]?.signature?.caregiverSignature
+        : null
 
     if (signature) {
       // Check if the signature is a Base64 string (image)

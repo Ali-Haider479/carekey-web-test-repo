@@ -34,7 +34,15 @@ const AcknowledgeSignature = ({ data }: any) => {
   }
 
   useEffect(() => {
-    const signature = data?.[0]?.signature?.clientSignature
+    // Assuming data is an array of objects with a signature object and a timestamp
+    const signature =
+      data?.length > 0
+        ? data
+            .filter((item: any) => item?.signature?.clientSignature) // Filter out items without a valid clientSignature
+            .sort(
+              (a: any, b: any) => new Date(b.signature.createdAt).getTime() - new Date(a.signature.createdAt).getTime()
+            )[0]?.signature?.clientSignature
+        : null
 
     if (signature) {
       const isBase64Image = signature.startsWith('data:image') || /^[A-Za-z0-9+/=]+$/.test(signature)

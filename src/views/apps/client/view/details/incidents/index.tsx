@@ -2,18 +2,25 @@
 import DataTable from '@/@core/components/mui/DataTable'
 import ReactTable from '@/@core/components/mui/ReactTable'
 import api from '@/utils/api'
-import { Avatar, Card, Typography } from '@mui/material'
+import { Avatar, Card, Dialog, Typography, Grid2 as Grid } from '@mui/material'
 import type { ClientTypes } from '@/types/apps/clientTypes'
 import { GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
 
 import axios from 'axios'
 import { useParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import { Visibility } from '@mui/icons-material'
+import DialogCloseButton from '@/components/dialogs/DialogCloseButton'
 
 const IncidentsTab = () => {
   const { id } = useParams()
   const [incidentsData, setIncidentsData] = useState<any>()
   const [dataWithProfileImg, setDataWithProfileImg] = useState<ClientTypes[]>([])
+  const [incidentModalOpen, setIncidentModalOpen] = useState(false)
+  const [incidentModalData, setIncidentModalData] = useState<any>(null)
+
+  const handleModalClose = () => setIncidentModalOpen(false)
+  const handleModalOpen = () => setIncidentModalOpen(true)
 
   const fetchClientIncidents = async () => {
     const clientIncidentsRes = await api.get(`/client/${id}/incident-report`)
@@ -152,12 +159,20 @@ const IncidentsTab = () => {
       render: (item: any) => <Typography>{item?.reportedToStaff === true ? 'Yes' : 'No'}</Typography>
     },
     {
-      id: 'incidentDescription',
-      label: 'DESCRIPTION',
+      id: 'incidentDetails',
+      label: 'DETAILS',
       minWidth: 170,
-      render: (item: any) => <Typography>{item?.incidentDescription}</Typography>
+      render: (item: any) => (
+        <Visibility
+          onClick={() => {
+            setIncidentModalData(item)
+            handleModalOpen()
+          }}
+        />
+      )
     }
   ]
+  console.log('incidentsData', incidentModalData)
 
   // const columns: GridColDef[] = [
   //   {
@@ -288,24 +303,135 @@ const IncidentsTab = () => {
   // ]
 
   return (
-    <Card>
-      <Typography className='text-xl p-6'>Incident Reports</Typography>
-      {/* <DataTable columns={columns} data={incidentsData} /> */}
-      {!incidentsData?.length ? (
-        <Typography className='flex justify-center pb-5'>No Data Available</Typography>
-      ) : (
-        <ReactTable
-          columns={newCol}
-          data={incidentsData}
-          keyExtractor={row => row.id.toString()}
-          enablePagination
-          pageSize={5}
-          stickyHeader
-          maxHeight={600}
-          containerStyle={{ borderRadius: 2 }}
-        />
-      )}
-    </Card>
+    <>
+      <Card>
+        <Typography className='text-xl p-6'>Incident Reports</Typography>
+        {/* <DataTable columns={columns} data={incidentsData} /> */}
+        {!incidentsData?.length ? (
+          <Typography className='flex justify-center pb-5'>No Data Available</Typography>
+        ) : (
+          <ReactTable
+            columns={newCol}
+            data={incidentsData}
+            keyExtractor={row => row.id.toString()}
+            enablePagination
+            pageSize={5}
+            stickyHeader
+            maxHeight={600}
+            containerStyle={{ borderRadius: 2 }}
+          />
+        )}
+      </Card>
+      <div>
+        <Dialog
+          open={incidentModalOpen}
+          onClose={handleModalClose}
+          closeAfterTransition={false}
+          sx={{
+            '& .MuiDialog-paper': {
+              width: '100%',
+              maxWidth: '87vh', // Adjust as needed
+              maxHeight: '85vh', // Limit modal height to 80% of viewport height
+              overflow: 'visible',
+              borderRadius: '8px',
+              padding: '3px'
+            }
+          }}
+        >
+          <DialogCloseButton onClick={handleModalClose} disableRipple>
+            <i className='bx-x' />
+          </DialogCloseButton>
+          <div className='flex items-center justify-center pt-[10px] pb-[5px] w-full px-5'>
+            <div>
+              <h2 className='text-xl font-semibold mt-5 mb-6'>Incident Details</h2>
+            </div>
+          </div>
+          <div className='flex items-center justify-center'>
+            <Grid container spacing={4} sx={{ marginLeft: 5, marginRight: 0, marginBottom: 2 }}>
+              <Grid size={{ xs: 6, md: 6 }}>
+                <div>
+                  <Typography className='text-md font-semibold'>Caregiver Involved: </Typography>
+                  <Typography className='text-md font-normal'>
+                    {`${incidentModalData?.caregiver?.firstName} ${incidentModalData?.caregiver?.lastName}`}
+                  </Typography>
+                </div>
+              </Grid>
+              <Grid size={{ xs: 6, md: 6 }}>
+                <div>
+                  <Typography className='text-md font-semibold'>Employee Involved: </Typography>
+                  <Typography className='text-md font-normal'>{incidentModalData?.employeeInvolved}</Typography>
+                </div>
+              </Grid>
+              <Grid size={{ xs: 6, md: 6 }}>
+                <div>
+                  <Typography className='text-md font-semibold'>Incident Date: </Typography>
+                  <Typography className='text-md font-normal'>
+                    {incidentModalData?.incidentDate.split('T')[0]}
+                  </Typography>
+                </div>
+              </Grid>
+              <Grid size={{ xs: 6, md: 6 }}>
+                <div>
+                  <Typography className='text-md font-semibold'>Incident Location: </Typography>
+                  <Typography className='text-md font-normal'>{incidentModalData?.incidentLocation}</Typography>
+                </div>
+              </Grid>
+              <Grid size={{ xs: 6, md: 6 }}>
+                <div>
+                  <Typography className='text-md font-semibold'>Incident Type: </Typography>
+                  <Typography className='text-md font-normal'>{incidentModalData?.incidentType}</Typography>
+                </div>
+              </Grid>
+              <Grid size={{ xs: 6, md: 6 }}>
+                <div>
+                  <Typography className='text-md font-semibold'>Patient Refused Medical Attention: </Typography>
+                  <Typography className='text-md font-normal'>
+                    {incidentModalData?.patientRefuseMedicalAttention === true ? 'Yes' : 'No'}
+                  </Typography>
+                </div>
+              </Grid>
+              <Grid size={{ xs: 6, md: 6 }}>
+                <div>
+                  <Typography className='text-md font-semibold'>Incident Reported to Client Family: </Typography>
+                  <Typography className='text-md font-normal'>
+                    {incidentModalData?.reportedToClientFaamily === true ? 'Yes' : 'No'}
+                  </Typography>
+                </div>
+              </Grid>
+              <Grid size={{ xs: 6, md: 6 }}>
+                <div>
+                  <Typography className='text-md font-semibold'>Incident Reported to Physician: </Typography>
+                  <Typography className='text-md font-normal'>
+                    {incidentModalData?.reportedToPhysician === true ? 'Yes' : 'No'}
+                  </Typography>
+                </div>
+              </Grid>
+              <Grid size={{ xs: 6, md: 6 }}>
+                <div>
+                  <Typography className='text-md font-semibold'>Incident Reported to Staff: </Typography>
+                  <Typography className='text-md font-normal'>
+                    {incidentModalData?.reportedToStaff === true ? 'Yes' : 'No'}
+                  </Typography>
+                </div>
+              </Grid>
+              <Grid size={{ xs: 6, md: 6 }}>
+                <div>
+                  <Typography className='text-md font-semibold'>Reporter Signature: </Typography>
+                  <Typography className='text-md font-normal'>{incidentModalData?.reporterSign}</Typography>
+                </div>
+              </Grid>
+              <Grid size={{ xs: 12, md: 12 }} sx={{ marginTop: 0 }}>
+                <div>
+                  <Typography className='text-md font-semibold'>Incident Description: </Typography>
+                  <Typography className='text-md font-normal'>{incidentModalData?.incidentDescription}</Typography>
+                </div>
+              </Grid>
+              <Grid size={{ xs: 12, md: 12 }}></Grid>
+            </Grid>
+          </div>
+        </Dialog>
+      </div>
+    </>
   )
 }
 

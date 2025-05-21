@@ -133,6 +133,21 @@ const AddEventModal = (props: AddEventSidebarType) => {
   const { id } = useParams()
   const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
 
+  const isFormValid = () => {
+    return (
+      values.title.trim() !== '' &&
+      values.client !== '' &&
+      values.service !== '' &&
+      values.startDate instanceof Date &&
+      !isNaN(values.startDate.getTime()) &&
+      values.startTime instanceof Date &&
+      !isNaN(values.startTime.getTime()) &&
+      values.endDate instanceof Date &&
+      !isNaN(values.endDate.getTime()) &&
+      values.assignedHours > 0
+    )
+  }
+
   useEffect(() => {
     fetchClientUsers()
   }, [addEventSidebarOpen])
@@ -552,7 +567,7 @@ const AddEventModal = (props: AddEventSidebarType) => {
                 <Button variant='outlined' color='secondary' onClick={handleModalClose}>
                   CANCEL
                 </Button>
-                <Button type='submit' variant='contained' className='bg-[#4B0082]'>
+                <Button type='submit' variant='contained' className='bg-[#4B0082]' disabled={!isFormValid()}>
                   Update
                 </Button>
               </>
@@ -561,7 +576,7 @@ const AddEventModal = (props: AddEventSidebarType) => {
                 <Button variant='outlined' color='secondary' onClick={handleModalClose}>
                   CANCEL
                 </Button>
-                <Button type='submit' variant='contained' className='bg-[#4B0082]'>
+                <Button type='submit' variant='contained' className='bg-[#4B0082]' disabled={!isFormValid()}>
                   ADD EVENT
                 </Button>
               </>

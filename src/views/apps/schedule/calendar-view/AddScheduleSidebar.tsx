@@ -148,6 +148,22 @@ const AddEventModal = (props: AddEventSidebarType) => {
   const [serviceActivities, setServiceActivities] = useState<any>([])
   const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
 
+  const isFormValid = () => {
+    return (
+      values.title.trim() !== '' &&
+      values.caregiver !== '' &&
+      values.client !== '' &&
+      values.service !== '' &&
+      values.startDate instanceof Date &&
+      !isNaN(values.startDate.getTime()) &&
+      values.startTime instanceof Date &&
+      !isNaN(values.startTime.getTime()) &&
+      values.endDate instanceof Date &&
+      !isNaN(values.endDate.getTime()) &&
+      values.assignedHours > 0
+    )
+  }
+
   const fetchClientUsers = async () => {
     try {
       const filterCg = props?.caregiverList?.filter((ele: any) => ele.id === values.caregiver)
@@ -638,7 +654,7 @@ const AddEventModal = (props: AddEventSidebarType) => {
                   <Button variant='outlined' color='secondary' onClick={handleModalClose}>
                     CANCEL
                   </Button>
-                  <Button type='submit' variant='contained' className='bg-[#4B0082]'>
+                  <Button type='submit' variant='contained' className='bg-[#4B0082]' disabled={!isFormValid()}>
                     Update
                   </Button>
                   {/* <Button variant='outlined' color='secondary' onClick={resetToStoredValues}>
@@ -653,7 +669,7 @@ const AddEventModal = (props: AddEventSidebarType) => {
                   <Button variant='outlined' color='secondary' onClick={handleModalClose}>
                     CANCEL
                   </Button>
-                  <Button type='submit' variant='contained' className='bg-[#4B0082]'>
+                  <Button type='submit' variant='contained' className='bg-[#4B0082]' disabled={!isFormValid()}>
                     ADD EVENT
                   </Button>
                 </>
