@@ -28,17 +28,19 @@ export type PersonalDetailsFormDataType = {
   mailingAddress: string
   mailingCity: string
   mailingState: string
-  mailingZipCode: number
+  mailingZipCode: number | undefined
   secondaryResidentialAddress: string
   secondaryResidentialCity: string
-  secondaryResidentialState: number
-  secondaryResidentialZipCode: number
+  secondaryResidentialState: string
+  secondaryResidentialZipCode: number | undefined
   clientResponsibilityPartyName: string
   clientResponsibilityPartyEmailAddress: string
   clientResponsibilityPartyPhoneNumber: number
   clientResponsibilityPartyFaxNumber: number
   clientResponsibilityPartyCaseManagerExtension: number
   clientResponsibilityPartyNote: string
+  mailingAddressCheckbox: boolean
+  secondaryAddressCheckbox: boolean
 }
 
 export type PhysicianAndCaseMangerFormDataType = {

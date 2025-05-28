@@ -14,7 +14,6 @@ import Grid from '@mui/material/Grid2'
 import CustomTabList from '@core/components/mui/TabList'
 import ProfileBanner from '@/@layouts/components/horizontal/ProfileBanner'
 import { Typography } from '@mui/material'
-import axios from 'axios'
 import { useParams } from 'next/navigation'
 import api from '@/utils/api'
 
@@ -45,6 +44,8 @@ const ClientDetails = ({ tabContentList }: BottomBodyProps) => {
         return '/ Submitted Form'
       case 'account-history':
         return '/ Account History'
+      case 'care-plan':
+        return '/ Care Plan'
       case 'time-sheets':
         return '/ Time Sheets'
       case 'service-authorization':
@@ -59,7 +60,6 @@ const ClientDetails = ({ tabContentList }: BottomBodyProps) => {
   const fetchClientData = async () => {
     try {
       const response = await api.get(`/client/${id}`)
-      console.log('Response Client Data =>>', response.data)
       setClientData(response.data)
     } catch (error) {
       console.error('Error getting Client Data: ', error)
@@ -95,6 +95,7 @@ const ClientDetails = ({ tabContentList }: BottomBodyProps) => {
               <Tab value='profile' label='PROFILE' />
               <Tab value='e-doc' label='E-DOC' />
               <Tab value='forms' label='FORMS' />
+              <Tab value='care-plan' label='CARE PLAN' />
               <Tab value='account-history' label='ACC HISTORY' />
               <Tab value='time-sheets' label='TIME SHEETS' />
               <Tab value='service-authorization' label='SERVICE AUTHORIZATION' />

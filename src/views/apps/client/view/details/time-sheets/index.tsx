@@ -603,7 +603,9 @@ const TimeSheets = () => {
     } catch (error) {
       console.error('Error generating PDF:', error)
     } finally {
-      setIsLoading(false)
+      setTimeout(() => {
+        setIsLoading(false)
+      }, 1000)
     }
   }
 
@@ -631,7 +633,7 @@ const TimeSheets = () => {
             keyExtractor={user => user.id.toString()}
             enableRowSelect={false}
             enablePagination={false}
-            pageSize={5}
+            pageSize={25}
             stickyHeader
             maxHeight={600}
             containerStyle={{ borderRadius: 2 }}
@@ -645,7 +647,7 @@ const TimeSheets = () => {
             keyExtractor={row => row.id.toString()}
             enableRowSelect={false}
             enablePagination={false}
-            pageSize={5}
+            pageSize={25}
             stickyHeader
             maxHeight={600}
             containerStyle={{ borderRadius: 2 }}

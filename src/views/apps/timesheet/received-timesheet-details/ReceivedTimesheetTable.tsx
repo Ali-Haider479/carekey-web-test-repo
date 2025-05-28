@@ -1030,19 +1030,23 @@ const ReceivedTimesheetTable = (
         <CustomAlert AlertProps={alertProps} openAlert={alertOpen} setOpenAlert={setAlertOpen} />
 
         <div style={{ overflowX: 'auto', padding: '0px' }}>
-          <ReactTable
-            columns={columns}
-            data={data}
-            keyExtractor={user => user.id.toString()}
-            enableRowSelect
-            stickyHeader
-            maxHeight={600}
-            containerStyle={{ borderRadius: 2 }}
-            editingId={editingId}
-            // onSave={handleSave}
-            onEditChange={handleEditChange}
-            onSelectionChange={handleSelect}
-          />
+          <Card>
+            <ReactTable
+              columns={columns}
+              data={data}
+              keyExtractor={user => user.id.toString()}
+              enableRowSelect
+              stickyHeader
+              maxHeight={600}
+              containerStyle={{ borderRadius: 2 }}
+              editingId={editingId}
+              // onSave={handleSave}
+              onEditChange={handleEditChange}
+              onSelectionChange={handleSelect}
+              pageSize={25}
+              enablePagination
+            />
+          </Card>
         </div>
         <div>
           <Dialog
@@ -1241,7 +1245,31 @@ const ReceivedTimesheetTable = (
                             return setSeconds(setMinutes(setHours(new Date(), 0), 0), 0)
                           }
                         })()}
-                        maxTime={setSeconds(setMinutes(setHours(new Date(), 23), 59), 59)}
+                        maxTime={(() => {
+                          if (!clockInDateString || !clockOutDateString) return new Date()
+                          const isCurrentDate = clockOutDateString.toDateString() === new Date().toDateString()
+
+                          if (isCurrentDate) {
+                            const now = new Date()
+                            const minutes = now.getMinutes()
+                            const roundedMinutes = Math.floor(minutes / 15) * 15
+
+                            const previousInterval = new Date(
+                              clockOutDateString.getFullYear(),
+                              clockOutDateString.getMonth(),
+                              clockOutDateString.getDate(),
+                              now.getHours(),
+                              roundedMinutes,
+                              0, // Set seconds to 0
+                              0 // Set milliseconds to 0
+                            )
+
+                            return previousInterval
+                          } else {
+                            // If previous date, set to end of day
+                            return setSeconds(setMinutes(setHours(new Date(clockOutDateString), 23), 59), 59)
+                          }
+                        })()}
                         onChange={(date: Date | null) => {
                           if (date) {
                             const timeString = date.toLocaleTimeString('en-US', {

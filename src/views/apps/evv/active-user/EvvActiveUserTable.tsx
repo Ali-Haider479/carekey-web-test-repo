@@ -58,6 +58,7 @@ interface TimeLogData {
   startLocation: Location
   caregiver: Caregiver
   client: Client
+  dateOfService: Date
 }
 
 interface Props {
@@ -180,7 +181,7 @@ const EvvActiveUserTable = ({ timeLogData, isLoading, payPeriod, fetchInitialDat
     const newErrors: FormErrors = {}
     let isValid = true
 
-    if (!values.dateOfService) {
+    if (!values.dateOfService || !timeLogData?.[0]?.dateOfService) {
       newErrors.dateOfService = 'Date of Clockout is required'
       isValid = false
     }
@@ -245,6 +246,8 @@ const EvvActiveUserTable = ({ timeLogData, isLoading, payPeriod, fetchInitialDat
     }
   }
 
+  console.log('TimeLog Data', timeLogData)
+
   const handleBlur = (field: keyof ClockOutFormData) => () => {
     setTouched(prev => ({
       ...prev,
@@ -293,9 +296,9 @@ const EvvActiveUserTable = ({ timeLogData, isLoading, payPeriod, fetchInitialDat
   const clientServiceActivities = async () => {
     try {
       const activityIds = selectedUser?.client?.serviceActivityIds
-      if (!selectedUser?.client) return // Avoid fetching if service is not set
+      if (!activityIds) return
       const response: any = await api.get(`/activity/activities/${activityIds}`)
-      setServiceActivities(response?.data)
+      setServiceActivities(response.data.filter((item: any) => item.service.name === selectedUser.serviceName))
     } catch (error) {
       console.error('Error fetching client service activities:', error)
     }
@@ -493,6 +496,8 @@ const EvvActiveUserTable = ({ timeLogData, isLoading, payPeriod, fetchInitialDat
     }
   ]
 
+  console.log('VALUES ====>> ', values)
+
   const PickersComponent = forwardRef(({ ...props }: any, ref) => {
     return (
       <TextField
@@ -534,7 +539,7 @@ const EvvActiveUserTable = ({ timeLogData, isLoading, payPeriod, fetchInitialDat
             keyExtractor={user => user.id.toString()}
             enableRowSelect
             enablePagination
-            pageSize={5}
+            pageSize={25}
             stickyHeader
             maxHeight={600}
             containerStyle={{ borderRadius: 2 }}
@@ -558,9 +563,15 @@ const EvvActiveUserTable = ({ timeLogData, isLoading, payPeriod, fetchInitialDat
                       <AppReactDatepicker
                         selectsStart
                         id='event-start-date'
-                        endDate={values?.dateOfService !== null ? values?.dateOfService : weekRange.endDate}
+                        endDate={
+                          timeLogData?.[0]?.dateOfService !== null ? timeLogData?.[0]?.dateOfService : weekRange.endDate
+                        }
                         selected={values?.dateOfService}
-                        startDate={values?.dateOfService !== null ? values?.dateOfService : weekRange.startDate}
+                        startDate={
+                          timeLogData?.[0]?.dateOfService !== null
+                            ? timeLogData?.[0]?.dateOfService
+                            : weekRange.startDate
+                        }
                         dateFormat={'yyyy-MM-dd'}
                         minDate={selectedUser?.clockIn} // Set the minimum selectable date
                         maxDate={weekRange.endDate}

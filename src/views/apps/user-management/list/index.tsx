@@ -9,15 +9,19 @@ const UserManagementPage = () => {
   const [rolesData, setRolesData] = useState<any[]>([])
   const [currentPage, setCurrentPage] = useState(0)
   const [refreshRoles, setRefreshRoles] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
   const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
   const tenantId = authUser?.tenant?.id
 
   const fetchInitialData = async () => {
+    setIsLoading(true)
     try {
       const response = await api.get(`/user/tenant/${tenantId}`)
       setUsersData(Array.isArray(response.data) ? response.data : response.data.data || [])
     } catch (error) {
       console.error('Error fetching initial users data:', error)
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -53,6 +57,7 @@ const UserManagementPage = () => {
       <UserManagementFilters onFilterApplied={handleFilterApplied} rolesData={rolesData} />
       <UserManagementList
         usersData={usersData}
+        isLoading={isLoading}
         fetchInitialData={fetchInitialData}
         currentPage={currentPage}
         setCurrentPage={setCurrentPage}

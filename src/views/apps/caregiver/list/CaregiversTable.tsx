@@ -6,7 +6,8 @@ import Button from '@mui/material/Button'
 import Grid from '@mui/material/Grid2'
 import { useParams, useRouter } from 'next/navigation'
 import ReactTable from '@/@core/components/mui/ReactTable'
-import { CircularProgress, Icon, Typography } from '@mui/material'
+import { Avatar, Chip, CircularProgress, Icon, Typography } from '@mui/material'
+import api from '@/utils/api'
 
 type Caregiver = {
   itemNumber: number
@@ -16,6 +17,7 @@ type Caregiver = {
   middleName: string
   lastName: string
   caregiverUMPI: string
+  user: any
 }
 
 interface CaregiverTableProps {
@@ -26,6 +28,7 @@ interface CaregiverTableProps {
 const CaregiverTable = ({ data, isLoading }: CaregiverTableProps) => {
   const [search, setSearch] = useState('')
   const [filteredData, setFilteredData] = useState<Caregiver[]>([])
+  const [dataWithProfileImg, setDataWithProfileImg] = useState<any>()
 
   const router = useRouter()
 
@@ -55,27 +58,46 @@ const CaregiverTable = ({ data, isLoading }: CaregiverTableProps) => {
     router.push(`/en/apps/caregiver/${id}/detail`)
   }
 
+  const getProfileImage = async (key: string) => {
+    try {
+      console.log('Inside get profile image url with key: ', key)
+      const res = await api.get(`/caregivers/getProfileUrl/${key}`)
+      console.log('Photo URL response', res.data)
+      return res.data
+    } catch (err) {
+      throw Error(`Error in fetching profile image url, ${err}`)
+    }
+  }
+
+  const fetchProfileImages = async () => {
+    if (data) {
+      const dataWithPhotoUrls = await Promise.all(
+        data?.map(async (item: any) => {
+          console.log('Data photo url ====>> ', item?.user?.profileImageUrl)
+          const profileImgUrl =
+            item?.user?.profileImageUrl !== null
+              ? await getProfileImage(item?.user?.profileImageUrl)
+              : item?.user?.profileImageUrl
+          return {
+            ...item,
+            profileImgUrl: profileImgUrl
+          }
+        })
+      )
+      setDataWithProfileImg(dataWithPhotoUrls)
+      setFilteredData(dataWithPhotoUrls)
+    }
+  }
+
+  useEffect(() => {
+    if (data.length > 0) {
+      fetchProfileImages()
+    }
+  }, [data])
+
+  console.log('Data with profile image URL: ', filteredData)
+
   const newColumns = [
-    // {
-    //   field: 'itemNumber',
-    //   headerName: '#',
-    //   flex: 0.5,
-    //   renderCell: (params: GridRenderCellParams) => <span>{params.row.index + 1}</span>
-    // },
-    {
-      id: 'id',
-      label: 'CAREGIVER ID',
-      minWidth: 200,
-      editable: true,
-      sortable: true,
-      render: (user: any) => {
-        return (
-          <div className='w-full cursor-pointer' onClick={() => handleNext(user?.id)}>
-            <Typography color='primary'>{user?.id}</Typography>
-          </div>
-        )
-      }
-    },
     {
       id: 'caregiverName',
       label: 'CAREGIVER NAME',
@@ -84,39 +106,44 @@ const CaregiverTable = ({ data, isLoading }: CaregiverTableProps) => {
       sortable: true,
       render: (user: any) => {
         return (
-          <div className='w-full cursor-pointer' onClick={() => handleNext(user?.id)}>
-            <Typography
-              // onClick={() => handleNext(user?.id)}
-              className='text-[#67C932]'
-            >{`${user?.firstName} ${user?.lastName}`}</Typography>
+          <div className='w-full h-full cursor-pointer'>
+            <div
+              style={{ height: '50px', display: 'flex', alignItems: 'center', gap: '8px', margin: 0, padding: 0 }}
+              onClick={() => handleNext(user?.id)}
+            >
+              <Avatar alt={user.firstName} src={user?.profileImgUrl} />
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <strong>{`${user.firstName} ${user.lastName}`}</strong>
+              </div>
+            </div>
           </div>
         )
       }
     },
     {
-      id: 'firstName',
-      label: 'FIRST NAME',
+      id: 'caregiverLevel',
+      label: 'LEVEL',
       minWidth: 200,
       editable: true,
       sortable: true,
       render: (user: any) => {
         return (
           <div className='w-full cursor-pointer' onClick={() => handleNext(user?.id)}>
-            <Typography color='primary'>{user?.firstName}</Typography>
+            <Typography color='primary'>{user?.caregiverLevel}</Typography>
           </div>
         )
       }
     },
     {
-      id: 'lastName',
-      label: 'LAST NAME',
+      id: 'ssn',
+      label: 'SOCIAL SECURITY',
       minWidth: 200,
       editable: true,
       sortable: true,
       render: (user: any) => {
         return (
           <div className='w-full cursor-pointer' onClick={() => handleNext(user?.id)}>
-            <Typography color='primary'>{user?.lastName}</Typography>
+            <Typography color='primary'>{user?.ssn}</Typography>
           </div>
         )
       }
@@ -131,6 +158,70 @@ const CaregiverTable = ({ data, isLoading }: CaregiverTableProps) => {
         return (
           <div className='w-full cursor-pointer' onClick={() => handleNext(user?.id)}>
             <Typography color='primary'>{user?.caregiverUMPI}</Typography>
+          </div>
+        )
+      }
+    },
+    {
+      id: 'dateOfHire',
+      label: 'HIRING DATE',
+      minWidth: 200,
+      editable: true,
+      sortable: true,
+      render: (user: any) => {
+        return (
+          <div className='w-full cursor-pointer' onClick={() => handleNext(user?.id)}>
+            <Typography color='primary'>{user?.dateOfHire}</Typography>
+          </div>
+        )
+      }
+    },
+    {
+      id: 'emailAddress',
+      label: 'EMAIL ADDRESS',
+      minWidth: 200,
+      editable: true,
+      sortable: true,
+      render: (user: any) => {
+        return (
+          <div className='w-full cursor-pointer' onClick={() => handleNext(user?.id)}>
+            <Typography color='primary'>{user?.user?.emailAddress}</Typography>
+          </div>
+        )
+      }
+    },
+    {
+      id: 'isLicensed245d',
+      label: 'LICENSED',
+      minWidth: 200,
+      editable: true,
+      sortable: true,
+      render: (user: any) => {
+        return (
+          <Chip
+            label={user?.isLicensed245d === true ? 'YES' : 'NO'}
+            sx={{
+              backgroundColor: user?.isLicensed24d === 'true' ? '#72E1281F' : '#FDB5281F',
+              borderRadius: '50px',
+              color: user?.isLicensed24d === 'true' ? '#71DD37' : '#FFAB00',
+              '& .MuiChip-label': {
+                padding: '0 10px'
+              }
+            }}
+          />
+        )
+      }
+    },
+    {
+      id: 'primaryPhoneNumber',
+      label: 'PHONE NUMBER',
+      minWidth: 200,
+      editable: true,
+      sortable: true,
+      render: (user: any) => {
+        return (
+          <div className='w-full cursor-pointer' onClick={() => handleNext(user?.id)}>
+            <Typography color='primary'>{user?.primaryPhoneNumber}</Typography>
           </div>
         )
       }
@@ -172,7 +263,6 @@ const CaregiverTable = ({ data, isLoading }: CaregiverTableProps) => {
 
       {/* Table */}
       <div style={{ overflowX: 'auto' }}>
-        {/* <DataTable columns={newColumns} data={data} /> */}
         {isLoading ? (
           <div className='flex items-center justify-center p-10'>
             <CircularProgress />
@@ -204,7 +294,7 @@ const CaregiverTable = ({ data, isLoading }: CaregiverTableProps) => {
             data={filteredData}
             keyExtractor={user => user.id.toString()}
             enablePagination
-            pageSize={5}
+            pageSize={25}
             stickyHeader
             maxHeight={600}
             containerStyle={{ borderRadius: 2 }}

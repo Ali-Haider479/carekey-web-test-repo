@@ -26,6 +26,7 @@ import FormControl from '@mui/material/FormControl'
 import axios from 'axios'
 import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
 import api from '@/utils/api'
+import ServiceAndActivities from '@/@core/components/custom-inputs/ServiceAcitvitesDropDown'
 
 type Props = {
   form?: any
@@ -242,58 +243,14 @@ const ServiceActivitiesForm = forwardRef<{ handleSubmit: any }, Props>(({ onFini
             </Grid>
           </CardContent>
         </Card>
-        <Card className='mt-3'>
-          <CardContent>
-            <Typography className='text-xl font-semibold mb-4'>Client Service Type</Typography>
 
-            <Grid container spacing={5}>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                <CustomDropDown
-                  name={'service'}
-                  control={control}
-                  error={errors.service}
-                  label={'Select Service'}
-                  optionList={
-                    serviceTypes?.map((item: any) => {
-                      return {
-                        key: `${item.id}-${item.name}`,
-                        value: item.id,
-                        optionString: item.name
-                      }
-                    }) || []
-                  }
-                  defaultValue={''}
-                />
-              </Grid>
-              <TextField
-                {...register('serviceNotes', { required: false })}
-                label={'Service Notes'}
-                placeholder={'Service Notes'}
-                name={'serviceNotes'}
-                defaultValue={''}
-                type={'text'}
-                size='small'
-                fullWidth
-                multiline
-                rows={4}
-              />
-            </Grid>
-          </CardContent>
-        </Card>
-
-        <Card className='mt-3'>
-          <CardContent>
-            <Typography className='text-xl font-semibold mb-4'>Service Activities</Typography>
-            <ServiceActivities
-              name={'serviceActivities'}
-              control={control}
-              label={'Select Service'}
-              error={errors.serviceActivities}
-              defaultValue={[]}
-              activities={filteredActivities}
-            />
-          </CardContent>
-        </Card>
+        <ServiceAndActivities
+          control={control}
+          errors={errors}
+          serviceTypes={serviceTypes || []}
+          activities={filteredActivities}
+          isUpdate={false} // Set to true for update mode
+        />
 
         <Card className='mt-3'>
           <CardContent>

@@ -5,6 +5,14 @@ import Card from '@mui/material/Card'
 import { CircularProgress } from '@mui/material'
 import DataTable from '@/@core/components/mui/DataTable'
 import { GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
+import ReactTable from '@/@core/components/mui/ReactTable'
+
+interface Column {
+  id: string
+  label: string
+  minWidth: number
+  render: (item: any) => JSX.Element
+}
 
 // Helper function to calculate duration with fallback
 const calculateDuration = (clockIn?: string, clockOut?: string): string => {
@@ -63,38 +71,50 @@ const SavedBatchTable = () => {
   const [filteredData, setFilteredData] = useState(rows)
   const [isLoading, setIsLoading] = useState(false)
 
-  const columns: GridColDef[] = [
+  const columns: Column[] = [
     {
-      field: 'batchName',
-      headerName: 'BATCH NAME',
-      flex: 1.5
+      id: 'batchName',
+      label: 'BATCH NAME',
+      minWidth: 170,
+      render: (item: any) => <span className='font-semibold text-base text-gray-800'>{item.batchName}</span>
     },
     {
-      field: 'dateOfSubmission',
-      headerName: 'DATE OF SUBMISSION',
-      flex: 1
+      id: 'dateOfSubmission',
+      label: 'DATE OF SUBMISSION',
+      minWidth: 170,
+      render: (item: any) => <span className='font-normal text-base text-gray-600'>{item.dateOfSubmission}</span>
     },
     {
-      field: 'submissionDate',
-      headerName: 'SUBMISSION DATE',
-      flex: 1
+      id: 'submissionDate',
+      label: 'SUBMISSION DATE',
+      minWidth: 170,
+      render: (item: any) => <span className='font-normal text-base text-gray-600'>{item.submissionDate}</span>
     },
     {
-      field: 'remitanceStatus',
-      headerName: 'REMITANCE STATUS',
-      flex: 1
-    },
-    {
-      field: 'finalStatus',
-      headerName: 'FINAL STATUS',
-      flex: 1,
-      renderCell: params => (
+      id: 'remitanceStatus',
+      label: 'REMITANCE STATUS',
+      minWidth: 170,
+      render: (item: any) => (
         <span
           className={`px-3 py-1 rounded-full text-xs ${
-            params.value === 'Completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+            item.remitanceStatus === 'Completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
           }`}
         >
-          {params.value}
+          {item.remitanceStatus}
+        </span>
+      )
+    },
+    {
+      id: 'finalStatus',
+      label: 'FINAL STATUS',
+      minWidth: 170,
+      render: (item: any) => (
+        <span
+          className={`px-3 py-1 rounded-full text-xs ${
+            item.finalStatus === 'Completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+          }`}
+        >
+          {item.finalStatus}
         </span>
       )
     }
@@ -113,7 +133,17 @@ const SavedBatchTable = () => {
   return (
     <Card sx={{ borderRadius: 1, boxShadow: 3 }}>
       {/* <CardHeader title='Saved Batch' className='pb-4' /> */}
-      <DataTable data={filteredData} columns={columns} />
+      <ReactTable
+        data={filteredData}
+        columns={columns}
+        keyExtractor={user => user.id.toString()}
+        enableRowSelect
+        enablePagination
+        pageSize={25}
+        stickyHeader
+        maxHeight={600}
+        containerStyle={{ borderRadius: 2 }}
+      />
     </Card>
   )
 }

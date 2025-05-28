@@ -333,7 +333,14 @@ const EmployeeStepper = () => {
           />
         )
       case 1:
-        return <LoginInfoComponent ref={loginInfoFormRef} onFinish={onLoginInfoSubmit} defaultValues={loginInfo} />
+        return (
+          <LoginInfoComponent
+            ref={loginInfoFormRef}
+            onFinish={onLoginInfoSubmit}
+            defaultValues={loginInfo}
+            caregiverPersonalInfo={caregiverData}
+          />
+        )
       case 2:
         return <DocumentsPage ref={documentsFormRef} onFinish={onDocumentsSubmit} defaultValues={documentsData} />
       default:

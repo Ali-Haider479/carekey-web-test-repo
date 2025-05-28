@@ -19,7 +19,7 @@ import {
 import axios from 'axios'
 import FormModal from '@/@core/components/mui/Modal'
 import { AddEventSidebarType, AddEventType } from '@/types/apps/calendarTypes'
-import { Alert, Grid2 as Grid, patch, Snackbar } from '@mui/material'
+import { Alert, CircularProgress, Grid2 as Grid, patch, Snackbar } from '@mui/material'
 import CustomAlert from '@/@core/components/mui/Alter'
 import api from '@/utils/api'
 
@@ -39,7 +39,7 @@ interface DefaultStateType {
   caregiver: string | undefined
   client: string
   service: string
-  assignedHours: number
+  assignedHours: number | string
   startTime: Date
   endTime: Date
   notes: string
@@ -146,6 +146,7 @@ const AddEventModal = (props: AddEventSidebarType) => {
   const [clientUsers, setClientUsers] = useState<any>([])
   const [serviceType, setServiceType] = useState<any[]>([])
   const [serviceActivities, setServiceActivities] = useState<any>([])
+  const [isAddEventLoading, setIsAddEventLoading] = useState(false)
   const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
 
   const isFormValid = () => {
@@ -154,12 +155,14 @@ const AddEventModal = (props: AddEventSidebarType) => {
       values.caregiver !== '' &&
       values.client !== '' &&
       values.service !== '' &&
+      values.notes !== '' &&
       values.startDate instanceof Date &&
       !isNaN(values.startDate.getTime()) &&
       values.startTime instanceof Date &&
       !isNaN(values.startTime.getTime()) &&
       values.endDate instanceof Date &&
       !isNaN(values.endDate.getTime()) &&
+      typeof values.assignedHours === 'number' &&
       values.assignedHours > 0
     )
   }
@@ -260,6 +263,7 @@ const AddEventModal = (props: AddEventSidebarType) => {
     clearErrors()
     dispatch(selectedEvent(null))
     handleAddEventSidebarToggle()
+    setAlertOpen(false)
   }
 
   const calculateTotalDays = (startDate: Date, endDate: Date) => {
@@ -275,12 +279,15 @@ const AddEventModal = (props: AddEventSidebarType) => {
   }
 
   const onSubmit = async () => {
+    setIsAddEventLoading(true)
     console.log('In onSubmit--------------->')
     const startDate = values.startDate
     const assignedHours = values.assignedHours
     const endDate =
       isEdited && calendarStore?.selectedEvent
-        ? new Date(startDate.getTime() + assignedHours * 60 * 60 * 1000)
+        ? typeof assignedHours === 'number'
+          ? new Date(startDate.getTime() + assignedHours * 60 * 60 * 1000)
+          : values.endDate
         : values.endDate
 
     const bulkEvents: AddEventType[] = []
@@ -293,7 +300,11 @@ const AddEventModal = (props: AddEventSidebarType) => {
     for (let i = 0; i < totalDays; i++) {
       const eventStartDate = new Date(currentDate)
       const finalStartDate = mergeDateWithTime(eventStartDate, values.startTime)
-      const finalEndDate = new Date(finalStartDate.getTime() + assignedHours * 60 * 60 * 1000)
+      // const finalEndDate = new Date(finalStartDate.getTime() + assignedHours * 60 * 60 * 1000)
+      const finalEndDate =
+        typeof assignedHours === 'number'
+          ? new Date(finalStartDate.getTime() + assignedHours * 60 * 60 * 1000)
+          : new Date(finalStartDate.getTime())
 
       bulkEvents.push({
         display: 'block',
@@ -320,7 +331,10 @@ const AddEventModal = (props: AddEventSidebarType) => {
       console.log('Editing Existing Event!!!!', calendarStore.selectedEvent.id)
       console.log('bulkEvents>>>>>', bulkEvents)
       console.log(startDate.getHours(), assignedHours)
-      if (startDate.getHours() + startDate.getMinutes() / 60 + assignedHours > 24) {
+      if (
+        startDate.getHours() + startDate.getMinutes() / 60 + (typeof assignedHours === 'number' ? assignedHours : 0) >
+        24
+      ) {
         setAlertMessage({
           message: 'Please select hours with in the date',
           severity: 'error'
@@ -338,9 +352,17 @@ const AddEventModal = (props: AddEventSidebarType) => {
           }
           const updatedSchedule = await api.patch(`/schedule/${eventId}`, patchBody)
           handleUpdateEvent(updatedSchedule.data)
+          handleModalClose()
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error updating schedule:', error)
+        if (error.status === 409) {
+          setAlertOpen(true)
+          setAlertMessage({
+            message: 'Caregiver already has a schedule within same date and time',
+            severity: 'error'
+          })
+        }
       } finally {
         setIsEditedOff
       }
@@ -349,13 +371,21 @@ const AddEventModal = (props: AddEventSidebarType) => {
         const createSchedule = await api.post(`/schedule`, bulkEvents)
         console.log('Created schedule:', createSchedule.data)
         handleAddEvent(createSchedule.data)
-      } catch (error) {
+        handleModalClose()
+      } catch (error: any) {
         console.error('Error creating schedule:', error)
+        if (error.status === 409) {
+          setAlertOpen(true)
+          setAlertMessage({
+            message: 'Caregiver already has a schedule within same date and time',
+            severity: 'error'
+          })
+        }
       }
     }
 
     dispatch(filterEvents())
-    handleModalClose()
+    setIsAddEventLoading(false)
   }
 
   const mergeDateWithTime = (date: Date, time: Date): Date => {
@@ -614,7 +644,79 @@ const AddEventModal = (props: AddEventSidebarType) => {
                   label='Assigned Hours (Per Day)'
                   value={values.assignedHours}
                   id='event-assignedHours'
-                  onChange={e => setValues({ ...values, assignedHours: Number(e.target.value) })}
+                  type='number'
+                  slotProps={{
+                    htmlInput: {
+                      min: 0,
+                      max: 24,
+                      step: 0.25
+                    }
+                  }}
+                  // onChange={e => setValues({ ...values, assignedHours: Number(e.target.value) })}
+                  onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                    // Allow digits, decimal point, backspace, delete, tab, enter, and arrow keys
+                    const allowedKeys = [
+                      '0',
+                      '1',
+                      '2',
+                      '3',
+                      '4',
+                      '5',
+                      '6',
+                      '7',
+                      '8',
+                      '9',
+                      '.',
+                      'Backspace',
+                      'Delete',
+                      'Tab',
+                      'Enter',
+                      'ArrowLeft',
+                      'ArrowRight'
+                    ]
+                    // Allow Ctrl/Cmd + A, C, V, X for select, copy, paste, cut
+                    if (e.ctrlKey || e.metaKey) {
+                      allowedKeys.push('a', 'c', 'v', 'x')
+                    }
+                    if (!allowedKeys.includes(e.key)) {
+                      e.preventDefault()
+                    }
+                    // Prevent multiple decimal points
+                    if (e.key === '.' && (e.target as HTMLInputElement).value.includes('.')) {
+                      e.preventDefault()
+                    }
+                  }}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                    const value = e.target.value
+                    // Allow empty string or valid number (e.g., "123", "12.34")
+                    if (value === '' || /^[0-9]*\.?[0-9]*$/.test(value)) {
+                      let newValue: number | string = value === '' ? '' : parseFloat(value)
+                      if (typeof newValue === 'number') {
+                        if (isNaN(newValue)) {
+                          newValue = '' // Handle invalid number
+                        } else {
+                          if (newValue > 24) {
+                            newValue = 24 // Cap at 24
+                          }
+                          if (newValue < 0) {
+                            newValue = 0 // Prevent negative values
+                          }
+                        }
+                      }
+                      setValues({ ...values, assignedHours: newValue })
+                    }
+                  }}
+                  error={
+                    typeof values.assignedHours === 'number' &&
+                    (values.assignedHours > 24 || isNaN(values.assignedHours))
+                  }
+                  helperText={
+                    typeof values.assignedHours === 'number' && values.assignedHours > 24
+                      ? 'Assigned hours cannot exceed 24.'
+                      : typeof values.assignedHours === 'number' && isNaN(values.assignedHours)
+                        ? 'Please enter a valid number.'
+                        : ''
+                  }
                 />
               </Grid>
             </Grid>
@@ -669,7 +771,13 @@ const AddEventModal = (props: AddEventSidebarType) => {
                   <Button variant='outlined' color='secondary' onClick={handleModalClose}>
                     CANCEL
                   </Button>
-                  <Button type='submit' variant='contained' className='bg-[#4B0082]' disabled={!isFormValid()}>
+                  <Button
+                    type='submit'
+                    variant='contained'
+                    className='bg-[#4B0082]'
+                    startIcon={isAddEventLoading ? <CircularProgress size={20} color='inherit' /> : null}
+                    disabled={!isFormValid() || isAddEventLoading}
+                  >
                     ADD EVENT
                   </Button>
                 </>

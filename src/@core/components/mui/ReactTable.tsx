@@ -510,7 +510,7 @@ function ReactTable<T extends { subRows?: T[] }>({
 
       {enablePagination && (
         <TablePagination
-          rowsPerPageOptions={[5, 10, 25, 50]}
+          rowsPerPageOptions={[25]}
           component='div'
           count={data.length}
           rowsPerPage={rowsPerPage}

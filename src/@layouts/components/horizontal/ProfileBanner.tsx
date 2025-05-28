@@ -36,6 +36,8 @@ const ProfileBanner = ({ props }: { props: ProfileHeaderType }) => {
     }
   }, [props?.profileImg])
 
+  console.log('PROFILE IMAGE URL', props?.profileImg)
+
   const getProfileImage = async (key: string) => {
     try {
       const res = await api.get(`/${props.isClient ? 'client' : 'caregivers'}/getProfileUrl/${key}`)

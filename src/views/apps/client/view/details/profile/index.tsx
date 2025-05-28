@@ -27,7 +27,7 @@ const Profile = () => {
   return (
     <Grid container spacing={0}>
       <Grid size={{ xs: 12, sm: 4, md: 4 }}>
-        <InfoCard />
+        <InfoCard clientData={clientData} />
       </Grid>
       <Grid size={{ xs: 12, sm: 6, md: 8 }}>
         <ClientAboutCard />

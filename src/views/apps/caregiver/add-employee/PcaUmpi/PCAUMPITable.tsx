@@ -19,12 +19,20 @@ import {
 import Grid from '@mui/material/Grid2'
 import { GridColDef } from '@mui/x-data-grid'
 import DataTable from '@/@core/components/mui/DataTable'
+import ReactTable from '@/@core/components/mui/ReactTable'
 
 interface DisplayFile {
   id: number
   name: string
   status: 'success' | 'error' | 'uploading'
   progress: number
+}
+
+interface Column {
+  id: string
+  label: string
+  minWidth: number
+  render: (item: any) => JSX.Element
 }
 
 interface Props {
@@ -80,42 +88,42 @@ const PCAUMPITable = ({ form }: Props) => {
     { id: '9', payor: 'PRIME WEST' }
   ]
 
-  const newColumns: GridColDef[] = [
-    // {
-    //   field: 'itemNumber',
-    //   headerName: '#',
-    //   flex: 0.5,
-    //   renderCell: (params: GridRenderCellParams) => <span>{params.row.index + 1}</span>
-    // },
+  const newColumns: Column[] = [
     {
-      field: 'payor',
-      headerName: 'PAYOR',
-      flex: 0.3
+      id: 'payor',
+      label: 'PAYOR',
+      minWidth: 170,
+      render: item => <Typography className='mt-4'>{item.payor}</Typography>
     },
     {
-      field: 'umpi',
-      headerName: 'UMPI',
-      flex: 0.3
+      id: 'umpi',
+      label: 'UMPI',
+      minWidth: 170,
+      render: item => <Typography className='mt-4'>{item.umpi}</Typography>
     },
     {
-      field: 'activationDate',
-      headerName: 'ACTIVATION DATE',
-      flex: 0.3
+      id: 'activationDate',
+      label: 'ACTIVATION DATE',
+      minWidth: 170,
+      render: item => <Typography className='mt-4'>{item.activationDate}</Typography>
     },
     {
-      field: 'expiryDate',
-      headerName: 'EXPIRY DATE',
-      flex: 0.3
+      id: 'expiryDate',
+      label: 'EXPIRY DATE',
+      minWidth: 170,
+      render: item => <Typography className='mt-4'>{item.expiryDate}</Typography>
     },
     {
-      field: 'faxDate',
-      headerName: 'FAX DATE',
-      flex: 0.3
+      id: 'faxDate',
+      label: 'FAX DATE',
+      minWidth: 170,
+      render: item => <Typography className='mt-4'>{item.faxDate}</Typography>
     },
     {
-      field: 'recievedDate',
-      headerName: 'RECIEVED DATE',
-      flex: 0.3
+      id: 'recievedDate',
+      label: 'RECIEVED DATE',
+      minWidth: 170,
+      render: item => <Typography className='mt-4'>{item.recievedDate}</Typography>
     }
   ]
 
@@ -137,7 +145,17 @@ const PCAUMPITable = ({ form }: Props) => {
               <input type='file' hidden onChange={handleFileUpload} />
             </Button>
           </div>
-          <DataTable columns={newColumns} data={rowData} />
+          <ReactTable
+            data={rowData}
+            columns={newColumns}
+            keyExtractor={user => user.id.toString()}
+            enableRowSelect
+            enablePagination
+            pageSize={25}
+            stickyHeader
+            maxHeight={600}
+            containerStyle={{ borderRadius: 2 }}
+          />
           <div className='mt-5 w-full'>
             <Grid>
               <TextField

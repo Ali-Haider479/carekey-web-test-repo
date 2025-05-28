@@ -1,7 +1,7 @@
 'use client'
 import { Typography } from '@mui/material'
 import TextField from '@mui/material/TextField'
-import React, { useState } from 'react'
+import React from 'react'
 import { Controller, useFormContext } from 'react-hook-form'
 
 type Props = {
@@ -19,16 +19,18 @@ type Props = {
   maxLength?: number
   onBlur?: any
   isPhoneNumber?: boolean
+  isSocialSecurityNumber?: boolean
 }
 
-const CustomTextField = (props: Props, e: any) => {
-  const { isRequired = true, isPhoneNumber = false } = props
+const CustomTextField = (props: Props) => {
+  const { isRequired = true, isPhoneNumber = false, isSocialSecurityNumber = false } = props
   const { trigger, watch, setValue } = useFormContext()
 
   const password = watch('password')
   const phoneNumber = isPhoneNumber === true && watch(`${props.name}`)
+  const ssn = isSocialSecurityNumber === true && watch(`${props.name}`)
 
-  // Format US phone number as XXX XXX XXXX
+  // Format US phone number as (XXX) XXX-XXXX
   const formatPhoneNumber = (value: string) => {
     if (!isPhoneNumber) return value
 
@@ -51,6 +53,31 @@ const CustomTextField = (props: Props, e: any) => {
 
     return formatted
   }
+
+  // Format SSN as XXX-XX-XXXX
+  const formatSSN = (value: string) => {
+    if (!isSocialSecurityNumber) return value
+
+    // Remove non-digits
+    const digits = value.replace(/\D/g, '')
+
+    // Format the SSN
+    let formatted = ''
+    if (digits.length > 0) {
+      formatted += digits.substring(0, Math.min(3, digits.length))
+
+      if (digits.length > 3) {
+        formatted += '-' + digits.substring(3, Math.min(5, digits.length))
+      }
+
+      if (digits.length > 5) {
+        formatted += '-' + digits.substring(5, Math.min(digits.length))
+      }
+    }
+
+    return formatted
+  }
+
   const getErrorMessage = (error: any) => {
     if (!error) return ''
 
@@ -91,6 +118,29 @@ const CustomTextField = (props: Props, e: any) => {
       }
     }
 
+    // SSN validation
+    if (isSocialSecurityNumber && isRequired) {
+      const value = error.ref?.value || ''
+      const digits = value.replace(/\D/g, '')
+      if (!digits.length) {
+        return `${props.label} is required`
+      }
+      if (digits.length !== 9) {
+        return 'Please enter a valid 9-digit Social Security Number'
+      }
+    }
+
+    if (isSocialSecurityNumber && !isRequired) {
+      const value = error.ref?.value || ''
+      const digits = value.replace(/\D/g, '')
+      if (!digits.length) {
+        return ''
+      }
+      if (digits.length !== 9) {
+        return 'Please enter a valid 9-digit Social Security Number'
+      }
+    }
+
     // Default error message for required field
     if (isRequired) {
       return `Please provide ${props.label}`
@@ -107,7 +157,7 @@ const CustomTextField = (props: Props, e: any) => {
           required: isRequired ? `${props.label} is required` : false,
           minLength: {
             value: props.minLength || 1,
-            message: props.minLength ? `${props.label} should be atleast ${props.minLength} characters` : ''
+            message: props.minLength ? `${props.label} should be at least ${props.minLength} characters` : ''
           },
           maxLength: {
             value: props.maxLength || 524288,
@@ -133,6 +183,20 @@ const CustomTextField = (props: Props, e: any) => {
               }
             }
           }),
+          ...(isSocialSecurityNumber && {
+            validate: {
+              validSSN: (value: string) => {
+                const digits = value?.replace(/\D/g, '')
+
+                if (isRequired && !digits?.length) {
+                  return `${props.label} is required`
+                }
+                if (digits?.length >= 1 && digits?.length < 9) {
+                  return 'Please enter a valid 9 digit Social Security Number'
+                }
+              }
+            }
+          }),
           ...(props.type === 'password' &&
             props.name === 'confirmPassword' && {
               validate: {
@@ -144,21 +208,20 @@ const CustomTextField = (props: Props, e: any) => {
           return (
             <TextField
               {...field}
-              value={isPhoneNumber ? phoneNumber : field.value}
+              value={isPhoneNumber ? phoneNumber : isSocialSecurityNumber ? ssn : field.value}
               onChange={e => {
                 let value = e.target.value.trimStart()
 
-                // Handle phone number input
                 if (isPhoneNumber) {
                   // For phone numbers, only keep digits and limit to 10
                   const digits = value.replace(/\D/g, '').substring(0, 10)
-
-                  // Set the raw digits as the actual form value
-                  field.onChange(phoneNumber)
-
-                  // Update the display value with formatting
-                  // setDisplayValue(formatPhoneNumber(digits))
+                  field.onChange(digits)
                   setValue(`${props.name}`, formatPhoneNumber(digits))
+                } else if (isSocialSecurityNumber) {
+                  // For SSN, only keep digits and limit to 9
+                  const digits = value.replace(/\D/g, '').substring(0, 9)
+                  field.onChange(digits)
+                  setValue(`${props.name}`, formatSSN(digits))
                 } else {
                   // For normal fields, just set the value as is
                   field.onChange(value)
@@ -182,15 +245,7 @@ const CustomTextField = (props: Props, e: any) => {
                 )
               }
               placeholder={props.placeHolder}
-              type={isPhoneNumber ? 'tel' : props.type}
-              // inputProps={{
-              //   ...(isPhoneNumber
-              //     ? {
-              //         inputMode: 'numeric',
-              //         pattern: '[0-9]*'
-              //       }
-              //     : {})
-              // }}
+              type={isPhoneNumber ? 'tel' : isSocialSecurityNumber ? 'text' : props.type}
               slotProps={props.slotProps}
               disabled={props.disabled}
               onBlur={props.onBlur}

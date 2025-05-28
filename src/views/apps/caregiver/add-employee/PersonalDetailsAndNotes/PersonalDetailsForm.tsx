@@ -109,11 +109,15 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                 </Grid>
                 <Grid size={{ xs: 12, sm: 4 }}>
                   <CustomDropDown
-                    name={'role'}
+                    name={'caregiverRole'}
                     control={control}
-                    error={errors.role}
+                    error={errors.caregiverRole}
                     label={'Role'}
-                    optionList={[{ key: 1, value: 'caregiver', optionString: 'Caregiver' }]}
+                    optionList={[
+                      { key: 1, value: 'Caregiver', optionString: 'Caregiver' },
+                      { key: 2, value: 'Interpreter', optionString: 'Interpreter' },
+                      { key: 3, value: 'Qulaified Professional', optionString: 'Qulaified Professional' }
+                    ]}
                     defaultValue={''}
                   />
                 </Grid>
@@ -147,8 +151,10 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                     error={errors.caregiverLevel}
                     label={'Caregiver Level'}
                     optionList={[
-                      { key: 1, value: 'caregiver', optionString: 'Caregiver' },
-                      { key: 2, value: 'serniorCaregiver', optionString: 'Sernior Caregiver' }
+                      { key: 1, value: 'L1', optionString: 'L1' },
+                      { key: 2, value: 'L2', optionString: 'L2' },
+                      { key: 3, value: 'L3', optionString: 'L3' },
+                      { key: 4, value: 'L4', optionString: 'L4' }
                     ]}
                     defaultValue={''}
                   />
@@ -210,6 +216,7 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                     type={'text'}
                     error={errors.ssn}
                     control={control}
+                    isSocialSecurityNumber={true}
                   />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 4 }}>

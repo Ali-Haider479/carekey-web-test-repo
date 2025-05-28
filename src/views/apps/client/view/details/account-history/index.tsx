@@ -1,5 +1,6 @@
 'use client'
 import DataTable from '@/@core/components/mui/DataTable'
+import ReactTable from '@/@core/components/mui/ReactTable'
 import CustomTextField from '@/@core/components/mui/TextField'
 import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
 import api from '@/utils/api'
@@ -15,6 +16,13 @@ import React, { useState, forwardRef, useEffect } from 'react'
 interface DefaultStateType {
   actionType: string
   startDate: string // Changed to string to match ISO format
+}
+
+interface Column {
+  id: string
+  label: string
+  minWidth: number
+  render: (item: any) => JSX.Element
 }
 
 interface PickerProps {
@@ -67,38 +75,30 @@ const AccountHistory = () => {
     fetchUserActions()
   }, [id])
 
-  const newColumns: GridColDef[] = [
+  const newColumns: Column[] = [
     {
-      field: 'createdAt',
-      headerName: 'DATE & TIME',
-      flex: 0.5,
-      renderCell: (params: GridRenderCellParams) => (
-        <Typography className='font-light text-sm my-3'>{formatDateTime(params.value)}</Typography>
-      )
+      id: 'createdAt',
+      label: 'DATE & TIME',
+      minWidth: 170,
+      render: item => <Typography className='font-light text-sm my-3'>{formatDateTime(item.createdAt)}</Typography>
     },
     {
-      field: 'userId',
-      headerName: 'ADMIN',
-      flex: 0.5,
-      renderCell: (params: GridRenderCellParams) => (
-        <Typography className='font-light text-sm my-3'>{params.row.user.userName}</Typography>
-      )
+      id: 'userId',
+      label: 'ADMIN',
+      minWidth: 170,
+      render: item => <Typography className='font-light text-sm my-3'>{item.user.userName}</Typography>
     },
     {
-      field: 'actionType',
-      headerName: 'SECTION',
-      flex: 0.5,
-      renderCell: (params: GridRenderCellParams) => (
-        <Typography className='font-light text-sm my-3'>{params.value}</Typography>
-      )
+      id: 'actionType',
+      label: 'SECTION',
+      minWidth: 170,
+      render: item => <Typography className='font-light text-sm my-3'>{item.actionType}</Typography>
     },
     {
-      field: 'details',
-      headerName: 'CHANGES MADE',
-      flex: 0.5,
-      renderCell: (params: GridRenderCellParams) => (
-        <Typography className='font-light text-sm my-3'>{params.value}</Typography>
-      )
+      id: 'details',
+      label: 'CHANGES MADE',
+      minWidth: 170,
+      render: item => <Typography className='font-light text-sm my-3'>{item.details}</Typography>
     }
   ]
 
@@ -205,7 +205,21 @@ const AccountHistory = () => {
       </form>
       <Card className='h-full w-full mt-3 shadow-md rounded-lg p-1'>
         <Input endAdornment={<SearchOutlined />} className='w-[534px] !h-[40px] m-4' placeholder='Search Admin name' />
-        {loading ? <Typography>Loading...</Typography> : <DataTable columns={newColumns} data={userActions} />}
+        {loading ? (
+          <Typography>Loading...</Typography>
+        ) : (
+          <ReactTable
+            data={userActions}
+            columns={newColumns}
+            keyExtractor={user => user.id.toString()}
+            enableRowSelect
+            enablePagination
+            pageSize={25}
+            stickyHeader
+            maxHeight={600}
+            containerStyle={{ borderRadius: 2 }}
+          />
+        )}
       </Card>
     </>
   )

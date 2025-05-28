@@ -4,6 +4,7 @@ import {
   Avatar,
   Button,
   Card,
+  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
@@ -41,6 +42,7 @@ const InfoCard = () => {
   const [isModalShow, setIsModalShow] = useState(false)
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null)
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false)
+  const [assignButtonLoading, setAssignButtonLoading] = useState(false)
 
   const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
   const [formData, setFormData] = useState<FormItems>()
@@ -146,6 +148,7 @@ const InfoCard = () => {
   }, [assignedClients])
 
   const onSubmit = async (data: FormItems) => {
+    setAssignButtonLoading(true)
     console.log('Form Data:', data, id)
     // await new Promise(resolve => setTimeout(resolve, 1000)) // Simulate API request
     // reset() // Reset form after submission
@@ -183,6 +186,7 @@ const InfoCard = () => {
     fetchAssignClient()
     reset()
     handleModalClose()
+    setAssignButtonLoading(false)
   }
 
   const handleModalClose = () => {
@@ -211,6 +215,8 @@ const InfoCard = () => {
     setSelectedUserId(null)
   }
 
+  console.log('Data from caregiver info card', data?.data)
+
   return (
     <>
       <FormProvider {...methods}>
@@ -219,7 +225,7 @@ const InfoCard = () => {
             <div className='flex justify-between text-sm text-gray-400 mb-2'>
               <Typography>Role:</Typography>
               <Typography className='text-gray-400'>
-                {data?.data?.caregiverLevel ? data?.data?.caregiverLevel : '---'}
+                {data?.data?.caregiverRole ? data?.data?.caregiverRole : '---'}
               </Typography>
             </div>
             <div className='flex justify-between text-sm text-gray-400 mb-2'>
@@ -367,7 +373,13 @@ const InfoCard = () => {
                     <Button variant='outlined' color='secondary' onClick={handleModalClose}>
                       CANCEL
                     </Button>
-                    <Button type='submit' variant='contained' className='bg-[#4B0082]'>
+                    <Button
+                      type='submit'
+                      startIcon={assignButtonLoading ? <CircularProgress size={20} color='inherit' /> : null}
+                      disabled={assignButtonLoading}
+                      variant='contained'
+                      className='bg-[#4B0082]'
+                    >
                       Assign Client
                     </Button>
                   </div>

@@ -153,6 +153,7 @@ const AddClientStepper = () => {
         dischargeDate: personalDetails.dateOfDischarge,
         dateOfBirth: personalDetails.dateOfBirth,
         pmiNumber: personalDetails.pmiNumber,
+        ssn: personalDetails.socialSecurity,
         gender: personalDetails.gender,
         emailId: personalDetails.emailId.toLowerCase(),
         primaryPhoneNumber: personalDetails.primaryPhoneNumber,
@@ -164,13 +165,12 @@ const AddClientStepper = () => {
         insuranceCode: personalDetails.insuranceCode,
         clientCode: personalDetails.clientCode,
         medicalSpendDown: personalDetails.medicalSpendDown,
-        amount: personalDetails.amount,
         sharedCare: personalDetails.sharedCare,
         pcaChoice: personalDetails.pcaChoice,
         isClient: true,
         isSignatureDraw: true,
         tenantId: authUser?.tenant?.id,
-        serviceActivityIds: serviceActivities?.serviceActivities
+        serviceActivityIds: serviceActivities?.services.map((item: any) => item.serviceActivities).flat()
       }
       const filteredCreateClientBody = Object.fromEntries(
         Object.entries(createClientBody).filter(([key, value]) => value !== undefined && value !== null && value !== '')
@@ -276,13 +276,14 @@ const AddClientStepper = () => {
       const assignCaregiverResponse = await api.post(`/user/createClientUser`, filteredAssignCaregiverBody)
       console.log('Assigned Caregiver Details --> ', assignCaregiverResponse)
 
-      const createClientServiceBody = {
-        note: serviceActivities.serviceNotes,
-        serviceId: serviceActivities.service,
-        clientId: clientId
-      }
-      const createClientServiceTypeResponse = await api.post(`/client/client-service`, createClientServiceBody)
-      console.log('Client Service Type Created --> ', createClientServiceTypeResponse)
+      serviceActivities.services.forEach(async (item: any) => {
+        const createClientServiceBody = {
+          note: item.serviceNotes,
+          serviceId: item.service,
+          clientId: clientId
+        }
+        await api.post(`/client/client-service`, createClientServiceBody)
+      })
 
       const createCarePlanDueBody = {
         clientId: clientId,
@@ -362,7 +363,6 @@ const AddClientStepper = () => {
       case 2:
         serviceActivitiesFormRef.current?.handleSubmit((data: clientServiceFormDataType) => {
           setServiceActivities((prevData: any) => ({ ...prevData, ...data }))
-          console.log('Personal Details in Parent:', data)
           // Move to next step after successful validation
           setActiveStep(prevActiveStep => prevActiveStep + 1)
         })()
@@ -395,7 +395,6 @@ const AddClientStepper = () => {
   }
 
   const serviceActivitiesFormSubmit = (values: any, data: any) => {
-    console.log('Personal Detail', values)
     setServiceActivities((prevData: any) => ({ ...prevData, ...data }))
     handleNext()
   }

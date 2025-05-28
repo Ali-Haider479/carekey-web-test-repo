@@ -132,7 +132,7 @@ const EvvMissedShiftsTable = ({ timeLogData, isLoading, onFilterApplied }: Props
           keyExtractor={user => user.id.toString()}
           enableRowSelect
           enablePagination
-          pageSize={5}
+          pageSize={25}
           stickyHeader
           maxHeight={600}
           containerStyle={{ borderRadius: 2 }}

@@ -306,7 +306,6 @@ const IncidentsTab = () => {
     <>
       <Card>
         <Typography className='text-xl p-6'>Incident Reports</Typography>
-        {/* <DataTable columns={columns} data={incidentsData} /> */}
         {!incidentsData?.length ? (
           <Typography className='flex justify-center pb-5'>No Data Available</Typography>
         ) : (
@@ -315,7 +314,7 @@ const IncidentsTab = () => {
             data={incidentsData}
             keyExtractor={row => row.id.toString()}
             enablePagination
-            pageSize={5}
+            pageSize={25}
             stickyHeader
             maxHeight={600}
             containerStyle={{ borderRadius: 2 }}

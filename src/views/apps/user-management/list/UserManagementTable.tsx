@@ -78,6 +78,7 @@ interface UserManagementListProps {
   rolesData: Role[] // Add rolesData prop
   setRolesData: (roles: Role[]) => void // Add setRolesData prop
   setRefreshRoles: (value: boolean) => void
+  isLoading: boolean
 }
 
 const UserManagementList = ({
@@ -87,14 +88,15 @@ const UserManagementList = ({
   setCurrentPage,
   rolesData,
   setRolesData,
-  setRefreshRoles
+  setRefreshRoles,
+  isLoading
 }: UserManagementListProps) => {
   const theme = useTheme()
   console.log('THEME', theme)
   const [search, setSearch] = useState('')
   const [permissionData, setPermissionData] = useState<any>([])
   const [isModalShow, setIsModalShow] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
+  const [isSaveButtonLoading, setIsSaveButtonLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [alertOpen, setAlertOpen] = useState(false)
   const [alertProps, setAlertProps] = useState<any>()
@@ -222,6 +224,7 @@ const UserManagementList = ({
   console.log('Auth User Tenant ID', authUser?.tenant?.id)
 
   const handleSubmit = async (e: React.FormEvent) => {
+    setIsSaveButtonLoading(true)
     e.preventDefault()
     if (!validateForm()) {
       return // Stop submission if validation fails
@@ -296,6 +299,8 @@ const UserManagementList = ({
           severity: 'error'
         })
       }
+    } finally {
+      setIsSaveButtonLoading(false)
     }
   }
 
@@ -587,7 +592,6 @@ const UserManagementList = ({
           </Grid>
         </Grid>
         <div style={{ overflowX: 'auto' }}>
-          {/* <DataTable columns={newColumns} data={sampleData} /> */}
           {isLoading ? (
             <div className='flex items-center justify-center p-10'>
               <CircularProgress />
@@ -598,7 +602,7 @@ const UserManagementList = ({
               data={usersData}
               keyExtractor={user => user.id.toString()}
               enablePagination
-              pageSize={5}
+              pageSize={25}
               stickyHeader
               maxHeight={600}
               containerStyle={{ borderRadius: 2 }}
@@ -756,7 +760,13 @@ const UserManagementList = ({
                 <Button variant='outlined' color='secondary' onClick={handleModalClose}>
                   CANCEL
                 </Button>
-                <Button type='submit' variant='contained' className='bg-[#4B0082]'>
+                <Button
+                  startIcon={isSaveButtonLoading ? <CircularProgress size={20} color='inherit' /> : null}
+                  disabled={isSaveButtonLoading === true}
+                  type='submit'
+                  variant='contained'
+                  className='bg-[#4B0082]'
+                >
                   Save
                 </Button>
               </div>

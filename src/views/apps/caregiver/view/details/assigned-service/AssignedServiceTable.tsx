@@ -15,6 +15,7 @@ import { List, ListItem, Typography } from '@mui/material'
 import axios from 'axios'
 import { dark, light } from '@mui/material/styles/createPalette'
 import api from '@/utils/api'
+import ReactTable from '@/@core/components/mui/ReactTable'
 
 // type AccountHistory = {
 //   key: number
@@ -23,6 +24,13 @@ import api from '@/utils/api'
 //   section: string
 //   changesMade: string
 // }
+
+interface Column {
+  id: string
+  label: string
+  minWidth: number
+  render: (item: any) => JSX.Element
+}
 
 const AssignedServiceTable = () => {
   // State
@@ -103,77 +111,34 @@ const AssignedServiceTable = () => {
 
   const router = useRouter()
 
-  // const rowData = [
-  //   {
-  //     id: '1',
-  //     client: 'Sameer Khan',
-  //     services: ['IHS (with training)', 'IHS (with training)']
-  //   },
-  //   {
-  //     id: '2',
-  //     client: 'Stancy Midth',
-  //     services: ['IHS (with training)']
-  //   },
-  //   {
-  //     id: '3',
-  //     client: 'Hasnain Ahmad',
-  //     services: ['IHS (with training)']
-  //   },
-  //   {
-  //     id: '4',
-  //     client: 'Rupesh Hog',
-  //     services: ['IHS (with training)', 'IHS (with training)']
-  //   },
-  //   {
-  //     id: '5',
-  //     client: 'Salma Zami',
-  //     services: ['IHS (with training)']
-  //   },
-  //   {
-  //     id: '6',
-  //     client: 'Shuaib Kareem',
-  //     services: ['IHS (with training)', 'IHS (with training)', 'IHS (with training']
-  //   },
-  //   {
-  //     id: '7',
-  //     client: 'Raees Khan',
-  //     services: ['IHS (with training)']
-  //   }
-  // ]
-
-  const newColumns: GridColDef[] = [
-    // {
-    //   field: 'itemNumber',
-    //   headerName: '#',
-    //   flex: 0.5,
-    //   renderCell: (params: GridRenderCellParams) => <span>{params.row.index + 1}</span>
-    // },
+  const newColumns: Column[] = [
     {
-      field: 'id',
-      headerName: '#',
-      flex: 0.1
+      id: 'id',
+      label: '#',
+      minWidth: 170,
+      render: item => <Typography className='font-normal text-base my-3'>{item.id}</Typography>
     },
     {
-      field: 'client',
-      headerName: 'CLIENT',
-      flex: 0.3,
-      renderCell: (params: GridRenderCellParams) => (
+      id: 'client',
+      label: 'CLIENT',
+      minWidth: 170,
+      render: item => (
         <Typography className='mt-4'>
-          {params?.row?.client?.firstName} {params?.row?.client?.lastName}
+          {item?.client?.firstName} {item?.client?.lastName}
         </Typography>
       )
     },
     {
-      field: 'services',
-      headerName: 'SERVICES',
-      flex: 0.8,
-      renderCell: (params: GridRenderCellParams) => (
+      id: 'services',
+      label: 'SERVICES',
+      minWidth: 170,
+      render: item => (
         <div className='flex flex-row gap-2 mt-2'>
           <div className='p-1 border border-[#666CFF] border-opacity-[50%] rounded-sm'>
             <Typography
               className={`${light ? 'text-[#4B0082]' : 'text-[#7013b7]'} ${dark ? 'text-[#7013b7]' : 'text-[#4B0082]'}`}
             >
-              {params?.row?.service[0]?.name}
+              {item?.service[0]?.name}
             </Typography>
           </div>
         </div>
@@ -185,7 +150,17 @@ const AssignedServiceTable = () => {
     <Card sx={{ borderRadius: 1, boxShadow: 3, p: 0 }}>
       {/* Table */}
       <div style={{ overflowX: 'auto' }}>
-        <DataTable columns={newColumns} data={data} />
+        <ReactTable
+          data={data}
+          columns={newColumns}
+          keyExtractor={user => user.id.toString()}
+          enableRowSelect
+          enablePagination
+          pageSize={25}
+          stickyHeader
+          maxHeight={600}
+          containerStyle={{ borderRadius: 2 }}
+        />
       </div>
     </Card>
   )

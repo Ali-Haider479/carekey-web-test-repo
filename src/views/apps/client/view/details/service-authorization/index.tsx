@@ -399,7 +399,7 @@ const ServiceAuthorization = () => {
                   data={selectedTab === 'active-service-auth' ? activeServices : expiredServices}
                   keyExtractor={item => item.id.toString()}
                   enablePagination
-                  pageSize={5}
+                  pageSize={25}
                   stickyHeader
                   maxHeight={600}
                   containerStyle={{ borderRadius: 2 }}

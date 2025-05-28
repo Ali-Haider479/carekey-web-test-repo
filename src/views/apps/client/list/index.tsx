@@ -9,13 +9,14 @@ import axios from 'axios'
 import Dropdown from '@/@core/components/mui/DropDown'
 
 import type { ClientTypes } from '@/types/apps/clientTypes'
-import { Avatar, Button, Card, Icon, MenuItem, TextField, Typography } from '@mui/material'
+import { Avatar, Button, Card, Icon, MenuItem, TextField, Typography, CircularProgress } from '@mui/material'
 import { useRouter } from 'next/navigation'
 import ReactTable from '@/@core/components/mui/ReactTable'
 import { useForm } from 'react-hook-form'
 import CustomTextField from '@/@core/components/mui/TextField'
 import { USStates } from '@/utils/constants'
 import api from '@/utils/api'
+import ClientTable from './ClientsTable'
 
 interface DefaultStateType {
   pmiNumber: string
@@ -39,6 +40,7 @@ const ClientListApps = () => {
   const [state, setState] = useState<DefaultStateType>(defaultState)
   const [serviceTypes, setServiceTypes] = useState<DefaultStateType>(defaultState)
   const [filterData, setFilterData] = useState()
+  const [isLoading, setIsLoading] = useState(true)
 
   const statusOptions = [
     { key: 1, value: 'pending', displayValue: 'Pending' },
@@ -58,6 +60,10 @@ const ClientListApps = () => {
       setData(response.data)
     } catch (error) {
       console.log('CLIENT DATA ERROR', error)
+    } finally {
+      setTimeout(() => {
+        setIsLoading(false)
+      }, 600)
     }
   }
 
@@ -169,26 +175,6 @@ const ClientListApps = () => {
   }
 
   const newColumns = [
-    // {
-    //   field: 'itemNumber',
-    //   headerName: '#',
-    //   flex: 0.5,
-    //   renderCell: (params: GridRenderCellParams) => <span>{params.row.index + 1}</span>
-    // },
-    {
-      id: 'id',
-      label: 'ID',
-      minWidth: 200,
-      editable: true,
-      sortable: true,
-      render: (item: any) => {
-        return (
-          <div className='w-full cursor-pointer' onClick={() => handleNext(item?.id)}>
-            <Typography color='primary'>{item.id}</Typography>
-          </div>
-        )
-      }
-    },
     {
       id: 'clientName',
       label: 'CLIENT NAME',
@@ -212,29 +198,29 @@ const ClientListApps = () => {
       }
     },
     {
-      id: 'firstName',
-      label: 'FIRST NAME',
+      id: 'admissionDate',
+      label: 'ADMISSION DATE',
       minWidth: 200,
       editable: true,
       sortable: true,
       render: (item: any) => {
         return (
           <div className='w-full cursor-pointer' onClick={() => handleNext(item?.id)}>
-            <Typography color='primary'>{item?.firstName}</Typography>
+            <Typography color='primary'>{item?.admissionDate}</Typography>
           </div>
         )
       }
     },
     {
-      id: 'lastName',
-      label: 'LAST NAME',
+      id: 'ssn',
+      label: 'SOCIAL SECURITY',
       minWidth: 200,
       editable: true,
       sortable: true,
       render: (item: any) => {
         return (
           <div className='w-full cursor-pointer' onClick={() => handleNext(item?.id)}>
-            <Typography color='primary'>{item?.lastName}</Typography>
+            <Typography color='primary'>{item?.ssn}</Typography>
           </div>
         )
       }
@@ -263,6 +249,34 @@ const ClientListApps = () => {
         return (
           <div className='w-full cursor-pointer' onClick={() => handleNext(item?.id)}>
             <Typography color='primary'>{item?.insuranceCode}</Typography>
+          </div>
+        )
+      }
+    },
+    {
+      id: 'emailId',
+      label: 'EMAIL ADDRESS',
+      minWidth: 200,
+      editable: true,
+      sortable: true,
+      render: (item: any) => {
+        return (
+          <div className='w-full cursor-pointer' onClick={() => handleNext(item?.id)}>
+            <Typography color='primary'>{item?.emailId}</Typography>
+          </div>
+        )
+      }
+    },
+    {
+      id: 'primaryPhoneNumber',
+      label: 'PHONE NUMBER',
+      minWidth: 200,
+      editable: true,
+      sortable: true,
+      render: (item: any) => {
+        return (
+          <div className='w-full cursor-pointer' onClick={() => handleNext(item?.id)}>
+            <Typography color='primary'>{item?.primaryPhoneNumber}</Typography>
           </div>
         )
       }
@@ -352,6 +366,7 @@ const ClientListApps = () => {
           </Card>
         </Grid>
         <Grid size={{ xs: 12 }}>
+          {/* <ClientTable isLoading={isLoading} data={data} /> */}
           <Card sx={{ borderRadius: 1, boxShadow: 3, p: 0 }}>
             <Grid sx={{ p: 5 }}>
               <div className='flex flex-row justify-between'>
@@ -380,7 +395,11 @@ const ClientListApps = () => {
                 </Button>
               </div>
             </Grid>
-            {!filteredData.length ? ( // Changed from dataWithProfileImg to filteredData
+            {isLoading ? (
+              <div className='flex items-center justify-center p-10'>
+                <CircularProgress />
+              </div>
+            ) : !data.length ? ( // Changed from dataWithProfileImg to filteredData
               <Card>
                 <div className='flex flex-col items-center justify-center p-10 gap-2'>
                   <Icon className='bx-folder-open text-6xl text-textSecondary' />
@@ -407,7 +426,7 @@ const ClientListApps = () => {
                 data={filteredData} // Changed from dataWithProfileImg to filteredData
                 keyExtractor={item => item.id.toString()}
                 enablePagination
-                pageSize={5}
+                pageSize={25}
                 stickyHeader
                 maxHeight={600}
                 containerStyle={{ borderRadius: 2 }}

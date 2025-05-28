@@ -50,6 +50,10 @@ const CaregiverFilters = ({
   const [caregiverUmpi, setCaregiverUmpi] = useState<DefaultStateType>(defaultState)
   const [caregiverState, setCaregiverState] = useState<DefaultStateType>(defaultState)
 
+  const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
+
+  console.log('Auth User', authUser)
+
   // Hooks
   const {
     handleSubmit,
@@ -79,7 +83,7 @@ const CaregiverFilters = ({
 
       // If no filters are applied, fetch all data
       if (queryParams.toString() === 'page=1&limit=10') {
-        const response = await api.get(`/caregivers/1/tenant`)
+        const response = await api.get(`/caregivers/${authUser?.tenant?.id}/tenant`)
         onFilterApplied(response.data)
         return
       }
@@ -100,7 +104,7 @@ const CaregiverFilters = ({
       setItem('')
 
       // Fetch all data without filters
-      const response = await api.get(`/caregivers/1/tenant`)
+      const response = await api.get(`/caregivers/${authUser?.tenant?.id}/tenant`)
       onFilterApplied(response.data)
     } catch (error) {
       console.error('Error resetting filters:', error)

@@ -25,15 +25,16 @@ const ManualTimesheetPage = () => {
   }, [dispatch])
 
   useEffect(() => {
-    ;(async () => {
+    (async () => {
       try {
         const response = await Promise.all([
           api.get(`/caregivers`),
           // api.get(`/client`),
           // api.get(`/service`),
-          api.get(`/pay-period/tenant/${authUser?.tenant?.id}`)
+          api.get(`/pay-period/history/tenant/${authUser?.tenant?.id}`)
         ])
         setCaregiverList(response[0].data)
+        console.log("response", response[1].data)
         // setClientList(response[1].data)
         // setServiceList(response[2].data)
         setPayPeriod(response[1].data)
@@ -52,7 +53,7 @@ const ManualTimesheetPage = () => {
           caregiverList={caregiverList}
           // clientList={clientList}
           // serviceList={serviceList}
-          payPeriod={payPeriod}
+          payPeriodList={payPeriod}
         />
       </Grid>
     </Grid>

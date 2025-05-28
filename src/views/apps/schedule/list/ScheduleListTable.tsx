@@ -18,6 +18,8 @@ import EditIcon from '@mui/icons-material/Edit'
 import { Delete } from '@mui/icons-material'
 import axios from 'axios'
 import api from '@/utils/api'
+import ReactTable from '@/@core/components/mui/ReactTable'
+import CustomAlert from '@/@core/components/mui/Alter'
 
 // Type Definitions
 type User = {
@@ -34,11 +36,22 @@ type User = {
   avatar: string
 }
 
+interface Column {
+  id: string
+  label: string
+  minWidth: number
+  render: (item: any) => JSX.Element
+}
+
 const ScheduleListTable = ({ events }: { events: any[] }) => {
   const { lang: locale } = useParams()
   // const [data, setData] = useState<any[]>([])
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const [selectedRowId, setSelectedRowId] = useState<number | null>(null)
+  const [alertOpen, setAlertOpen] = useState(false)
+  const [alertProps, setAlertProps] = useState<any>()
+  const [scheduleData, setScheduleData] = useState<any>()
+  const [isDeleted, setIsDeleted] = useState<boolean>(false)
 
   const handleActionClick = (event: React.MouseEvent<HTMLButtonElement>, rowId: number) => {
     setAnchorEl(event.currentTarget)
@@ -49,47 +62,84 @@ const ScheduleListTable = ({ events }: { events: any[] }) => {
     setAnchorEl(null)
     setSelectedRowId(null)
   }
-
-  console.log('Calender data', events)
-
   // useEffect(() => {
   //   setData(events.events)
   // }, [events.events])
   // console.log(events)
 
-  const newCols: GridColDef[] = [
-    { field: 'id', headerName: 'ID', flex: 0.5 },
+  const newCols: Column[] = [
     {
-      field: 'firstName',
-      headerName: 'CLIENT NAME',
-      flex: 1.5,
-      renderCell: (params: GridRenderCellParams) => (
-        console.log('PARAMS', params),
-        (
-          <div style={{ height: '50px', display: 'flex', alignItems: 'center', gap: '8px', margin: 0, padding: 0 }}>
-            <Avatar alt={params.row.status} src={params.row.avatar} />
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <strong className='h-4'>{params.row.client?.firstName}</strong>
-              <span style={{ fontSize: '12px', color: '#757575' }}>{params.row?.client?.emergencyEmailId}</span>
-            </div>
+      id: 'clientName',
+      label: 'CLIENT NAME',
+      minWidth: 170,
+      render: item => (
+        <div style={{ height: '50px', display: 'flex', alignItems: 'center', gap: '8px', margin: 0, padding: 0 }}>
+          {/* <Avatar alt={item?.status} src={item?.avatar} /> */}
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <strong className='h-4 text-md text-[#4B0082]'>
+              {item?.client?.firstName} {item?.client?.lastName}
+            </strong>
+            <span style={{ fontSize: '12px', color: '#757575' }}>{item?.client?.emergencyEmailId}</span>
           </div>
-        )
+        </div>
       )
     },
     {
-      field: 'proMod',
-      headerName: 'PRO & MOD',
-      flex: 1,
-      renderCell: (params: any) => {
-        return <Typography className='font-normal text-base my-3'>N/A</Typography>
+      id: 'caregiverName',
+      label: 'CAREGIVER NAME',
+      minWidth: 170,
+      render: item => (
+        <div style={{ height: '50px', display: 'flex', alignItems: 'center', gap: '8px', margin: 0, padding: 0 }}>
+          {/* <Avatar alt={item?.status} src={item?.avatar} /> */}
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <strong className='h-4 text-[#03C3EC]'>
+              {item?.caregiver?.firstName} {item?.caregiver?.lastName}
+            </strong>
+            <span style={{ fontSize: '12px', color: '#757575' }}>{item?.caregiver?.user?.emailAddress}</span>
+          </div>
+        </div>
+      )
+    },
+    {
+      id: 'serviceName',
+      label: 'SERVICE',
+      minWidth: 170,
+      render: item => {
+        return <Typography className='font-normal text-base my-3'>{item?.service?.name}</Typography>
       }
     },
     {
-      field: 'start',
-      headerName: 'Start Date',
-      flex: 0.75,
-      renderCell: (params: any) => {
-        const startDate = params?.row?.start
+      id: 'location',
+      label: 'LOCATION',
+      minWidth: 170,
+      render: item => {
+        return <Typography className='font-normal text-base my-3'>{item?.location ? item?.location : 'N/A'}</Typography>
+      }
+    },
+    {
+      id: 'start',
+      label: 'Start Date',
+      minWidth: 170,
+      render: (item: any) => {
+        const startDate = item?.start
+        if (startDate) {
+          const date = new Date(startDate)
+          return (
+            <Typography className='font-normal text-base my-3'>
+              {`${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear().toString().slice(-2)}`}
+            </Typography>
+          )
+        } else {
+          return <Typography className='font-normal text-base my-3'>N/A</Typography>
+        }
+      }
+    },
+    {
+      id: 'end',
+      label: 'End Date',
+      minWidth: 170,
+      render: (item: any) => {
+        const startDate = item?.end
         if (startDate) {
           const date = new Date(startDate)
           return (
@@ -102,62 +152,45 @@ const ScheduleListTable = ({ events }: { events: any[] }) => {
       }
     },
     {
-      field: 'end',
-      headerName: 'End Date',
-      flex: 0.75,
-      renderCell: (params: any) => {
-        const startDate = params?.row?.end
-        if (startDate) {
-          const date = new Date(startDate)
-          return (
-            <Typography className='font-normal text-base my-3'>
-              {`${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear().toString().slice(-2)}`}
-            </Typography>
-          )
-        }
-        return <Typography className='font-normal text-base my-3'>N/A</Typography>
-      }
-    },
-    {
-      field: 'status',
-      headerName: 'Status',
-      flex: 0.75,
-      renderCell: (params: GridRenderCellParams) => (
+      id: 'status',
+      label: 'Status',
+      minWidth: 170,
+      render: (item: any) => (
         <Chip
-          label={params?.value?.includes('pending') ? 'PENDING' : 'WAITING'}
+          label={item?.status?.includes('pending') ? 'PENDING' : 'WAITING'}
           size='small'
           sx={{
-            color: params.value === 'pending' ? '#4CAF50' : '#F44336',
-            backgroundColor: params.value === 'ACTIVE' ? '#E8F5E9' : '#FFEBEE',
+            color: item?.status === 'pending' ? '#4CAF50' : '#F44336',
+            backgroundColor: item?.status === 'pending' ? '#E8F5E9' : '#FFEBEE',
             fontWeight: 'bold'
           }}
         />
       )
     },
     {
-      field: 'assignedHours',
-      headerName: 'Total Unit',
-      flex: 0.75
+      id: 'assignedHours',
+      label: 'ASSIGNED HOURS',
+      minWidth: 170,
+      render: (item: any) => (
+        <Typography className='font-normal text-base my-3'>{item?.assignedHours || 'N/A'}</Typography>
+      )
     },
     {
-      field: 'actions',
-      headerName: 'ACTION',
-      renderCell: (params: GridRenderCellParams) => (
+      id: 'actions',
+      label: 'Action',
+      minWidth: 170,
+      render: (item: any) => (
         <>
-          <IconButton onClick={event => handleActionClick(event, params.row.id)} size='small'>
+          <IconButton onClick={event => handleActionClick(event, item?.id)} size='small'>
             <MoreVertIcon />
           </IconButton>
 
-          <Menu
-            open={selectedRowId === params.row.id && Boolean(anchorEl)}
-            anchorEl={anchorEl}
-            onClose={handleCloseMenu}
-          >
+          <Menu open={selectedRowId === item?.id && Boolean(anchorEl)} anchorEl={anchorEl} onClose={handleCloseMenu}>
             {/* <MenuItem onClick={() => {}}>
                 <EditIcon fontSize='small' sx={{ mr: 1 }} />
                 Edit
               </MenuItem> */}
-            <MenuItem onClick={() => handleDeleteSchedule(params.row.id)}>
+            <MenuItem onClick={() => handleDeleteSchedule(item?.id)}>
               <Delete className='text-red-500' fontSize='small' sx={{ mr: 1 }} />
               Delete
             </MenuItem>
@@ -173,6 +206,8 @@ const ScheduleListTable = ({ events }: { events: any[] }) => {
       firstName: event.client?.firstName || 'N/A',
       client: event.client,
       caregiver: event.caregiver,
+      service: event.service,
+      location: event.location,
       status: event.status,
       assignedHours: event.assignedHours,
       start: event.start,
@@ -188,33 +223,58 @@ const ScheduleListTable = ({ events }: { events: any[] }) => {
       if (deletionRes) {
         const updatedData = events.filter((item: any) => item.id !== id)
         // setData(updatedData)
+        setIsDeleted(true)
+        setScheduleData(updatedData)
       }
+      setAlertOpen(true)
+      setAlertProps({
+        message: 'Schedule entry deleted successfully.',
+        severity: 'success'
+      })
     } catch (error) {
       console.log(`Error deleting schedule with ID ${id}`, error)
+      setAlertOpen(true)
+      setAlertProps({
+        message: 'An unexpected error occured while deleting schedule entry.',
+        severity: 'error'
+      })
     } finally {
       handleCloseMenu
     }
   }
 
   return (
-    <Card sx={{ borderRadius: 1, boxShadow: 3 }}>
-      <CardHeader
-        title=''
-        action={
-          <Button
-            variant='contained'
-            className='max-sm:is-full'
-            sx={{ backgroundColor: '#4B0082' }}
-            href={getLocalizedUrl('/en/apps/schedules/calendar-view', locale as Locale)}
-          >
-            CALENDAR
-          </Button>
-        }
-      />
-      <div style={{ overflowX: 'auto', padding: '0px' }}>
-        <DataTable data={transformedData} columns={newCols} />
-      </div>
-    </Card>
+    <>
+      <CustomAlert AlertProps={alertProps} openAlert={alertOpen} setOpenAlert={setAlertOpen} />
+      <Card sx={{ borderRadius: 1, boxShadow: 3 }}>
+        <CardHeader
+          title=''
+          action={
+            <Button
+              variant='contained'
+              className='max-sm:is-full'
+              sx={{ backgroundColor: '#4B0082' }}
+              href={getLocalizedUrl('/en/apps/schedules/calendar-view', locale as Locale)}
+            >
+              CALENDAR
+            </Button>
+          }
+        />
+        <div style={{ overflowX: 'auto', padding: '0px' }}>
+          <ReactTable
+            data={isDeleted === true ? scheduleData : transformedData}
+            columns={newCols}
+            keyExtractor={user => user.id.toString()}
+            // enableRowSelect
+            enablePagination
+            pageSize={25}
+            stickyHeader
+            maxHeight={600}
+            containerStyle={{ borderRadius: 2 }}
+          />
+        </div>
+      </Card>
+    </>
   )
 }
 

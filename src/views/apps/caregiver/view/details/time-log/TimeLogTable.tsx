@@ -16,6 +16,14 @@ import { Typography } from '@mui/material'
 import AdUnitsIcon from '@mui/icons-material/AdUnits'
 import { calculateHoursWorked } from '@/utils/helperFunctions'
 import api from '@/utils/api'
+import ReactTable from '@/@core/components/mui/ReactTable'
+
+interface Column {
+  id: string
+  label: string
+  minWidth: number
+  render: (item: any) => JSX.Element
+}
 
 const TimeLogTable = () => {
   const { id } = useParams()
@@ -37,28 +45,29 @@ const TimeLogTable = () => {
     fetchTimeLog()
   }, [])
 
-  const newColumns: GridColDef[] = [
+  const newColumns: Column[] = [
     {
-      field: 'id',
-      headerName: '#',
-      flex: 0.1
+      id: 'id',
+      label: '#',
+      minWidth: 50,
+      render: (item: any) => <Typography className='font-normal text-base my-3'>{item.id}</Typography>
     },
     {
-      field: 'clientName',
-      headerName: 'CLIENT NAME',
-      flex: 1,
-      renderCell: (params: any) => (
+      id: 'clientName',
+      label: 'CLIENT NAME',
+      minWidth: 170,
+      render: (item: any) => (
         <Typography className='font-normal text-base my-3'>
-          {params?.row?.client?.firstName} {params?.row?.client?.lastName}
+          {item?.client?.firstName} {item?.client?.lastName}
         </Typography>
       )
     },
     {
-      field: 'payPeriod',
-      headerName: 'DATE',
-      flex: 1,
-      renderCell: (params: any) => {
-        const startTime = params?.row?.clockIn
+      id: 'payPeriod',
+      label: 'PAY PERIOD',
+      minWidth: 170,
+      render: (item: any) => {
+        const startTime = item?.clockIn
         if (startTime) {
           // Parse the date string into a Date object
           const date = new Date(startTime)
@@ -76,11 +85,11 @@ const TimeLogTable = () => {
       }
     },
     {
-      field: 'clockIn',
-      headerName: 'START TIME',
-      flex: 1,
-      renderCell: (params: any) => {
-        const startTime = params?.row?.clockIn
+      id: 'clockIn',
+      label: 'START TIME',
+      minWidth: 170,
+      render: (item: any) => {
+        const startTime = item?.clockIn
         if (startTime) {
           // Parse the date string into a Date object
           const date = new Date(startTime)
@@ -98,11 +107,11 @@ const TimeLogTable = () => {
       }
     },
     {
-      field: 'clockOut',
-      headerName: 'END TIME',
-      flex: 1,
-      renderCell: (params: any) => {
-        const endTime = params?.row?.clockOut
+      id: 'clockOut',
+      label: 'END TIME',
+      minWidth: 170,
+      render: (item: any) => {
+        const endTime = item?.clockOut
         if (endTime) {
           // Parse the date string into a Date object
           const date = new Date(endTime)
@@ -120,12 +129,12 @@ const TimeLogTable = () => {
       }
     },
     {
-      field: 'hoursWorked',
-      headerName: 'TIME DURATION',
-      flex: 1,
-      renderCell: (params: any) => {
+      id: 'hoursWorked',
+      label: 'TIME DURATION',
+      minWidth: 170,
+      render: (item: any) => {
         try {
-          const hoursWorked = calculateHoursWorked(params.row.clockIn, params.row.clockOut)
+          const hoursWorked = calculateHoursWorked(item.clockIn, item.clockOut)
 
           return <Typography className='font-normal text-base my-3'>{hoursWorked} Hrs</Typography>
         } catch (error) {
@@ -135,10 +144,10 @@ const TimeLogTable = () => {
       }
     },
     {
-      field: 'logsVia',
-      headerName: 'LOGGED VIA',
-      flex: 1,
-      renderCell: (params: any) => <AdUnitsIcon className='my-3' />
+      id: 'logsVia',
+      label: 'LOGGED VIA',
+      minWidth: 170,
+      render: () => <AdUnitsIcon className='my-3' />
     }
   ]
 
@@ -146,7 +155,17 @@ const TimeLogTable = () => {
     <Card sx={{ borderRadius: 1, boxShadow: 3, p: 0 }}>
       {/* Table */}
       <div style={{ overflowX: 'auto' }}>
-        <DataTable columns={newColumns} data={data} />
+        <ReactTable
+          data={data}
+          columns={newColumns}
+          keyExtractor={user => user.id.toString()}
+          enableRowSelect
+          enablePagination
+          pageSize={25}
+          stickyHeader
+          maxHeight={600}
+          containerStyle={{ borderRadius: 2 }}
+        />
       </div>
     </Card>
   )

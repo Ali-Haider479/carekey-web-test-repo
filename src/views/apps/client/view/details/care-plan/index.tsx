@@ -1,0 +1,397 @@
+'use client'
+import api from '@/utils/api'
+import {
+  Box,
+  Card,
+  CardContent,
+  Typography,
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  FormHelperText,
+  Chip,
+  IconButton,
+  Grid2 as Grid,
+  Button
+} from '@mui/material'
+import AddIcon from '@mui/icons-material/Add'
+import CloseIcon from '@mui/icons-material/Close'
+import { useParams } from 'next/navigation'
+import React, { useEffect, useState, useRef } from 'react'
+import { useForm, FormProvider, Controller, useFieldArray, useWatch } from 'react-hook-form'
+
+type ServiceType = {
+  id: string
+  name: string
+  note?: string
+}
+
+type ActivityType = {
+  id: string
+  serviceId: string
+  title: string
+}
+
+type FormValues = {
+  services: {
+    service: string
+    serviceNotes: string
+    serviceActivities: string[]
+  }[]
+}
+
+const CareplanTab = () => {
+  const { id } = useParams()
+  const [clientServices, setClientServices] = useState<ServiceType[]>([])
+  const [servicesResponse, setServicesResponse] = useState<any>([])
+  const [servicesActivities, setServicesActivities] = useState<ActivityType[]>([])
+  const [openSelect, setOpenSelect] = useState<{ [key: string]: boolean }>({})
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const prevServiceIdsRef = useRef<string[]>([])
+
+  const methods = useForm<FormValues>({
+    defaultValues: {
+      services: []
+    }
+  })
+
+  const {
+    control,
+    handleSubmit,
+    reset,
+    setValue,
+    formState: { errors }
+  } = methods
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: 'services'
+  })
+
+  // Watch the entire services array
+  const watchedServices = useWatch({
+    control,
+    name: 'services',
+    defaultValue: fields
+  })
+
+  // Track previous service IDs to avoid infinite loop
+  const prevSelectedServiceIdsRef = useRef<string[]>([])
+
+  // Fetch client data, activities, and all services
+  const fetchClient = async () => {
+    try {
+      const [servicesResponse, activitiesResponse, allServicesResponse] = await Promise.all([
+        api.get(`/client/client-services-activities/${id}`),
+        api.get(`/activity`),
+        api.get(`/service`)
+      ])
+      setServicesResponse(servicesResponse)
+      const clientData = servicesResponse.data[0]
+      console.log('NEW CLIENT DATA', clientData)
+
+      // Use all services from /service endpoint
+      const servicesData = allServicesResponse.data.map((svc: any) => ({
+        id: svc.id.toString(),
+        name: svc.name,
+        note: clientData.clientServices.find((cs: any) => cs.service.id === svc.id)?.note || ''
+      }))
+
+      const activitiesData = activitiesResponse.data.map((act: any) => ({
+        id: act.id.toString(),
+        serviceId: act.service.id.toString(),
+        title: act.title
+      }))
+
+      setClientServices(servicesData)
+      setServicesActivities(activitiesData)
+
+      // Map serviceActivityIds to services
+      const serviceActivityIds = clientData.serviceActivityIds || []
+      const formServices = clientData.clientServices.map((cs: any) => ({
+        service: cs.service.id.toString(),
+        serviceNotes: cs.note || '',
+        serviceActivities: activitiesData
+          .filter(
+            (act: ActivityType) =>
+              act.serviceId === cs.service.id.toString() && serviceActivityIds.includes(Number(act.id))
+          )
+          .map((act: ActivityType) => act.id)
+      }))
+
+      console.log('NEW FORM SERVICES', formServices)
+      // Update prevServiceIdsRef with assigned services
+      prevServiceIdsRef.current = formServices.map((svc: any) => svc.service)
+      // Initialize prevSelectedServiceIdsRef
+      prevSelectedServiceIdsRef.current = formServices.map((svc: any) => svc.service)
+
+      reset({
+        services: formServices.length > 0 ? formServices : [{ service: '', serviceNotes: '', serviceActivities: [] }]
+      })
+    } catch (error) {
+      console.error('Error fetching client data:', error)
+      setErrorMessage('Failed to fetch client data')
+    }
+  }
+
+  // Update activities when service changes
+  useEffect(() => {
+    fields.forEach((_, index) => {
+      const selectedServiceId = watchedServices[index]?.service || ''
+      const prevSelectedServiceId = prevSelectedServiceIdsRef.current[index] || ''
+
+      // Only update if service ID has changed
+      if (selectedServiceId && selectedServiceId !== prevSelectedServiceId) {
+        const serviceActivityIds = servicesResponse?.data[0]?.serviceActivityIds || []
+        const availableActivities = servicesActivities.filter(act => act.serviceId === selectedServiceId)
+        const updatedActivities = availableActivities
+          .filter(act => serviceActivityIds.includes(Number(act.id)))
+          .map(act => act.id)
+
+        // Only update if activities have changed to avoid infinite loop
+        const currentActivities = watchedServices[index]?.serviceActivities || []
+        if (JSON.stringify(currentActivities) !== JSON.stringify(updatedActivities)) {
+          setValue(`services.${index}.serviceActivities`, updatedActivities, {
+            shouldValidate: true,
+            shouldDirty: true
+          })
+        }
+
+        // Update prevSelectedServiceIdsRef
+        prevSelectedServiceIdsRef.current[index] = selectedServiceId
+      }
+    })
+  }, [watchedServices, servicesActivities, setValue, fields])
+
+  // Initialize with one section if no services
+  useEffect(() => {
+    if (fields.length === 0) {
+      append({ service: '', serviceNotes: '', serviceActivities: [] })
+    }
+  }, [append, fields.length])
+
+  useEffect(() => {
+    fetchClient()
+  }, [id])
+
+  const onSubmit = async (data: FormValues) => {
+    try {
+      setErrorMessage(null)
+      const clientId = Number(id)
+      if (isNaN(clientId)) {
+        throw new Error('Invalid client ID')
+      }
+
+      // Identify new services (not in prevServiceIdsRef.current)
+      const newServices = data.services.filter(
+        item => item.service && !prevServiceIdsRef.current.includes(item.service)
+      )
+      console.log('NEW SERVICES', newServices, data.services, prevServiceIdsRef.current)
+
+      // Assign new services
+      for (const item of newServices) {
+        const createClientServiceBody = {
+          note: item.serviceNotes || '',
+          serviceId: Number(item.service),
+          clientId: clientId
+        }
+        await api.post(`/client/client-service`, JSON.stringify(createClientServiceBody))
+      }
+
+      // Update activities
+      const payload = {
+        serviceActivityIds: data.services
+          .flatMap(svc => svc.serviceActivities)
+          .map(Number)
+          .filter(num => !isNaN(num))
+      }
+      await api.put(`/client/update-activities/${clientId}`, JSON.stringify(payload))
+
+      // Refresh data after submission
+      fetchClient()
+    } catch (error: any) {
+      console.error('Error updating services:', error)
+      setErrorMessage(error.response?.data?.message || error.message || 'Failed to update services')
+    }
+  }
+
+  const handleDeleteActivity = (itemToRemove: string, onChange: (items: string[]) => void, selectedArray: string[]) => {
+    const newValue = selectedArray.filter(val => val !== itemToRemove)
+    onChange(newValue)
+  }
+
+  const selectedServiceIds = fields
+    .map((field, index) => watchedServices[index]?.service)
+    .filter(id => id !== '' && id !== undefined)
+
+  const isAddDisabled = selectedServiceIds.length >= clientServices.length
+
+  const addNewService = () => {
+    if (!isAddDisabled) {
+      append({ service: '', serviceNotes: '', serviceActivities: [] })
+      prevSelectedServiceIdsRef.current.push('')
+    }
+  }
+
+  return (
+    <FormProvider {...methods}>
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <Card>
+          <CardContent>
+            {errorMessage && (
+              <Box mb={2}>
+                <Typography color='error'>{errorMessage}</Typography>
+              </Box>
+            )}
+            <Box display='flex' justifyContent='space-between' alignItems='center' mb={2}>
+              <Typography className='text-xl font-semibold'>Update Services and Activities</Typography>
+              <IconButton color='success' onClick={addNewService} aria-label='Add new service' disabled={isAddDisabled}>
+                <AddIcon />
+              </IconButton>
+            </Box>
+
+            {fields.map((field, index) => {
+              const selectedServiceId = watchedServices[index]?.service || ''
+              const availableActivities = servicesActivities.filter(act => act.serviceId === selectedServiceId)
+
+              return (
+                <React.Fragment key={field.id}>
+                  <Box mb={4} p={2} borderRadius={2}>
+                    <Box display='flex' justifyContent='space-between' alignItems='center' mb={2}>
+                      <Typography className='text-xl font-semibold'>Service Name</Typography>
+                      {/* Uncomment to enable delete functionality
+                      {fields.length > 1 && (
+                        <IconButton
+                          color='secondary'
+                          onClick={() => {
+                            remove(index)
+                            prevSelectedServiceIdsRef.current.splice(index, 1)
+                          }}
+                          aria-label={`Remove service ${index + 1}`}
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      )} */}
+                    </Box>
+
+                    <Grid container spacing={5}>
+                      <Grid size={{ xs: 12 }}>
+                        <Controller
+                          name={`services.${index}.service`}
+                          control={control}
+                          rules={{ required: 'Service is required' }}
+                          render={({ field }) => (
+                            <FormControl fullWidth error={!!errors.services?.[index]?.service}>
+                              <InputLabel size='small'>Select Service</InputLabel>
+                              <Select
+                                {...field}
+                                label='Select Service'
+                                size='small'
+                                value={field.value || ''}
+                                onChange={e => field.onChange(e.target.value)}
+                              >
+                                {clientServices.map(item => (
+                                  <MenuItem
+                                    key={`${item.id}-${item.name}`}
+                                    value={item.id}
+                                    disabled={selectedServiceIds.includes(item.id) && item.id !== field.value}
+                                  >
+                                    {item.name}
+                                  </MenuItem>
+                                ))}
+                              </Select>
+                              {errors.services?.[index]?.service && (
+                                <FormHelperText>{errors.services[index]?.service?.message}</FormHelperText>
+                              )}
+                            </FormControl>
+                          )}
+                        />
+                      </Grid>
+                      <Grid size={{ xs: 12 }}>
+                        <Controller
+                          name={`services.${index}.serviceNotes`}
+                          control={control}
+                          render={({ field }) => (
+                            <TextField
+                              {...field}
+                              label='Service Notes'
+                              placeholder='Service Notes'
+                              type='text'
+                              size='small'
+                              fullWidth
+                              multiline
+                              rows={4}
+                            />
+                          )}
+                        />
+                      </Grid>
+                      <Grid size={{ xs: 12 }}>
+                        <Typography className='text-xl font-semibold mb-4'>Service Activities</Typography>
+                        <Controller
+                          name={`services.${index}.serviceActivities`}
+                          control={control}
+                          rules={{ required: 'At least one activity is required' }}
+                          render={({ field: { value = [], onChange, ...field } }) => (
+                            <FormControl fullWidth error={!!errors.services?.[index]?.serviceActivities}>
+                              <InputLabel size='small'>Select Activities</InputLabel>
+                              <Select
+                                {...field}
+                                multiple
+                                renderValue={() => ''}
+                                value={Array.isArray(value) ? value : []}
+                                label='Select Activities'
+                                size='small'
+                                onChange={e => onChange(e.target.value as string[])}
+                                open={openSelect[`${index}`] || false}
+                                onOpen={() => setOpenSelect(prev => ({ ...prev, [`${index}`]: true }))}
+                                onClose={() => setOpenSelect(prev => ({ ...prev, [`${index}`]: false }))}
+                              >
+                                {availableActivities.map(svc => (
+                                  <MenuItem key={svc.id} value={svc.id}>
+                                    {svc.title}
+                                  </MenuItem>
+                                ))}
+                              </Select>
+                              {errors.services?.[index]?.serviceActivities && (
+                                <FormHelperText>{errors.services[index]?.serviceActivities?.message}</FormHelperText>
+                              )}
+                              <Box className='flex flex-wrap gap-2 mt-2'>
+                                {Array.isArray(value) &&
+                                  value.map(itemId => {
+                                    const selectedActivity = servicesActivities.find(s => s.id === itemId)
+                                    return (
+                                      <Chip
+                                        key={itemId}
+                                        label={selectedActivity?.title}
+                                        onDelete={() => handleDeleteActivity(itemId, onChange, value)}
+                                        deleteIcon={<CloseIcon className='text-sm text-[#8592A3] border-2 rounded' />}
+                                        className='mt-2 text-[#8592A3] text-sm py-1'
+                                        aria-label={`Remove ${selectedActivity?.title}`}
+                                      />
+                                    )
+                                  })}
+                              </Box>
+                            </FormControl>
+                          )}
+                        />
+                      </Grid>
+                    </Grid>
+                  </Box>
+                  <Box className='w-full border-t border-[#4d4d4e] my-4' />
+                </React.Fragment>
+              )
+            })}
+          </CardContent>
+          <Box display='flex' justifyContent='flex-end' p={2}>
+            <Button type='submit' variant='contained' color='primary' className='mr-4 mb-2'>
+              Save Changes
+            </Button>
+          </Box>
+        </Card>
+      </form>
+    </FormProvider>
+  )
+}
+
+export default CareplanTab

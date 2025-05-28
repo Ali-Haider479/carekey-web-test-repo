@@ -5,7 +5,7 @@ import CustomTextField from '@core/components/custom-inputs/CustomTextField'
 import { FormProvider, useForm, useFormContext } from 'react-hook-form'
 // import AntdDatePickerFeatureMUI from "../shared/AntdDatePickerFeatureMUI";
 import CustomRadioButton from '@core/components/custom-inputs/CustomRadioButton'
-import { Card, CardContent, InputAdornment, InputLabel, Select, Typography } from '@mui/material'
+import { Card, CardContent, Checkbox, FormLabel, InputAdornment, InputLabel, Select, Typography } from '@mui/material'
 import ControlledDatePicker from '@/@core/components/custom-inputs/ControledDatePicker'
 import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
 import { PersonalDetailsFormDataType } from './formTypes'
@@ -44,6 +44,52 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
     watch,
     handleSubmit // Add this if you want to use form submission
   } = methods // Use methods instead of useFormContext
+
+  const primaryAddress = watch('primaryResidentialAddress')
+  const primaryCity = watch('primaryResidentialCity')
+  const primaryState = watch('primaryResidentialState')
+  const primaryZipCode = watch('primaryResidentialZipCode')
+
+  const mailingAddressCheckboxEnabled = watch('mailingAddressCheckbox')
+  const secondaryAddressCheckboxEnabled = watch('secondaryAddressCheckbox')
+
+  const handleEnableMailingAddressCheckboxChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setValue('mailingAddressCheckbox', event.target.checked)
+
+    if (event.target.checked) {
+      setValue('mailingAddress', primaryAddress)
+      setValue('mailingCity', primaryCity)
+      setValue('mailingState', primaryState)
+      setValue('mailingZipCode', primaryZipCode)
+    }
+
+    // If disabling, clear all client-related fields
+    if (!event.target.checked) {
+      setValue('mailingAddress', '')
+      setValue('mailingCity', '')
+      setValue('mailingState', '')
+      setValue('mailingZipCode', undefined)
+    }
+  }
+
+  const handleEnableSecondaryAddressCheckboxChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setValue('secondaryAddressCheckbox', event.target.checked)
+
+    if (event.target.checked) {
+      setValue('secondaryResidentialAddress', primaryAddress)
+      setValue('secondaryResidentialCity', primaryCity)
+      setValue('secondaryResidentialState', primaryState)
+      setValue('secondaryResidentialZipCode', primaryZipCode)
+    }
+
+    // If disabling, clear all client-related fields
+    if (!event.target.checked) {
+      setValue('secondaryResidentialAddress', '')
+      setValue('secondaryResidentialCity', '')
+      setValue('secondaryResidentialState', '')
+      setValue('secondaryResidentialZipCode', undefined)
+    }
+  }
 
   const onSubmit = (data: PersonalDetailsFormDataType) => {
     console.log('Submitted Data:', data)
@@ -134,6 +180,8 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                   type={'number'}
                   error={errors.pmiNumber}
                   control={control}
+                  minLength={8}
+                  maxLength={8}
                 />
               </Grid>
 
@@ -166,6 +214,7 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                   error={errors.socialSecurity}
                   control={control}
                   isRequired={false}
+                  isSocialSecurityNumber={true}
                 />
               </Grid>
 
@@ -255,7 +304,10 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                   control={control}
                   isRequired={false}
                   label={'Shared Care'}
-                  optionList={[{ key: 1, value: 'none', optionString: 'None' }]}
+                  optionList={[
+                    { key: 1, value: 'Yes', optionString: 'Yes' },
+                    { key: 2, value: 'No', optionString: 'No' }
+                  ]}
                 />
               </Grid>
 
@@ -300,50 +352,15 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
               </Grid>
 
               <Grid size={{ xs: 12, sm: 4 }}>
-                <CustomTextField
-                  label={'Medical Spend Down'}
-                  placeHolder={'1234'}
-                  name={'medicalSpendDown2'}
-                  defaultValue={''}
-                  type={'number'}
-                  error={errors.medicalSpendDown2}
-                  control={control}
-                  isRequired={false}
-                />
-              </Grid>
-
-              <Grid size={{ xs: 12, sm: 4 }}>
-                <TextField
-                  {...register('amount', {
-                    required: false,
-                    pattern: {
-                      value: /^\d*\.?\d{0,2}$/, // Allows numbers with up to 2 decimal places
-                      message: 'Please enter a valid amount'
-                    }
-                  })}
-                  label={'Amount'}
-                  placeholder={'12121'}
-                  name={'amount'}
-                  defaultValue={undefined}
-                  itemType='number'
-                  type={'number'}
-                  size='small'
-                  fullWidth
-                  InputProps={{
-                    // Add dollar sign
-                    startAdornment: <InputAdornment position='start'>$</InputAdornment>,
-                    inputMode: 'decimal' // Use decimal keyboard on mobile
-                  }}
-                />
-              </Grid>
-
-              <Grid size={{ xs: 12, sm: 4 }}>
                 <CustomDropDown
                   name={'pcaChoice'}
                   control={control}
                   isRequired={false}
-                  label={'PCA Choice'}
-                  optionList={[{ key: 1, value: 'none', optionString: 'None' }]}
+                  label={'PCA Type'}
+                  optionList={[
+                    { key: 1, value: 'PCA Choice', optionString: 'PCA Choice' },
+                    { key: 2, value: 'PCA Tradition', optionString: 'PCA Tradition' }
+                  ]}
                 />
               </Grid>
             </Grid>
@@ -404,7 +421,20 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
             </Grid>
           </CardContent>
           <CardContent>
-            <Typography className='text-xl font-semibold mb-4'>Mailing Address</Typography>
+            <div className='flex flex-row justify-between'>
+              <div>
+                <Typography className='text-xl font-semibold mb-4'>Mailing Address</Typography>
+                {/* <h2 className='text-xl font-semibold mb-6'>Assign Caregiver</h2> */}
+              </div>
+              <div>
+                <FormLabel>Same as primary residential address</FormLabel>
+                <Checkbox
+                  {...register('mailingAddressCheckbox')}
+                  checked={mailingAddressCheckboxEnabled}
+                  onChange={handleEnableMailingAddressCheckboxChange}
+                />
+              </div>
+            </div>
             <Grid container spacing={4}>
               <Grid size={{ xs: 12, sm: 4 }}>
                 <CustomTextField
@@ -457,7 +487,20 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
             </Grid>
           </CardContent>
           <CardContent>
-            <Typography className='text-xl font-semibold mb-4'>Secondary Residential Address</Typography>
+            <div className='flex flex-row justify-between'>
+              <div>
+                <Typography className='text-xl font-semibold mb-4'>Secondary Residential Address</Typography>
+                {/* <h2 className='text-xl font-semibold mb-6'>Assign Caregiver</h2> */}
+              </div>
+              <div>
+                <FormLabel>Same as primary residential address</FormLabel>
+                <Checkbox
+                  {...register('secondaryAddressCheckbox')}
+                  checked={secondaryAddressCheckboxEnabled}
+                  onChange={handleEnableSecondaryAddressCheckboxChange}
+                />
+              </div>
+            </div>
             <Grid container spacing={4}>
               <Grid size={{ xs: 12, sm: 4 }}>
                 <CustomTextField

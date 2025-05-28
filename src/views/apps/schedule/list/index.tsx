@@ -17,6 +17,7 @@ const ScheduleList = () => {
   // Initialize filteredEvents with null or the full events list
   const [filteredEvents, setFilteredEvents] = useState<any>(null)
   const [filterClicked, setFilterClicked] = useState<boolean>(false)
+  const [isLoading, setIsLoading] = useState(true);
 
   // Fetch events on mount
   useEffect(() => {
@@ -50,7 +51,7 @@ const ScheduleList = () => {
         <ScheduleTableFiltersCard onFilterApplied={handleFilteredData} />
       </Grid>
       <Grid size={{ xs: 12 }}>
-        {/* Use filteredEvents if set, otherwise use events */}
+        {/* Use filteredEvents if set, otherwise use events */}{ }
         <ScheduleListTable events={filterClicked ? filteredEvents : events} />
       </Grid>
     </Grid>

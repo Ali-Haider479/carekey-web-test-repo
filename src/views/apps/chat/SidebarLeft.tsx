@@ -32,7 +32,7 @@ import CustomTextField from '@core/components/mui/TextField'
 
 // Util Imports
 import { getInitials } from '@/utils/getInitials'
-import { Button, Chip, Dialog, Grid2 as Grid } from '@mui/material'
+import { Button, Chip, CircularProgress, Dialog, Grid2 as Grid } from '@mui/material'
 import DialogCloseButton from '@/components/dialogs/DialogCloseButton'
 import CustomDropDown from '@/@core/components/custom-inputs/CustomDropDown'
 import { useForm } from 'react-hook-form'
@@ -103,6 +103,7 @@ const SidebarLeft = (props: Props) => {
   const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
   const [alertOpen, setAlertOpen] = useState(false)
   const [alertProps, setAlertProps] = useState<any>()
+  const [isCreateChatLoading, setIsCreateChatLoading] = useState(false)
 
   // MQTT Hook
   const { subscribe, isConnected } = useMqttClient({
@@ -202,6 +203,7 @@ const SidebarLeft = (props: Props) => {
   }
 
   const onSubmit = async (data: any) => {
+    setIsCreateChatLoading(true)
     const { otherUser, clientId } = data
     const chatRoomName = `chatroom-${Math.min(authUser?.id, Number(otherUser))}-${Math.max(authUser?.id, Number(otherUser))}-${clientId}`
 
@@ -226,6 +228,7 @@ const SidebarLeft = (props: Props) => {
     await dispatch(fetchChatRooms(authUser?.id))
     handleModalClose()
     reset() // Reset form fields after successful submission
+    setIsCreateChatLoading(false)
   }
 
   return (
@@ -376,7 +379,13 @@ const SidebarLeft = (props: Props) => {
               <Button variant='outlined' color='secondary' onClick={handleModalClose}>
                 Cancel
               </Button>
-              <Button type='submit' variant='contained' className='bg-[#4B0082]'>
+              <Button
+                startIcon={isCreateChatLoading ? <CircularProgress size={20} color='inherit' /> : null}
+                type='submit'
+                variant='contained'
+                className='bg-[#4B0082]'
+                disabled={isCreateChatLoading}
+              >
                 Create
               </Button>
             </div>
