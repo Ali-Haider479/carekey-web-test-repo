@@ -4,7 +4,7 @@ import Grid from '@mui/material/Grid2'
 import Card from '@mui/material/Card'
 import CardHeader from '@mui/material/CardHeader'
 import CardContent from '@mui/material/CardContent'
-import { Button, InputAdornment, IconButton } from '@mui/material'
+import { Button, InputAdornment, IconButton, CircularProgress } from '@mui/material'
 import { useRouter } from 'next/navigation'
 import { FormProvider, useForm } from 'react-hook-form'
 import CustomTextField from '@/@core/components/custom-inputs/CustomTextField'
@@ -71,6 +71,7 @@ const CreateTenant = (props: Props) => {
   const [alertProps, setAlertProps] = useState<any>()
   const [error, setError] = useState('')
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [submitButtonLoading, setSubmitButtonLoading] = useState<boolean>(false)
   const router = useRouter()
 
   const emailAddress = watch('emailAddress')
@@ -137,6 +138,7 @@ const CreateTenant = (props: Props) => {
   // console.log('Current Date ----->> ', new Date().toISOString())
 
   const onSubmit = async (data: any) => {
+    setSubmitButtonLoading(true)
     const tenantPayload = {
       firstName: data.firstName,
       lastName: data.lastName,
@@ -213,6 +215,8 @@ const CreateTenant = (props: Props) => {
           severity: 'error'
         })
       }
+    } finally {
+      setSubmitButtonLoading(false)
     }
   }
 
@@ -471,7 +475,13 @@ const CreateTenant = (props: Props) => {
               >
                 Cancel
               </Button>
-              <Button variant='contained' type='submit' sx={{ backgroundColor: '#4B0082' }}>
+              <Button
+                startIcon={submitButtonLoading ? <CircularProgress color='inherit' size={20} /> : null}
+                disabled={submitButtonLoading}
+                variant='contained'
+                type='submit'
+                sx={{ backgroundColor: '#4B0082' }}
+              >
                 Submit
               </Button>
             </Grid>

@@ -12,7 +12,8 @@ import {
   MenuItem,
   FormHelperText,
   Chip,
-  IconButton
+  IconButton,
+  Button
 } from '@mui/material'
 import Grid from '@mui/material/Grid2'
 import AddIcon from '@mui/icons-material/Add'
@@ -86,9 +87,12 @@ const ServiceAndActivities = ({ control, errors, serviceTypes, activities, isUpd
           <Typography className='text-xl font-semibold'>
             {isUpdate ? 'Update Services and Activities' : 'Services and Activities'}
           </Typography>
-          <IconButton color='success' onClick={addNewService} aria-label='Add new service' disabled={isAddDisabled}>
+          {/* <IconButton color='success' onClick={addNewService} aria-label='Add new service' disabled={isAddDisabled}>
             <AddIcon />
-          </IconButton>
+          </IconButton> */}
+          <Button startIcon={<AddIcon />} onClick={addNewService} variant='contained'>
+            Add Service
+          </Button>
         </Box>
 
         {fields.map((field, index) => (
@@ -153,8 +157,8 @@ const ServiceAndActivities = ({ control, errors, serviceTypes, activities, isUpd
                         type='text'
                         size='small'
                         fullWidth
-                        multiline
-                        rows={4}
+                        // multiline
+                        // rows={4}
                       />
                     )}
                   />

@@ -22,6 +22,8 @@ const ReceivedTimesheetDetails = () => {
     fetchInitialData()
   }, [])
 
+  console.log('PAY PERIOD --->> ', payPeriod)
+
   const fetchInitialData = async () => {
     try {
       const response = await Promise.all([api.get(`/time-log`), api.get(`/pay-period/tenant/${authUser?.tenant?.id}`)])

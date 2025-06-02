@@ -66,6 +66,7 @@ interface Props {
   isLoading: boolean
   payPeriod: any
   fetchInitialData: any
+  formattedAddress: any
 }
 
 interface ClockOutFormData {
@@ -132,6 +133,8 @@ const useLocationDetails = (location: Location) => {
     }
   }, [location.latitude, location.longitude, getLocationDetails])
 
+  console.log('LOCATION DETAILS ------>> ', locationDetails)
+
   return locationDetails
 }
 
@@ -147,7 +150,7 @@ const LocationCell = React.memo(({ location }: { location: Location }) => {
   )
 })
 
-const EvvActiveUserTable = ({ timeLogData, isLoading, payPeriod, fetchInitialData }: Props) => {
+const EvvActiveUserTable = ({ timeLogData, isLoading, payPeriod, fetchInitialData, formattedAddress }: Props) => {
   const [selectedUser, setSelectedUser] = useState<any | null>(null)
   const [isModalShow, setIsModalShow] = useState(false)
   const [clockOutReason, setClockOutReason] = useState('')
@@ -161,6 +164,13 @@ const EvvActiveUserTable = ({ timeLogData, isLoading, payPeriod, fetchInitialDat
   const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
   const [alertOpen, setAlertOpen] = useState(false)
   const [alertProps, setAlertProps] = useState<any>()
+
+  console.log(
+    'FORMATTED ADDRESS --~--~-->>',
+    // formattedAddress,
+    // formattedAddress?.features[0]?.properties?.address?.formattedAddress,
+    timeLogData
+  )
 
   const handleModalClose = () => {
     setIsModalShow(false)
@@ -469,7 +479,10 @@ const EvvActiveUserTable = ({ timeLogData, isLoading, payPeriod, fetchInitialDat
         user?.isCommunityVisit || !user?.startLocation ? (
           <Typography color='primary'>Community Visit</Typography>
         ) : (
-          <LocationCell location={user?.startLocation} />
+          // <LocationCell location={user?.startLocation} />
+          <Typography color='primary'>
+            {formattedAddress?.features[0]?.properties?.address?.formattedAddress}
+          </Typography>
         )
     },
     {

@@ -445,6 +445,7 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                   type={'text'}
                   error={errors.mailingAddress}
                   control={control}
+                  disabled={mailingAddressCheckboxEnabled}
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 4 }}>
@@ -456,6 +457,7 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                   type={'text'}
                   error={errors.mailingCity}
                   control={control}
+                  disabled={mailingAddressCheckboxEnabled}
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 4 }}>
@@ -470,6 +472,7 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                     optionString: state.optionString
                   }))}
                   defaultValue={''}
+                  disabled={mailingAddressCheckboxEnabled}
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 4 }}>
@@ -482,6 +485,7 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                   error={errors.mailingZipCode}
                   control={control}
                   maxLength={5}
+                  disabled={mailingAddressCheckboxEnabled}
                 />
               </Grid>
             </Grid>
@@ -512,6 +516,7 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                   error={errors.secondaryResidentialAddress}
                   control={control}
                   isRequired={false}
+                  disabled={secondaryAddressCheckboxEnabled}
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 4 }}>
@@ -524,6 +529,7 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                   error={errors.secondaryResidentialCity}
                   control={control}
                   isRequired={false}
+                  disabled={secondaryAddressCheckboxEnabled}
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 4 }}>
@@ -539,6 +545,7 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                     optionString: state.optionString
                   }))}
                   defaultValue={''}
+                  disabled={secondaryAddressCheckboxEnabled}
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 4 }}>
@@ -552,6 +559,7 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                   control={control}
                   isRequired={false}
                   maxLength={5}
+                  disabled={secondaryAddressCheckboxEnabled}
                 />
               </Grid>
             </Grid>

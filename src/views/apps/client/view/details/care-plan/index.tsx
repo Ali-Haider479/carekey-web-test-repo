@@ -14,7 +14,8 @@ import {
   Chip,
   IconButton,
   Grid2 as Grid,
-  Button
+  Button,
+  CircularProgress
 } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
 import CloseIcon from '@mui/icons-material/Close'
@@ -49,6 +50,7 @@ const CareplanTab = () => {
   const [servicesActivities, setServicesActivities] = useState<ActivityType[]>([])
   const [openSelect, setOpenSelect] = useState<{ [key: string]: boolean }>({})
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [saveChangesButtonLoading, setSaveChangesButtonLoading] = useState<boolean>(false)
   const prevServiceIdsRef = useRef<string[]>([])
 
   const methods = useForm<FormValues>({
@@ -176,6 +178,7 @@ const CareplanTab = () => {
   }, [id])
 
   const onSubmit = async (data: FormValues) => {
+    setSaveChangesButtonLoading(true)
     try {
       setErrorMessage(null)
       const clientId = Number(id)
@@ -213,6 +216,8 @@ const CareplanTab = () => {
     } catch (error: any) {
       console.error('Error updating services:', error)
       setErrorMessage(error.response?.data?.message || error.message || 'Failed to update services')
+    } finally {
+      setSaveChangesButtonLoading(false)
     }
   }
 
@@ -246,9 +251,12 @@ const CareplanTab = () => {
             )}
             <Box display='flex' justifyContent='space-between' alignItems='center' mb={2}>
               <Typography className='text-xl font-semibold'>Update Services and Activities</Typography>
-              <IconButton color='success' onClick={addNewService} aria-label='Add new service' disabled={isAddDisabled}>
+              {/* <IconButton color='success' onClick={addNewService} aria-label='Add new service' disabled={isAddDisabled}>
                 <AddIcon />
-              </IconButton>
+              </IconButton> */}
+              <Button startIcon={<AddIcon />} onClick={addNewService} disabled={isAddDisabled} variant='contained'>
+                Add Service
+              </Button>
             </Box>
 
             {fields.map((field, index) => {
@@ -320,8 +328,8 @@ const CareplanTab = () => {
                               type='text'
                               size='small'
                               fullWidth
-                              multiline
-                              rows={4}
+                              // multiline
+                              // rows={4}
                             />
                           )}
                         />
@@ -384,7 +392,14 @@ const CareplanTab = () => {
             })}
           </CardContent>
           <Box display='flex' justifyContent='flex-end' p={2}>
-            <Button type='submit' variant='contained' color='primary' className='mr-4 mb-2'>
+            <Button
+              startIcon={saveChangesButtonLoading ? <CircularProgress size={20} color='inherit' /> : null}
+              disabled={saveChangesButtonLoading}
+              type='submit'
+              variant='contained'
+              color='primary'
+              className='mr-4 mb-2'
+            >
               Save Changes
             </Button>
           </Box>

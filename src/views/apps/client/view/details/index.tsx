@@ -95,7 +95,7 @@ const ClientDetails = ({ tabContentList }: BottomBodyProps) => {
               <Tab value='profile' label='PROFILE' />
               <Tab value='e-doc' label='E-DOC' />
               <Tab value='forms' label='FORMS' />
-              <Tab value='care-plan' label='CARE PLAN' />
+              <Tab value='care-plan' label='SERVICES' />
               <Tab value='account-history' label='ACC HISTORY' />
               <Tab value='time-sheets' label='TIME SHEETS' />
               <Tab value='service-authorization' label='SERVICE AUTHORIZATION' />

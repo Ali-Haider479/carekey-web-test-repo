@@ -10,7 +10,7 @@ import Avatar from '@mui/material/Avatar'
 import { Button, IconButton, Menu, MenuItem, Typography } from '@mui/material'
 import { getLocalizedUrl } from '@/utils/i18n'
 import { Locale } from '@/configs/i18n'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import DataTable from '@/@core/components/mui/DataTable'
 import { GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
@@ -52,6 +52,8 @@ const ScheduleListTable = ({ events }: { events: any[] }) => {
   const [alertProps, setAlertProps] = useState<any>()
   const [scheduleData, setScheduleData] = useState<any>()
   const [isDeleted, setIsDeleted] = useState<boolean>(false)
+
+  const router = useRouter()
 
   const handleActionClick = (event: React.MouseEvent<HTMLButtonElement>, rowId: number) => {
     setAnchorEl(event.currentTarget)
@@ -254,7 +256,10 @@ const ScheduleListTable = ({ events }: { events: any[] }) => {
               variant='contained'
               className='max-sm:is-full'
               sx={{ backgroundColor: '#4B0082' }}
-              href={getLocalizedUrl('/en/apps/schedules/calendar-view', locale as Locale)}
+              // href={getLocalizedUrl('/en/apps/schedules/calendar-view', locale as Locale)}
+              onClick={() => {
+                router.replace('/en/apps/schedules/calendar-view')
+              }}
             >
               CALENDAR
             </Button>

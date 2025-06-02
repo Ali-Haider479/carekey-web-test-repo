@@ -271,6 +271,9 @@ const ManualTimesheet = ({ caregiverList, payPeriodList }: any) => {
     })
   }
 
+  console.log('Pay Period Value', values.payperiod)
+  console.log('Week Range = ', weekRange)
+
   const onSubmit = async () => {
     if (!validateForm()) {
       return
@@ -490,12 +493,13 @@ const ManualTimesheet = ({ caregiverList, payPeriodList }: any) => {
               <AppReactDatepicker
                 selectsStart
                 id='event-start-date'
-                endDate={values.dateOfService !== null ? values.dateOfService : weekRange.endDate}
+                endDate={weekRange.current === true ? new Date() : weekRange.endDate}
                 selected={values.dateOfService}
                 startDate={values.dateOfService !== null ? values.dateOfService : weekRange.startDate}
                 dateFormat={'yyyy-MM-dd'}
                 minDate={weekRange.startDate}
-                maxDate={weekRange.endDate}
+                maxDate={weekRange.current === true ? new Date() : weekRange.endDate}
+                disabled={!values.payperiod}
                 customInput={
                   <TextField
                     fullWidth

@@ -147,7 +147,26 @@ const AddEventModal = (props: AddEventSidebarType) => {
   const [serviceType, setServiceType] = useState<any[]>([])
   const [serviceActivities, setServiceActivities] = useState<any>([])
   const [isAddEventLoading, setIsAddEventLoading] = useState(false)
+  const [clientServiceAuth, setClientServiceAuth] = useState<any>()
   const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
+
+  const fetchClientServiceAuth = async () => {
+    try {
+      if (values.client) {
+        const res = await api.get(`/client/${values.client}/service-auth`)
+        console.log('Client Service Auth Data: ', res.data)
+        setClientServiceAuth(res.data)
+      }
+    } catch (error) {
+      console.error('Error fetching client service auth: ', error)
+    }
+  }
+
+  useEffect(() => {
+    if (values.client) {
+      fetchClientServiceAuth()
+    }
+  }, [values.client])
 
   const isFormValid = () => {
     return (
@@ -280,6 +299,24 @@ const AddEventModal = (props: AddEventSidebarType) => {
 
   const onSubmit = async () => {
     setIsAddEventLoading(true)
+    if (clientServiceAuth?.length === 0) {
+      setAlertOpen(true)
+      setAlertMessage({
+        message: 'Client must have a service auth to create a schedule',
+        severity: 'error'
+      })
+      setIsAddEventLoading(false)
+      return
+    }
+    if (clientServiceAuth?.length > 0 && clientServiceAuth[0]?.endDate < new Date()) {
+      setAlertOpen(true)
+      setAlertMessage({
+        message: 'The service auth has expired. Please update the service auth before creating a schedule',
+        severity: 'error'
+      })
+      setIsAddEventLoading(false)
+      return
+    }
     console.log('In onSubmit--------------->')
     const startDate = values.startDate
     const assignedHours = values.assignedHours
@@ -327,7 +364,7 @@ const AddEventModal = (props: AddEventSidebarType) => {
     }
 
     // Make a single API call with bulk data
-    if (isEdited && calendarStore?.selectedEvent) {
+    if (isEdited && calendarStore?.selectedEvent && calendarStore?.selectedEvent?.title !== '') {
       console.log('Editing Existing Event!!!!', calendarStore.selectedEvent.id)
       console.log('bulkEvents>>>>>', bulkEvents)
       console.log(startDate.getHours(), assignedHours)
@@ -346,7 +383,9 @@ const AddEventModal = (props: AddEventSidebarType) => {
       }
       try {
         if (bulkEvents.length === 1) {
+          console.log('CALENDER STORE', calendarStore)
           const eventId = calendarStore?.selectedEvent?.id
+          console.log('EVENT ID', eventId)
           const patchBody = {
             ...bulkEvents[0]
           }
@@ -471,7 +510,7 @@ const AddEventModal = (props: AddEventSidebarType) => {
               fullWidth
               className='mbe-3'
               label='Caregiver'
-              disabled={isEdited && calendarStore.selectedEvent}
+              disabled={isEdited && calendarStore?.selectedEvent?.title?.length}
               value={values?.caregiver}
               id='caregiver-schedule'
               onChange={e => setValues({ ...values, caregiver: e.target.value })}
@@ -493,7 +532,7 @@ const AddEventModal = (props: AddEventSidebarType) => {
               className='mbe-3'
               label='Client'
               value={values?.client}
-              disabled={isEdited && calendarStore.selectedEvent}
+              disabled={isEdited && calendarStore?.selectedEvent?.title?.length}
               id='client-schedule'
               onChange={e => setValues({ ...values, client: e.target.value })}
             >
@@ -537,7 +576,7 @@ const AddEventModal = (props: AddEventSidebarType) => {
                   startDate={values.startDate}
                   showTimeSelect={!values.startDate}
                   dateFormat={!values.startDate ? 'yyyy-MM-dd hh:mm' : 'yyyy-MM-dd'}
-                  disabled={isEdited && calendarStore.selectedEvent}
+                  disabled={isEdited && calendarStore?.selectedEvent?.title?.length}
                   customInput={
                     <PickersComponent
                       label='Start Date'
@@ -567,7 +606,7 @@ const AddEventModal = (props: AddEventSidebarType) => {
                   showTimeSelectOnly
                   dateFormat='hh:mm aa'
                   id='time-only-picker'
-                  disabled={isEdited && calendarStore.selectedEvent}
+                  disabled={isEdited && calendarStore?.selectedEvent?.title?.length}
                   onChange={(date: Date | null) => {
                     if (date !== null) {
                       // Combine the selected start date with the selected start time
@@ -601,7 +640,7 @@ const AddEventModal = (props: AddEventSidebarType) => {
                   customInput={
                     <PickersComponent label='End Date' registername='endDate' className='mbe-3' id='event-end-date' />
                   }
-                  disabled={isEdited && calendarStore.selectedEvent}
+                  disabled={isEdited && calendarStore?.selectedEvent?.title?.length}
                   onChange={(date: Date | null) => {
                     if (date !== null) {
                       // Combine the selected end date with the selected end time

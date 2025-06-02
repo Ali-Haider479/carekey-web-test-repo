@@ -133,11 +133,26 @@ const ReceivedTimesheetTable = (
   const [deletingId, setDeletingId] = useState<string | number | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
   const [rowsToDelete, setRowsToDelete] = useState<any[]>([])
+  const [serviceType, setServiceType] = useState<any>()
   const [deleteReason, setDeleteReason] = useState<string>('')
   const clockInDateString = new Date(watch('clockInDate'))
   const clockOutDateString = new Date(watch('clockOutDate'))
   const tsApprovalStatus = watch('tsApprovalStatus')
   const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
+
+  const fetchClientServiceType = async () => {
+    try {
+      if (!modalData?.client?.id) return
+      const response = await api.get(`/client/${modalData.client?.id}/services`)
+      setServiceType(response.data)
+    } catch (error) {
+      console.error('Error fetching client service type:', error)
+    }
+  }
+
+  console.log('Modal Data ---->> ', modalData)
+
+  console.log('WEEK RANGE ----->> ', weekRange)
 
   useEffect(() => {
     // Skip validation on initial render or when not editing
@@ -195,6 +210,10 @@ const ReceivedTimesheetTable = (
       setWeekRange(range)
     }
   }, [payPeriod])
+
+  const currentDate = new Date().toISOString().split('T')[0]
+
+  console.log('CURRENT DATE == ', currentDate)
 
   const toggleEditing = () => {
     setIsEditing(!isEditing)
@@ -396,12 +415,19 @@ const ReceivedTimesheetTable = (
   const handleModalClose = () => {
     setIsModalShow(false)
     setIsEditing(false)
+    setServiceType(null)
     setModalData(null)
     reset()
     handleCloseMenu()
     setAnchorEl(null)
     setSelectedUser(null)
   }
+
+  useEffect(() => {
+    if (modalData?.client?.id) {
+      fetchClientServiceType()
+    }
+  }, [modalData?.client?.id])
 
   const onSubmit = async (formData: EditDetailsPayload) => {
     try {
@@ -1099,19 +1125,12 @@ const ReceivedTimesheetTable = (
                       control={control}
                       label={'Service Name'}
                       isRequired={false}
-                      disabled={true}
-                      optionList={[
-                        {
-                          key: 1,
-                          value: 'Personal Care Assistant (PCA)',
-                          optionString: 'Personal Care Assistant (PCA)'
-                        },
-                        {
-                          key: 2,
-                          value: 'Individualized Home Supports (IHS)',
-                          optionString: 'Individual Home Service (IHS)'
-                        }
-                      ]}
+                      disabled={!isEditing}
+                      optionList={serviceType?.map((item: any) => ({
+                        key: item.id,
+                        value: item.name,
+                        optionString: item.name
+                      }))}
                       // disabled={!isEditing}
                     />
                   </Grid>
@@ -1143,7 +1162,7 @@ const ReceivedTimesheetTable = (
                         endDate={clockOutDateString || undefined}
                         startDate={clockInDateString || undefined}
                         minDate={new Date(weekRange.startDate)}
-                        maxDate={new Date(weekRange.endDate)}
+                        maxDate={weekRange.endDate > currentDate ? new Date() : new Date(weekRange.endDate)}
                         rules={{
                           required: 'Clock In Date is required'
                         }}
@@ -1192,7 +1211,7 @@ const ReceivedTimesheetTable = (
                         disabled={!isEditing}
                         selected={clockOutDateString}
                         minDate={clockInDateString || undefined}
-                        maxDate={new Date(weekRange.endDate)}
+                        maxDate={weekRange.endDate > currentDate ? new Date() : new Date(weekRange.endDate)}
                         rules={{
                           required: 'Clock Out Date is required',
                           validate: (value: any) => {

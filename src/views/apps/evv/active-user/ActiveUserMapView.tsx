@@ -1,6 +1,9 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import { Card } from '@mui/material'
 import FleetMap from '../../logistics/fleet/FleetMap'
+import Radar from 'radar-sdk-js'
+
+Radar.initialize(process.env.NEXT_PUBLIC_RADAR_TEST_PUBLISHABLE_KEY || '')
 
 export type viewStateType = {
   longitude: number
@@ -8,56 +11,108 @@ export type viewStateType = {
   zoom: number
 }
 
-const createGeoJSON = (timeLogData: any) => {
-  return {
-    type: 'FeatureCollection',
-    features: timeLogData.map((log: any) => ({
-      type: 'Feature',
-      geometry: {
-        type: 'Point',
-        coordinates: [log.startLocation.longitude, log.startLocation.latitude] // Updated to GeoJSON standard
-      },
-      properties: {
-        id: log.id,
-        caregiverName: `${log.caregiver.firstName} ${log.caregiver.lastName}`,
-        clientName: `${log.client.firstName} ${log.client.lastName}`
-      }
-    }))
-  }
-}
-
-const ActiveUserMapView = ({ timeLogData }: { timeLogData: any }) => {
+const ActiveUserMapView = ({
+  timeLogData,
+  geoJsonData,
+  formattedAddress
+}: {
+  timeLogData: any
+  geoJsonData: any
+  formattedAddress: any
+}) => {
   if (timeLogData.length) {
-    const initialViewState = useMemo(() => {
-      if (timeLogData?.[0]?.startLocation) {
-        return {
-          longitude: timeLogData[0].startLocation.longitude,
-          latitude: timeLogData[0].startLocation.latitude,
-          zoom: 13 // Default zoom for city-level visibility
-        }
+    if (!timeLogData?.length || !timeLogData[0]?.startLocation) {
+      return null
+    }
+
+    const initialViewState = useMemo(() => ({
+      longitude: timeLogData[0].startLocation.longitude,
+      latitude: timeLogData[0].startLocation.latitude,
+      zoom: 13
+    }), [timeLogData])
+
+    const [expanded, setExpanded] = useState(0)
+    const [viewState, setViewState] = useState(initialViewState)
+    const [map, setMap] = useState<any>(null)
+
+    useEffect(() => {
+      // Initialize Radar map with attribution control disabled
+      const radarMap = Radar.ui.map({
+        container: 'map',
+        style: 'radar-default-v1',
+        center: [initialViewState.longitude, initialViewState.latitude], // Use initialViewState directly
+        zoom: initialViewState.zoom,
+        attributionControl: false
+      })
+
+      // Wait for map to fully load before adding markers
+      radarMap.on('load', () => {// Force resize to ensure proper layout calculation
+        setTimeout(() => {
+          radarMap.resize()
+          // Add markers for each coordinate
+          geoJsonData.features.forEach((feature: any) => {
+            const { coordinates } = feature.geometry
+            const { caregiverName, clientName, address } = feature.properties
+            const popupText = `${caregiverName} for ${clientName}${address ? `<br>Address: ${address}` : ''}`
+
+            // Validate coordinates
+            if (!coordinates || !Array.isArray(coordinates) || coordinates.length !== 2) {
+              console.warn('Invalid coordinates for feature:', feature)
+              return
+            }
+
+            // Create marker with fixed positioning
+            const marker = Radar.ui.marker({
+              html: `<div style="background-color: red; width: 10px; height: 10px; border-radius: 50%; transform: translate(-50%, -50%);"></div>`,
+              popup: {
+                text: popupText,
+                closeOnClick: true,
+                offset: 10
+              }
+            })
+              .setLngLat([Number(coordinates[0]), Number(coordinates[1])]) // Ensure numeric coordinates
+              .addTo(radarMap)
+          })
+
+          // Log map center and bounds for debugging
+          console.log('Map Center:', radarMap.getCenter());
+          console.log('Map Bounds:', radarMap.getBounds());
+          console.log('GeoJSON Data:', geoJsonData);
+          // Additional debugging
+          console.log('Map dimensions:', radarMap.getContainer().offsetWidth, 'x', radarMap.getContainer().offsetHeight)
+        }, 100) // Short delay allows layout stabilization
+      })
+
+      setMap(radarMap)
+
+      // Update view state on map move
+      radarMap.on('moveend', () => {
+        const center = radarMap.getCenter();
+        setViewState({
+          longitude: center.lng,
+          latitude: center.lat,
+          zoom: radarMap.getZoom()
+        })
+      })
+
+      // Cleanup on unmount
+      return () => {
+        radarMap.remove()
       }
-      return {
-        longitude: -96.0, // Center of USA
-        latitude: 37.0, // Center of USA
-        zoom: 3.5 // USA-wide view if no data
-      }
-    }, [timeLogData])
+    }, [geoJsonData, initialViewState])
 
-    const [expanded, setExpanded] = useState<number | false>(0)
-    const [viewState, setViewState] = useState<viewStateType>(initialViewState)
-
-    const geoJsonData = useMemo(() => createGeoJSON(timeLogData), [timeLogData])
-
-    const mapboxAccessToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN || ''
-    console.log('GEO JSON data', geoJsonData)
+    console.log('GEO JSON data with addresses', geoJsonData)
 
     return (
-      <div className='w-full h-80'>
-        <FleetMap
-          carIndex={expanded}
-          viewState={viewState}
-          geojson={geoJsonData}
-          mapboxAccessToken={mapboxAccessToken}
+      <div className='h-[40vh] w-[75vw]'>
+        <div
+          id='map'
+          style={{
+            width: '75vw',
+            height: '40vh',
+            position: 'relative', // Changed to relative for proper marker containment
+            overflow: 'hidden' // Prevent markers from overflowing
+          }}
         />
       </div>
     )

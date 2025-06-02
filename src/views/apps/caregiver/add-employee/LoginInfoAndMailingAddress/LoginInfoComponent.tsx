@@ -85,7 +85,7 @@ const LoginInfoComponent = forwardRef<{ handleSubmit: any }, Props>(
 
     const mailingAddressCheckboxEnabled = watch('mailingAddressCheckbox')
 
-    console.log('Passwords comparison', passwordCheck, confirmPasswordCheck)
+    console.log('Mailing address checkbox status --->> ', mailingAddressCheckboxEnabled)
 
     const handleClickShowPassword = () => setIsPasswordShown(show => !show)
 
@@ -364,6 +364,7 @@ const LoginInfoComponent = forwardRef<{ handleSubmit: any }, Props>(
                     type={'text'}
                     error={errors.address}
                     control={control}
+                    disabled={mailingAddressCheckboxEnabled}
                   />
                 </Grid>
 
@@ -377,6 +378,7 @@ const LoginInfoComponent = forwardRef<{ handleSubmit: any }, Props>(
                     type={'text'}
                     error={errors.city}
                     control={control}
+                    disabled={mailingAddressCheckboxEnabled}
                   />
                 </Grid>
 
@@ -393,6 +395,7 @@ const LoginInfoComponent = forwardRef<{ handleSubmit: any }, Props>(
                       optionString: state.optionString
                     }))}
                     defaultValue={''}
+                    disabled={mailingAddressCheckboxEnabled}
                   />
                 </Grid>
 
@@ -407,6 +410,7 @@ const LoginInfoComponent = forwardRef<{ handleSubmit: any }, Props>(
                     error={errors.zipCode}
                     control={control}
                     maxLength={5}
+                    disabled={mailingAddressCheckboxEnabled}
                   />
                 </Grid>
               </Grid>
