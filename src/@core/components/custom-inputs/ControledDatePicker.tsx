@@ -28,7 +28,7 @@ const ControlledDatePicker = (props: Props) => {
       control={props.control}
       defaultValue={props.defaultValue}
       // rules={{ required: isRequired ? `${props.label} is required` : false }}
-      rules={rules} // Apply validation rules
+      rules={rules ? rules : { required: isRequired ? `${props.label} is required` : false }} // Apply validation rules
       render={({ field, fieldState: { error } }) => (
         <AppReactDatepicker
           selected={field.value ? new Date(field.value) : null}

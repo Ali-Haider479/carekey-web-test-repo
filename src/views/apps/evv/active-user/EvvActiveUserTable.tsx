@@ -217,30 +217,30 @@ const EvvActiveUserTable = ({ timeLogData, isLoading, payPeriod, fetchInitialDat
 
   const handleChange =
     (field: keyof ClockOutFormData) =>
-    (event: SelectChangeEvent<number[]> | React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-      if (field === 'serviceActivities') {
-        const value = (event as SelectChangeEvent<number[]>).target.value as number[]
-        setSelectedItems(value)
-        setValues(prev => ({
-          ...prev,
-          serviceActivities: value
-        }))
-      } else if (field === 'reason') {
-        const value = (event as React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>).target.value
-        setClockOutReason(value)
-        setValues(prev => ({
-          ...prev,
-          reason: value
-        }))
-      }
+      (event: SelectChangeEvent<number[]> | React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        if (field === 'serviceActivities') {
+          const value = (event as SelectChangeEvent<number[]>).target.value as number[]
+          setSelectedItems(value)
+          setValues(prev => ({
+            ...prev,
+            serviceActivities: value
+          }))
+        } else if (field === 'reason') {
+          const value = (event as React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>).target.value
+          setClockOutReason(value)
+          setValues(prev => ({
+            ...prev,
+            reason: value
+          }))
+        }
 
-      if (touched[field] && errors[field]) {
-        setErrors(prev => ({
-          ...prev,
-          [field]: ''
-        }))
+        if (touched[field] && errors[field]) {
+          setErrors(prev => ({
+            ...prev,
+            [field]: ''
+          }))
+        }
       }
-    }
 
   const handleDateChange = (field: keyof ClockOutFormData) => (date: Date | null) => {
     setValues(prev => ({
@@ -475,15 +475,23 @@ const EvvActiveUserTable = ({ timeLogData, isLoading, payPeriod, fetchInitialDat
       minWidth: 170,
       editable: false,
       sortable: true,
-      render: (user: any) =>
-        user?.isCommunityVisit || !user?.startLocation ? (
-          <Typography color='primary'>Community Visit</Typography>
-        ) : (
-          // <LocationCell location={user?.startLocation} />
-          <Typography color='primary'>
-            {formattedAddress?.features[0]?.properties?.address?.formattedAddress}
-          </Typography>
+      render: (user: any) => {
+        console.log("USER", user);
+        const caregiverName = `${user.caregiver.firstName} ${user.caregiver.lastName}`;
+        const formattedAddressIndex = formattedAddress?.features?.findIndex((item: any) =>
+          item?.properties?.caregiverName === caregiverName);
+        console.log("formattedAddressIndex", formattedAddressIndex)
+        return (
+          user?.isCommunityVisit || !user?.startLocation ? (
+            <Typography color='primary'>Community Visit</Typography>
+          ) : (
+            // <LocationCell location={user?.startLocation} />
+            <Typography color='primary'>
+              {formattedAddress?.features[formattedAddressIndex]?.properties?.address?.formattedAddress}
+            </Typography>
+          )
         )
+      }
     },
     {
       id: 'status',

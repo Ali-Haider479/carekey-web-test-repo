@@ -88,7 +88,8 @@ const EvvActiveUser = () => {
         }
       })
     )
-    const updatedGeoJson = { ...geoJson, features: updatedFeatures }
+    const updatedGeoJson = { ...geoJson, features: updatedFeatures };
+    console.log("updatedGeoJson", updatedGeoJson)
     setGeoJsonData(updatedGeoJson)
     setFormattedAddress(updatedGeoJson)
   }

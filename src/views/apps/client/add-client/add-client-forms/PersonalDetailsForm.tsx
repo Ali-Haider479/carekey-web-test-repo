@@ -145,6 +145,7 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                   error={errors.admissionDate}
                   label={'Admission Date'}
                   defaultValue={undefined}
+                  isRequired={true}
                 />
               </Grid>
 
@@ -168,6 +169,7 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                   label={'Date of Birth'}
                   defaultValue={undefined}
                   maxDate={new Date()}
+                  isRequired={true}
                 />
               </Grid>
 

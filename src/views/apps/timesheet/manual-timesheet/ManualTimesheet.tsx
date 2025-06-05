@@ -110,7 +110,7 @@ const ManualTimesheet = ({ caregiverList, payPeriodList }: any) => {
     }
 
     // Get current date in UTC (May 28, 2025)
-    const currentDate = new Date(Date.UTC(2025, 4, 28)) // Month is 0-based (4 = May)
+    const currentDate = new Date() // Month is 0-based (4 = May)
 
     // Determine if the period is current
     const isCurrent = range.endDate === null || (currentDate >= startDate && currentDate <= endDate)

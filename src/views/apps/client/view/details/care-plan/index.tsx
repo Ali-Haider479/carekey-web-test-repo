@@ -37,7 +37,8 @@ type ActivityType = {
 
 type FormValues = {
   services: {
-    service: string
+    id?: string // ClientServiceJoin ID
+    service: string // Service ID
     serviceNotes: string
     serviceActivities: string[]
   }[]
@@ -51,7 +52,9 @@ const CareplanTab = () => {
   const [openSelect, setOpenSelect] = useState<{ [key: string]: boolean }>({})
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [saveChangesButtonLoading, setSaveChangesButtonLoading] = useState<boolean>(false)
-  const prevServiceIdsRef = useRef<string[]>([])
+  const prevServiceIdsRef = useRef<string[]>([]) // Tracks service IDs (cs.service.id)
+  const prevClientServiceIdsRef = useRef<string[]>([]) // Tracks ClientServiceJoin IDs (cs.id)
+  const prevSelectedServiceIdsRef = useRef<string[]>([])
 
   const methods = useForm<FormValues>({
     defaultValues: {
@@ -71,17 +74,12 @@ const CareplanTab = () => {
     name: 'services'
   })
 
-  // Watch the entire services array
   const watchedServices = useWatch({
     control,
     name: 'services',
     defaultValue: fields
   })
 
-  // Track previous service IDs to avoid infinite loop
-  const prevSelectedServiceIdsRef = useRef<string[]>([])
-
-  // Fetch client data, activities, and all services
   const fetchClient = async () => {
     try {
       const [servicesResponse, activitiesResponse, allServicesResponse] = await Promise.all([
@@ -93,7 +91,6 @@ const CareplanTab = () => {
       const clientData = servicesResponse.data[0]
       console.log('NEW CLIENT DATA', clientData)
 
-      // Use all services from /service endpoint
       const servicesData = allServicesResponse.data.map((svc: any) => ({
         id: svc.id.toString(),
         name: svc.name,
@@ -109,10 +106,10 @@ const CareplanTab = () => {
       setClientServices(servicesData)
       setServicesActivities(activitiesData)
 
-      // Map serviceActivityIds to services
       const serviceActivityIds = clientData.serviceActivityIds || []
       const formServices = clientData.clientServices.map((cs: any) => ({
-        service: cs.service.id.toString(),
+        id: cs.id.toString(), // ClientServiceJoin ID
+        service: cs.service.id.toString(), // Service ID
         serviceNotes: cs.note || '',
         serviceActivities: activitiesData
           .filter(
@@ -123,10 +120,11 @@ const CareplanTab = () => {
       }))
 
       console.log('NEW FORM SERVICES', formServices)
-      // Update prevServiceIdsRef with assigned services
       prevServiceIdsRef.current = formServices.map((svc: any) => svc.service)
-      // Initialize prevSelectedServiceIdsRef
+      prevClientServiceIdsRef.current = formServices.map((svc: any) => svc.id)
       prevSelectedServiceIdsRef.current = formServices.map((svc: any) => svc.service)
+      console.log('INITIAL PREV SERVICE IDS', prevServiceIdsRef.current)
+      console.log('INITIAL PREV CLIENT SERVICE IDS', prevClientServiceIdsRef.current)
 
       reset({
         services: formServices.length > 0 ? formServices : [{ service: '', serviceNotes: '', serviceActivities: [] }]
@@ -137,13 +135,11 @@ const CareplanTab = () => {
     }
   }
 
-  // Update activities when service changes
   useEffect(() => {
     fields.forEach((_, index) => {
       const selectedServiceId = watchedServices[index]?.service || ''
       const prevSelectedServiceId = prevSelectedServiceIdsRef.current[index] || ''
 
-      // Only update if service ID has changed
       if (selectedServiceId && selectedServiceId !== prevSelectedServiceId) {
         const serviceActivityIds = servicesResponse?.data[0]?.serviceActivityIds || []
         const availableActivities = servicesActivities.filter(act => act.serviceId === selectedServiceId)
@@ -151,7 +147,6 @@ const CareplanTab = () => {
           .filter(act => serviceActivityIds.includes(Number(act.id)))
           .map(act => act.id)
 
-        // Only update if activities have changed to avoid infinite loop
         const currentActivities = watchedServices[index]?.serviceActivities || []
         if (JSON.stringify(currentActivities) !== JSON.stringify(updatedActivities)) {
           setValue(`services.${index}.serviceActivities`, updatedActivities, {
@@ -160,13 +155,11 @@ const CareplanTab = () => {
           })
         }
 
-        // Update prevSelectedServiceIdsRef
         prevSelectedServiceIdsRef.current[index] = selectedServiceId
       }
     })
   }, [watchedServices, servicesActivities, setValue, fields])
 
-  // Initialize with one section if no services
   useEffect(() => {
     if (fields.length === 0) {
       append({ service: '', serviceNotes: '', serviceActivities: [] })
@@ -186,20 +179,55 @@ const CareplanTab = () => {
         throw new Error('Invalid client ID')
       }
 
-      // Identify new services (not in prevServiceIdsRef.current)
-      const newServices = data.services.filter(
-        item => item.service && !prevServiceIdsRef.current.includes(item.service)
-      )
-      console.log('NEW SERVICES', newServices, data.services, prevServiceIdsRef.current)
+      console.log('PREV SERVICE IDS BEFORE FILTER', prevServiceIdsRef.current)
+      console.log('PREV CLIENT SERVICE IDS BEFORE FILTER', prevClientServiceIdsRef.current)
+      console.log('SUBMITTED DATA', data.services)
 
-      // Assign new services
-      for (const item of newServices) {
-        const createClientServiceBody = {
-          note: item.serviceNotes || '',
-          serviceId: Number(item.service),
-          clientId: clientId
+      // Identify new and existing services
+      const newServices = data.services.filter(
+        item => item.service && !prevClientServiceIdsRef.current.includes(item.id || '')
+      )
+      const existingServices = data.services.filter(
+        item => item.service && item.id && prevClientServiceIdsRef.current.includes(item.id)
+      )
+
+      console.log(
+        'NEW SERVICES',
+        newServices,
+        'EXISTING SERVICES',
+        existingServices,
+        'ALL SERVICES',
+        data.services,
+        'PREV SERVICE IDS',
+        prevServiceIdsRef.current,
+        'PREV CLIENT SERVICE IDS',
+        prevClientServiceIdsRef.current
+      )
+
+      // Create new services
+      if (newServices.length > 0) {
+        console.log('INSIDE POST CALL', newServices)
+        for (const item of newServices) {
+          const createClientServiceBody = {
+            note: item.serviceNotes || '',
+            serviceId: Number(item.service),
+            clientId: clientId
+          }
+          await api.post(`/client/client-service`, createClientServiceBody)
         }
-        await api.post(`/client/client-service`, JSON.stringify(createClientServiceBody))
+      }
+
+      // Update existing services
+      if (existingServices.length > 0) {
+        console.log('INSIDE UPDATE CALL', existingServices)
+        for (const item of existingServices) {
+          const updateClientServiceBody = {
+            note: item.serviceNotes || '',
+            serviceId: Number(item.service),
+            clientId: clientId
+          }
+          await api.put(`/client/client-service/${item.id}`, updateClientServiceBody)
+        }
       }
 
       // Update activities
@@ -209,7 +237,8 @@ const CareplanTab = () => {
           .map(Number)
           .filter(num => !isNaN(num))
       }
-      await api.put(`/client/update-activities/${clientId}`, JSON.stringify(payload))
+      console.log('UPDATING ACTIVITIES', payload)
+      await api.put(`/client/update-activities/${clientId}`, payload)
 
       // Refresh data after submission
       fetchClient()
@@ -251,9 +280,6 @@ const CareplanTab = () => {
             )}
             <Box display='flex' justifyContent='space-between' alignItems='center' mb={2}>
               <Typography className='text-xl font-semibold'>Update Services and Activities</Typography>
-              {/* <IconButton color='success' onClick={addNewService} aria-label='Add new service' disabled={isAddDisabled}>
-                <AddIcon />
-              </IconButton> */}
               <Button startIcon={<AddIcon />} onClick={addNewService} disabled={isAddDisabled} variant='contained'>
                 Add Service
               </Button>
@@ -268,19 +294,6 @@ const CareplanTab = () => {
                   <Box mb={4} p={2} borderRadius={2}>
                     <Box display='flex' justifyContent='space-between' alignItems='center' mb={2}>
                       <Typography className='text-xl font-semibold'>Service Name</Typography>
-                      {/* Uncomment to enable delete functionality
-                      {fields.length > 1 && (
-                        <IconButton
-                          color='secondary'
-                          onClick={() => {
-                            remove(index)
-                            prevSelectedServiceIdsRef.current.splice(index, 1)
-                          }}
-                          aria-label={`Remove service ${index + 1}`}
-                        >
-                          <DeleteIcon />
-                        </IconButton>
-                      )} */}
                     </Box>
 
                     <Grid container spacing={5}>
@@ -328,8 +341,6 @@ const CareplanTab = () => {
                               type='text'
                               size='small'
                               fullWidth
-                              // multiline
-                              // rows={4}
                             />
                           )}
                         />
