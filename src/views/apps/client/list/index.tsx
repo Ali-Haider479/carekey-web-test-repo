@@ -9,7 +9,7 @@ import axios from 'axios'
 import Dropdown from '@/@core/components/mui/DropDown'
 
 import type { ClientTypes } from '@/types/apps/clientTypes'
-import { Avatar, Button, Card, Icon, MenuItem, TextField, Typography, CircularProgress } from '@mui/material'
+import { Avatar, Button, Card, Icon, MenuItem, TextField, Typography, CircularProgress, useTheme } from '@mui/material'
 import { useRouter } from 'next/navigation'
 import ReactTable from '@/@core/components/mui/ReactTable'
 import { useForm } from 'react-hook-form'
@@ -17,6 +17,8 @@ import CustomTextField from '@/@core/components/mui/TextField'
 import { USStates } from '@/utils/constants'
 import api from '@/utils/api'
 import ClientTable from './ClientsTable'
+import TanStackTable from '@/@core/components/mui/TanStackTable'
+import { Mail, Phone } from '@mui/icons-material'
 
 interface DefaultStateType {
   pmiNumber: string
@@ -41,6 +43,10 @@ const ClientListApps = () => {
   const [serviceTypes, setServiceTypes] = useState<DefaultStateType>(defaultState)
   const [filterData, setFilterData] = useState()
   const [isLoading, setIsLoading] = useState(true)
+
+  const theme = useTheme()
+
+  console.log('THEME --->>', theme)
 
   const statusOptions = [
     { key: 1, value: 'pending', displayValue: 'Pending' },
@@ -181,17 +187,38 @@ const ClientListApps = () => {
       minWidth: 200,
       editable: true,
       sortable: true,
-      render: (item: any) => {
+      render: (user: any) => {
+        const getInitials = (name: string) => {
+          return name
+            .split(' ')
+            .map(n => n[0])
+            .join('')
+            .toUpperCase()
+        }
         return (
-          <div className='w-full h-full cursor-pointer'>
-            <div
-              style={{ height: '50px', display: 'flex', alignItems: 'center', gap: '8px', margin: 0, padding: 0 }}
-              onClick={() => handleNext(item?.id)}
-            >
-              <Avatar alt={item.firstName} src={item.profileImgUrl} />
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <strong>{`${item.firstName} ${item.lastName}`}</strong>
+          <div className='cursor-pointer flex items-center space-x-2 min-w-0' onClick={() => handleNext(user?.id)}>
+            <div className='flex-shrink-0'>
+              <div className='w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-white font-medium text-xs shadow-lg'>
+                {user?.profileImgUrl ? (
+                  <Avatar alt={user.firstName} src={user?.profileImgUrl} className='w-full h-full' />
+                ) : (
+                  getInitials(`${user.firstName} ${user.lastName}`)
+                )}
               </div>
+            </div>
+            <div className='min-w-0 flex-1'>
+              <p className='text-sm font-medium text-gray-900 dark:text-gray-100 truncate'>
+                {(() => {
+                  const nameParts = user?.firstName.trim().split(' ')
+                  if (nameParts.length >= 2) {
+                    const firstName = nameParts[0]
+                    const lastName = nameParts.slice(1).join(' ')
+                    return `${lastName}, ${firstName}`
+                  }
+                  return `${user?.firstName} ${user?.lastName}`
+                })()}
+              </p>
+              <p className='text-sm text-gray-500 dark:text-gray-400 truncate'>PMI: {user?.pmiNumber || 'N/A'}</p>
             </div>
           </div>
         )
@@ -204,9 +231,43 @@ const ClientListApps = () => {
       editable: true,
       sortable: true,
       render: (item: any) => {
+        const formatDate = (dateString: string) => {
+          if (!dateString) return 'N/A'
+          const date = new Date(dateString)
+          return date.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: '2-digit'
+          })
+        }
         return (
           <div className='w-full cursor-pointer' onClick={() => handleNext(item?.id)}>
-            <Typography color='primary'>{item?.admissionDate}</Typography>
+            <Typography color='primary' className='text-sm'>
+              {formatDate(item?.admissionDate)}
+            </Typography>
+          </div>
+        )
+      }
+    },
+    {
+      id: 'dateOfBirth',
+      label: 'BIRTH DATE',
+      minWidth: 200,
+      editable: true,
+      sortable: true,
+      render: (item: any) => {
+        const formatDate = (dateString: string) => {
+          if (!dateString) return 'N/A'
+          const date = new Date(dateString)
+          return date.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: '2-digit'
+          })
+        }
+        return (
+          <div className='w-full cursor-pointer' onClick={() => handleNext(item?.id)}>
+            <Typography color='primary'>{formatDate(item?.dateOfBirth)}</Typography>
           </div>
         )
       }
@@ -220,21 +281,9 @@ const ClientListApps = () => {
       render: (item: any) => {
         return (
           <div className='w-full cursor-pointer' onClick={() => handleNext(item?.id)}>
-            <Typography color='primary'>{item?.ssn}</Typography>
-          </div>
-        )
-      }
-    },
-    {
-      id: 'pmiNumber',
-      label: 'PMI NUMBER',
-      minWidth: 200,
-      editable: true,
-      sortable: true,
-      render: (item: any) => {
-        return (
-          <div className='w-full cursor-pointer' onClick={() => handleNext(item?.id)}>
-            <Typography color='primary'>{item?.pmiNumber}</Typography>
+            <Typography color='primary' className='text-sm'>
+              {item?.ssn}
+            </Typography>
           </div>
         )
       }
@@ -248,7 +297,9 @@ const ClientListApps = () => {
       render: (item: any) => {
         return (
           <div className='w-full cursor-pointer' onClick={() => handleNext(item?.id)}>
-            <Typography color='primary'>{item?.insuranceCode}</Typography>
+            <Typography color='primary' className='text-sm'>
+              {item?.insuranceCode ? item?.insuranceCode : 'N/A'}
+            </Typography>
           </div>
         )
       }
@@ -259,24 +310,23 @@ const ClientListApps = () => {
       minWidth: 200,
       editable: true,
       sortable: true,
-      render: (item: any) => {
+      render: (user: any) => {
         return (
-          <div className='w-full cursor-pointer' onClick={() => handleNext(item?.id)}>
-            <Typography color='primary'>{item?.emailId}</Typography>
-          </div>
-        )
-      }
-    },
-    {
-      id: 'primaryPhoneNumber',
-      label: 'PHONE NUMBER',
-      minWidth: 200,
-      editable: true,
-      sortable: true,
-      render: (item: any) => {
-        return (
-          <div className='w-full cursor-pointer' onClick={() => handleNext(item?.id)}>
-            <Typography color='primary'>{item?.primaryPhoneNumber}</Typography>
+          <div className='w-full cursor-pointer' onClick={() => handleNext(user?.id)}>
+            <div className='space-y-1 min-w-0'>
+              <div className='flex items-center text-sm min-w-0'>
+                <Mail className='w-3 h-3 mr-1 text-gray-400 dark:text-gray-500 flex-shrink-0' />
+                <Typography className='text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 truncate transition-colors min-w-0 text-sm'>
+                  {user?.emailId ? user?.emailId : 'N/A'}
+                </Typography>
+              </div>
+              <div className='flex items-center text-sm min-w-0'>
+                <Phone className='w-3 h-3 mr-1 text-gray-400 dark:text-gray-500 flex-shrink-0' />
+                <Typography className='text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 transition-colors whitespace-nowrap text-sm'>
+                  {user?.primaryPhoneNumber}
+                </Typography>
+              </div>
+            </div>
           </div>
         )
       }
@@ -421,7 +471,7 @@ const ClientListApps = () => {
                 </div>
               </Card>
             ) : (
-              <ReactTable
+              <TanStackTable
                 columns={newColumns}
                 data={filteredData} // Changed from dataWithProfileImg to filteredData
                 keyExtractor={item => item.id.toString()}

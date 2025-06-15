@@ -12,7 +12,9 @@ import api from '@/utils/api'
 
 const CaregiverList = () => {
   const [caregiverData, setCaregiverData] = useState<any>([])
+  const [totalCaregivers, setTotalCaregivers] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
+  const [isUserDeleted, setIsUserDeleted] = useState(false)
   const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
   const token = authUser?.backendAccessToken
 
@@ -21,6 +23,7 @@ const CaregiverList = () => {
       const response = await api.get(`/caregivers`)
       console.log('CARGIVER RESPONSE ONE', response)
       setCaregiverData(response.data)
+      setTotalCaregivers(response.data.length)
       setIsLoading(false)
     } catch (error) {
       console.error('Error fetching initial data:', error)
@@ -29,8 +32,9 @@ const CaregiverList = () => {
   }
 
   useEffect(() => {
+    console.log('useEffect triggered with isUserDeleted:', isUserDeleted)
     fetchInitialData()
-  }, [])
+  }, [isUserDeleted])
 
   const handleFilteredData = (accountStatus: any) => {
     setCaregiverData(accountStatus)
@@ -42,7 +46,13 @@ const CaregiverList = () => {
         <CaregiverFilters setData={() => {}} onFilterApplied={handleFilteredData} />
       </Grid>
       <Grid size={{ xs: 12 }}>
-        <CaregiverTable isLoading={isLoading} data={caregiverData} />
+        <CaregiverTable
+          isLoading={isLoading}
+          data={caregiverData}
+          setIsUserDeleted={setIsUserDeleted}
+          isUserDeleted={isUserDeleted}
+          totalCaregivers={totalCaregivers}
+        />
       </Grid>
     </Grid>
   )

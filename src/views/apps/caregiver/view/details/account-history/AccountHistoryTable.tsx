@@ -7,7 +7,7 @@ import { useEffect, useState, forwardRef } from 'react'
 import Card from '@mui/material/Card'
 import TextField from '@mui/material/TextField'
 import Grid from '@mui/material/Grid2'
-import { Button, CardHeader, InputAdornment, MenuItem, Typography } from '@mui/material'
+import { Button, CardHeader, CircularProgress, InputAdornment, MenuItem, Typography } from '@mui/material'
 
 // Third-party Imports
 import axios from 'axios'
@@ -74,6 +74,7 @@ const AccountHistoryTable = () => {
   useEffect(() => {
     const fetchUserActions = async () => {
       try {
+        setLoading(true)
         const response = await api.get(`/account-history/caregiver/${id}`)
         setUserActions(response.data)
         setOriginalUserActions(response.data) // Save original data
@@ -167,7 +168,16 @@ const AccountHistoryTable = () => {
                 selected={values.startDate ? new Date(values.startDate) : null}
                 startDate={values.startDate ? new Date(values.startDate) : null}
                 dateFormat={'yyyy-MM-dd'}
-                customInput={<PickersComponent registername='startDate' className='mbe-6' id='event-start-date' />}
+                customInput={
+                  <TextField
+                    fullWidth
+                    size='small'
+                    label='Start Date'
+                    name='startDate'
+                    className='mbe-6'
+                    id='event-start-date'
+                  />
+                }
                 onChange={(date: Date | null) =>
                   date !== null && setValues({ ...values, startDate: date.toISOString() })
                 }
@@ -231,13 +241,14 @@ const AccountHistoryTable = () => {
 
         <div style={{ overflowX: 'auto' }}>
           {loading ? (
-            <Typography>Loading...</Typography>
+            <div className='flex items-center justify-center p-10'>
+              <CircularProgress />
+            </div>
           ) : (
             <ReactTable
               data={userActions}
               columns={newColumns}
               keyExtractor={user => user.id.toString()}
-              enableRowSelect
               enablePagination
               pageSize={25}
               stickyHeader

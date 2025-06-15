@@ -11,7 +11,7 @@ import styles from '../CaregiversTable.module.css'
 import { useParams, useRouter } from 'next/navigation'
 import { GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
 import DataTable from '@/@core/components/mui/DataTable'
-import { List, ListItem, Typography } from '@mui/material'
+import { CircularProgress, List, ListItem, Typography } from '@mui/material'
 import axios from 'axios'
 import { dark, light } from '@mui/material/styles/createPalette'
 import api from '@/utils/api'
@@ -40,11 +40,13 @@ const AssignedServiceTable = () => {
   const [assignedClients, setAssignedClients] = useState<any[]>([])
   const [clientServices, setClientServices] = useState<any>()
   const [rowData, setRowData] = useState<any>()
+  const [loading, setLoading] = useState(false)
   const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
   const token = authUser?.backendAccessToken
 
   const fetchClientService = async (fetchedClients: any) => {
     try {
+      setLoading(true)
       const clientServicesRes: any[] = []
 
       // Use a for...of loop to iterate through fetchedClients
@@ -65,11 +67,14 @@ const AssignedServiceTable = () => {
     } catch (error) {
       console.error('Error fetching client services: ', error)
       // Optionally, handle the error (e.g., set an error state)
+    } finally {
+      setLoading(false) // Ensure loading state is reset
     }
   }
 
   const fetchAssignClient = async () => {
     try {
+      setLoading(true)
       // Fetch assigned clients
       const caregivers = await api.get(`/caregivers/caregiver/${id}`)
       console.log('CAREGIVER USER ', caregivers)
@@ -87,6 +92,8 @@ const AssignedServiceTable = () => {
     } catch (error) {
       console.error('Error fetching assigned clients: ', error)
       // Optionally, handle the error (e.g., set an error state)
+    } finally {
+      setLoading(false) // Ensure loading state is reset
     }
   }
 
@@ -148,20 +155,25 @@ const AssignedServiceTable = () => {
 
   return (
     <Card sx={{ borderRadius: 1, boxShadow: 3, p: 0 }}>
+      {loading ? (
+        <div className='flex items-center justify-center p-10'>
+          <CircularProgress />
+        </div>
+      ) : (
+        <div style={{ overflowX: 'auto' }}>
+          <ReactTable
+            data={data}
+            columns={newColumns}
+            keyExtractor={user => user.id.toString()}
+            enablePagination
+            pageSize={25}
+            stickyHeader
+            maxHeight={600}
+            containerStyle={{ borderRadius: 2 }}
+          />
+        </div>
+      )}
       {/* Table */}
-      <div style={{ overflowX: 'auto' }}>
-        <ReactTable
-          data={data}
-          columns={newColumns}
-          keyExtractor={user => user.id.toString()}
-          enableRowSelect
-          enablePagination
-          pageSize={25}
-          stickyHeader
-          maxHeight={600}
-          containerStyle={{ borderRadius: 2 }}
-        />
-      </div>
     </Card>
   )
 }

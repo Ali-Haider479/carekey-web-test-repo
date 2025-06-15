@@ -12,7 +12,7 @@ import axios from 'axios'
 import { useParams, useRouter } from 'next/navigation'
 import { GridColDef } from '@mui/x-data-grid'
 import DataTable from '@/@core/components/mui/DataTable'
-import { Typography } from '@mui/material'
+import { CircularProgress, Typography } from '@mui/material'
 import AdUnitsIcon from '@mui/icons-material/AdUnits'
 import { calculateHoursWorked } from '@/utils/helperFunctions'
 import api from '@/utils/api'
@@ -30,14 +30,18 @@ const TimeLogTable = () => {
   // State
   const [data, setData] = useState([])
   const [search, setSearch] = useState('')
+  const [loading, setLoading] = useState(false)
 
   const fetchTimeLog = async () => {
     try {
+      setLoading(true)
       const fetchedTimeLog = await api.get(`/time-log/caregiver/${id}`)
       setData(fetchedTimeLog.data)
       console.log('Caregiver Timelog Data --> ', fetchedTimeLog)
     } catch (error) {
       console.error('Error fetching data: ', error)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -153,20 +157,24 @@ const TimeLogTable = () => {
 
   return (
     <Card sx={{ borderRadius: 1, boxShadow: 3, p: 0 }}>
-      {/* Table */}
-      <div style={{ overflowX: 'auto' }}>
-        <ReactTable
-          data={data}
-          columns={newColumns}
-          keyExtractor={user => user.id.toString()}
-          enableRowSelect
-          enablePagination
-          pageSize={25}
-          stickyHeader
-          maxHeight={600}
-          containerStyle={{ borderRadius: 2 }}
-        />
-      </div>
+      {loading ? (
+        <div className='flex items-center justify-center p-10'>
+          <CircularProgress />
+        </div>
+      ) : (
+        <div style={{ overflowX: 'auto' }}>
+          <ReactTable
+            data={data}
+            columns={newColumns}
+            keyExtractor={user => user.id.toString()}
+            enablePagination
+            pageSize={25}
+            stickyHeader
+            maxHeight={600}
+            containerStyle={{ borderRadius: 2 }}
+          />
+        </div>
+      )}
     </Card>
   )
 }

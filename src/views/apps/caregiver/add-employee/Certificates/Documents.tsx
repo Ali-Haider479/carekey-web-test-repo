@@ -149,7 +149,7 @@ const DocumentsPage = forwardRef<{ handleSubmit: any }, Props>(({ onFinish, defa
   return (
     <FormProvider {...methods}>
       <form onSubmit={handleSubmit(onSubmit)} className='w-full'>
-        <PCAUMPITable />
+        {/* <PCAUMPITable /> */}
         {/* Training Certificates Section */}
         <Card className='mt-5'>
           <CardContent>

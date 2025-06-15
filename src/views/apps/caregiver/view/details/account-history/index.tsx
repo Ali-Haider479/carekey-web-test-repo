@@ -6,13 +6,8 @@ import { CaregiverTypes } from '@/types/apps/caregiverTypes'
 
 const AccountHistory = () => {
   return (
-    <div>
-      <div>
-        <AccountHistoryFilters setData={() => {}} />
-      </div>
-      <div className='mt-5'>
-        <AccountHistoryTable />
-      </div>
+    <div className='mt-5'>
+      <AccountHistoryTable />
     </div>
   )
 }

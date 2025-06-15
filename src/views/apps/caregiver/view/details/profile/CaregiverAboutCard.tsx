@@ -1,6 +1,6 @@
 'use client'
 import React, { useEffect, useState } from 'react'
-import { Button, Card, styled, TextField, Typography } from '@mui/material'
+import { Button, Card, MenuItem, styled, TextField, Typography } from '@mui/material'
 import CircularProgress from '@mui/material/CircularProgress'
 import type { CircularProgressProps } from '@mui/material/CircularProgress'
 import { useParams } from 'next/navigation'
@@ -9,6 +9,8 @@ import { AddOutlined, EditOutlined, SaveOutlined } from '@mui/icons-material'
 import { EditableField } from '@/@core/components/custom-inputs/CustomEditableTextField'
 import CloseIcon from '@mui/icons-material/Close'
 import api from '@/utils/api'
+import { string } from 'valibot'
+import { error } from 'console'
 
 const CircularProgressDeterminate = styled(CircularProgress)<CircularProgressProps>({
   color: 'var(--mui-palette-customColors-trackBg)'
@@ -19,15 +21,21 @@ function CaregiverAboutCard() {
   const [data, setData] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [isEdit, setIsEdit] = useState(true)
+  const [accountStatus, setAccountStatus] = useState<string>('')
   const [formData, setFormData] = useState<any>({})
   const [originalFormData, setOriginalFormData] = useState<any>({})
   const [emailError, setEmailError] = useState<boolean>(false)
   const [emergencyEmailError, setEmergencyEmailError] = useState<boolean>(false)
-  const [phoneNumberError, setPhoneNumberError] = useState<boolean>(false)
+  const [primaryPhoneNumberError, setPrimaryPhoneNumberError] = useState<boolean>(false)
+  const [secondaryPhoneNumberError, setSecondaryPhoneNumberError] = useState<boolean>(false)
   const [emergencyPhoneNumberError, setEmergencyPhoneNumberError] = useState<boolean>(false)
+  const [addressError, setAddressError] = useState<boolean>(false)
+  const [cityError, setCityError] = useState<boolean>(false)
+  const [stateError, setStateError] = useState<boolean>(false)
+  const [zipCodeError, setZipCodeError] = useState<boolean>(false)
   const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
 
-  const formatPhoneNumber = (value: string = '') => {
+  const formatPhoneNumber = (value: string) => {
     // Remove all non-digits
     const numbers = value.replace(/\D/g, '')
 
@@ -48,6 +56,10 @@ function CaregiverAboutCard() {
     fetchData()
   }, [])
 
+  console.log('DATA ----->> ', data)
+
+  const residentialAddress = data?.addresses?.find((address: any) => address.address.addressType === 'Residential')
+
   // Initialize form data when data is fetched
   useEffect(() => {
     if (data) {
@@ -62,10 +74,10 @@ function CaregiverAboutCard() {
         secondaryPhoneNumber: data.secondaryPhoneNumber,
         emergencyContactNumber: data.emergencyContactNumber,
         emergencyEmailId: data.emergencyEmailId,
-        address: data.addresses?.[0]?.address?.address,
-        city: data.addresses?.[0]?.address?.city,
-        state: data.addresses?.[0]?.address?.state,
-        zipCode: data.addresses?.[0]?.address?.zipCode,
+        address: residentialAddress?.address?.address,
+        city: residentialAddress?.address?.city,
+        state: residentialAddress?.address?.state,
+        zipCode: residentialAddress?.address?.zipCode,
         payRate: data.payRate,
         payor: data.pcaUMPIInfo?.payor,
         umpi: data.pcaUMPIInfo?.umpi,
@@ -79,16 +91,23 @@ function CaregiverAboutCard() {
         allergies: data.caregiverNotes?.allergies
       }
       setFormData(formattedData)
+      setAccountStatus(data.user?.accountStatus)
       setOriginalFormData(formattedData)
     }
   }, [data])
 
   const handleCancel = () => {
     setFormData({ ...originalFormData }) // Reset form data to original values
+    setAccountStatus(data.user?.accountStatus) // Reset account status to original
     setEmailError(false)
     setEmergencyEmailError(false)
-    setPhoneNumberError(false)
+    setPrimaryPhoneNumberError(false)
+    setSecondaryPhoneNumberError(false)
     setEmergencyPhoneNumberError(false)
+    setAddressError(false)
+    setCityError(false)
+    setZipCodeError(false)
+    setStateError(false)
     setIsEdit(true) // Switch back to view mode
   }
 
@@ -117,12 +136,15 @@ function CaregiverAboutCard() {
       setEmergencyEmailError(false)
     }
 
-    // Apply phone number formatting for specific fields
-    if (['primaryPhoneNumber', 'secondaryPhoneNumber'].includes(name)) {
-      const digits = value.replace(/\D/g, '')
+    // Handle phone number formatting and validation for primary phone number
+    if (name === 'primaryPhoneNumber') {
+      const digits = value.replace(/\D/g, '') // Strip non-digits
+      // Ignore input if digits exceed 10
+      if (digits.length > 10) return
       const formattedNumber = formatPhoneNumber(digits)
 
-      setPhoneNumberError(digits.length !== 10)
+      // Set error only if the field is not empty and does not have 10 digits
+      setPrimaryPhoneNumberError(digits.length >= 0 && digits.length !== 10)
 
       setFormData((prev: any) => ({
         ...prev,
@@ -131,19 +153,82 @@ function CaregiverAboutCard() {
       return
     }
 
-    if (name === 'emergencyContactNumber' && value.length > 0) {
-      const digits = value.replace(/\D/g, '')
+    // Handle phone number formatting and validation for secondary phone number
+    if (name === 'secondaryPhoneNumber') {
+      const digits = value.replace(/\D/g, '') // Strip non-digits
+      // Ignore input if digits exceed 10
+      if (digits.length > 10) return
       const formattedNumber = formatPhoneNumber(digits)
 
-      setEmergencyPhoneNumberError(digits.length !== 10)
+      // Set error only if the field is not empty and does not have 10 digits
+      setSecondaryPhoneNumberError(digits.length > 0 && digits.length !== 10)
 
       setFormData((prev: any) => ({
         ...prev,
         [name]: formattedNumber // Store formatted number in state
       }))
       return
-    } else if (name === 'emergencyContactNumber' && value.length === 0) {
-      setEmergencyPhoneNumberError(false)
+    }
+
+    if (name === 'address') {
+      // Allow only alphanumeric input for address
+      const alphanumericValue = value.replace(/[^a-zA-Z0-9\s.,-]/g, '') // Strip non-alphanumeric characters
+      setAddressError(alphanumericValue.length >= 0 && alphanumericValue.length < 2) // Set error if less than 5 characters
+      setFormData((prev: any) => ({
+        ...prev,
+        [name]: alphanumericValue // Store alphanumeric value in state
+      }))
+      return
+    }
+
+    if (name === 'zipCode') {
+      // Allow only numeric input for zip code
+      const numericValue = value.replace(/[^0-9]/g, '') // Strip non-numeric characters
+      if (numericValue.length > 5) return // Ignore input if length exceeds 5
+      setZipCodeError(numericValue.length >= 0 && numericValue.length !== 5) // Set error if not exactly 5 digits
+      setFormData((prev: any) => ({
+        ...prev,
+        [name]: numericValue // Store numeric value in state
+      }))
+      return
+    }
+
+    if (name === 'city') {
+      // Allow only alphabetic input for city
+      const alphabeticValue = value.replace(/[^a-zA-Z\s]/g, '') // Strip non-alphabetic characters
+      setCityError(alphabeticValue.length >= 0 && alphabeticValue.length < 2) // Set error if less than 2 characters
+      setFormData((prev: any) => ({
+        ...prev,
+        [name]: alphabeticValue // Store alphabetic value in state
+      }))
+      return
+    }
+
+    if (name === 'payRate') {
+      // Allow only numeric input for pay rate
+      const numericValue = value.replace(/[^0-9.]/g, '') // Strip non-numeric characters
+      setFormData((prev: any) => ({
+        ...prev,
+        [name]: numericValue // Store numeric value in state
+      }))
+      return
+    }
+
+    // Handle emergency contact number formatting and validation
+    if (name === 'emergencyContactNumber') {
+      const digits = value.replace(/\D/g, '') // Strip non-digits
+      // Ignore input if digits exceed 10
+      if (digits.length > 10) return
+      const formattedNumber = formatPhoneNumber(digits)
+
+      // Set error only if the field is not empty and does not have 10 digits
+      setEmergencyPhoneNumberError(digits.length > 0 && digits.length !== 10)
+
+      setFormData((prev: any) => ({
+        ...prev,
+        [name]: formattedNumber // Store formatted number in state
+      }))
+      return
     }
 
     // Handle all other fields normally
@@ -157,6 +242,10 @@ function CaregiverAboutCard() {
     try {
       setIsLoading(true)
       await api.put(`/caregivers/${id}`, formData)
+      const accountStatusPayload = {
+        accountStatus: accountStatus
+      }
+      await api.patch(`/user/${data.user.id}`, accountStatusPayload)
       const accountHistoryPayLoad = {
         actionType: 'CaregiverProfileInfoUpdate',
         details: `Caregiver (ID: ${id}) profile information updated by User (ID: ${authUser?.id})`,
@@ -178,23 +267,43 @@ function CaregiverAboutCard() {
     { label: 'First Name', name: 'firstName', value: formData.firstName },
     { label: 'Middle Name', name: 'middleName', value: formData.middleName },
     { label: 'Last Name', name: 'lastName', value: formData.lastName },
-    { label: 'Phone Number', name: 'primaryPhoneNumber', value: formData.primaryPhoneNumber },
+    {
+      label: 'Phone Number',
+      name: 'primaryPhoneNumber',
+      value: formData.primaryPhoneNumber,
+      error: primaryPhoneNumberError
+    },
     { label: 'Date of Birth', name: 'dateOfBirth', value: formData.dateOfBirth },
     { label: 'Email Address', name: 'emailAddress', value: formData.emailAddress },
-    { label: 'Cell Phone Number', name: 'secondaryPhoneNumber', value: formData.secondaryPhoneNumber },
+    {
+      label: 'Cell Phone Number',
+      name: 'secondaryPhoneNumber',
+      value: formData.secondaryPhoneNumber,
+      error: secondaryPhoneNumberError
+    },
     { label: 'Gender', name: 'gender', value: formData.gender }
   ]
 
   const emergencyFields = [
-    { label: 'Emergency Number', name: 'emergencyContactNumber', value: formData.emergencyContactNumber },
-    { label: 'Emergency Email ID', name: 'emergencyEmailId', value: formData.emergencyEmailId }
+    {
+      label: 'Emergency Number',
+      name: 'emergencyContactNumber',
+      value: formData.emergencyContactNumber,
+      error: emergencyPhoneNumberError
+    },
+    {
+      label: 'Emergency Email ID',
+      name: 'emergencyEmailId',
+      value: formData.emergencyEmailId,
+      error: emergencyEmailError
+    }
   ]
 
   const addressFields = [
-    { label: 'Address', name: 'address', value: formData.address },
-    { label: 'City', name: 'city', value: formData.city },
+    { label: 'Address', name: 'address', value: formData.address, error: addressError },
+    { label: 'City', name: 'city', value: formData.city, error: cityError },
     { label: 'State', name: 'state', value: formData.state },
-    { label: 'Zip', name: 'zipCode', value: formData.zipCode },
+    { label: 'Zip Code', name: 'zipCode', value: formData.zipCode, error: zipCodeError },
     { label: 'Pay Rate', name: 'payRate', value: formData.payRate }
   ]
 
@@ -225,7 +334,30 @@ function CaregiverAboutCard() {
               <Typography variant='h2' className='text-2xl font-semibold'>
                 About
               </Typography>
-              <div className='flex items-center justify-center gap-2'>
+              <div className='flex items-center justify-center gap-5'>
+                {isEdit ? (
+                  <div className='flex justify-between text-sm text-gray-500 items-center gap-2'>
+                    <Typography className='text-md text-gray-500'>Status: </Typography>
+                    <Typography
+                      className={`text-md ${data?.user?.accountStatus === 'Active' ? 'bg-green-200 text-green-600' : 'bg-gray-200 text-gray-600'} font-medium rounded-full py-1 px-3`}
+                    >
+                      {accountStatus}
+                    </Typography>
+                  </div>
+                ) : (
+                  <TextField
+                    select
+                    label='Account Status'
+                    value={accountStatus}
+                    onChange={e => setAccountStatus(e.target.value)}
+                    variant='standard'
+                    className='outline-none w-1/3'
+                    disabled={isEdit}
+                  >
+                    <MenuItem value='Active'>Active</MenuItem>
+                    <MenuItem value='Inactive'>Inactive</MenuItem>
+                  </TextField>
+                )}
                 {!isEdit && (
                   <Button
                     variant='contained'
@@ -242,15 +374,15 @@ function CaregiverAboutCard() {
                   className='bg-[#4B0082] text-white'
                   onClick={isEdit ? () => setIsEdit(false) : handleSave}
                   disabled={
-                    emailError
-                      ? true
-                      : emergencyEmailError
-                        ? true
-                        : phoneNumberError
-                          ? true
-                          : emergencyPhoneNumberError
-                            ? true
-                            : false
+                    emailError ||
+                    emergencyEmailError ||
+                    primaryPhoneNumberError ||
+                    secondaryPhoneNumberError ||
+                    emergencyPhoneNumberError ||
+                    addressError ||
+                    cityError ||
+                    stateError ||
+                    zipCodeError
                   }
                 >
                   {isEdit ? 'Edit' : 'Update'}
@@ -273,10 +405,10 @@ function CaregiverAboutCard() {
                     onChange={handleFieldChange}
                     name={field.name}
                     disabled={['emailAddress', 'gender'].includes(field.name) ? true : false}
+                    phoneNumberError={field.error}
                   />
                 ))}
               </div>
-              {phoneNumberError && <Typography className='text-error'>Please enter a valid 10 digit number</Typography>}
             </div>
 
             {/* Emergency Details Section */}
@@ -290,15 +422,11 @@ function CaregiverAboutCard() {
                     isEdit={isEdit}
                     onChange={handleFieldChange}
                     name={field.name}
+                    phoneNumberError={field.error}
+                    emailError={field.error}
                   />
                 ))}
               </div>
-              {emergencyEmailError && (
-                <Typography className='text-error'>Please enter a valid email address</Typography>
-              )}
-              {emergencyPhoneNumberError && (
-                <Typography className='text-error'>Please enter a valid 10 digit number</Typography>
-              )}
             </div>
 
             {/* Additional Details Section */}
@@ -315,6 +443,7 @@ function CaregiverAboutCard() {
                     isEdit={isEdit}
                     onChange={handleFieldChange}
                     name={field.name}
+                    AddressError={field.error}
                   />
                 ))}
               </div>
