@@ -315,19 +315,6 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
 
               <Grid size={{ xs: 12, sm: 4 }}>
                 <CustomTextField
-                  label={'Insurance Code'}
-                  placeHolder={'1234'}
-                  name={'insuranceCode'}
-                  defaultValue={''}
-                  type={'number'}
-                  error={errors.insuranceCode}
-                  control={control}
-                  isRequired={false}
-                />
-              </Grid>
-
-              <Grid size={{ xs: 12, sm: 4 }}>
-                <CustomTextField
                   label={'Client Code'}
                   placeHolder={'please enter Primary Client Code'}
                   name={'clientCode'}

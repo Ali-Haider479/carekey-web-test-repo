@@ -162,7 +162,6 @@ const AddClientStepper = () => {
         emergencyContactName: personalDetails.emergencyContactName,
         emergencyContactNumber: personalDetails.emergencyContactNumber,
         emergencyEmailId: personalDetails.emergencyEmail.toLowerCase(),
-        insuranceCode: personalDetails.insuranceCode,
         clientCode: personalDetails.clientCode,
         medicalSpendDown: personalDetails.medicalSpendDown,
         sharedCare: personalDetails.sharedCare,

@@ -9,7 +9,7 @@ import axios from 'axios'
 import Dropdown from '@/@core/components/mui/DropDown'
 
 import type { ClientTypes } from '@/types/apps/clientTypes'
-import { Avatar, Button, Card, Icon, MenuItem, TextField, Typography, CircularProgress, useTheme } from '@mui/material'
+import { Avatar, Button, Card, Icon, MenuItem, TextField, Typography, CircularProgress } from '@mui/material'
 import { useRouter } from 'next/navigation'
 import ReactTable from '@/@core/components/mui/ReactTable'
 import { useForm } from 'react-hook-form'
@@ -18,18 +18,23 @@ import { USStates } from '@/utils/constants'
 import api from '@/utils/api'
 import ClientTable from './ClientsTable'
 import TanStackTable from '@/@core/components/mui/TanStackTable'
-import { Mail, Phone } from '@mui/icons-material'
+import { Mail, PeopleOutline, Phone } from '@mui/icons-material'
+import { useTheme } from '@emotion/react'
 
 interface DefaultStateType {
   pmiNumber: string
   state: string
+  clientName: string
+  primaryPhoneNumber: string
   serviceTypes: string
 }
 
 const defaultState: DefaultStateType = {
   pmiNumber: '',
   state: '',
-  serviceTypes: ''
+  serviceTypes: '',
+  clientName: '',
+  primaryPhoneNumber: ''
 }
 
 const ClientListApps = () => {
@@ -41,12 +46,15 @@ const ClientListApps = () => {
   const [pmiNumber, setPmiNumber] = useState<DefaultStateType>(defaultState)
   const [state, setState] = useState<DefaultStateType>(defaultState)
   const [serviceTypes, setServiceTypes] = useState<DefaultStateType>(defaultState)
+  const [clientName, setClientName] = useState<DefaultStateType>(defaultState)
+  const [primaryPhoneNumber, setPrimaryPhoneNumber] = useState<DefaultStateType>(defaultState)
+  const [totalClients, setTotalClients] = useState(0)
   const [filterData, setFilterData] = useState()
   const [isLoading, setIsLoading] = useState(true)
 
-  const theme = useTheme()
-
-  console.log('THEME --->>', theme)
+  const theme: any = useTheme()
+  const lightTheme = theme.palette.mode === 'light'
+  const darkTheme = theme.palette.mode === 'dark'
 
   const statusOptions = [
     { key: 1, value: 'pending', displayValue: 'Pending' },
@@ -64,6 +72,7 @@ const ClientListApps = () => {
       const response = await api.get(`/client`)
       console.log('RESPONSE CLIENT DATA', response)
       setData(response.data)
+      setTotalClients(response.data.length)
     } catch (error) {
       console.log('CLIENT DATA ERROR', error)
     } finally {
@@ -144,6 +153,12 @@ const ClientListApps = () => {
       const queryParams = new URLSearchParams()
 
       if (pmiNumber.pmiNumber) queryParams.append('pmiNumber', pmiNumber.pmiNumber)
+      if (primaryPhoneNumber.primaryPhoneNumber) {
+        queryParams.append('primaryPhoneNumber', primaryPhoneNumber.primaryPhoneNumber)
+      }
+      if (clientName.clientName) {
+        queryParams.append('clientName', clientName.clientName)
+      }
       if (state.state) queryParams.append('state', state.state)
       if (serviceTypes.serviceTypes) queryParams.append('serviceType', serviceTypes.serviceTypes)
       queryParams.append('page', '1')
@@ -172,6 +187,8 @@ const ClientListApps = () => {
       setPmiNumber(defaultState)
       setState(defaultState)
       setServiceTypes(defaultState)
+      setClientName(defaultState)
+      setPrimaryPhoneNumber(defaultState)
 
       const response = await api.get(`/client`)
       setDataWithProfileImg(response.data)
@@ -207,7 +224,7 @@ const ClientListApps = () => {
               </div>
             </div>
             <div className='min-w-0 flex-1'>
-              <p className='text-sm font-medium text-gray-900 dark:text-gray-100 truncate'>
+              <p className={`text-sm font-medium ${lightTheme ? 'text-gray-900' : 'text-gray-100'} truncate`}>
                 {(() => {
                   const nameParts = user?.firstName.trim().split(' ')
                   if (nameParts.length >= 2) {
@@ -218,7 +235,9 @@ const ClientListApps = () => {
                   return `${user?.firstName} ${user?.lastName}`
                 })()}
               </p>
-              <p className='text-sm text-gray-500 dark:text-gray-400 truncate'>PMI: {user?.pmiNumber || 'N/A'}</p>
+              <p className={`text-sm ${lightTheme ? 'text-gray-500' : 'text-gray-400'} truncate`}>
+                PMI: {user?.pmiNumber || 'N/A'}
+              </p>
             </div>
           </div>
         )
@@ -306,7 +325,7 @@ const ClientListApps = () => {
     },
     {
       id: 'emailId',
-      label: 'EMAIL ADDRESS',
+      label: 'CONTACT',
       minWidth: 200,
       editable: true,
       sortable: true,
@@ -315,14 +334,22 @@ const ClientListApps = () => {
           <div className='w-full cursor-pointer' onClick={() => handleNext(user?.id)}>
             <div className='space-y-1 min-w-0'>
               <div className='flex items-center text-sm min-w-0'>
-                <Mail className='w-3 h-3 mr-1 text-gray-400 dark:text-gray-500 flex-shrink-0' />
-                <Typography className='text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 truncate transition-colors min-w-0 text-sm'>
+                <Mail
+                  className={`w-3 h-3 mr-1 ${theme.palette.mode === 'light' ? 'text-gray-400' : 'text-gray-500'} flex-shrink-0`}
+                />
+                <Typography
+                  className={`${theme.palette.mode === 'light' ? 'text-indigo-600 hover:text-indigo-800' : 'text-indigo-400 hover:text-indigo-300'} truncate transition-colors min-w-0 text-sm`}
+                >
                   {user?.emailId ? user?.emailId : 'N/A'}
                 </Typography>
               </div>
               <div className='flex items-center text-sm min-w-0'>
-                <Phone className='w-3 h-3 mr-1 text-gray-400 dark:text-gray-500 flex-shrink-0' />
-                <Typography className='text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 transition-colors whitespace-nowrap text-sm'>
+                <Phone
+                  className={`w-3 h-3 mr-1 ${theme.palette.mode === 'light' ? 'text-gray-400' : 'text-gray-500'} flex-shrink-0`}
+                />
+                <Typography
+                  className={`${lightTheme ? 'text-gray-600 hover:text-gray-800' : 'text-gray-300 hover:text-gray-100'} transition-colors whitespace-nowrap text-sm`}
+                >
                   {user?.primaryPhoneNumber}
                 </Typography>
               </div>
@@ -344,7 +371,22 @@ const ClientListApps = () => {
               </span>
             </Grid>
             <Grid container spacing={6} marginTop={4}>
-              <Grid size={{ xs: 12, sm: 4 }}>
+              <Grid size={{ xs: 12, sm: 3 }}>
+                <Typography variant='h6' className='mb-2'>
+                  Client Name
+                </Typography>
+                <CustomTextField
+                  fullWidth
+                  id='client Name'
+                  placeholder='Client Name'
+                  value={clientName.clientName}
+                  onChange={e => setClientName({ ...clientName, clientName: e.target.value })}
+                  slotProps={{
+                    select: { displayEmpty: true }
+                  }}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 3 }}>
                 <Typography variant='h6' className='mb-2'>
                   PMI Number
                 </Typography>
@@ -359,29 +401,7 @@ const ClientListApps = () => {
                   }}
                 />
               </Grid>
-              <Grid size={{ xs: 12, sm: 4 }}>
-                <Typography variant='h6' className='mb-2'>
-                  State
-                </Typography>
-                <CustomTextField
-                  select
-                  fullWidth
-                  id='caregiver-state'
-                  placeholder='Caregiver State'
-                  value={state.state}
-                  onChange={e => setState({ ...state, state: e.target.value })}
-                  slotProps={{
-                    select: { displayEmpty: true }
-                  }}
-                >
-                  {USStates.map((state: any) => (
-                    <MenuItem key={state.key} value={state.value}>
-                      {state.optionString}
-                    </MenuItem>
-                  ))}
-                </CustomTextField>
-              </Grid>
-              <Grid size={{ xs: 12, sm: 4 }}>
+              <Grid size={{ xs: 12, sm: 3 }}>
                 <Typography variant='h6' className='mb-2'>
                   Service types
                 </Typography>
@@ -400,14 +420,37 @@ const ClientListApps = () => {
                   <MenuItem value={'Individualized Home Supports (IHS)'}>Individualized Home Supports (IHS)</MenuItem>
                 </CustomTextField>
               </Grid>
+              <Grid size={{ xs: 12, sm: 3 }}>
+                <Typography variant='h6' className='mb-2'>
+                  Client Phone Number
+                </Typography>
+                <CustomTextField
+                  fullWidth
+                  id='primary-phone-number'
+                  placeholder='Client Phone Number'
+                  value={primaryPhoneNumber.primaryPhoneNumber}
+                  onChange={e => setPrimaryPhoneNumber({ ...primaryPhoneNumber, primaryPhoneNumber: e.target.value })}
+                  slotProps={{
+                    select: { displayEmpty: true }
+                  }}
+                />
+              </Grid>
               <Grid container spacing={12}>
                 <Grid size={{ xs: 12, sm: 4 }}>
-                  <Button type='submit' variant='outlined' className='p-1'>
+                  <Button
+                    type='submit'
+                    variant='contained'
+                    className={`p-1 ${lightTheme ? 'bg-[#4B0082]' : 'bg-[#7112B7]'}`}
+                  >
                     Apply
                   </Button>
                 </Grid>
                 <Grid size={{ xs: 12, sm: 4 }}>
-                  <Button onClick={handleReset} color='error' variant='outlined' className='p-1'>
+                  <Button
+                    onClick={handleReset}
+                    variant='contained'
+                    className={`p-1 ${lightTheme ? 'bg-[#FF5B35]' : 'bg-[#FF5B3F]'}`}
+                  >
                     Reset
                   </Button>
                 </Grid>
@@ -418,32 +461,26 @@ const ClientListApps = () => {
         <Grid size={{ xs: 12 }}>
           {/* <ClientTable isLoading={isLoading} data={data} /> */}
           <Card sx={{ borderRadius: 1, boxShadow: 3, p: 0 }}>
-            <Grid sx={{ p: 5 }}>
-              <div className='flex flex-row justify-between'>
-                <TextField
-                  className='w-[50%]' // Ensures the input takes up most of the width
-                  placeholder='Search name'
-                  variant='outlined'
-                  size='small'
-                  value={search}
-                  onChange={e => setSearch(e.target.value)}
-                  InputProps={{
-                    endAdornment: (
-                      <span className='text-gray-500 ml-2 mt-2'>
-                        <i className='bx bx-search' />
-                      </span>
-                    )
-                  }}
-                />
+            <Grid
+              container
+              spacing={2}
+              sx={{ mb: 2, pt: 4, pb: 2, px: 5, display: 'flex', justifyContent: 'flex-end' }}
+            >
+              <Grid size={{ xs: 12, sm: 6, md: 6 }} sx={{ display: 'flex', justifyContent: 'flex-end', gap: 5 }}>
+                <span
+                  className={`inline-flex border-[1px] items-center px-3 py-1 rounded-full text-sm font-medium ${theme.palette.mode === 'light' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' : 'bg-indigo-900/30 text-indigo-300 border-indigo-700'}`}
+                >
+                  <PeopleOutline className='w-4 h-4 mr-1' />
+                  {totalClients} {totalClients === 1 ? 'Client' : 'Clients'}
+                </span>
                 <Button
+                  onClick={() => router.push('/en/apps/client/add-client')}
                   variant='contained'
-                  onClick={() => {
-                    router.push('/en/apps/client/add-client')
-                  }}
+                  sx={{ backgroundColor: lightTheme ? '#4B0082' : '#7112B7', color: '#fff', fontWeight: 'bold' }}
                 >
                   Add Client
                 </Button>
-              </div>
+              </Grid>
             </Grid>
             {isLoading ? (
               <div className='flex items-center justify-center p-10'>
@@ -464,7 +501,7 @@ const ClientListApps = () => {
                       router.push('/en/apps/client/add-client')
                     }}
                     className='mt-4'
-                    sx={{ backgroundColor: '#4B0082' }}
+                    sx={{ backgroundColor: lightTheme ? '#4B0082' : '#7112B7' }}
                   >
                     Add New Client
                   </Button>

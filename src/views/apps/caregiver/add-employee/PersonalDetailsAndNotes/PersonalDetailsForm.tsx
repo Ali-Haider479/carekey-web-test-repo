@@ -132,6 +132,7 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                     control={control}
                     minLength={10}
                     maxLength={10}
+                    isRequired={false}
                   />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 4 }}>

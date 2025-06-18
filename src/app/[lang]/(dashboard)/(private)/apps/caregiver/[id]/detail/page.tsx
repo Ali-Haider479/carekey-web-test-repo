@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic'
 
 // Data Imports
 import CaregiverDetails from '@/views/apps/caregiver/view/details'
+import CG_Documents from '@/views/apps/caregiver/view/details/documents'
 
 const CaregiverProfileTab = dynamic(() => import('@/views/apps/caregiver/view/details/profile'))
 const CaregiverAccHistoryTab = dynamic(() => import('@/views/apps/caregiver/view/details/account-history'))
@@ -17,7 +18,8 @@ const tabContentList = () => ({
   'account-history': (props: any) => <CaregiverAccHistoryTab {...props} />,
   'assigned-service': (props: any) => <CaregiverAssignedServiceTab {...props} />,
   'time-log': (props: any) => <CaregiverTimeLogTab {...props} />,
-  schedule: (props: any) => <CaregiverScheduleTab {...props} />
+  schedule: (props: any) => <CaregiverScheduleTab {...props} />,
+  documents: (props: any) => <CG_Documents {...props} />
 })
 
 const CareGiverViewTab = () => {

@@ -68,13 +68,15 @@ const CaregiverDetails = ({ tabContentList }: BottomBodyProps) => {
       case 'profile':
         return 'Caregiver - Profile'
       case 'account-history':
-        return 'Caregiver - Account History'
+        return 'Caregiver - Logs'
       case 'assigned-service':
         return 'Caregiver - Assigned Services'
       case 'time-log':
         return 'Caregiver - Time Log'
       case 'schedule':
         return 'Caregiver - Schedule'
+      case 'documents':
+        return 'Caregiver - Documents'
       default:
         return 'Caregiver'
     }
@@ -113,10 +115,11 @@ const CaregiverDetails = ({ tabContentList }: BottomBodyProps) => {
           <Grid size={{ xs: 12 }}>
             <CustomTabList onChange={handleChange} variant='scrollable' pill='true'>
               <Tab value='profile' label='PROFILE' />
-              <Tab value='account-history' label='ACC HISTORY' />
+              <Tab value='account-history' label='LOGS' />
               <Tab value='assigned-service' label='ASSIGNED SERVICE' />
               <Tab value='time-log' label='VIEW TIME LOG' />
               <Tab value='schedule' label='VIEW SCHEDULE' />
+              <Tab value='documents' label='DOCUMENTS' />
             </CustomTabList>
           </Grid>
           <Grid size={{ xs: 12 }}>

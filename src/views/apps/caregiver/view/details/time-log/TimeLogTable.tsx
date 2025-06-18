@@ -12,7 +12,7 @@ import axios from 'axios'
 import { useParams, useRouter } from 'next/navigation'
 import { GridColDef } from '@mui/x-data-grid'
 import DataTable from '@/@core/components/mui/DataTable'
-import { CircularProgress, Typography } from '@mui/material'
+import { Chip, CircularProgress, Typography } from '@mui/material'
 import AdUnitsIcon from '@mui/icons-material/AdUnits'
 import { calculateHoursWorked } from '@/utils/helperFunctions'
 import api from '@/utils/api'
@@ -148,10 +148,22 @@ const TimeLogTable = () => {
       }
     },
     {
-      id: 'logsVia',
-      label: 'LOGGED VIA',
+      id: 'manualEntry',
+      label: 'MANUAL',
       minWidth: 170,
-      render: () => <AdUnitsIcon className='my-3' />
+      render: item => (
+        <Chip
+          label={item?.manualEntry === true ? 'Yes' : 'No'}
+          sx={{
+            backgroundColor: item?.manualEntry === true ? '#72E1281F' : '#FDB5281F',
+            borderRadius: '50px',
+            color: item?.manualEntry === true ? '#71DD37' : '#FFAB00',
+            '& .MuiChip-label': {
+              padding: '0 10px'
+            }
+          }}
+        />
+      )
     }
   ]
 

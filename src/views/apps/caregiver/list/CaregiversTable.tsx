@@ -73,6 +73,9 @@ const CaregiverTable = ({ data, isLoading, isUserDeleted, setIsUserDeleted, tota
 
   const theme: any = useTheme()
 
+  const lightTheme = theme.palette.mode === 'light'
+  const darkTheme = theme.palette.mode === 'dark'
+
   const router = useRouter()
 
   useEffect(() => {
@@ -352,7 +355,9 @@ const CaregiverTable = ({ data, isLoading, isUserDeleted, setIsUserDeleted, tota
                 <Phone
                   className={`w-3 h-3 mr-1 ${theme.palette.mode === 'light' ? 'text-gray-400' : 'text-gray-500'} flex-shrink-0`}
                 />
-                <Typography className='text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 transition-colors whitespace-nowrap text-sm'>
+                <Typography
+                  className={`${lightTheme ? 'text-gray-600 hover:text-gray-800' : 'text-gray-300 hover:text-gray-100'} transition-colors whitespace-nowrap text-sm`}
+                >
                   {user?.primaryPhoneNumber}
                 </Typography>
               </div>
@@ -461,35 +466,18 @@ const CaregiverTable = ({ data, isLoading, isUserDeleted, setIsUserDeleted, tota
       {/* Search Bar and Add Employee Buttons */}
       <CustomAlert AlertProps={alertProps} openAlert={alertOpen} setOpenAlert={setAlertOpen} />
 
-      <Grid container spacing={2} alignItems='center' sx={{ mb: 2, p: 10 }}>
-        <Grid size={{ xs: 12, md: 6 }}>
-          <TextField
-            fullWidth
-            placeholder='Search caregiver by name'
-            variant='outlined'
-            size='small'
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            InputProps={{
-              endAdornment: (
-                <span style={{ color: '#757575', marginLeft: '8px', marginTop: 8 }}>
-                  <i className='bx-search' />
-                </span>
-              )
-            }}
-          />
-        </Grid>
-        <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex', justifyContent: 'flex-end', gap: 5 }}>
+      <Grid container spacing={2} sx={{ mb: 2, pt: 0, pb: 2, px: 5, display: 'flex', justifyContent: 'flex-end' }}>
+        <Grid size={{ xs: 12, sm: 6, md: 6 }} sx={{ display: 'flex', justifyContent: 'flex-end', gap: 5 }}>
           <span
             className={`inline-flex border-[1px] items-center px-3 py-1 rounded-full text-sm font-medium ${theme.palette.mode === 'light' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' : 'bg-indigo-900/30 text-indigo-300 border-indigo-700'}`}
           >
             <PeopleOutline className='w-4 h-4 mr-1' />
-            {totalCaregivers} caregivers
+            {totalCaregivers} {totalCaregivers === 1 ? 'Caregiver' : 'Caregivers'}
           </span>
           <Button
             onClick={() => router.push('/en/apps/caregiver/add-employee')}
             variant='contained'
-            sx={{ backgroundColor: '#4B0082', color: '#fff', fontWeight: 'bold' }}
+            sx={{ backgroundColor: lightTheme ? '#4B0082' : '#7112B7', color: '#fff', fontWeight: 'bold' }}
           >
             Add Caregiver
           </Button>
@@ -516,8 +504,8 @@ const CaregiverTable = ({ data, isLoading, isUserDeleted, setIsUserDeleted, tota
                 onClick={() => {
                   router.push('/en/apps/caregiver/add-employee')
                 }}
-                className='mt-4'
-                sx={{ backgroundColor: '#4B0082' }}
+                className={`mt-4`}
+                sx={{ backgroundColor: lightTheme ? '#4B0082' : '#7112B7' }}
               >
                 Add New Caregiver
               </Button>
@@ -529,7 +517,7 @@ const CaregiverTable = ({ data, isLoading, isUserDeleted, setIsUserDeleted, tota
             data={filteredData}
             keyExtractor={user => user.id.toString()}
             enablePagination
-            pageSize={25}
+            pageSize={10}
             stickyHeader
             maxHeight={600}
             containerStyle={{ borderRadius: 2 }}
@@ -550,10 +538,10 @@ const CaregiverTable = ({ data, isLoading, isUserDeleted, setIsUserDeleted, tota
         <div className='flex items-center justify-center w-full px-5 flex-col'>
           <form onSubmit={handleDelete}>
             <div>
-              <h2 className='text-xl font-semibold mt-10 mb-6'>De-activate User</h2>
+              <h2 className='text-xl font-semibold mt-5 mb-4'>Set User to Inactive</h2>
             </div>
             <div>
-              <Typography>Are you sure you want to de-activate this user?</Typography>
+              <Typography className='mb-7'>Are you sure you want to set this user's status to Inactive?</Typography>
             </div>
             <div className='flex gap-4 justify-end mt-4 mb-4 w-full'>
               <Button variant='outlined' color='secondary' onClick={handleModalClose}>

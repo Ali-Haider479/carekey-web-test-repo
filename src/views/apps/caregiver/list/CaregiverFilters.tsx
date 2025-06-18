@@ -18,17 +18,22 @@ import axios from 'axios'
 import { Button, Typography } from '@mui/material'
 import { USStates } from '@/utils/constants'
 import api from '@/utils/api'
+import { useTheme } from '@emotion/react'
 
 interface DefaultStateType {
   accountStatus: string
   caregiverUmpi: string
+  primaryPhoneNumber: string
+  caregiverName: string
   state: string
 }
 
 const defaultState: DefaultStateType = {
-  accountStatus: '',
+  accountStatus: 'All',
   caregiverUmpi: '',
-  state: ''
+  state: '',
+  primaryPhoneNumber: '',
+  caregiverName: ''
 }
 
 interface CaregiverFiltersProps {
@@ -46,11 +51,14 @@ const CaregiverFilters = ({
 }) => {
   // States
   const [item, setItem] = useState<CaregiverTypes['item']>('')
-  const [accountStatus, setAccountStatus] = useState<DefaultStateType>(defaultState)
-  const [caregiverUmpi, setCaregiverUmpi] = useState<DefaultStateType>(defaultState)
-  const [caregiverState, setCaregiverState] = useState<DefaultStateType>(defaultState)
+  const [filters, setFilters] = useState<DefaultStateType>(defaultState)
 
   const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
+
+  const theme: any = useTheme()
+
+  const lightTheme = theme.palette.mode === 'light'
+  const darkTheme = theme.palette.mode === 'dark'
 
   console.log('Auth User', authUser)
 
@@ -65,19 +73,34 @@ const CaregiverFilters = ({
       const queryParams = new URLSearchParams()
 
       // Add accountStatus filter if provided
-      if (accountStatus.accountStatus) {
-        queryParams.append('accountStatus', accountStatus.accountStatus)
+      if (filters.accountStatus && filters.accountStatus !== 'All') {
+        queryParams.append('accountStatus', filters.accountStatus)
       }
 
       // Add caregiverUMPI filter if provided
-      if (caregiverUmpi.caregiverUmpi) {
-        queryParams.append('caregiverUMPI', caregiverUmpi.caregiverUmpi)
+      if (filters.caregiverUmpi) {
+        queryParams.append('caregiverUMPI', filters.caregiverUmpi)
       }
 
-      // Add state filter if provided
-      if (caregiverState.state) {
-        queryParams.append('state', caregiverState.state)
+      if (filters.primaryPhoneNumber) {
+        queryParams.append('primaryPhoneNumber', filters.primaryPhoneNumber)
       }
+
+      if (filters.caregiverName) {
+        queryParams.append('caregiverName', filters.caregiverName)
+      }
+
+      if (
+        filters.accountStatus === 'All' &&
+        !filters.caregiverName &&
+        !filters.caregiverUmpi &&
+        !filters.primaryPhoneNumber
+      ) {
+        const response = await api.get(`/caregivers/${authUser?.tenant?.id}/tenant`)
+        onFilterApplied(response.data)
+        return
+      }
+
       queryParams.append('page', '1')
       queryParams.append('limit', '10')
 
@@ -97,10 +120,7 @@ const CaregiverFilters = ({
 
   const handleReset = async () => {
     try {
-      // Reset all filter states to default empty values
-      setAccountStatus(defaultState)
-      setCaregiverUmpi(defaultState)
-      setCaregiverState(defaultState)
+      setFilters(defaultState)
       setItem('')
 
       // Fetch all data without filters
@@ -111,6 +131,8 @@ const CaregiverFilters = ({
     }
   }
 
+  console.log('Filtering with params: ', filters)
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} autoComplete='off'>
       <Card sx={{ borderRadius: 1, boxShadow: 3, p: 0, padding: 5 }}>
@@ -120,7 +142,22 @@ const CaregiverFilters = ({
           </span>
         </Grid>
         <Grid container spacing={6} marginTop={4}>
-          <Grid size={{ xs: 12, sm: 4 }}>
+          <Grid size={{ xs: 12, sm: 3 }}>
+            <Typography variant='h6' className='mb-2'>
+              Caregiver Name
+            </Typography>
+            <CustomTextField
+              fullWidth
+              id='caregiver-name'
+              placeholder='Caregiver Name'
+              value={filters.caregiverName}
+              onChange={e => setFilters({ ...filters, caregiverName: e.target.value })}
+              slotProps={{
+                select: { displayEmpty: true }
+              }}
+            />
+          </Grid>
+          <Grid size={{ xs: 12, sm: 3 }}>
             <Typography variant='h6' className='mb-2'>
               Account Status
             </Typography>
@@ -129,17 +166,18 @@ const CaregiverFilters = ({
               fullWidth
               placeholder='Account Status'
               id='select-status'
-              value={accountStatus.accountStatus}
-              onChange={e => setAccountStatus({ ...accountStatus, accountStatus: e.target.value })}
+              value={filters.accountStatus}
+              onChange={e => setFilters({ ...filters, accountStatus: e.target.value })}
               slotProps={{
                 select: { displayEmpty: true }
               }}
             >
+              <MenuItem value='All'>All</MenuItem>
               <MenuItem value='Active'>Active</MenuItem>
               <MenuItem value='Inactive'>Inactive</MenuItem>
             </CustomTextField>
           </Grid>
-          <Grid size={{ xs: 12, sm: 4 }}>
+          <Grid size={{ xs: 12, sm: 3 }}>
             <Typography variant='h6' className='mb-2'>
               Caregiver UMPI
             </Typography>
@@ -147,14 +185,29 @@ const CaregiverFilters = ({
               fullWidth
               id='caregiver-Umpi'
               placeholder='Caregiver Umpi'
-              value={caregiverUmpi.caregiverUmpi}
-              onChange={e => setCaregiverUmpi({ ...caregiverUmpi, caregiverUmpi: e.target.value })}
+              value={filters.caregiverUmpi}
+              onChange={e => setFilters({ ...filters, caregiverUmpi: e.target.value })}
               slotProps={{
                 select: { displayEmpty: true }
               }}
             />
           </Grid>
-          <Grid size={{ xs: 12, sm: 4 }}>
+          <Grid size={{ xs: 12, sm: 3 }}>
+            <Typography variant='h6' className='mb-2'>
+              Caregiver Phone Number
+            </Typography>
+            <CustomTextField
+              fullWidth
+              id='primary-phone-number'
+              placeholder='Caregiver Phone Number'
+              value={filters.primaryPhoneNumber}
+              onChange={e => setFilters({ ...filters, primaryPhoneNumber: e.target.value })}
+              slotProps={{
+                select: { displayEmpty: true }
+              }}
+            />
+          </Grid>
+          {/* <Grid size={{ xs: 12, sm: 4 }}>
             <Typography variant='h6' className='mb-2'>
               State
             </Typography>
@@ -175,15 +228,24 @@ const CaregiverFilters = ({
                 </MenuItem>
               ))}
             </CustomTextField>
-          </Grid>
+          </Grid> */}
           <Grid container spacing={12}>
             <Grid size={{ xs: 12, sm: 4 }}>
-              <Button type='submit' variant='outlined' className='p-1'>
+              <Button
+                type='submit'
+                variant='contained'
+                className={`p-1 ${lightTheme ? 'bg-[#4B0082]' : 'bg-[#7112B7]'}`}
+              >
                 Apply
               </Button>
             </Grid>
             <Grid size={{ xs: 12, sm: 4 }}>
-              <Button onClick={handleReset} color='error' variant='outlined' className='p-1'>
+              <Button
+                onClick={handleReset}
+                variant='contained'
+                color='error'
+                className={`p-1 ${lightTheme ? 'bg-[#FF5B35]' : 'bg-[#FF5B3F]'}`}
+              >
                 Reset
               </Button>
             </Grid>

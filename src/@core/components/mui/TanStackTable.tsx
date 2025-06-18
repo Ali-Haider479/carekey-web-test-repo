@@ -11,7 +11,8 @@ import {
   getSortedRowModel,
   SortingState,
   useReactTable,
-  VisibilityState
+  VisibilityState,
+  getPaginationRowModel
 } from '@tanstack/react-table'
 
 export interface Column<T> {
@@ -93,7 +94,7 @@ function TanStackTable<T extends { subRows?: T[] }>({
 }: ReactTableProps<T>) {
   const [selected, setSelected] = useState<string[]>([])
   const [expanded, setExpanded] = useState<string[]>([])
-  const [page, setPage] = useState(externalPage)
+  const [pageIndex, setPageIndex] = useState(externalPage)
   const [rowsPerPage, setRowsPerPage] = useState(pageSize)
   const [sortConfig, setSortConfig] = useState<{ columnId: string; direction: 'asc' | 'desc' } | null>({
     columnId: caregiverTable ? 'caregiverName' : 'clientName',
@@ -139,7 +140,11 @@ function TanStackTable<T extends { subRows?: T[] }>({
     state: {
       globalFilter,
       sorting,
-      columnVisibility
+      columnVisibility,
+      pagination: {
+        pageIndex,
+        pageSize: 10 // Hardcode to 10 rows per page
+      }
     },
     columnResizeMode: 'onChange',
     enableColumnResizing: true,
@@ -157,6 +162,18 @@ function TanStackTable<T extends { subRows?: T[] }>({
     globalFilterFn,
     filterFns: {
       fuzzy: globalFilterFn
+    },
+    onPaginationChange: updater => {
+      if (typeof updater === 'function') {
+        const newState = updater({ pageIndex, pageSize: rowsPerPage })
+        setPageIndex(newState.pageIndex)
+        setRowsPerPage(newState.pageSize)
+        onPageChange?.(newState.pageIndex)
+      } else {
+        setPageIndex(updater.pageIndex)
+        setRowsPerPage(updater.pageSize)
+        onPageChange?.(updater.pageIndex)
+      }
     }
   })
 
@@ -167,7 +184,7 @@ function TanStackTable<T extends { subRows?: T[] }>({
   }, [editingId])
 
   useEffect(() => {
-    setPage(externalPage)
+    setPageIndex(externalPage)
   }, [externalPage])
 
   // Initialize default sorting by id in ascending order
@@ -388,23 +405,19 @@ function TanStackTable<T extends { subRows?: T[] }>({
   }
 
   const handleChangePage = (event: unknown, newPage: number) => {
-    setPage(newPage)
+    setPageIndex(newPage)
+    table.setPageIndex(newPage) // Sync with TanStack Table
     onPageChange?.(newPage)
   }
 
+  // Update handleChangeRowsPerPage to work with TanStack Table
   const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setRowsPerPage(parseInt(event.target.value, 10))
-    setPage(0)
+    const newRowsPerPage = parseInt(event.target.value, 10)
+    setRowsPerPage(newRowsPerPage)
+    setPageIndex(0) // Reset to first page
+    table.setPageSize(newRowsPerPage) // Sync with TanStack Table
     onPageChange?.(0)
   }
-
-  const totalPages = Math.ceil(data.length / rowsPerPage)
-
-  // Apply sorting to data
-  const sortedData = getSortedData(data)
-  const paginatedData = enablePagination
-    ? sortedData.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-    : sortedData
 
   return (
     <>
@@ -506,15 +519,6 @@ function TanStackTable<T extends { subRows?: T[] }>({
       </div>
 
       {enablePagination && (
-        // <TablePagination
-        //   rowsPerPageOptions={[25]}
-        //   component='div'
-        //   count={data.length}
-        //   rowsPerPage={rowsPerPage}
-        //   page={page}
-        //   onPageChange={handleChangePage}
-        //   onRowsPerPageChange={handleChangeRowsPerPage}
-        // />
         <div
           className={`${theme.palette.mode === 'light' ? 'bg-white border-gray-200' : 'bg-[#2b2c3f] border-gray-700'} px-6 py-3 border-t flex items-center justify-between`}
         >
@@ -522,7 +526,8 @@ function TanStackTable<T extends { subRows?: T[] }>({
             className={`flex items-center text-sm ${theme.palette.mode === 'light' ? 'text-gray-700' : 'text-gray-300'}`}
           >
             <span>
-              Showing {table.getRowModel().rows.length} of {data.length} {caregiverTable ? 'caregivers' : 'clients'}
+              Showing {table.getRowModel().rows.length} of {table.getCoreRowModel().rows.length}{' '}
+              {caregiverTable ? 'caregivers' : 'clients'}
             </span>
             {table.getSelectedRowModel().rows.length > 0 && (
               <span className='ml-4 text-indigo-600 dark:text-indigo-400'>
@@ -532,19 +537,19 @@ function TanStackTable<T extends { subRows?: T[] }>({
           </div>
           <div className='flex items-center space-x-2'>
             <button
-              onClick={() => handleChangePage(null, page - 1)}
-              disabled={page === 0}
-              className={`bg-transparent cursor-pointer px-3 py-1 text-sm ${theme.palette.mode === 'light' ? 'text-gray-500 hover:text-gray-700' : 'text-gray-400 hover:text-gray-200'} disabled:opacity-50 transition-colors`}
+              onClick={() => table.previousPage()}
+              disabled={!table.getCanPreviousPage()}
+              className={`bg-transparent ${table.getCanPreviousPage() && 'cursor-pointer'} px-3 py-1 text-sm ${theme.palette.mode === 'light' ? 'text-gray-500 hover:text-gray-700' : 'text-gray-400 hover:text-gray-200'} disabled:opacity-50 transition-colors`}
             >
               Previous
             </button>
             <span className={`px-3 py-1 text-sm ${theme.palette.mode === 'light' ? 'text-gray-700' : 'text-gray-300'}`}>
-              Page 1 of 1
+              Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
             </span>
             <button
-              onClick={() => handleChangePage(null, page + 1)}
-              disabled={page === totalPages - 1}
-              className={`bg-transparent cursor-pointer px-3 py-1 text-sm ${theme.palette.mode === 'light' ? 'text-gray-500 hover:text-gray-700' : 'text-gray-400 hover:text-gray-200'} disabled:opacity-50 transition-colors`}
+              onClick={() => table.nextPage()}
+              disabled={!table.getCanNextPage()}
+              className={`bg-transparent ${table.getCanNextPage() && 'cursor-pointer'} px-3 py-1 text-sm ${theme.palette.mode === 'light' ? 'text-gray-500 hover:text-gray-700' : 'text-gray-400 hover:text-gray-200'} disabled:opacity-50 transition-colors`}
             >
               Next
             </button>

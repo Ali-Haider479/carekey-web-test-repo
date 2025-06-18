@@ -23,6 +23,7 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
 import { formatDateTime } from '@/utils/helperFunctions'
 import api from '@/utils/api'
 import ReactTable from '@/@core/components/mui/ReactTable'
+import { useTheme } from '@emotion/react'
 
 interface DefaultStateType {
   actionType: string
@@ -70,6 +71,10 @@ const AccountHistoryTable = () => {
   const [originalUserActions, setOriginalUserActions] = useState([]) // Store original data for reset
   const [loading, setLoading] = useState(true)
   const { id } = useParams()
+
+  const theme: any = useTheme()
+  const lightTheme = theme.palette.mode === 'light'
+  const darkTheme = theme.palette.mode === 'dark'
 
   useEffect(() => {
     const fetchUserActions = async () => {
@@ -202,10 +207,23 @@ const AccountHistoryTable = () => {
                 <MenuItem value='ClientAssignedToCaregiver'>Client Assign</MenuItem>
               </TextField>
             </Grid>
-            <Grid container spacing={2}>
+            <Grid container spacing={13}>
               <Grid size={{ xs: 12, sm: 4 }}>
-                <Button type='submit' variant='contained' className='px-1'>
+                <Button
+                  type='submit'
+                  variant='contained'
+                  className={`px-1 ${lightTheme ? 'bg-[#4B0082]' : 'bg-[#7112B7]'}`}
+                >
                   Apply
+                </Button>
+              </Grid>
+              <Grid size={{ xs: 12, sm: 4 }}>
+                <Button
+                  onClick={handleReset}
+                  variant='contained'
+                  className={`px-1 ${lightTheme ? 'bg-[#FF5B35]' : 'bg-[#FF5B3F]'}`}
+                >
+                  Reset
                 </Button>
               </Grid>
               {/* <Grid size={{ xs: 12, sm: 4 }}>
@@ -250,7 +268,7 @@ const AccountHistoryTable = () => {
               columns={newColumns}
               keyExtractor={user => user.id.toString()}
               enablePagination
-              pageSize={25}
+              pageSize={20}
               stickyHeader
               maxHeight={600}
               containerStyle={{ borderRadius: 2 }}
