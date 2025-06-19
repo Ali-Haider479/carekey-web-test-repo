@@ -11,19 +11,12 @@ import styles from '../CaregiversTable.module.css'
 import { useParams, useRouter } from 'next/navigation'
 import { GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
 import DataTable from '@/@core/components/mui/DataTable'
-import { CircularProgress, List, ListItem, Typography } from '@mui/material'
+import { CircularProgress, List, ListItem, Switch, Typography } from '@mui/material'
 import axios from 'axios'
 import { dark, light } from '@mui/material/styles/createPalette'
 import api from '@/utils/api'
 import ReactTable from '@/@core/components/mui/ReactTable'
-
-// type AccountHistory = {
-//   key: number
-//   dateAndTime: string
-//   admin: string
-//   section: string
-//   changesMade: string
-// }
+import { useTheme } from '@emotion/react'
 
 interface Column {
   id: string
@@ -43,6 +36,27 @@ const AssignedServiceTable = () => {
   const [loading, setLoading] = useState(false)
   const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
   const token = authUser?.backendAccessToken
+
+  const theme: any = useTheme()
+  const lightTheme = theme.palette.mode === 'light'
+
+  const label = { inputProps: { 'aria-label': 'Switch demo' } }
+
+  const updateEVV = async (item: any) => {
+    try {
+      console.log('Item to Edit: ', item)
+      const updateEVVPayload = {
+        evvEnforce: !item?.evvEnforce // Toggle the current value
+      }
+      const updateRes = await api.put(`/client/client-service/${item.id}`, updateEVVPayload)
+      console.log('EVV Updated Successfully:', updateRes.data)
+
+      // Refresh data after successful update
+      await fetchAssignClient()
+    } catch (error) {
+      console.error('Error Updating evv: ', error)
+    }
+  }
 
   const fetchClientService = async (fetchedClients: any) => {
     try {
@@ -66,9 +80,8 @@ const AssignedServiceTable = () => {
       setClientServices(clientServicesRes)
     } catch (error) {
       console.error('Error fetching client services: ', error)
-      // Optionally, handle the error (e.g., set an error state)
     } finally {
-      setLoading(false) // Ensure loading state is reset
+      setLoading(false)
     }
   }
 
@@ -78,7 +91,6 @@ const AssignedServiceTable = () => {
       // Fetch assigned clients
       const caregivers = await api.get(`/caregivers/caregiver/${id}`)
       console.log('CAREGIVER USER ', caregivers)
-      // setCurrentUser(caregivers?.data?.user)
       const clientResponse = await api.get(`/user/clientUsers/${caregivers?.data?.user?.id}`)
       const fetchedClient = clientResponse.data
 
@@ -91,29 +103,34 @@ const AssignedServiceTable = () => {
       await fetchClientService(fetchedClient)
     } catch (error) {
       console.error('Error fetching assigned clients: ', error)
-      // Optionally, handle the error (e.g., set an error state)
     } finally {
-      setLoading(false) // Ensure loading state is reset
+      setLoading(false)
     }
   }
 
   useEffect(() => {
     const fetchData = async () => {
-      await fetchAssignClient() // Wait for clients and their services to be fetched
+      await fetchAssignClient()
     }
 
-    fetchData() // Call the async function
-  }, [id]) // Add `id` to the dependency array
+    fetchData()
+  }, [id])
 
   useEffect(() => {
-    // Compute `dataForTable` only when `assignedClients` and `clientServices` are updated
     if (assignedClients?.length > 0 && clientServices?.length > 0) {
-      const dataForTable = assignedClients.map((item: any, index: number) => {
-        return { ...item, service: clientServices[index] }
-      })
+      const dataForTable = assignedClients.reduce((acc, item, index) => {
+        const services = clientServices[index] || []
+        const serviceEntries = services.map((service: any, serviceIndex: number) => ({
+          ...item,
+          service: service
+        }))
+        return [...acc, ...serviceEntries]
+      }, [])
+      console.log('Data for table: ', dataForTable)
       setData(dataForTable)
     }
-  }, [assignedClients, clientServices]) // Add `assignedClients` and `clientServices` as dependencies
+  }, [assignedClients, clientServices])
+
   console.log('Data', data)
 
   const router = useRouter()
@@ -123,14 +140,14 @@ const AssignedServiceTable = () => {
       id: 'id',
       label: '#',
       minWidth: 170,
-      render: item => <Typography className='font-normal text-base my-3'>{item.id}</Typography>
+      render: item => <Typography className='font-normal text-base my-0'>{item.id}</Typography>
     },
     {
       id: 'client',
       label: 'CLIENT',
       minWidth: 170,
       render: item => (
-        <Typography className='mt-4'>
+        <Typography className='mt-0'>
           {item?.client?.firstName} {item?.client?.lastName}
         </Typography>
       )
@@ -140,13 +157,28 @@ const AssignedServiceTable = () => {
       label: 'SERVICES',
       minWidth: 170,
       render: item => (
-        <div className='flex flex-row gap-2 mt-2'>
+        <div className='flex flex-row gap-2 mt-0'>
           <div className='p-1 border border-[#666CFF] border-opacity-[50%] rounded-sm'>
-            <Typography
-              className={`${light ? 'text-[#4B0082]' : 'text-[#7013b7]'} ${dark ? 'text-[#7013b7]' : 'text-[#4B0082]'}`}
-            >
-              {item?.service[0]?.name}
+            <Typography className={`${lightTheme ? 'text-[#4B0082]' : 'text-[#8812b7]'}`}>
+              {item?.service?.service?.name}
             </Typography>
+          </div>
+        </div>
+      )
+    },
+    {
+      id: 'evvEnforce',
+      label: 'EVV',
+      minWidth: 170,
+      render: item => (
+        <div>
+          <div className='p-0 flex rounded-sm'>
+            <Switch
+              {...label}
+              checked={item?.service?.clientService?.evvEnforce === true}
+              onChange={() => updateEVV(item?.service?.clientService)}
+              className='mr-0'
+            />
           </div>
         </div>
       )
@@ -164,7 +196,7 @@ const AssignedServiceTable = () => {
           <ReactTable
             data={data}
             columns={newColumns}
-            keyExtractor={user => user.id.toString()}
+            keyExtractor={user => user.service.clientService.id.toString()}
             enablePagination
             pageSize={25}
             stickyHeader
@@ -173,7 +205,6 @@ const AssignedServiceTable = () => {
           />
         </div>
       )}
-      {/* Table */}
     </Card>
   )
 }

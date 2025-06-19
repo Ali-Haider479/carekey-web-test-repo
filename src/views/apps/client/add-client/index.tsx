@@ -279,6 +279,7 @@ const AddClientStepper = () => {
         const createClientServiceBody = {
           note: item.serviceNotes,
           serviceId: item.service,
+          evvEnforce: true,
           clientId: clientId
         }
         await api.post(`/client/client-service`, createClientServiceBody)

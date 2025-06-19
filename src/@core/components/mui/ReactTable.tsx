@@ -390,7 +390,7 @@ function ReactTable<T extends { subRows?: T[] }>({
               align={column.align}
               sx={{
                 ...column.cellStyle,
-                pl: level > 0 && index === 0 ? 6 : undefined
+                pl: level > 0 && index === 0 ? 6 : column.id === 'evvEnforce' ? 2 : undefined
               }}
             >
               {renderCell(item, column)}

@@ -16,7 +16,7 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
 import CustomDropDown from '@/@core/components/custom-inputs/CustomDropDown'
 import CustomTextField from '@/@core/components/custom-inputs/CustomTextField'
 import ControlledDatePicker from '@/@core/components/custom-inputs/ControledDatePicker'
-import { USStates } from '@/utils/constants'
+import { payerOptions, USStates } from '@/utils/constants'
 import { Add, DeleteOutline, Edit, EditOutlined, Save, SaveOutlined } from '@mui/icons-material'
 import DialogCloseButton from '@/components/dialogs/DialogCloseButton'
 import api from '@/utils/api'
@@ -61,6 +61,11 @@ const CaregiverDocuments = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
   const [drivingLicenseSaveButtonLoading, setDrivingLicenseSaveButtonLoading] = useState<boolean>(false)
   const [drivingLicenseToEdit, setDrivingLicenseToEdit] = useState<any>()
 
+  const [newUmpiDocModalShow, setNewUmpiDocModalShow] = useState<boolean>(false)
+  const [umpiDocEditModalShow, setUmpiEditModalShow] = useState<boolean>(false)
+  const [umpiDocSaveButtonLoading, setUmpiDocSaveButtonLoading] = useState<boolean>(false)
+  const [umpiDocToEdit, setUmpiDocToEdit] = useState<any>()
+
   const { id } = useParams()
 
   const theme: any = useTheme()
@@ -101,6 +106,19 @@ const CaregiverDocuments = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
     setNewDrivingLicenseModalShow(false)
     setDrivingCertificates([])
   }
+  const handleUmpiDocumentEditModalOpen = (doc: any) => {
+    setUmpiEditModalShow(true)
+    setUmpiDocToEdit(doc)
+  }
+
+  const handleUmpiDocEditModalClose = () => {
+    setUmpiEditModalShow(false)
+    setUmpiFile([])
+  }
+
+  const handleNewUmpiDocModalClose = () => {
+    setNewUmpiDocModalShow(false)
+  }
   const handleTrainingCertificateDeleteModalShow = () => setTrainingCertificateDeleteModalShow(false)
   const handleNewTrainingCertificatesModalClose = () => setNewTrainingCertificateModalShow(false)
   const handleNewDocumentsModalClose = () => setNewDocumentsModalShow(false)
@@ -132,7 +150,15 @@ const CaregiverDocuments = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
       clearanceFileObject: [],
       employeeNumber: '',
       additionalPayRate: '',
-      serviceType: ''
+      serviceType: '',
+      payor: umpiDocToEdit?.uploadedDocument?.metaData?.payer,
+      umpiNumber: umpiDocToEdit?.uploadedDocument?.metaData?.umpiNumber,
+      activationdate: umpiDocToEdit?.uploadedDocument?.metaData?.activationDate,
+      expiryDate: umpiDocToEdit?.uploadedDocument?.expiryDate,
+      newPayor: '',
+      newUmpiNumber: '',
+      newActivationDate: null,
+      newExpiryDate: null
     },
     ...defaultValues
   })
@@ -175,6 +201,16 @@ const CaregiverDocuments = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
   const drivingLicenseExpiryDate = watch('drivingLicenseExpiryDate')
   const drivingLicenseState = watch('drivingLicenseState')
 
+  const payor = watch('payor')
+  const umpiNumber = watch('umpiNumber')
+  const activationDate = watch('activationdate')
+  const expiryDate = watch('expiryDate')
+
+  const newPayor = watch('newPayor')
+  const newUmpiNumber = watch('newUmpiNumber')
+  const newActivationDate = watch('newActivationDate')
+  const newExpiryDate = watch('newExpiryDate')
+
   console.log(
     'New Driving License Details: ',
     newDrivingLicenseNumber,
@@ -190,12 +226,15 @@ const CaregiverDocuments = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
     (doc: any) => doc?.uploadedDocument?.documentType === 'drivingLicense'
   )
 
+  const umpiDocument = caregiverDocuments?.filter((doc: any) => doc?.uploadedDocument?.documentType === 'umpiDocument')
+
   console.log('Driving License Document: ', drivingLicenseDocument)
 
   const otherDocuments = caregiverDocuments?.filter(
     (doc: any) =>
       doc?.uploadedDocument?.documentType !== 'drivingLicense' &&
-      doc?.uploadedDocument?.documentType !== 'trainingCertificate'
+      doc?.uploadedDocument?.documentType !== 'trainingCertificate' &&
+      doc?.uploadedDocument?.documentType !== 'umpiDocument'
   )
 
   console.log('Other documents =====>> ', otherDocuments)
@@ -218,6 +257,38 @@ const CaregiverDocuments = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
   useEffect(() => {
     fetchCaregiverDocuments()
   }, [])
+
+  const getPdf = async (key: string, fileName: string) => {
+    const pdfRes = await api.get(`/caregivers/getPdf/${key}`)
+    console.log('PDF RESPONSE --->> ', pdfRes)
+    if (pdfRes && pdfRes.status === 200) {
+      openPdfInNewTab(pdfRes.data, fileName)
+    }
+  }
+
+  const openPdfInNewTab = (pdfUrl: string, itemName: string) => {
+    if (/iPhone/i.test(navigator.userAgent) || !pdfUrl.includes('data')) {
+      const a = document.createElement('a')
+      a.href = pdfUrl
+      a.target = '_blank'
+      a.click()
+    } else {
+      fetch(pdfUrl)
+        .then(response => response.blob())
+        .then(blob => {
+          const objectUrl = URL.createObjectURL(blob)
+          const win = window.open(objectUrl, '_blank')
+          if (!win) {
+            console.error('Unable to open a new tab. Please check your browser settings.')
+          } else {
+            win.document.title = itemName
+          }
+        })
+        .catch(error => {
+          console.error('Error loading PDF:', error)
+        })
+    }
+  }
 
   const onSubmit = (data: any) => {
     const formData = {
@@ -610,6 +681,89 @@ const CaregiverDocuments = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
     }
   }
 
+  const handleAddNewUmpiDoc = async () => {
+    try {
+      setUmpiDocSaveButtonLoading(true)
+      const metaData = {
+        documentName: 'UMPI Letter',
+        payer: newPayor,
+        activationDate: newActivationDate?.toISOString().split('T')[0]
+      }
+      const documentUploads = [
+        uploadDocuments(umpiFile, 'umpiDocument', String(id), newExpiryDate?.toISOString().split('T')[0], metaData)
+      ]
+      const uploadResponses = await Promise.all(documentUploads)
+      const successfulUploads = uploadResponses.filter(response => response !== null)
+      console.log('Successful document uploads:', successfulUploads)
+      fetchCaregiverDocuments()
+      setNewUmpiDocModalShow(false)
+    } catch (error) {
+      console.error('Error in adding training certificate: ', error)
+    } finally {
+      setUmpiDocSaveButtonLoading(false)
+    }
+  }
+
+  const handleEditUmpiDoc = async (data: any) => {
+    try {
+      setUmpiDocSaveButtonLoading(true)
+      if (!umpiDocToEdit?.id) {
+        console.error('No document ID found for editing')
+        return
+      }
+
+      const formData = new FormData()
+      const metaData = {
+        documentName: 'UMPI Letter',
+        payer: payor,
+        activationDate: activationDate instanceof Date ? activationDate?.toISOString().split('T')[0] : null
+      }
+
+      // Append metadata
+      formData.append('metaData', JSON.stringify(metaData))
+
+      // Calculate expiry days if a new expiry date is provided
+      if (expiryDate && expiryDate instanceof Date) {
+        formData.append('expiryDate', expiryDate?.toISOString().split('T')[0])
+      }
+
+      // Append document type
+      formData.append('documentType', 'umpiDocument')
+
+      // Append new file if provided
+      if (umpiFile.length > 0) {
+        umpiFile.forEach((file: File) => {
+          formData.append('file', file)
+        })
+      }
+
+      // Make the PATCH API call
+      const response = await api.patch(`/upload-document/${umpiDocToEdit.id}`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      })
+
+      console.log('Edit Driving License Response:', response.data)
+
+      // Close the modal and reset state
+      fetchCaregiverDocuments()
+      setUmpiEditModalShow(false)
+      setUmpiFile([])
+      reset({
+        umpiNumber,
+        expiryDate
+      })
+
+      // Optionally refresh the caregiverDocuments list
+      // You may need to fetch updated documents or update the local state
+    } catch (error) {
+      console.error('Error editing driving license:', error)
+    } finally {
+      setUmpiDocSaveButtonLoading(false)
+    }
+  }
+
   const handleDelete = async () => {
     try {
       setDeleteButtonLoading(true)
@@ -617,7 +771,9 @@ const CaregiverDocuments = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
         ? documentToEdit?.id
         : drivingLicenseToEdit
           ? drivingLicenseToEdit?.id
-          : trainingDocumentToEdit?.id
+          : umpiDocToEdit
+            ? umpiDocToEdit?.id
+            : trainingDocumentToEdit?.id
       const deleteResponse = await api.delete(`/caregivers/document/${docToDelete}`)
       console.log('DELETE RESPONSE ---->> ', deleteResponse)
       fetchCaregiverDocuments()
@@ -674,7 +830,7 @@ const CaregiverDocuments = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
   const renderUploadedDocuments = (doc: any) =>
     caregiverDocuments?.length > 0 && (
       <>
-        <div className='px-4 py-2 rounded-lg border border-[#32475C] border-opacity-[22%]'>
+        <div className='cursor-pointer px-4 py-2 rounded-lg border border-[#32475C] border-opacity-[22%]'>
           <div className='flex flex-row justify-between items-center'>
             <div className='flex items-center gap-2 mb-0'>
               <PictureAsPdfIcon />
@@ -712,13 +868,20 @@ const CaregiverDocuments = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
       id: 'fileName',
       label: 'FILE NAME',
       minWidth: 170,
-      render: item => (
-        <Typography className='font-light text-sm my-3'>
-          {item.uploadedDocument.fileName.length > 15
-            ? `${item.uploadedDocument.fileName.substring(0, 15)}...`
-            : item.uploadedDocument.fileName}
-        </Typography>
-      )
+      render: item => {
+        return (
+          <div
+            className='cursor-pointer w-1/2'
+            onClick={() => getPdf(item?.uploadedDocument?.fileKey, item.uploadedDocument.fileName)}
+          >
+            <Typography className='font-light text-sm my-3'>
+              {item.uploadedDocument.fileName.length > 15
+                ? `${item.uploadedDocument.fileName.substring(0, 15)}...`
+                : item.uploadedDocument.fileName}
+            </Typography>
+          </div>
+        )
+      }
     },
     {
       id: 'actions',
@@ -760,11 +923,16 @@ const CaregiverDocuments = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
       label: 'FILE NAME',
       minWidth: 170,
       render: item => (
-        <Typography className='font-light text-sm my-3'>
-          {item.uploadedDocument.fileName.length > 15
-            ? `${item.uploadedDocument.fileName.substring(0, 15)}...`
-            : item.uploadedDocument.fileName}
-        </Typography>
+        <div
+          className='cursor-pointer w-1/2'
+          onClick={() => getPdf(item?.uploadedDocument?.fileKey, item.uploadedDocument.fileName)}
+        >
+          <Typography className='font-light text-sm my-3'>
+            {item.uploadedDocument.fileName.length > 15
+              ? `${item.uploadedDocument.fileName.substring(0, 15)}...`
+              : item.uploadedDocument.fileName}
+          </Typography>
+        </div>
       )
     },
     {
@@ -806,7 +974,7 @@ const CaregiverDocuments = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
                 <Button
                   variant='contained'
                   onClick={() => setNewTrainingCertificateModalShow(true)}
-                  className='mr-5 mb-4 cursor-pointer'
+                  className={`mr-5 mb-4 cursor-pointer ${lightTheme ? 'bg-[#4B0082]' : 'bg-[#7112B7]'}`}
                   startIcon={<Add />}
                 >
                   Add
@@ -862,7 +1030,7 @@ const CaregiverDocuments = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
                           ? handleDrivingLicenseEditModalOpen(drivingLicenseDocument?.[0])
                           : setNewDrivingLicenseModalShow(true)
                       }}
-                      className='mr-5 mb-4 cursor-pointer'
+                      className={`${lightTheme ? 'bg-[#4B0082]' : 'bg-[#7112B7]'} mr-0 mb-4 cursor-pointer`}
                       startIcon={drivingLicenseDocument?.length ? <Edit /> : <Add />}
                     >
                       {drivingLicenseDocument?.length ? 'Update' : 'Add'}
@@ -876,7 +1044,7 @@ const CaregiverDocuments = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
                         ? handleDrivingLicenseEditModalOpen(drivingLicenseDocument?.[0])
                         : setNewDrivingLicenseModalShow(true)
                     }}
-                    className='mr-5 mb-4 cursor-pointer'
+                    className={`${lightTheme ? 'bg-[#4B0082]' : 'bg-[#7112B7]'} mr-5 mb-4 cursor-pointer`}
                     startIcon={drivingLicenseDocument?.length ? <Edit /> : <Add />}
                   >
                     {drivingLicenseDocument?.length ? 'Update' : 'Add'}
@@ -916,7 +1084,16 @@ const CaregiverDocuments = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
                   <div className='flex flex-row items-center gap-2 mb-2'>
                     <Typography className='font-semibold'>Uploaded File: </Typography>
                     {drivingLicenseDocument?.length ? (
-                      renderUploadedDocuments(drivingLicenseDocument?.[0])
+                      <div
+                        onClick={() =>
+                          getPdf(
+                            drivingLicenseDocument?.[0]?.uploadedDocument?.fileKey,
+                            drivingLicenseDocument?.[0]?.uploadedDocument?.fileName
+                          )
+                        }
+                      >
+                        {renderUploadedDocuments(drivingLicenseDocument?.[0])}
+                      </div>
                     ) : (
                       <Typography>N/A</Typography>
                     )}
@@ -926,6 +1103,103 @@ const CaregiverDocuments = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
             </CardContent>
           </Card>
 
+          <Card className='mt-5 w-full ml-0 shadow-md rounded-lg p-6'>
+            <div className='flex flex-row justify-between'>
+              <Typography className='text-xl font-semibold mb-4'>PCA-UMPI INFO</Typography>
+              {umpiDocument?.length ? (
+                <div className='flex flex-row'>
+                  <Button
+                    variant='contained'
+                    className='mr-5 mb-4 cursor-pointer'
+                    color='error'
+                    startIcon={<DeleteOutline />}
+                    onClick={() => {
+                      setTrainingCertificateDeleteModalShow(true)
+                      setUmpiDocToEdit(umpiDocument?.[0])
+                    }}
+                  >
+                    Delete
+                  </Button>
+                  <Button
+                    variant='contained'
+                    onClick={() => {
+                      umpiDocument?.length
+                        ? handleUmpiDocumentEditModalOpen(umpiDocument?.[0])
+                        : setNewUmpiDocModalShow(true)
+                    }}
+                    className={`${lightTheme ? 'bg-[#4B0082]' : 'bg-[#7112B7]'} mr-0 mb-4 cursor-pointer`}
+                    startIcon={umpiDocument?.length ? <Edit /> : <Add />}
+                  >
+                    {umpiDocument?.length ? 'Update' : 'Add'}
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  variant='contained'
+                  onClick={() => {
+                    umpiDocument?.length
+                      ? handleUmpiDocumentEditModalOpen(umpiDocument?.[0])
+                      : setNewUmpiDocModalShow(true)
+                  }}
+                  className={`${lightTheme ? 'bg-[#4B0082]' : 'bg-[#7112B7]'} mr-0 mb-4 cursor-pointer`}
+                  startIcon={umpiDocument?.length ? <Edit /> : <Add />}
+                >
+                  {umpiDocument?.length ? 'Update' : 'Add'}
+                </Button>
+              )}
+            </div>
+
+            {caregiverDocumentsLoading ? (
+              <div className='flex justify-center itmes-center'>
+                <CircularProgress />
+              </div>
+            ) : (
+              <div>
+                <div className='flex flex-row gap-2 mb-2'>
+                  <Typography className='font-semibold'>Payor: </Typography>
+                  <Typography>
+                    {umpiDocument?.[0]?.uploadedDocument?.metaData?.payer
+                      ? umpiDocument?.[0]?.uploadedDocument?.metaData?.payer
+                      : 'N/A'}
+                  </Typography>
+                </div>
+                <div className='flex flex-row gap-2 mb-2'>
+                  <Typography className='font-semibold'>Affiliation Date: </Typography>
+                  <Typography>
+                    {umpiDocument?.[0]?.uploadedDocument?.metaData?.activationDate
+                      ? umpiDocument?.[0]?.uploadedDocument?.metaData?.activationDate
+                      : 'N/A'}
+                  </Typography>
+                </div>
+                <div className='flex flex-row gap-2 mb-2'>
+                  <Typography className='font-semibold'>Expiry Date: </Typography>
+                  <Typography>
+                    {umpiDocument?.[0]?.uploadedDocument?.expiryDate
+                      ? umpiDocument?.[0]?.uploadedDocument?.expiryDate
+                      : 'N/A'}
+                  </Typography>
+                </div>
+                <div className='flex flex-row items-center gap-2 mb-2'>
+                  <Typography className='font-semibold'>Uploaded File: </Typography>
+                  {umpiDocument?.length ? (
+                    <div
+                      onClick={() =>
+                        getPdf(
+                          umpiDocument?.[0]?.uploadedDocument?.fileKey,
+                          umpiDocument?.[0]?.uploadedDocument?.fileName
+                        )
+                      }
+                    >
+                      {renderUploadedDocuments(umpiDocument?.[0])}
+                    </div>
+                  ) : (
+                    <Typography>N/A</Typography>
+                  )}
+                </div>
+              </div>
+            )}
+          </Card>
+
           <Card className='mt-5 px-0'>
             <CardContent className='px-0'>
               <div className='flex flex-row justify-between'>
@@ -933,7 +1207,7 @@ const CaregiverDocuments = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
                 <Button
                   variant='contained'
                   onClick={() => setNewDocumentsModalShow(true)}
-                  className='mr-5 mb-4 cursor-pointer'
+                  className={`${lightTheme ? 'bg-[#4B0082]' : 'bg-[#7112B7]'} mr-5 mb-4 cursor-pointer`}
                   startIcon={<Add />}
                   disabled={otherDocuments?.length === 3}
                 >
@@ -1444,6 +1718,170 @@ const CaregiverDocuments = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
         </Dialog>
 
         <Dialog
+          open={umpiDocEditModalShow}
+          onClose={handleUmpiDocEditModalClose}
+          closeAfterTransition={false}
+          sx={{ '& .MuiDialog-paper': { overflow: 'visible' }, paddingY: 2 }}
+          maxWidth='md'
+        >
+          <DialogCloseButton onClick={handleUmpiDocEditModalClose} disableRipple>
+            <i className='bx-x' />
+          </DialogCloseButton>
+          <div className='flex items-center justify-center w-full px-5 flex-col'>
+            <form onSubmit={handleSubmit(handleEditUmpiDoc)}>
+              <div>
+                <h2 className='text-xl font-semibold mt-5 mb-4'>Edit UMPI Document</h2>
+              </div>
+              <div className='p-0'>
+                <div className='grid grid-cols-1 md:grid-cols-3 gap-6'>
+                  <div className='col-span-1 p-3 border rounded-lg'>
+                    <FileUploaderRestrictions
+                      onFilesSelected={(selectedFiles: any) => {
+                        setUmpiFile(selectedFiles)
+                      }}
+                      mimeType={['application/pdf']}
+                      fileCount={1}
+                      fileSize={25 * 1024 * 1024}
+                    />
+                  </div>
+                  <div className='col-span-2'>
+                    <h3 className='text-lg font-semibold mb-4'>Uploading Files</h3>
+                    <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>{renderFileProgress(umpiFile)}</div>
+                  </div>
+                </div>
+                <div className='grid grid-cols-1 md:grid-cols-2 gap-6 mt-6'>
+                  <CustomDropDown
+                    name='payor'
+                    control={control}
+                    error={errors.dlState}
+                    label='Payor'
+                    isRequired={false}
+                    optionList={payerOptions.map((state: any) => ({
+                      key: state.key,
+                      value: state.value,
+                      optionString: state.optionString
+                    }))}
+                    defaultValue={umpiDocToEdit?.uploadedDocument?.metaData?.payer}
+                  />
+                  <ControlledDatePicker
+                    name={'activationDate'}
+                    control={control}
+                    label={'Affiliation Date'}
+                    defaultValue={umpiDocToEdit?.uploadedDocument?.metaData?.activationDate}
+                    // error={errors.drivingLicenseExpiryDate}
+                    isRequired={false}
+                  />
+                  <ControlledDatePicker
+                    name={'expiryDate'}
+                    control={control}
+                    label={'Expiry Date'}
+                    defaultValue={umpiDocToEdit?.uploadedDocument?.expiryDate}
+                    // error={errors.drivingLicenseExpiryDate}
+                    isRequired={false}
+                  />
+                </div>
+              </div>
+              <div className='flex gap-4 justify-end mt-4 mb-4 w-full'>
+                <Button variant='outlined' color='secondary' onClick={handleUmpiDocEditModalClose}>
+                  CANCEL
+                </Button>
+                <Button
+                  startIcon={umpiDocSaveButtonLoading ? <CircularProgress size={20} color='inherit' /> : null}
+                  disabled={umpiDocSaveButtonLoading}
+                  type='submit'
+                  variant='contained'
+                  className={`${lightTheme ? 'bg-[#4B0082]' : 'bg-[#7112B7]'}`}
+                >
+                  SAVE
+                </Button>
+              </div>
+            </form>
+          </div>
+        </Dialog>
+
+        <Dialog
+          open={newUmpiDocModalShow}
+          onClose={handleNewUmpiDocModalClose}
+          closeAfterTransition={false}
+          sx={{ '& .MuiDialog-paper': { overflow: 'visible' }, paddingY: 2 }}
+          maxWidth='md'
+        >
+          <DialogCloseButton onClick={handleNewUmpiDocModalClose} disableRipple>
+            <i className='bx-x' />
+          </DialogCloseButton>
+          <div className='flex items-center justify-center w-full px-5 flex-col'>
+            <form onSubmit={handleSubmit(handleAddNewUmpiDoc)}>
+              <div>
+                <h2 className='text-xl font-semibold mt-5 mb-4'>Add New UMPI Document</h2>
+              </div>
+              <div className='p-0'>
+                <div className='grid grid-cols-1 md:grid-cols-3 gap-6'>
+                  <div className='col-span-1 p-3 border rounded-lg'>
+                    <FileUploaderRestrictions
+                      onFilesSelected={(selectedFiles: any) => {
+                        setUmpiFile(selectedFiles)
+                      }}
+                      mimeType={['application/pdf']}
+                      fileCount={1}
+                      fileSize={25 * 1024 * 1024}
+                    />
+                  </div>
+                  <div className='col-span-2'>
+                    <h3 className='text-lg font-semibold mb-4'>Uploading Files</h3>
+                    <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>{renderFileProgress(umpiFile)}</div>
+                  </div>
+                </div>
+                <div className='grid grid-cols-1 md:grid-cols-2 gap-6 mt-6'>
+                  <CustomDropDown
+                    name='newPayor'
+                    control={control}
+                    error={errors.dlState}
+                    label='Payor'
+                    isRequired={false}
+                    optionList={payerOptions.map((state: any) => ({
+                      key: state.key,
+                      value: state.value,
+                      optionString: state.optionString
+                    }))}
+                    defaultValue={''}
+                  />
+                  <ControlledDatePicker
+                    name={'newActivationDate'}
+                    control={control}
+                    label={'Affiliation Date'}
+                    defaultValue={null}
+                    error={errors.newActivationDate}
+                    isRequired={false}
+                  />
+                  <ControlledDatePicker
+                    name={'newExpiryDate'}
+                    control={control}
+                    label={'Expiry Date'}
+                    defaultValue={''}
+                    // error={errors.drivingLicenseExpiryDate}
+                    isRequired={false}
+                  />
+                </div>
+              </div>
+              <div className='flex gap-4 justify-end mt-4 mb-4 w-full'>
+                <Button variant='outlined' color='secondary' onClick={handleNewUmpiDocModalClose}>
+                  CANCEL
+                </Button>
+                <Button
+                  startIcon={umpiDocSaveButtonLoading ? <CircularProgress size={20} color='inherit' /> : null}
+                  disabled={umpiDocSaveButtonLoading}
+                  type='submit'
+                  variant='contained'
+                  className={`${lightTheme ? 'bg-[#4B0082]' : 'bg-[#7112B7]'}`}
+                >
+                  SAVE
+                </Button>
+              </div>
+            </form>
+          </div>
+        </Dialog>
+
+        <Dialog
           open={trainingCertificateDeleteModalShow}
           onClose={handleTrainingCertificateDeleteModalShow}
           closeAfterTransition={false}
@@ -1471,7 +1909,7 @@ const CaregiverDocuments = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
                 // type='submit'
                 onClick={handleDelete}
                 variant='contained'
-                className='bg-[#4B0082]'
+                className={`${lightTheme ? 'bg-[#4B0082]' : 'bg-[#7112B7]'}`}
               >
                 YES
               </Button>

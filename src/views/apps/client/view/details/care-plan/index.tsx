@@ -211,7 +211,8 @@ const CareplanTab = () => {
           const createClientServiceBody = {
             note: item.serviceNotes || '',
             serviceId: Number(item.service),
-            clientId: clientId
+            clientId: clientId,
+            evvEnforce: true
           }
           await api.post(`/client/client-service`, createClientServiceBody)
         }

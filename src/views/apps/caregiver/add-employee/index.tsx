@@ -71,7 +71,7 @@ const EmployeeStepper = () => {
     documentType: string,
     caregiverId: string,
     expiryDate?: string,
-    additionalMetadata?: Record<string, any>
+    metaData?: Record<string, any>
   ) => {
     // Skip upload if no files exist
     if (!files || files.length === 0) {
@@ -106,10 +106,8 @@ const EmployeeStepper = () => {
     formData.append('expiryDate', finalExpiryDate)
 
     // Append additional metadata if exists
-    if (additionalMetadata) {
-      Object.entries(additionalMetadata).forEach(([key, value]) => {
-        formData.append(key, value as string)
-      })
+    if (metaData) {
+      formData.append('metaData', JSON.stringify(metaData))
     }
 
     // Make the API call
@@ -174,6 +172,22 @@ const EmployeeStepper = () => {
 
       const caregiverId = caregiverResponse.data.id
 
+      const trainingCertificateMetaData = {
+        documentName: documentsData.trainingCertificateName || 'default-certificate'
+      }
+
+      const drivingLicenseMetaData = {
+        documentName: 'Driving License',
+        drivingLicenseNumber: documentsData.drivingLicenseNumber,
+        drivingLicenseState: documentsData.dlState
+      }
+
+      const umpiDocumentMetaData = {
+        documentName: 'UMPI Letter',
+        payer: '',
+        activationDate: null
+      }
+
       // Prepare document uploads with explicit expiry dates or default
       const documentUploads = [
         // Training Certificates
@@ -182,9 +196,7 @@ const EmployeeStepper = () => {
           'trainingCertificate',
           documentsData.trainingCertificateExpiryDate,
           caregiverId.toString(),
-          {
-            trainingCertificateName: documentsData.trainingCertificateName
-          }
+          trainingCertificateMetaData
         ),
 
         // Driving License
@@ -193,42 +205,49 @@ const EmployeeStepper = () => {
           'drivingLicense',
           documentsData.drivingLicenseExpiryDate,
           caregiverId.toString(),
-          {
-            drivingLicenseNumber: documentsData.drivingLicenseNumber,
-            dlState: documentsData.dlState
-          }
+          drivingLicenseMetaData
         ),
 
         // SSN File
         uploadDocuments(
           Docs.ssnFileObject,
-          'other',
+          'ssnDocument',
           caregiverId.toString(),
-          new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString()
+          new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString(),
+          {
+            documentName: 'SSN Document'
+          }
         ),
 
         // Adult File
         uploadDocuments(
           Docs.adultFileObject,
-          'other',
+          'adultMandatedDocument',
           caregiverId.toString(),
-          new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString()
+          new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString(),
+          {
+            documentName: 'Adult Mandated Document'
+          }
         ),
 
         // UMPI File
         uploadDocuments(
           Docs.umpiFileObject,
-          'other',
+          'umpiDocument',
           caregiverId.toString(),
-          new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString()
+          new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString(),
+          umpiDocumentMetaData
         ),
 
         // Clearance File
         uploadDocuments(
           Docs.clearanceFileObject,
-          'other',
+          'clearanceDocument',
           caregiverId.toString(),
-          new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString()
+          new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString(),
+          {
+            documentName: 'Clearance Document'
+          }
         )
       ]
 
