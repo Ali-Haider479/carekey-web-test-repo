@@ -1044,7 +1044,7 @@ const CaregiverDocuments = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
                         ? handleDrivingLicenseEditModalOpen(drivingLicenseDocument?.[0])
                         : setNewDrivingLicenseModalShow(true)
                     }}
-                    className={`${lightTheme ? 'bg-[#4B0082]' : 'bg-[#7112B7]'} mr-5 mb-4 cursor-pointer`}
+                    className={`${lightTheme ? 'bg-[#4B0082]' : 'bg-[#7112B7]'} mb-4 cursor-pointer`}
                     startIcon={drivingLicenseDocument?.length ? <Edit /> : <Add />}
                   >
                     {drivingLicenseDocument?.length ? 'Update' : 'Add'}
