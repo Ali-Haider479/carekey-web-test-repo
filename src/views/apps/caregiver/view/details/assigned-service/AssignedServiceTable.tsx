@@ -46,9 +46,9 @@ const AssignedServiceTable = () => {
     try {
       console.log('Item to Edit: ', item)
       const updateEVVPayload = {
-        evvEnforce: !item?.evvEnforce // Toggle the current value
+        evvEnforce: !item?.evv // Toggle the current value
       }
-      const updateRes = await api.put(`/client/client-service/${item.id}`, updateEVVPayload)
+      const updateRes = await api.put(`/client/client-service/${item.clientServiceId}`, updateEVVPayload)
       console.log('EVV Updated Successfully:', updateRes.data)
 
       // Refresh data after successful update
@@ -160,7 +160,7 @@ const AssignedServiceTable = () => {
         <div className='flex flex-row gap-2 mt-0'>
           <div className='p-1 border border-[#666CFF] border-opacity-[50%] rounded-sm'>
             <Typography className={`${lightTheme ? 'text-[#4B0082]' : 'text-[#8812b7]'}`}>
-              {item?.service?.service?.name}
+              {item?.service?.name}
             </Typography>
           </div>
         </div>
@@ -175,8 +175,8 @@ const AssignedServiceTable = () => {
           <div className='p-0 flex rounded-sm'>
             <Switch
               {...label}
-              checked={item?.service?.clientService?.evvEnforce === true}
-              onChange={() => updateEVV(item?.service?.clientService)}
+              checked={item?.service?.evv === true}
+              onChange={() => updateEVV(item?.service)}
               className='mr-0'
             />
           </div>
@@ -196,7 +196,7 @@ const AssignedServiceTable = () => {
           <ReactTable
             data={data}
             columns={newColumns}
-            keyExtractor={user => user.service.clientService.id.toString()}
+            keyExtractor={user => user.service.id.toString()}
             enablePagination
             pageSize={25}
             stickyHeader

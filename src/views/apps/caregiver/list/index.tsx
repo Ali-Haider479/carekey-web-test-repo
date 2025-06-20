@@ -20,10 +20,10 @@ const CaregiverList = () => {
 
   const fetchInitialData = async () => {
     try {
-      const response = await api.get(`/caregivers`)
+      const response = await api.get(`/caregivers/active`)
       console.log('CARGIVER RESPONSE ONE', response)
       setCaregiverData(response.data)
-      setTotalCaregivers(response.data.length)
+      // setTotalCaregivers(response.data.length)
       setIsLoading(false)
     } catch (error) {
       console.error('Error fetching initial data:', error)
@@ -31,9 +31,15 @@ const CaregiverList = () => {
     }
   }
 
+  const fetchAllCaregivers = async () => {
+    const response = await api.get(`/caregivers`)
+    setTotalCaregivers(response.data.length)
+  }
+
   useEffect(() => {
     console.log('useEffect triggered with isUserDeleted:', isUserDeleted)
     fetchInitialData()
+    fetchAllCaregivers()
   }, [isUserDeleted])
 
   const handleFilteredData = (accountStatus: any) => {

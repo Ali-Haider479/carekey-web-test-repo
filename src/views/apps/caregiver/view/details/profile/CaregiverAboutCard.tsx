@@ -339,49 +339,6 @@ function CaregiverAboutCard() {
     { label: 'Comments', name: 'comments', value: formData.comments }
   ]
 
-  const renderFileProgress = (files: File[]) => {
-    return files.map((file: File, index: number) => (
-      <div key={index} className='p-3 rounded-lg border border-[#32475C] border-opacity-[22%]'>
-        <div className='flex justify-between items-center mb-2'>
-          <div className='flex items-center gap-10'>
-            <div className='flex items-center gap-2'>
-              <PictureAsPdfIcon />
-              <Typography className='font-semibold text-green-600 text-sm'>
-                {file.name.length > 20 ? `${file.name.substring(0, 20)}...` : file.name} (100%)
-              </Typography>
-            </div>
-            <div>
-              <Typography className='font-semibold text-green-600 text-sm'>Completed</Typography>
-            </div>
-          </div>
-        </div>
-        <LinearProgress variant='determinate' value={100} color={'success'} />
-      </div>
-    ))
-  }
-
-  const renderUploadedDocuments = (doc: any) =>
-    caregiverDocuments?.length > 0 && (
-      <>
-        <div className='px-4 py-2 rounded-lg border border-[#32475C] border-opacity-[22%]'>
-          <div className='flex flex-row justify-between items-center'>
-            <div className='flex items-center gap-2 mb-0'>
-              <PictureAsPdfIcon />
-              <div>
-                <Typography className='font-semibold text-green-600 text-sm'>
-                  {doc?.uploadedDocument?.fileName?.length > 25
-                    ? `${doc?.uploadedDocument?.fileName?.substring(0, 25)}...`
-                    : doc?.uploadedDocument?.fileName}
-                </Typography>
-                <Typography className='text-sm text-gray-600'>{doc?.uploadedDocument?.documentType}</Typography>
-              </div>
-            </div>
-            <div></div>
-          </div>
-        </div>
-      </>
-    )
-
   return (
     <>
       {isLoading ? (
@@ -431,7 +388,7 @@ function CaregiverAboutCard() {
                 <Button
                   variant='contained'
                   startIcon={isEdit ? <EditOutlined /> : <SaveOutlined />}
-                  className='bg-[#4B0082] text-white'
+                  className={`${lightTheme ? 'bg-[#4B0082' : 'bg-[#7112B7]'} text-white`}
                   onClick={isEdit ? () => setIsEdit(false) : handleSave}
                   disabled={
                     emailError ||
@@ -510,14 +467,7 @@ function CaregiverAboutCard() {
               <Button
                 variant='contained'
                 startIcon={<AddOutlined />}
-                sx={{
-                  marginTop: '10px',
-                  backgroundColor: '#4B0082',
-                  color: 'white',
-                  '&:hover': {
-                    backgroundColor: '#6A0DAD'
-                  }
-                }}
+                className={`${lightTheme ? 'bg-[#4B0082' : 'bg-[#7112B7]'} mt-[10px] text-white`}
               >
                 Add Pay Rate
               </Button>

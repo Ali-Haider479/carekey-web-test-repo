@@ -29,7 +29,7 @@ interface DefaultStateType {
 }
 
 const defaultState: DefaultStateType = {
-  accountStatus: 'All',
+  accountStatus: 'Active',
   caregiverUmpi: '',
   state: '',
   primaryPhoneNumber: '',
@@ -106,7 +106,7 @@ const CaregiverFilters = ({
 
       // If no filters are applied, fetch all data
       if (queryParams.toString() === 'page=1&limit=10') {
-        const response = await api.get(`/caregivers/${authUser?.tenant?.id}/tenant`)
+        const response = await api.get(`/caregivers/active`)
         onFilterApplied(response.data)
         return
       }
@@ -124,7 +124,7 @@ const CaregiverFilters = ({
       setItem('')
 
       // Fetch all data without filters
-      const response = await api.get(`/caregivers/${authUser?.tenant?.id}/tenant`)
+      const response = await api.get(`/caregivers/active`)
       onFilterApplied(response.data)
     } catch (error) {
       console.error('Error resetting filters:', error)

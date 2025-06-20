@@ -24,6 +24,7 @@ import CustomTextField from '@/@core/components/custom-inputs/CustomTextField'
 import { FormProvider, useForm } from 'react-hook-form'
 import DialogCloseButton from '@/components/dialogs/DialogCloseButton'
 import api from '@/utils/api'
+import { useTheme } from '@emotion/react'
 
 type FormItems = {
   clientId?: number
@@ -43,6 +44,9 @@ const InfoCard = () => {
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null)
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false)
   const [assignButtonLoading, setAssignButtonLoading] = useState(false)
+
+  const theme: any = useTheme()
+  const lightTheme = theme.palette.mode === 'light'
 
   const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
   const [formData, setFormData] = useState<FormItems>()
@@ -241,7 +245,7 @@ const InfoCard = () => {
                 Assigned Clients ({assignedClients?.length})
               </Typography>
               <IconButton
-                className='h-6 w-6 bg-[#4B0082]'
+                className={`${lightTheme ? 'bg-[#4B0082]' : 'bg-[#7112B7]'} h-6 w-6`}
                 onClick={() => {
                   setIsModalShow(true)
                 }}
@@ -267,7 +271,7 @@ const InfoCard = () => {
                     </div>
                   </div>
                   <IconButton
-                    className='h-6 w-6 bg-[#4B0082]'
+                    className={`${lightTheme ? 'bg-[#4B0082]' : 'bg-[#7112B7]'} h-6 w-6`}
                     onClick={() => {
                       setOpenDeleteDialog(true)
                       setSelectedUserId(data?.id)
@@ -378,7 +382,7 @@ const InfoCard = () => {
                       startIcon={assignButtonLoading ? <CircularProgress size={20} color='inherit' /> : null}
                       disabled={assignButtonLoading}
                       variant='contained'
-                      className='bg-[#4B0082]'
+                      className={`${lightTheme ? 'bg-[#4B0082]' : 'bg-[#7112B7]'}`}
                     >
                       Assign Client
                     </Button>
