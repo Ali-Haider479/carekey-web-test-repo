@@ -15,6 +15,7 @@ import { RouterLink } from '../RouterLink'
 // Util Imports
 import { menuClasses } from '../../utils/menuClasses'
 import { dark } from '@mui/material/styles/createPalette'
+import { Theme, useTheme } from '@mui/material'
 
 type MenuButtonStylesProps = Partial<ChildrenType> & {
   level: number
@@ -27,6 +28,7 @@ type MenuButtonStylesProps = Partial<ChildrenType> & {
 export const menuButtonStyles = (props: MenuButtonStylesProps) => {
   // Props
   const { level, disabled, children, isCollapsed, isPopoutWhenCollapsed } = props
+  const theme = useTheme<Theme>()
 
   return css({
     display: 'flex',
@@ -57,7 +59,9 @@ export const menuButtonStyles = (props: MenuButtonStylesProps) => {
     // All the active styles are applied to the button including menu items or submenu
     [`&.${menuClasses.active}`]: {
       ...(!children && { color: 'white' }),
-      backgroundColor: children ? '#f3f3f3' : `${dark ? ' #7112B7' : '#4B0082'}`
+      backgroundColor: children
+        ? '#f3f3f3'
+        : `${theme.palette.mode === 'dark' ? theme.palette.primary.dark : theme.palette.primary.main}`
     }
   })
 }

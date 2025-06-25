@@ -44,14 +44,16 @@ const ClientDetails = ({ tabContentList }: BottomBodyProps) => {
         return '/ Submitted Form'
       case 'account-history':
         return '/ Account History'
-      case 'care-plan':
-        return '/ Care Plan'
+      case 'services':
+        return '/ Services'
       case 'time-sheets':
         return '/ Time Sheets'
       case 'service-authorization':
         return '/ Service Authorization'
       case 'incidents':
         return '/ Incidents'
+      case 'care-plan':
+        return '/ Care Plan'
       default:
         return ''
     }
@@ -95,11 +97,12 @@ const ClientDetails = ({ tabContentList }: BottomBodyProps) => {
               <Tab value='profile' label='PROFILE' />
               <Tab value='e-doc' label='E-DOC' />
               <Tab value='forms' label='FORMS' />
-              <Tab value='care-plan' label='SERVICES' />
-              <Tab value='account-history' label='ACC HISTORY' />
+              <Tab value='services' label='SERVICES' />
+              <Tab value='account-history' label='LOGS' />
               <Tab value='time-sheets' label='TIME SHEETS' />
               <Tab value='service-authorization' label='SERVICE AUTHORIZATION' />
               <Tab value='incidents' label='INCIDENTS' />
+              <Tab value='care-plan' label='CARE PLAN' />
             </CustomTabList>
           </Grid>
           <Grid size={{ xs: 12 }}>

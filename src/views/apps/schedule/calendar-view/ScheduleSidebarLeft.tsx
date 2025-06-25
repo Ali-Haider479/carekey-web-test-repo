@@ -19,6 +19,7 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
 
 // Slice Imports
 import { filterAllCalendarLabels, filterCalendarLabel, selectedEvent } from '@/redux-store/slices/calendar'
+import { useTheme } from '@emotion/react'
 
 const ScheduleSidebarLeft = (props: SidebarLeftProps) => {
   // Props
@@ -32,6 +33,9 @@ const ScheduleSidebarLeft = (props: SidebarLeftProps) => {
     handleLeftSidebarToggle,
     handleAddEventSidebarToggle
   } = props
+
+  const theme: any = useTheme()
+  const lightTheme = theme.palette.mode === 'light'
 
   // Vars
   const colorsArr = calendarsColor ? Object.entries(calendarsColor) : []
@@ -95,7 +99,7 @@ const ScheduleSidebarLeft = (props: SidebarLeftProps) => {
             variant='contained'
             startIcon={<i className='bx-plus' />}
             onClick={handleSidebarToggleSidebar}
-            sx={{ backgroundColor: '#4B0082' }}
+            sx={{ backgroundColor: lightTheme ? '#4B0082' : '#7112B7' }}
           >
             Add Event
           </Button>

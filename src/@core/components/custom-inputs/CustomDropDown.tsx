@@ -1,9 +1,9 @@
 'use client'
-import React, { useState } from 'react'
+import React from 'react'
 import { Controller } from 'react-hook-form'
 import MenuItem from '@mui/material/MenuItem'
 import FormControl from '@mui/material/FormControl'
-import { FormHelperText, InputLabel, Select, Typography } from '@mui/material'
+import { Box, CircularProgress, FormHelperText, InputLabel, Select, Typography } from '@mui/material'
 
 type Option = {
   key: any
@@ -11,73 +11,99 @@ type Option = {
   optionString: string
 }
 
-type Props = {
+interface CustomDropDownProps {
   name: string
   control?: any
   error?: any
   label: string
   optionList: Option[]
   defaultValue?: any
-  sx?: any
-  // value?: any
-  // onChange?: any
   isRequired?: boolean
   disabled?: boolean
+  loading?: boolean
 }
 
-function CustomDropDown(props: Props) {
-  const { isRequired = true } = props
+const CustomDropDown: React.FC<CustomDropDownProps> = ({
+  name,
+  control,
+  label,
+  optionList = [],
+  loading = false,
+  isRequired = true,
+  defaultValue = '',
+  error,
+  disabled = false
+}) => {
+  const renderLabel = () => (
+    <Box className='flex flex-row items-center'>
+      {label && <Typography component='span'>{label}</Typography>}
+      {isRequired && (
+        <Typography component='span' className='text-red-500 ml-0.5'>
+          *
+        </Typography>
+      )}
+    </Box>
+  )
+
+  const renderMenuItems = () => {
+    if (loading) {
+      return (
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            minHeight: 56,
+            width: '100%'
+          }}
+        >
+          <CircularProgress size={24} />
+        </Box>
+      )
+    }
+
+    if (optionList.length === 0) {
+      return (
+        <MenuItem key='no-options' value='' disabled>
+          No options found
+        </MenuItem>
+      )
+    }
+
+    return optionList.map((item: Option) => (
+      <MenuItem key={item.key} value={item.value}>
+        {item.optionString}
+      </MenuItem>
+    ))
+  }
+
   return (
     <Controller
-      name={props.name}
-      control={props.control}
-      defaultValue={props.defaultValue}
+      name={name}
+      control={control}
+      defaultValue={defaultValue}
       rules={{
-        required: isRequired ? `${props.label} is required` : false // Apply required rule conditionally
+        required: isRequired ? `${label} is required` : false
       }}
       render={({ field }) => (
-        <FormControl fullWidth error={!!props.error} className='relative' sx={props.sx}>
-          <InputLabel size='small'>
-            {isRequired === true ? (
-              <div className='flex flex-row'>
-                <Typography>{props.label}</Typography>
-                <Typography className='text-red-500 ml-1'>*</Typography>
-              </div>
-            ) : (
-              props.label
-            )}
-          </InputLabel>
+        <FormControl fullWidth error={error} className='relative'>
+          <InputLabel size='small'>{renderLabel()}</InputLabel>
           <Select
-            {...field} // Spread field to bind value and onChange
-            label={
-              isRequired === true ? (
-                <div className='flex flex-row'>
-                  <Typography>{props.label}</Typography>
-                  <Typography className='text-red-500 ml-1'>*</Typography>
-                </div>
-              ) : (
-                props.label
-              )
-            }
+            {...field}
+            label={renderLabel()}
             size='small'
-            // value={props.value}
-            // onChange={props.onChange}
-            disabled={props.disabled}
+            disabled={disabled}
             MenuProps={{
               PaperProps: {
                 sx: {
-                  maxHeight: 200 // Adjust the height of the dropdown options
+                  maxHeight: 200
                 }
               }
             }}
           >
-            {props?.optionList?.map((item: any) => (
-              <MenuItem key={item.key} value={item.value}>
-                {item.optionString}
-              </MenuItem>
-            ))}
+            {renderMenuItems()}
           </Select>
-          {props.error && <FormHelperText>{`please select a ${props.label}`}</FormHelperText>}
+          {error && <FormHelperText>{`Please select a ${label}`}</FormHelperText>}
         </FormControl>
       )}
     />

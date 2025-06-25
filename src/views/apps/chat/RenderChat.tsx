@@ -5,7 +5,7 @@ import { ChatDataType, StatusObjType } from '@/types/apps/chatTypes'
 import Chip from '@mui/material/Chip'
 import { formatDateToMonthShort } from './utils'
 import AvatarWithBadge from './AvatarWithBadge'
-import { Typography } from '@mui/material'
+import { Theme, Typography, useTheme } from '@mui/material'
 import CustomChip from '@/@core/components/mui/Chip'
 
 export const statusObj: StatusObjType = {
@@ -27,6 +27,8 @@ type RenderChatType = {
 export const renderChat = (props: RenderChatType) => {
   const { chatStore, getActiveUserData, setSidebarOpen, backdropOpen, setBackdropOpen, isBelowMdScreen } = props
 
+  const theme = useTheme<Theme>()
+
   const sortedChats = [...chatStore.chats].sort((a, b) => {
     const aLastMessageTime = a.chat.length ? new Date(a.chat[a.chat.length - 1].time).getTime() : 0
     const bLastMessageTime = b.chat.length ? new Date(b.chat[b.chat.length - 1].time).getTime() : 0
@@ -35,7 +37,7 @@ export const renderChat = (props: RenderChatType) => {
 
   return sortedChats.map(chat => {
     const contact = chatStore.contacts.find(contact => contact.chatRoomId === chat.id)
-    console.log("CONNTACT", contact);
+    console.log('CONNTACT', contact)
     if (!contact) return null
     const isChatActive = chatStore.activeUser?.chatRoomId === contact.chatRoomId
 
@@ -43,9 +45,16 @@ export const renderChat = (props: RenderChatType) => {
       <li
         key={chat.id}
         className={classnames('flex items-start gap-4 bs-[60px] pli-3 plb-2 cursor-pointer rounded mbe-1', {
-          'bg-[#4B0082] shadow-primarySm': isChatActive,
+          'shadow-primarySm': isChatActive,
           'text-[var(--mui-palette-primary-contrastText)]': isChatActive
         })}
+        style={{
+          backgroundColor: isChatActive
+            ? theme.palette.mode === 'dark'
+              ? theme.palette.primary.dark
+              : theme.palette.primary.main
+            : ''
+        }}
         onClick={() => {
           if (contact.chatRoomId !== undefined) {
             getActiveUserData(contact.chatRoomId)
@@ -65,10 +74,15 @@ export const renderChat = (props: RenderChatType) => {
         />
         <div className='min-is-0 flex-auto'>
           <div className='flex items-center gap-3'>
-            <Typography>
+            <Typography sx={{ color: isChatActive ? 'white' : '' }}>
               {contact.fullName.length > 8 ? `${contact.fullName.substring(0, 8)}...` : contact.fullName}
             </Typography>
-            <Chip icon={<PersonIcon />} label={contact.about.split('/')[1]} variant='outlined' />
+            <Chip
+              icon={<PersonIcon />}
+              label={contact.about.split('/')[1]}
+              variant='outlined'
+              sx={{ color: isChatActive ? 'white' : '', borderColor: isChatActive ? 'gray' : '' }}
+            />
           </div>
           {chat.chat.length ? (
             <Typography variant='body2' color={isChatActive ? 'inherit' : 'text.secondary'} className='truncate'>

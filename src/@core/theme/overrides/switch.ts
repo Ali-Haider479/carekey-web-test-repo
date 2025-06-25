@@ -34,14 +34,15 @@ const switchOverrides: Theme['components'] = {
               }
             })
       }),
-      switchBase: ({ ownerState }) => ({
+      switchBase: ({ theme, ownerState }) => ({
         top: 2,
         left: 1,
         '&.Mui-checked': {
           left: -7,
           color: 'var(--mui-palette-common-white)',
           '& + .MuiSwitch-track': {
-            opacity: 1
+            opacity: 1,
+            backgroundColor: theme.palette.mode === 'dark' ? theme.palette.primary.dark : theme.palette.primary.main
           }
         },
         '&.Mui-checked:not(.Mui-disabled) + .MuiSwitch-track': {
@@ -57,16 +58,16 @@ const switchOverrides: Theme['components'] = {
           backgroundColor: 'transparent'
         }
       }),
-      thumb: {
+      thumb: () => ({
         width: 14,
         height: 14,
         boxShadow: 'var(--mui-customShadows-xs)'
-      },
-      track: {
+      }),
+      track: ({ theme }) => ({
         opacity: 1,
         borderRadius: 10,
-        backgroundColor: 'var(--mui-palette-action-focus)'
-      }
+        backgroundColor: theme.palette.mode === 'dark' ? theme.palette.grey[800] : theme.palette.action.focus
+      })
     }
   }
 }

@@ -27,6 +27,7 @@ import DocumentsPage from './Certificates/Documents'
 import { CircularProgress } from '@mui/material'
 import CustomAlert from '@/@core/components/mui/Alter'
 import api from '@/utils/api'
+import { useTheme, Theme } from '@mui/material/styles'
 
 // Vars
 const steps = [
@@ -56,6 +57,7 @@ const EmployeeStepper = () => {
   const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
   const token = authUser?.backendAccessToken
   const router = useRouter()
+  const theme = useTheme<Theme>()
 
   const personalDetailsFormRef = useRef<{ handleSubmit: any }>(null)
   const loginInfoFormRef = useRef<{ handleSubmit: any }>(null)
@@ -387,12 +389,28 @@ const EmployeeStepper = () => {
                     <div className='step-label -mt-[100px]'>
                       <div>
                         <Typography
-                          className={`step-title text-base ${activeStep === steps.indexOf(label) ? (dark ? 'text-[#7112B7]' : 'text-[#4B0082]') : ''}`}
+                          className={`step-title text-base`}
+                          sx={{
+                            color:
+                              activeStep === steps.indexOf(label)
+                                ? theme.palette.mode === 'dark'
+                                  ? `${theme.palette.primary.dark} !important`
+                                  : `${theme.palette.primary.main} !important`
+                                : ''
+                          }}
                         >
                           {label.title}
                         </Typography>
                         <Typography
-                          className={`step-subtitle ${activeStep === steps.indexOf(label) ? (dark ? 'text-[#7112B7]' : 'text-[#4B0082]') : ''}`}
+                          className={`step-subtitle`}
+                          sx={{
+                            color:
+                              activeStep === steps.indexOf(label)
+                                ? theme.palette.mode === 'dark'
+                                  ? `${theme.palette.primary.dark} !important`
+                                  : `${theme.palette.primary.main} !important`
+                                : ''
+                          }}
                         >
                           {label.subtitle}
                         </Typography>

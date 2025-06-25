@@ -459,12 +459,28 @@ const AddClientStepper = () => {
                     <div className='step-label -mt-[90px]'>
                       <div>
                         <Typography
-                          className={`step-title text-base ${activeStep === steps.indexOf(label) ? (dark ? 'text-[#7112B7]' : 'text-[#4B0082]') : ''}`}
+                          className={`step-title text-base`}
+                          sx={theme => ({
+                            color:
+                              activeStep === steps.indexOf(label)
+                                ? theme.palette.mode === 'dark'
+                                  ? `${theme.palette.primary.dark} !important`
+                                  : `${theme.palette.primary.main} !important`
+                                : ''
+                          })}
                         >
                           {label.title}
                         </Typography>
                         <Typography
-                          className={`step-subtitle ${activeStep === steps.indexOf(label) ? (dark ? 'text-[#7112B7]' : 'text-[#4B0082]') : ''}`}
+                          className={`step-subtitle`}
+                          sx={theme => ({
+                            color:
+                              activeStep === steps.indexOf(label)
+                                ? theme.palette.mode === 'dark'
+                                  ? `${theme.palette.primary.dark} !important`
+                                  : `${theme.palette.primary.main} !important`
+                                : ''
+                          })}
                         >
                           {label.subtitle}
                         </Typography>

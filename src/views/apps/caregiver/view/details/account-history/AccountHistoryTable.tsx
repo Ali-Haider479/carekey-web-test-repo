@@ -137,6 +137,18 @@ const AccountHistoryTable = () => {
     })
   }
 
+  useEffect(() => {
+    if (!search) {
+      setUserActions(originalUserActions)
+      return
+    }
+
+    const filteredBySearch = originalUserActions.filter((action: any) =>
+      action.user.userName.toLowerCase().includes(search.toLowerCase())
+    )
+    setUserActions(filteredBySearch)
+  }, [search, originalUserActions])
+
   const onSubmit = async (e: any) => {
     e.preventDefault()
     try {
@@ -209,20 +221,12 @@ const AccountHistoryTable = () => {
             </Grid>
             <Grid container spacing={13}>
               <Grid size={{ xs: 12, sm: 4 }}>
-                <Button
-                  type='submit'
-                  variant='contained'
-                  className={`px-1 ${lightTheme ? 'bg-[#4B0082]' : 'bg-[#7112B7]'}`}
-                >
+                <Button type='submit' variant='contained' className={`px-1`}>
                   Apply
                 </Button>
               </Grid>
               <Grid size={{ xs: 12, sm: 4 }}>
-                <Button
-                  onClick={handleReset}
-                  variant='contained'
-                  className={`px-1 ${lightTheme ? 'bg-[#FF5B35]' : 'bg-[#FF5B3F]'}`}
-                >
+                <Button onClick={handleReset} variant='contained' className={`px-1`} color='error'>
                   Reset
                 </Button>
               </Grid>

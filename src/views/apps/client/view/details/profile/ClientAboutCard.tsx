@@ -8,6 +8,24 @@ import { EditableField } from '@/@core/components/custom-inputs/CustomEditableTe
 import CloseIcon from '@mui/icons-material/Close'
 import api from '@/utils/api'
 
+const initialErrorState = {
+  emailId: false,
+  primaryPhoneNumber: false,
+  primaryCellNumber: false,
+  zipCode: false,
+  emergencyEmailId: false,
+  emergencyContactNumber: false,
+  'physician.phoneNumber': false,
+  'physician.faxNumber': false,
+  'physician.zipCode': false,
+  'caseManager.email': false,
+  'caseManager.phoneNumber': false,
+  'caseManager.faxNumber': false,
+  'responsibleParty.phoneNumber': false,
+  'responsibleParty.faxNumber': false,
+  'responsibleParty.emailAddress': false
+}
+
 function ClientAboutCard() {
   const { id } = useParams()
   const [data, setData] = useState<any>(null)
@@ -15,20 +33,14 @@ function ClientAboutCard() {
   const [isEdit, setIsEdit] = useState(true)
   const [formData, setFormData] = useState<any>({})
   const [originalFormData, setOriginalFormData] = useState<any>({})
-  const [emailError, setEmailError] = useState<boolean>(false)
-  const [emergencyEmailError, setEmergencyEmailError] = useState<boolean>(false)
-  const [phoneNumberError, setPhoneNumberError] = useState<boolean>(false)
-  const [emergencyPhoneNumberError, setEmergencyPhoneNumberError] = useState<boolean>(false)
   const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
 
-  const formatPhoneNumber = (value: string = '') => {
-    // Remove all non-digits
-    const numbers = value.replace(/\D/g, '')
+  const [formErrors, setFormErrors] = useState<any>(initialErrorState)
 
-    // Early return if empty
+  const formatPhoneNumber = (value: string = '') => {
+    const numbers = value.replace(/\D/g, '')
     if (!numbers) return ''
 
-    // Apply mask according to input length
     if (numbers.length <= 3) {
       return `(${numbers}`
     } else if (numbers.length <= 6) {
@@ -36,6 +48,24 @@ function ClientAboutCard() {
     } else {
       return `(${numbers.slice(0, 3)}) ${numbers.slice(3, 6)}-${numbers.slice(6, 10)}`
     }
+  }
+
+  const validateEmail = (email: string) => {
+    if (!email) return true
+    const pattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
+    return pattern.test(email)
+  }
+
+  const validatePhoneNumber = (phone: string) => {
+    if (!phone) return true
+    const digits = phone.replace(/\D/g, '')
+    return digits.length === 10
+  }
+
+  const validateZipCode = (zipCode: string) => {
+    if (!zipCode) return true
+    const pattern = /^\d{5}(-\d{4})?$/
+    return pattern.test(zipCode)
   }
 
   useEffect(() => {
@@ -46,7 +76,6 @@ function ClientAboutCard() {
     try {
       setIsLoading(true)
       const response = await api.get(`/client/detail/${id}`)
-      console.log('CLIENT RES', response.data)
       setData(response.data)
     } catch (error) {
       console.error('Error fetching data', error)
@@ -57,6 +86,10 @@ function ClientAboutCard() {
 
   useEffect(() => {
     if (data) {
+      console.log(data)
+      const residentialAddress = data.addresses?.find(
+        (addr: any) => addr.address?.addressType === 'Residential'
+      )?.address;
       const formattedData = {
         firstName: data.firstName,
         middleName: data.middleName,
@@ -72,10 +105,10 @@ function ClientAboutCard() {
         emergencyContactNumber: data.emergencyContactNumber,
         emergencyEmailId: data.emergencyEmailId,
         gender: data.gender,
-        address: data.addresses?.[0]?.address?.address,
-        city: data.addresses?.[0]?.address?.city,
-        state: data.addresses?.[0]?.address?.state,
-        zipCode: data.addresses?.[0]?.address?.zipCode,
+        address: residentialAddress?.address || "",
+        city: residentialAddress?.city || "",
+        state: residentialAddress?.state || "",
+        zipCode: residentialAddress?.zipCode || "",
         admissionDate: data.admissionDate,
         dischargeDate: data.dischargeDate,
         'physician.name': data.clientPhysician?.name,
@@ -103,62 +136,79 @@ function ClientAboutCard() {
   }, [data])
 
   const handleCancel = () => {
-    setFormData({ ...originalFormData }) // Reset form data to original values
-    setEmailError(false)
-    setEmergencyEmailError(false)
-    setPhoneNumberError(false)
-    setEmergencyPhoneNumberError(false)
-    setIsEdit(true) // Switch back to view mode
+    setFormData({ ...originalFormData })
+    setFormErrors(initialErrorState)
+    setIsEdit(true)
   }
 
   const handleFieldChange = (name: string, value: any) => {
-    const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
-    if (!emailPattern.test(formData.emailId) && name.includes('emergencyEmailId')) {
-      setEmailError(true)
-    } else if (value.length > 0 && !emailPattern.test(formData.emergencyEmailId) && name.includes('emergencyEmailId')) {
-      setEmergencyEmailError(true)
-    } else {
-      setEmailError(false)
-      setEmergencyEmailError(false)
-    }
-
-    // Apply phone number formatting for specific fields
-    if (['primaryPhoneNumber', 'primaryCellNumber'].includes(name)) {
-      const digits = value.replace(/\D/g, '')
-      const formattedNumber = formatPhoneNumber(digits)
-
-      setPhoneNumberError(digits.length !== 10)
-
-      setFormData((prev: any) => ({
-        ...prev,
-        [name]: formattedNumber // Store formatted number in state
-      }))
-      return
-    }
-
-    if (name === 'emergencyContactNumber' && value.length > 0) {
-      const digits = value.replace(/\D/g, '')
-      const formattedNumber = formatPhoneNumber(digits)
-
-      setEmergencyPhoneNumberError(digits.length !== 10)
-
-      setFormData((prev: any) => ({
-        ...prev,
-        [name]: formattedNumber // Store formatted number in state
-      }))
-      return
-    } else if (name === 'emergencyContactNumber' && value.length === 0) {
-      setEmergencyPhoneNumberError(false)
-    }
-
-    // Handle all other fields normally
+    // Update form data first
     setFormData((prev: any) => ({
       ...prev,
       [name]: value
     }))
+
+    // Then validate
+    let isValid = true
+
+    // Email validation
+    if (
+      name === 'emailId' ||
+      name === 'emergencyEmailId' ||
+      name === 'caseManager.email' ||
+      name === 'responsibleParty.emailAddress'
+    ) {
+      isValid = validateEmail(value)
+      setFormErrors((prev: any) => ({
+        ...prev,
+        [name]: !isValid
+      }))
+    }
+
+    // Phone number validation
+    else if (
+      name.includes('phoneNumber') ||
+      name.includes('faxNumber') ||
+      name === 'primaryPhoneNumber' ||
+      name === 'primaryCellNumber' ||
+      name === 'emergencyContactNumber'
+    ) {
+      isValid = validatePhoneNumber(value)
+      setFormErrors((prev: any) => ({
+        ...prev,
+        [name]: !isValid
+      }))
+
+      // Format phone numbers
+      if (isValid && value) {
+        const formattedValue = formatPhoneNumber(value)
+        setFormData((prev: any) => ({
+          ...prev,
+          [name]: formattedValue
+        }))
+      }
+    }
+
+    // Zip code validation
+    else if (name === 'zipCode' || name === 'physician.zipCode') {
+      isValid = validateZipCode(value)
+      setFormErrors((prev: any) => ({
+        ...prev,
+        [name]: !isValid
+      }))
+    }
+  }
+
+  const hasErrors = () => {
+    return Object.values(formErrors).some(error => error === true)
   }
 
   const handleSave = async () => {
+    if (hasErrors()) {
+      alert('Please fix all validation errors before saving.')
+      return
+    }
+
     try {
       setIsLoading(true)
       await api.put(`/client/${id}`, formData)
@@ -169,9 +219,8 @@ function ClientAboutCard() {
         clientId: id
       }
       await api.post(`/account-history/log`, accountHistoryPayLoad)
-      console.log('FORM DATA', formData)
       setIsEdit(true)
-      fetchData() // Refresh data after update
+      fetchData()
     } catch (error) {
       console.error('Error updating data', error)
     } finally {
@@ -186,51 +235,116 @@ function ClientAboutCard() {
     { label: 'Last Name', name: 'lastName', value: formData.lastName },
     { label: 'PMI Number', name: 'pmiNumber', value: formData.pmiNumber },
     { label: 'Client Code', name: 'clientCode', value: formData.clientCode },
-    { label: 'Phone Number', name: 'primaryPhoneNumber', value: formData.primaryPhoneNumber },
+    {
+      label: 'Phone Number',
+      name: 'primaryPhoneNumber',
+      value: formData.primaryPhoneNumber,
+      error: formErrors.primaryPhoneNumber
+    },
     { label: 'Date of Birth', name: 'dateOfBirth', value: formData.dateOfBirth },
-    { label: 'Email', name: 'emailId', value: formData.emailId },
-    { label: 'Cell Phone Number', name: 'primaryCellNumber', value: formData.primaryCellNumber },
+    { label: 'Email', name: 'emailId', value: formData.emailId, error: formErrors.emailId },
+    {
+      label: 'Cell Phone Number',
+      name: 'primaryCellNumber',
+      value: formData.primaryCellNumber,
+      error: formErrors.primaryCellNumber
+    },
     { label: 'Gender', name: 'gender', value: formData.gender }
   ]
 
   const emergencyFields = [
     { label: 'Emergency Contact Name', name: 'emergencyContactName', value: formData.emergencyContactName },
-    { label: 'Emergency Contact Number', name: 'emergencyContactNumber', value: formData.emergencyContactNumber },
-    { label: 'Emergency Email ID', name: 'emergencyEmailId', value: formData.emergencyEmailId }
+    {
+      label: 'Emergency Contact Number',
+      name: 'emergencyContactNumber',
+      value: formData.emergencyContactNumber,
+      error: formErrors.emergencyContactNumber
+    },
+    {
+      label: 'Emergency Email ID',
+      name: 'emergencyEmailId',
+      value: formData.emergencyEmailId,
+      error: formErrors.emergencyEmailId
+    }
   ]
 
   const addressFields = [
     { label: 'Address', name: 'address', value: formData.address },
     { label: 'City', name: 'city', value: formData.city },
     { label: 'State', name: 'state', value: formData.state },
-    { label: 'Zip Code', name: 'zipCode', value: formData.zipCode }
+    { label: 'Zip Code', name: 'zipCode', value: formData.zipCode, error: formErrors.zipCode }
   ]
 
   const physicianFields = [
     { label: 'Physician Name', name: 'physician.name', value: formData['physician.name'] },
-    { label: 'Phone Number', name: 'physician.phoneNumber', value: formData['physician.phoneNumber'] },
+    {
+      label: 'Phone Number',
+      name: 'physician.phoneNumber',
+      value: formData['physician.phoneNumber'],
+      error: formErrors['physician.phoneNumber']
+    },
     { label: 'Clinic Name', name: 'physician.clinicName', value: formData['physician.clinicName'] },
-    { label: 'Fax Number', name: 'physician.faxNumber', value: formData['physician.faxNumber'] },
+    {
+      label: 'Fax Number',
+      name: 'physician.faxNumber',
+      value: formData['physician.faxNumber'],
+      error: formErrors['physician.faxNumber']
+    },
     { label: 'Address', name: 'physician.address', value: formData['physician.address'] },
     { label: 'City', name: 'physician.city', value: formData['physician.city'] },
     { label: 'State', name: 'physician.state', value: formData['physician.state'] },
-    { label: 'Zip Code', name: 'physician.zipCode', value: formData['physician.zipCode'] }
+    {
+      label: 'Zip Code',
+      name: 'physician.zipCode',
+      value: formData['physician.zipCode'],
+      error: formErrors['physician.zipCode']
+    }
   ]
 
   const caseManagerFields = [
     { label: 'Case Manager Name', name: 'caseManager.name', value: formData['caseManager.name'] },
     { label: 'Extension', name: 'caseManager.extension', value: formData['caseManager.extension'] },
-    { label: 'Phone Number', name: 'caseManager.phoneNumber', value: formData['caseManager.phoneNumber'] },
-    { label: 'Email', name: 'caseManager.email', value: formData['caseManager.email'] },
-    { label: 'Fax Number', name: 'caseManager.faxNumber', value: formData['caseManager.faxNumber'] }
+    {
+      label: 'Phone Number',
+      name: 'caseManager.phoneNumber',
+      value: formData['caseManager.phoneNumber'],
+      error: formErrors['caseManager.phoneNumber']
+    },
+    {
+      label: 'Email',
+      name: 'caseManager.email',
+      value: formData['caseManager.email'],
+      error: formErrors['caseManager.email']
+    },
+    {
+      label: 'Fax Number',
+      name: 'caseManager.faxNumber',
+      value: formData['caseManager.faxNumber'],
+      error: formErrors['caseManager.faxNumber']
+    }
   ]
 
   const responsiblePartyFields = [
     { label: 'Name', name: 'responsibleParty.name', value: formData['responsibleParty.name'] },
     { label: 'Relationship', name: 'responsibleParty.relationship', value: formData['responsibleParty.relationship'] },
-    { label: 'Phone Number', name: 'responsibleParty.phoneNumber', value: formData['responsibleParty.phoneNumber'] },
-    { label: 'Fax Number', name: 'responsibleParty.faxNumber', value: formData['responsibleParty.faxNumber'] },
-    { label: 'Email Address', name: 'responsibleParty.emailAddress', value: formData['responsibleParty.emailAddress'] }
+    {
+      label: 'Phone Number',
+      name: 'responsibleParty.phoneNumber',
+      value: formData['responsibleParty.phoneNumber'],
+      error: formErrors['responsibleParty.phoneNumber']
+    },
+    {
+      label: 'Fax Number',
+      name: 'responsibleParty.faxNumber',
+      value: formData['responsibleParty.faxNumber'],
+      error: formErrors['responsibleParty.faxNumber']
+    },
+    {
+      label: 'Email Address',
+      name: 'responsibleParty.emailAddress',
+      value: formData['responsibleParty.emailAddress'],
+      error: formErrors['responsibleParty.emailAddress']
+    }
   ]
 
   const admissionFields = [
@@ -238,10 +352,8 @@ function ClientAboutCard() {
     { label: 'Discharge Date', name: 'dischargeDate', value: formData.dischargeDate }
   ]
 
-  // Updated CardContent section for rendering fields
   return (
     <Card className='w-full shadow-md rounded-lg p-6'>
-      {/* About Header */}
       <CardContent className='flex justify-between items-center mb-6'>
         <Typography className='text-2xl font-semibold'>About</Typography>
         <div className='flex items-center justify-center gap-2'>
@@ -258,19 +370,8 @@ function ClientAboutCard() {
           <Button
             variant='contained'
             startIcon={isEdit ? <EditOutlined /> : <SaveOutlined />}
-            className='bg-[#4B0082] text-white'
             onClick={isEdit ? () => setIsEdit(false) : handleSave}
-            disabled={
-              emailError
-                ? true
-                : emergencyEmailError
-                  ? true
-                  : phoneNumberError
-                    ? true
-                    : emergencyPhoneNumberError
-                      ? true
-                      : false
-            }
+            disabled={!isEdit && hasErrors()}
           >
             {isEdit ? 'Edit' : 'Update'}
           </Button>
@@ -282,18 +383,26 @@ function ClientAboutCard() {
         <Typography className='text-lg font-semibold mb-4'>Personal Details</Typography>
         <div className='grid grid-cols-2 gap-y-4 gap-x-8'>
           {personalFields.map(field => (
-            <EditableField
-              key={field.name}
-              label={field.label}
-              value={field.value}
-              isEdit={isEdit}
-              onChange={handleFieldChange}
-              name={field.name}
-              disabled={field.name === 'gender'}
-            />
+            <div key={field.name}>
+              <EditableField
+                label={field.label}
+                value={field.value}
+                isEdit={isEdit}
+                onChange={handleFieldChange}
+                name={field.name}
+                disabled={field.name === 'gender'}
+              />
+              {field.error && (
+                <Typography className='text-error mt-1' sx={{ fontSize: '0.75rem' }}>
+                  {field.name.includes('emailId')
+                    ? 'Please enter a valid email address'
+                    : field.name.includes('primaryPhoneNumber') || field.name.includes('primaryCellNumber')
+                      ? 'Please enter a valid 10 digit number'
+                      : 'Invalid format'}
+                </Typography>
+              )}
+            </div>
           ))}
-          {emailError && <Typography className='text-error'>Please enter a valid email</Typography>}
-          {phoneNumberError && <Typography className='text-error'>Please enter a valid 10 digit number</Typography>}
         </div>
       </CardContent>
 
@@ -302,20 +411,22 @@ function ClientAboutCard() {
         <Typography className='text-lg font-semibold mb-4'>Emergency Contact</Typography>
         <div className='grid grid-cols-2 gap-y-4 gap-x-8'>
           {emergencyFields.map(field => (
-            <EditableField
-              key={field.name}
-              label={field.label}
-              value={field.value}
-              isEdit={isEdit}
-              onChange={handleFieldChange}
-              name={field.name}
-            />
+            <div key={field.name}>
+              <EditableField
+                label={field.label}
+                value={field.value}
+                isEdit={isEdit}
+                onChange={handleFieldChange}
+                name={field.name}
+              />
+              {field.error && (
+                <Typography className='text-error mt-1' sx={{ fontSize: '0.75rem' }}>
+                  {field.name.includes('emergencyEmailId') ? 'Please enter a valid email address' : 'Please enter a valid 10 digit number'}
+                </Typography>
+              )}
+            </div>
           ))}
         </div>
-        {emergencyEmailError && <Typography className='text-error'>Please enter a valid email</Typography>}
-        {emergencyPhoneNumberError && (
-          <Typography className='text-error'>Please enter a valid 10 digit number</Typography>
-        )}
       </CardContent>
 
       {/* Address Section */}
@@ -323,14 +434,20 @@ function ClientAboutCard() {
         <Typography className='text-lg font-semibold mb-4'>Address</Typography>
         <div className='grid grid-cols-2 gap-y-4 gap-x-8'>
           {addressFields.map(field => (
-            <EditableField
-              key={field.name}
-              label={field.label}
-              value={field.value}
-              isEdit={isEdit}
-              onChange={handleFieldChange}
-              name={field.name}
-            />
+            <div key={field.name}>
+              <EditableField
+                label={field.label}
+                value={field.value}
+                isEdit={isEdit}
+                onChange={handleFieldChange}
+                name={field.name}
+              />
+              {field.error && (
+                <Typography className='text-error mt-1' sx={{ fontSize: '0.75rem' }}>
+                  Invalid zip code format (e.g., 12345)
+                </Typography>
+              )}
+            </div>
           ))}
         </div>
       </CardContent>
@@ -340,14 +457,20 @@ function ClientAboutCard() {
         <Typography className='text-lg font-semibold mb-4'>Physician Information</Typography>
         <div className='grid grid-cols-2 gap-y-4 gap-x-8'>
           {physicianFields.map(field => (
-            <EditableField
-              key={field.name}
-              label={field.label}
-              value={field.value}
-              isEdit={isEdit}
-              onChange={handleFieldChange}
-              name={field.name}
-            />
+            <div key={field.name}>
+              <EditableField
+                label={field.label}
+                value={field.value}
+                isEdit={isEdit}
+                onChange={handleFieldChange}
+                name={field.name}
+              />
+              {field.error && (
+                <Typography className='text-error mt-1' sx={{ fontSize: '0.75rem' }}>
+                  {field.name.includes('physician.zipCode') ? 'Invalid zip code format' : 'Please enter a valid 10 digit number'}
+                </Typography>
+              )}
+            </div>
           ))}
         </div>
       </CardContent>
@@ -357,14 +480,20 @@ function ClientAboutCard() {
         <Typography className='text-lg font-semibold mb-4'>Case Manager</Typography>
         <div className='grid grid-cols-2 gap-y-4 gap-x-8'>
           {caseManagerFields.map(field => (
-            <EditableField
-              key={field.name}
-              label={field.label}
-              value={field.value}
-              isEdit={isEdit}
-              onChange={handleFieldChange}
-              name={field.name}
-            />
+            <div key={field.name}>
+              <EditableField
+                label={field.label}
+                value={field.value}
+                isEdit={isEdit}
+                onChange={handleFieldChange}
+                name={field.name}
+              />
+              {field.error && (
+                <Typography className='text-error mt-1' sx={{ fontSize: '0.75rem' }}>
+                  {field.name.includes('caseManager.email') ? 'Please enter a valid email address' : 'Please enter a valid 10 digit number'}
+                </Typography>
+              )}
+            </div>
           ))}
         </div>
       </CardContent>
@@ -374,73 +503,21 @@ function ClientAboutCard() {
         <Typography className='text-lg font-semibold mb-4'>Responsible Party</Typography>
         <div className='grid grid-cols-2 gap-y-4 gap-x-8'>
           {responsiblePartyFields.map(field => (
-            <EditableField
-              key={field.name}
-              label={field.label}
-              value={field.value}
-              isEdit={isEdit}
-              onChange={handleFieldChange}
-              name={field.name}
-            />
+            <div key={field.name}>
+              <EditableField
+                label={field.label}
+                value={field.value}
+                isEdit={isEdit}
+                onChange={handleFieldChange}
+                name={field.name}
+              />
+              {field.error && (
+                <Typography className='text-error mt-1' sx={{ fontSize: '0.75rem' }}>
+                  {field.name.includes('responsibleParty.emailAddress') ? 'Please enter a valid email address' : 'Please enter a valid 10 digit number'}
+                </Typography>
+              )}
+            </div>
           ))}
-        </div>
-      </CardContent>
-
-      {/* Section: Service Information */}
-      <CardContent>
-        <h2 className='text-lg font-semibold  mb-4'>Service Information</h2>
-        <div className='grid grid-cols-2 gap-x-8 gap-y-4'>
-          <span className='text-sm '>
-            Shared Care: <Typography>{`${formData?.sharedCare ? formData?.sharedCare : ''}`}</Typography>
-          </span>
-          <span className='text-sm '>
-            Approved Service Locations: <Typography>NA</Typography>
-          </span>
-        </div>
-      </CardContent>
-
-      {/* Section: Service Plan Details */}
-      <CardContent>
-        <h2 className='text-lg font-semibold  mb-4'>Service Plan Details</h2>
-        <div className='space-y-4'>
-          <div>
-            <span className='text-sm '>
-              <Typography>IHS (with training) (H2014 UC U3)</Typography> (Aug 1, 2023 - Nov 27, 2024) Approved Units:
-              1040 - <Typography> 0.5 Hrs/Day - 3.75 Hrs/Week</Typography>
-            </span>
-          </div>
-          <div>
-            <span className='text-sm '>
-              Community Integration & Socialization: Assist with Community Participation, Entertainments, Activities,
-              Health, Safety & Wellness, and completing Paperwork
-            </span>
-          </div>
-          <div>
-            <span className='text-sm '>
-              <Typography>Integrated Community Supports Daily (T1020 UC):</Typography> (Nov 28, 2023 - Jul 31, 2024)
-              Approved Units: <Typography>248 - 0.25 Hrs/Day - 1.75 Hrs/Week </Typography>
-            </span>
-          </div>
-          <div>
-            <span className='text-sm '>
-              Going to store, Home Organization, Community Activity, Budgeting, Assist with scheduling ride to attend
-              medical appointments, Client will work towards improving his health by being physically active/gym.,
-              Assist with reading and organizing mails
-            </span>
-          </div>
-        </div>
-        <div className='mb-6 border-t pt-6 mt-4'>
-          <div className='grid grid-cols-2 gap-x-8 gap-y-4'>
-            <span className='text-sm '>
-              Available Services: <Typography>---</Typography>
-            </span>
-            <span className='text-sm '>
-              Place of Services: <Typography>---</Typography>
-            </span>
-            <span className='text-sm '>
-              Client Location: <Typography>---</Typography>
-            </span>
-          </div>
         </div>
       </CardContent>
     </Card>

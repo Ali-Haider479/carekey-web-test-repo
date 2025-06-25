@@ -349,16 +349,9 @@ const ServiceAuthorization = () => {
               />
             </div>
             <div className='flex justify-end gap-3'>
-              <Button
-                startIcon={<Add />}
-                className='w-[160px] bg-[#4B0082] text-white h-10'
-                onClick={() => setIsListModalShow(true)}
-              >
+              <Button startIcon={<Add />} className='w-[160px] h-10' onClick={() => setIsListModalShow(true)}>
                 ADD SA LIST
               </Button>
-              {/* <Button startIcon={<Add />} className='bg-[#4B0082] text-white h-10' onClick={handleAddNew}>
-                ADD SERVICE AUTHORIZATION
-              </Button> */}
             </div>
           </div>
         </Card>
@@ -585,7 +578,7 @@ const ServiceAuthorization = () => {
                   <Button variant='outlined' color='secondary' onClick={handleModalClose}>
                     CANCEL
                   </Button>
-                  <Button type='submit' variant='contained' className='bg-[#4B0082]'>
+                  <Button type='submit' variant='contained'>
                     {isEditMode ? 'Update' : 'Save'}
                   </Button>
                 </div>

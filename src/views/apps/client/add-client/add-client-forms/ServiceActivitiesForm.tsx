@@ -2,29 +2,23 @@
 import { forwardRef, useEffect, useImperativeHandle, useState } from 'react'
 import { FormProvider, useForm } from 'react-hook-form'
 import {
-  Button,
   Card,
   CardContent,
   Checkbox,
-  FormControlLabel,
-  FormGroup,
-  FormLabel,
-  InputLabel,
-  Select,
-  Typography
+  // FormControlLabel,
+  // FormGroup,
+  FormLabel
+  // Typography
 } from '@mui/material'
 import Grid from '@mui/material/Grid2'
 import CustomDropDown from '@/@core/components/custom-inputs/CustomDropDown'
 import ControlledTextArea from '@/@core/components/custom-inputs/ControlledTextArea'
-import ServiceActivities from '@/@core/components/custom-inputs/ServiceAcitvitesDropDown'
+// import ServiceActivities from '@/@core/components/custom-inputs/ServiceAcitvitesDropDown'
 import { clientServiceFormDataType } from './formTypes'
 import CustomTextField from '@/@core/components/custom-inputs/CustomTextField'
 import ControlledDatePicker from '@/@core/components/custom-inputs/ControledDatePicker'
-import TextField from '@mui/material/TextField'
-import MenuItem from '@mui/material/MenuItem'
-import FormControl from '@mui/material/FormControl'
-import axios from 'axios'
-import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
+// import TextField from '@mui/material/TextField'
+// import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
 import api from '@/utils/api'
 import ServiceAndActivities from '@/@core/components/custom-inputs/ServiceAcitvitesDropDown'
 
@@ -50,7 +44,7 @@ const ServiceActivitiesForm = forwardRef<{ handleSubmit: any }, Props>(({ onFini
     control,
     formState: { errors },
     register,
-    getValues,
+    // getValues,
     setValue,
     watch,
     handleSubmit // Add this if you want to use form submission
@@ -64,10 +58,10 @@ const ServiceActivitiesForm = forwardRef<{ handleSubmit: any }, Props>(({ onFini
   const [serviceTypes, setServiceTypes] = useState<any[]>()
   const [activities, setActivities] = useState<any[]>()
   const [caregiversList, setCaregiversList] = useState<any>()
-  const [assignmentDate, setAssignmentDate] = useState<Date | null>(null)
-  const [unAssignmentDate, setUnAssignmentDate] = useState<Date | null>(null)
-  const [lastCompletedDate, setLastCompletedDate] = useState<Date | null>(null)
-  const [dueDate, setDueDate] = useState<Date | null>(null)
+  // const [assignmentDate, setAssignmentDate] = useState<Date | null>(null)
+  // const [unAssignmentDate, setUnAssignmentDate] = useState<Date | null>(null)
+  // const [lastCompletedDate, setLastCompletedDate] = useState<Date | null>(null)
+  // const [dueDate, setDueDate] = useState<Date | null>(null)
 
   const selectedServiceId = watch('service')
   const assignCaregiverEnabled = watch('enableAssignCaregiver')
@@ -252,7 +246,7 @@ const ServiceActivitiesForm = forwardRef<{ handleSubmit: any }, Props>(({ onFini
           isUpdate={false} // Set to true for update mode
         />
 
-        <Card className='mt-3'>
+        {/* <Card className='mt-3'>
           <CardContent>
             <Typography className='text-xl font-semibold mb-4'>Care Plan Due</Typography>
             <div className='grid grid-cols-1 md:grid-cols-3 gap-x-5 mb-3 mt-2'>
@@ -325,7 +319,7 @@ const ServiceActivitiesForm = forwardRef<{ handleSubmit: any }, Props>(({ onFini
               </FormGroup>
             </div>
           </CardContent>
-        </Card>
+        </Card> */}
       </form>
     </FormProvider>
   )

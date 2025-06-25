@@ -135,12 +135,7 @@ const PCAUMPITable = ({ form }: Props) => {
             <Typography variant='h4' gutterBottom>
               PCA UMPI Information
             </Typography>
-            <Button
-              variant='contained'
-              component='label'
-              size='small'
-              className='!bg-[#4B0082] !text-[white] !border-[#4B0082] hover:!bg-[#4B0082] hover:!border-[#4B0082] !rounded-[8px]'
-            >
+            <Button variant='contained' component='label' size='small' className='!rounded-[8px]'>
               CHOOSE FILE
               <input type='file' hidden onChange={handleFileUpload} />
             </Button>

@@ -267,7 +267,11 @@ const ChatLog = ({ chatStore, isBelowLgScreen, isBelowMdScreen, isBelowSmScreen 
                       key={index}
                       className={classnames('whitespace-pre-wrap pli-4 plb-2 shadow-xs', {
                         'bg-backgroundPaper rounded-e rounded-b': !isSender,
-                        'bg-[#4B0082] text-[var(--mui-palette-primary-contrastText)] rounded-s rounded-b': isSender
+                        'text-[var(--mui-palette-primary-contrastText)] rounded-s rounded-b': isSender
+                      })}
+                      sx={theme => ({
+                        backgroundColor:
+                          theme.palette.mode === 'light' ? theme.palette.primary.main : theme.palette.primary.dark
                       })}
                       style={{ wordBreak: 'break-word' }}
                     >

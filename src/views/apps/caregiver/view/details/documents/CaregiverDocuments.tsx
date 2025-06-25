@@ -21,20 +21,13 @@ import { Add, DeleteOutline, Edit, EditOutlined, Save, SaveOutlined } from '@mui
 import DialogCloseButton from '@/components/dialogs/DialogCloseButton'
 import api from '@/utils/api'
 import { useTheme } from '@emotion/react'
-import ReactTable from '@/@core/components/mui/ReactTable'
+import ReactTable, { type Column } from '@/@core/components/mui/ReactTable'
 import { useParams } from 'next/navigation'
 
 type Props = {
   onFinish: (data: any) => void
   defaultValues?: any
   caregiverDocuments?: any
-}
-
-interface Column {
-  id: string
-  label: string
-  minWidth: number
-  render: (item: any) => JSX.Element
 }
 
 const CaregiverDocuments = forwardRef<{ handleSubmit: any }, Props>(({ onFinish, defaultValues }, ref) => {
@@ -259,6 +252,7 @@ const CaregiverDocuments = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
   }, [])
 
   const getPdf = async (key: string, fileName: string) => {
+    console.log('Getting pdf with key: ', key)
     const pdfRes = await api.get(`/caregivers/getPdf/${key}`)
     console.log('PDF RESPONSE --->> ', pdfRes)
     if (pdfRes && pdfRes.status === 200) {
@@ -267,6 +261,7 @@ const CaregiverDocuments = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
   }
 
   const openPdfInNewTab = (pdfUrl: string, itemName: string) => {
+    console.log('Opening pdf with url: ', pdfUrl)
     if (/iPhone/i.test(navigator.userAgent) || !pdfUrl.includes('data')) {
       const a = document.createElement('a')
       a.href = pdfUrl
@@ -318,7 +313,7 @@ const CaregiverDocuments = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
   }
 
   const uploadDocuments = async (
-    files: { path: string }[],
+    files: File[],
     documentType: string,
     caregiverId: string,
     expiryDate?: string,
@@ -334,16 +329,8 @@ const CaregiverDocuments = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
     const formData = new FormData()
 
     // Append files
-    files.forEach((file: { path: string }) => {
-      // Use File object instead of Blob for better compatibility
-      const fileObject = new File([file.path], file.path, {
-        type: file.path.endsWith('.pdf')
-          ? 'application/pdf'
-          : file.path.endsWith('.jpg') || file.path.endsWith('.png')
-            ? 'image/jpeg'
-            : 'application/octet-stream'
-      })
-      formData.append('file', fileObject, file.path)
+    files.forEach((file: File) => {
+      formData.append('file', file)
     })
 
     // Append common parameters
@@ -595,6 +582,7 @@ const CaregiverDocuments = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
         documentName: newTrainingCertificateName || 'default-certificate'
         // Add other metadata fields if needed
       }
+      console.log('Uploaded--TrainingFile', trainingCertificates)
       const documentUploads = [
         uploadDocuments(
           trainingCertificates,
@@ -849,11 +837,12 @@ const CaregiverDocuments = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
       </>
     )
 
-  const trainingCertificateColumns: Column[] = [
+  const trainingCertificateColumns: Column<any>[] = [
     {
       id: 'certificateName',
       label: 'NAME',
-      minWidth: 170,
+      align: 'left',
+      width: 1000,
       render: item => (
         <Typography className='font-light text-sm my-3'>{item?.uploadedDocument?.metaData?.documentName}</Typography>
       )
@@ -861,13 +850,13 @@ const CaregiverDocuments = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
     {
       id: 'expiryDate',
       label: 'EXPIRY DATE',
-      minWidth: 170,
+      width: 1000,
       render: item => <Typography className='font-light text-sm my-3'>{item.uploadedDocument.expiryDate}</Typography>
     },
     {
       id: 'fileName',
       label: 'FILE NAME',
-      minWidth: 170,
+      width: 1000,
       render: item => {
         return (
           <div
@@ -875,8 +864,8 @@ const CaregiverDocuments = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
             onClick={() => getPdf(item?.uploadedDocument?.fileKey, item.uploadedDocument.fileName)}
           >
             <Typography className='font-light text-sm my-3'>
-              {item.uploadedDocument.fileName.length > 15
-                ? `${item.uploadedDocument.fileName.substring(0, 15)}...`
+              {item.uploadedDocument.fileName.length > 20
+                ? `${item.uploadedDocument.fileName.substring(0, 20)}...`
                 : item.uploadedDocument.fileName}
             </Typography>
           </div>
@@ -884,11 +873,12 @@ const CaregiverDocuments = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
       }
     },
     {
-      id: 'actions',
+      id: 'docActions',
       label: 'ACTION',
-      minWidth: 170,
+      align: 'center',
+      width: 220,
       render: item => (
-        <div className='flex flex-row gap-4'>
+        <div className='flex flex-row gap-2 ml-5'>
           <EditOutlined className='cursor-pointer' onClick={() => handleTrainingEditModalOpen(item)} />
           <DeleteOutline
             color='error'
@@ -903,11 +893,11 @@ const CaregiverDocuments = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
     }
   ]
 
-  const otherDocColumns: Column[] = [
+  const otherDocColumns: Column<any>[] = [
     {
       id: 'certificateName',
       label: 'NAME',
-      minWidth: 170,
+      width: 1000,
       render: item => (
         <Typography className='font-light text-sm my-3'>{item?.uploadedDocument?.metaData?.documentName}</Typography>
       )
@@ -915,21 +905,21 @@ const CaregiverDocuments = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
     {
       id: 'expiryDate',
       label: 'EXPIRY DATE',
-      minWidth: 170,
+      width: 1000,
       render: item => <Typography className='font-light text-sm my-3'>{item.uploadedDocument.expiryDate}</Typography>
     },
     {
       id: 'fileName',
       label: 'FILE NAME',
-      minWidth: 170,
+      width: 1000,
       render: item => (
         <div
           className='cursor-pointer w-1/2'
           onClick={() => getPdf(item?.uploadedDocument?.fileKey, item.uploadedDocument.fileName)}
         >
           <Typography className='font-light text-sm my-3'>
-            {item.uploadedDocument.fileName.length > 15
-              ? `${item.uploadedDocument.fileName.substring(0, 15)}...`
+            {item.uploadedDocument.fileName.length > 20
+              ? `${item.uploadedDocument.fileName.substring(0, 20)}...`
               : item.uploadedDocument.fileName}
           </Typography>
         </div>
@@ -938,9 +928,9 @@ const CaregiverDocuments = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
     {
       id: 'actions',
       label: 'ACTION',
-      minWidth: 170,
+      width: 220,
       render: item => (
-        <div className='flex flex-row gap-4'>
+        <div className='flex flex-row gap-2'>
           <EditOutlined className='cursor-pointer' onClick={() => handlDocumentEditModalOpen(item)} />
           <DeleteOutline
             color='error'
@@ -974,7 +964,7 @@ const CaregiverDocuments = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
                 <Button
                   variant='contained'
                   onClick={() => setNewTrainingCertificateModalShow(true)}
-                  className={`mr-5 mb-4 cursor-pointer ${lightTheme ? 'bg-[#4B0082]' : 'bg-[#7112B7]'}`}
+                  className={`mr-6 mb-4 cursor-pointer `}
                   startIcon={<Add />}
                 >
                   Add
@@ -1030,7 +1020,7 @@ const CaregiverDocuments = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
                           ? handleDrivingLicenseEditModalOpen(drivingLicenseDocument?.[0])
                           : setNewDrivingLicenseModalShow(true)
                       }}
-                      className={`${lightTheme ? 'bg-[#4B0082]' : 'bg-[#7112B7]'} mr-0 mb-4 cursor-pointer`}
+                      className={` mr-0 mb-4 cursor-pointer`}
                       startIcon={drivingLicenseDocument?.length ? <Edit /> : <Add />}
                     >
                       {drivingLicenseDocument?.length ? 'Update' : 'Add'}
@@ -1044,7 +1034,7 @@ const CaregiverDocuments = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
                         ? handleDrivingLicenseEditModalOpen(drivingLicenseDocument?.[0])
                         : setNewDrivingLicenseModalShow(true)
                     }}
-                    className={`${lightTheme ? 'bg-[#4B0082]' : 'bg-[#7112B7]'} mb-4 cursor-pointer`}
+                    className={` mb-4 cursor-pointer`}
                     startIcon={drivingLicenseDocument?.length ? <Edit /> : <Add />}
                   >
                     {drivingLicenseDocument?.length ? 'Update' : 'Add'}
@@ -1127,7 +1117,7 @@ const CaregiverDocuments = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
                         ? handleUmpiDocumentEditModalOpen(umpiDocument?.[0])
                         : setNewUmpiDocModalShow(true)
                     }}
-                    className={`${lightTheme ? 'bg-[#4B0082]' : 'bg-[#7112B7]'} mr-0 mb-4 cursor-pointer`}
+                    className={` mr-0 mb-4 cursor-pointer`}
                     startIcon={umpiDocument?.length ? <Edit /> : <Add />}
                   >
                     {umpiDocument?.length ? 'Update' : 'Add'}
@@ -1141,7 +1131,7 @@ const CaregiverDocuments = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
                       ? handleUmpiDocumentEditModalOpen(umpiDocument?.[0])
                       : setNewUmpiDocModalShow(true)
                   }}
-                  className={`${lightTheme ? 'bg-[#4B0082]' : 'bg-[#7112B7]'} mr-0 mb-4 cursor-pointer`}
+                  className={` mr-0 mb-4 cursor-pointer`}
                   startIcon={umpiDocument?.length ? <Edit /> : <Add />}
                 >
                   {umpiDocument?.length ? 'Update' : 'Add'}
@@ -1207,7 +1197,7 @@ const CaregiverDocuments = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
                 <Button
                   variant='contained'
                   onClick={() => setNewDocumentsModalShow(true)}
-                  className={`${lightTheme ? 'bg-[#4B0082]' : 'bg-[#7112B7]'} mr-5 mb-4 cursor-pointer`}
+                  className={` mr-5 mb-4 cursor-pointer`}
                   startIcon={<Add />}
                   disabled={otherDocuments?.length === 3}
                 >
@@ -1328,7 +1318,7 @@ const CaregiverDocuments = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
                   disabled={newDocumentsSaveButtonLoading}
                   type='submit'
                   variant='contained'
-                  className={`${lightTheme ? 'bg-[#4B0082]' : 'bg-[#7112B7]'}`}
+                  className={``}
                 >
                   SAVE
                 </Button>
@@ -1403,7 +1393,7 @@ const CaregiverDocuments = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
                   disabled={newTrainingCertificateSaveButtonLoading}
                   type='submit'
                   variant='contained'
-                  className={`${lightTheme ? 'bg-[#4B0082]' : 'bg-[#7112B7]'}`}
+                  className={``}
                 >
                   SAVE
                 </Button>
@@ -1462,7 +1452,7 @@ const CaregiverDocuments = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
                   disabled={newTrainingCertificateSaveButtonLoading}
                   type='submit'
                   variant='contained'
-                  className={`${lightTheme ? 'bg-[#4B0082]' : 'bg-[#7112B7]'}`}
+                  className={``}
                 >
                   SAVE
                 </Button>
@@ -1510,7 +1500,7 @@ const CaregiverDocuments = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
                   label={'Certificate Name'}
                   placeHolder={'123ABC'}
                   name={'newTrainingCertificateName'}
-                  defaultValue={'123ABC'}
+                  defaultValue={''}
                   type={'text'}
                   error={!!errors?.trainingCertificateName}
                   isRequired={false}
@@ -1536,7 +1526,7 @@ const CaregiverDocuments = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
                   disabled={newTrainingCertificateSaveButtonLoading}
                   type='submit'
                   variant='contained'
-                  className={`${lightTheme ? 'bg-[#4B0082]' : 'bg-[#7112B7]'}`}
+                  className={``}
                 >
                   SAVE
                 </Button>
@@ -1622,7 +1612,7 @@ const CaregiverDocuments = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
                   disabled={drivingLicenseSaveButtonLoading}
                   type='submit'
                   variant='contained'
-                  className={`${lightTheme ? 'bg-[#4B0082]' : 'bg-[#7112B7]'}`}
+                  className={``}
                 >
                   SAVE
                 </Button>
@@ -1708,7 +1698,7 @@ const CaregiverDocuments = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
                   disabled={drivingLicenseSaveButtonLoading}
                   type='submit'
                   variant='contained'
-                  className={`${lightTheme ? 'bg-[#4B0082]' : 'bg-[#7112B7]'}`}
+                  className={``}
                 >
                   SAVE
                 </Button>
@@ -1790,7 +1780,7 @@ const CaregiverDocuments = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
                   disabled={umpiDocSaveButtonLoading}
                   type='submit'
                   variant='contained'
-                  className={`${lightTheme ? 'bg-[#4B0082]' : 'bg-[#7112B7]'}`}
+                  className={``}
                 >
                   SAVE
                 </Button>
@@ -1872,7 +1862,7 @@ const CaregiverDocuments = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
                   disabled={umpiDocSaveButtonLoading}
                   type='submit'
                   variant='contained'
-                  className={`${lightTheme ? 'bg-[#4B0082]' : 'bg-[#7112B7]'}`}
+                  className={``}
                 >
                   SAVE
                 </Button>
@@ -1909,7 +1899,7 @@ const CaregiverDocuments = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
                 // type='submit'
                 onClick={handleDelete}
                 variant='contained'
-                className={`${lightTheme ? 'bg-[#4B0082]' : 'bg-[#7112B7]'}`}
+                className={``}
               >
                 YES
               </Button>

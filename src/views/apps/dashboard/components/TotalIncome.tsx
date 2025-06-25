@@ -71,12 +71,12 @@ const TotalIncome = () => {
   // Hooks
   const theme = useTheme()
   const [chartData, setChartData] = useState<{
-    series: { name: string; data: number[] }[];
-    categories: string[];
+    series: { name: string; data: number[] }[]
+    categories: string[]
   }>({
     series: [{ name: 'Hours', data: [0, 0, 0, 0, 0, 0, 0] }],
-    categories: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
-  });
+    categories: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+  })
   const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
 
   // Fetch data from backend
@@ -84,19 +84,21 @@ const TotalIncome = () => {
     const fetchWeeklyReport = async () => {
       try {
         const tenantId = authUser?.tenant?.id
-        const response = await api.get(`/caregivers/weekly-report/${tenantId}`)
-        const data = response.data
-        setChartData({
-          series: data.series,
-          categories: data.categories,
-        });
+        if (tenantId) {
+          const response = await api.get(`/caregivers/weekly-report/${tenantId}`)
+          const data = response?.data
+          setChartData({
+            series: data?.series,
+            categories: data?.categories
+          })
+        }
       } catch (error) {
-        console.error('Error fetching weekly report:', error);
+        console.error('Error fetching weekly report:', error)
       }
-    };
+    }
 
-    fetchWeeklyReport();
-  }, []);
+    fetchWeeklyReport()
+  }, [])
 
   const options: ApexOptions = {
     chart: {

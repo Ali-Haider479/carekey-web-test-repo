@@ -17,6 +17,7 @@ import AdUnitsIcon from '@mui/icons-material/AdUnits'
 import { calculateHoursWorked } from '@/utils/helperFunctions'
 import api from '@/utils/api'
 import ReactTable from '@/@core/components/mui/ReactTable'
+import { useTheme } from '@emotion/react'
 
 interface Column {
   id: string
@@ -31,6 +32,8 @@ const TimeLogTable = () => {
   const [data, setData] = useState([])
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(false)
+  const theme: any = useTheme()
+  const lightTheme = theme.palette.mode === 'light'
 
   const fetchTimeLog = async () => {
     try {
@@ -155,11 +158,25 @@ const TimeLogTable = () => {
         <Chip
           label={item?.manualEntry === true ? 'Yes' : 'No'}
           sx={{
-            backgroundColor: item?.manualEntry === true ? '#72E1281F' : '#FDB5281F',
-            borderRadius: '50px',
-            color: item?.manualEntry === true ? '#71DD37' : '#FFAB00',
+            backgroundColor:
+              item?.manualEntry === true
+                ? theme.palette.mode === 'light'
+                  ? theme.palette.success.lightOpacity
+                  : theme.palette.success.lighterOpacity
+                : theme.palette.mode === 'light'
+                  ? theme.palette.warning.lightOpacity
+                  : theme.palette.warning.lighterOpacity,
+            borderRadius: '20px',
+            color:
+              item?.manualEntry === true
+                ? theme.palette.mode === 'light'
+                  ? theme.palette.success.main
+                  : theme.palette.success.dark
+                : theme.palette.mode === 'light'
+                  ? theme.palette.warning.main
+                  : theme.palette.warning.dark,
             '& .MuiChip-label': {
-              padding: '0 10px'
+              padding: '0 15px'
             }
           }}
         />

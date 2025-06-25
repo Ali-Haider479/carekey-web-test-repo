@@ -14,6 +14,7 @@ import { AddEventSidebarType, AddEventType } from '@/types/apps/calendarTypes'
 import { Alert, Grid2 as Grid, TextField } from '@mui/material'
 import { useParams } from 'next/navigation'
 import api from '@/utils/api'
+import { useTheme } from '@emotion/react'
 
 interface PickerProps {
   label?: string
@@ -169,6 +170,9 @@ const AddEventModal = (props: AddEventSidebarType) => {
       />
     )
   })
+
+  const theme: any = useTheme()
+  const lightTheme = theme.palette.mode === 'light'
 
   const fetchClientUsers = async () => {
     try {
@@ -567,7 +571,7 @@ const AddEventModal = (props: AddEventSidebarType) => {
                 <Button variant='outlined' color='secondary' onClick={handleModalClose}>
                   CANCEL
                 </Button>
-                <Button type='submit' variant='contained' className='bg-[#4B0082]' disabled={!isFormValid()}>
+                <Button type='submit' variant='contained' disabled={!isFormValid()}>
                   Update
                 </Button>
               </>
@@ -576,7 +580,7 @@ const AddEventModal = (props: AddEventSidebarType) => {
                 <Button variant='outlined' color='secondary' onClick={handleModalClose}>
                   CANCEL
                 </Button>
-                <Button type='submit' variant='contained' className='bg-[#4B0082]' disabled={!isFormValid()}>
+                <Button type='submit' variant='contained' disabled={!isFormValid()}>
                   ADD EVENT
                 </Button>
               </>

@@ -11,11 +11,10 @@ import MenuItem from '@mui/material/MenuItem'
 import type { CaregiverTypes } from '@/types/apps/caregiverTypes'
 
 // Component Imports
-import CustomTextField from '@core/components/mui/TextField'
 import Card from '@mui/material/Card'
 import { useForm } from 'react-hook-form'
 import axios from 'axios'
-import { Button, Typography } from '@mui/material'
+import { Button, TextField, Typography } from '@mui/material'
 import { USStates } from '@/utils/constants'
 import api from '@/utils/api'
 import { useTheme } from '@emotion/react'
@@ -146,23 +145,25 @@ const CaregiverFilters = ({
             <Typography variant='h6' className='mb-2'>
               Caregiver Name
             </Typography>
-            <CustomTextField
+            <TextField
               fullWidth
+              size='small'
               id='caregiver-name'
               placeholder='Caregiver Name'
               value={filters.caregiverName}
               onChange={e => setFilters({ ...filters, caregiverName: e.target.value })}
-              slotProps={{
-                select: { displayEmpty: true }
-              }}
+              // slotProps={{
+              //   select: { displayEmpty: true }
+              // }}
             />
           </Grid>
           <Grid size={{ xs: 12, sm: 3 }}>
             <Typography variant='h6' className='mb-2'>
               Account Status
             </Typography>
-            <CustomTextField
+            <TextField
               select
+              size='small'
               fullWidth
               placeholder='Account Status'
               id='select-status'
@@ -172,17 +173,24 @@ const CaregiverFilters = ({
                 select: { displayEmpty: true }
               }}
             >
-              <MenuItem value='All'>All</MenuItem>
-              <MenuItem value='Active'>Active</MenuItem>
-              <MenuItem value='Inactive'>Inactive</MenuItem>
-            </CustomTextField>
+              <MenuItem value='All' className=''>
+                All
+              </MenuItem>
+              <MenuItem value='Active' className=''>
+                Active
+              </MenuItem>
+              <MenuItem value='Inactive' className=''>
+                Inactive
+              </MenuItem>
+            </TextField>
           </Grid>
           <Grid size={{ xs: 12, sm: 3 }}>
             <Typography variant='h6' className='mb-2'>
               Caregiver UMPI
             </Typography>
-            <CustomTextField
+            <TextField
               fullWidth
+              size='small'
               id='caregiver-Umpi'
               placeholder='Caregiver Umpi'
               value={filters.caregiverUmpi}
@@ -196,8 +204,9 @@ const CaregiverFilters = ({
             <Typography variant='h6' className='mb-2'>
               Caregiver Phone Number
             </Typography>
-            <CustomTextField
+            <TextField
               fullWidth
+              size='small'
               id='primary-phone-number'
               placeholder='Caregiver Phone Number'
               value={filters.primaryPhoneNumber}
@@ -211,7 +220,7 @@ const CaregiverFilters = ({
             <Typography variant='h6' className='mb-2'>
               State
             </Typography>
-            <CustomTextField
+            <TextField
               select
               fullWidth
               id='caregiver-state'
@@ -227,25 +236,16 @@ const CaregiverFilters = ({
                   {state.optionString}
                 </MenuItem>
               ))}
-            </CustomTextField>
+            </TextField>
           </Grid> */}
           <Grid container spacing={12}>
             <Grid size={{ xs: 12, sm: 4 }}>
-              <Button
-                type='submit'
-                variant='contained'
-                className={`p-1 ${lightTheme ? 'bg-[#4B0082]' : 'bg-[#7112B7]'}`}
-              >
+              <Button type='submit' variant='contained' className={`p-1`}>
                 Apply
               </Button>
             </Grid>
             <Grid size={{ xs: 12, sm: 4 }}>
-              <Button
-                onClick={handleReset}
-                variant='contained'
-                color='error'
-                className={`p-1 ${lightTheme ? 'bg-[#FF5B35]' : 'bg-[#FF5B3F]'}`}
-              >
+              <Button onClick={handleReset} variant='contained' color='error' className={`p-1`}>
                 Reset
               </Button>
             </Grid>

@@ -366,7 +366,8 @@ function ReactTable<T extends { subRows?: T[] }>({
               backgroundColor: getBackgroundColor(),
               display: level === 0 || parentExpanded ? 'table-row' : 'none',
               '& > td': {
-                borderBottom: `1px solid ${theme?.palette?.divider || 'rgba(0, 0, 0, 0.12)'}`
+                borderBottom: `1px solid ${theme?.palette?.divider || 'rgba(0, 0, 0, 0.12)'}`,
+                paddingRight: 0 // Remove right padding for all cells
               },
               boxShadow: 'none'
             } as SxProps<Theme>
@@ -390,7 +391,9 @@ function ReactTable<T extends { subRows?: T[] }>({
               align={column.align}
               sx={{
                 ...column.cellStyle,
-                pl: level > 0 && index === 0 ? 6 : column.id === 'evvEnforce' ? 2 : undefined
+                pl: level > 0 && index === 0 ? 6 : column.id === 'evvEnforce' ? 2 : undefined,
+                pr: index === columns.length - 1 ? 0 : undefined, // Remove right padding for the last column
+                width: column.width || 'auto'
               }}
             >
               {renderCell(item, column)}

@@ -150,14 +150,20 @@ const MenuItem: ForwardRefRenderFunction<HTMLLIElement, MenuItemProps> = (props,
         style={{
           border: active
             ? theme?.palette?.mode === 'light'
-              ? '2px solid #4B0082'
-              : '2px solid #7122B7'
+              ? `2px solid ${theme?.palette?.primary.main}`
+              : `2px solid ${theme?.palette?.primary.dark}`
             : theme?.palette?.mode === 'light'
               ? '1px solid #d2d7db'
               : '1px solid #50657A',
           borderRadius: '8px',
           marginBottom: '8px',
-          backgroundColor: active ? theme?.palette?.mode === 'light' ? '#4B0082' : '#7112B7' : theme?.palette?.mode === 'light' ? 'white' : '#333448'
+          backgroundColor: active
+            ? theme?.palette?.mode === 'light'
+              ? theme?.palette?.primary.main
+              : theme?.palette?.primary.dark
+            : theme?.palette?.mode === 'light'
+              ? 'white'
+              : '#333448'
         }}
         component={component}
         tabIndex={disabled ? -1 : 0}

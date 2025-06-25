@@ -25,43 +25,48 @@ export const menuButtonStyles = (props: MenuButtonStylesProps) => {
   // Props
   const { level, disabled, children } = props
 
-  return css({
-    display: 'flex',
-    alignItems: 'center',
-    minBlockSize: '30px',
-    textDecoration: 'none',
-    color: 'inherit',
-    boxSizing: 'border-box',
-    cursor: 'pointer',
-    paddingInline: '20px',
+  return ({ theme }: { theme: any }) =>
+    css({
+      display: 'flex',
+      alignItems: 'center',
+      minBlockSize: '30px',
+      textDecoration: 'none',
+      color: theme.palette.text.primary,
+      boxSizing: 'border-box',
+      cursor: 'pointer',
+      paddingInline: '20px',
 
-    '&:hover': {
-      backgroundColor: '#f3f3f3'
-    },
+      '&:hover': {
+        backgroundColor: theme.palette.action.hover
+      },
 
-    '&:focus-visible': {
-      outline: 'none',
-      backgroundColor: '#f3f3f3'
-    },
+      '&:focus-visible': {
+        outline: 'none',
+        backgroundColor: theme.palette.action.hover
+      },
 
-    ...(disabled && {
-      pointerEvents: 'none',
-      cursor: 'default',
-      color: '#adadad'
-    }),
+      ...(disabled && {
+        pointerEvents: 'none',
+        cursor: 'default',
+        color: theme.palette.text.disabled
+      }),
 
-    // All the active styles are applied to the button including menu items or submenu
-    [`&.${menuClasses.active}`]: {
-      ...(level === 0
-        ? {
-            color: 'white',
-            backgroundColor: `${dark ? ' #7112B7' : '#4B0082'}`
-          }
-        : {
-            ...(children ? { backgroundColor: '#f3f3f3' } : { color: '#765feb', backgroundColor: '#765feb1f' })
-          })
-    }
-  })
+      [`&.${menuClasses.active}`]: {
+        ...(level === 0
+          ? {
+              color: theme.palette.primary.contrastText,
+              backgroundColor: theme.palette.primary.main
+            }
+          : {
+              ...(children
+                ? { backgroundColor: theme.palette.action.hover }
+                : {
+                    color: theme.palette.primary.main,
+                    backgroundColor: theme.palette.primary.light
+                  })
+            })
+      }
+    })
 }
 
 const MenuButton: ForwardRefRenderFunction<HTMLAnchorElement, MenuButtonProps> = (

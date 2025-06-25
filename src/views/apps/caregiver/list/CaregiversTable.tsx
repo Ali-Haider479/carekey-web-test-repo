@@ -477,7 +477,7 @@ const CaregiverTable = ({ data, isLoading, isUserDeleted, setIsUserDeleted, tota
           <Button
             onClick={() => router.push('/en/apps/caregiver/add-employee')}
             variant='contained'
-            sx={{ backgroundColor: lightTheme ? '#4B0082' : '#7112B7', color: '#fff', fontWeight: 'bold' }}
+            sx={{ color: '#fff', fontWeight: 'bold' }}
           >
             Add Caregiver
           </Button>
@@ -505,7 +505,6 @@ const CaregiverTable = ({ data, isLoading, isUserDeleted, setIsUserDeleted, tota
                   router.push('/en/apps/caregiver/add-employee')
                 }}
                 className={`mt-4`}
-                sx={{ backgroundColor: lightTheme ? '#4B0082' : '#7112B7' }}
               >
                 Add New Caregiver
               </Button>
@@ -547,7 +546,7 @@ const CaregiverTable = ({ data, isLoading, isUserDeleted, setIsUserDeleted, tota
               <Button variant='outlined' color='secondary' onClick={handleModalClose}>
                 NO
               </Button>
-              <Button type='submit' variant='contained' className='bg-[#4B0082]'>
+              <Button type='submit' variant='contained'>
                 YES
               </Button>
             </div>

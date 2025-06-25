@@ -18,6 +18,7 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
 
 // Slice Imports
 import { filterAllCalendarLabels, filterCalendarLabel, selectedEvent } from '@/redux-store/slices/calendar'
+import { useTheme } from '@emotion/react'
 
 const ScheduleSidebarLeft = (props: SidebarLeftProps) => {
   // Props
@@ -31,6 +32,9 @@ const ScheduleSidebarLeft = (props: SidebarLeftProps) => {
     handleLeftSidebarToggle,
     handleAddEventSidebarToggle
   } = props
+
+  const theme: any = useTheme()
+  const lightTheme = theme.palette.mode === 'light'
 
   // Vars
   const colorsArr = calendarsColor ? Object.entries(calendarsColor) : []
@@ -94,7 +98,6 @@ const ScheduleSidebarLeft = (props: SidebarLeftProps) => {
             variant='contained'
             startIcon={<i className='bx-plus' />}
             onClick={handleSidebarToggleSidebar}
-            sx={{ backgroundColor: '#4B0082' }}
           >
             Add Event
           </Button>
@@ -109,30 +112,6 @@ const ScheduleSidebarLeft = (props: SidebarLeftProps) => {
           }}
         />
         <Divider className='is-full' />
-
-        {/* <div className='flex flex-col gap-1 p-6 is-full'>
-                    <Typography variant='h5' className='mbe-3'>
-                        Event Filters
-                    </Typography>
-                    <FormControlLabel
-                        label='View All'
-                        control={
-                            <Checkbox
-                                color='secondary'
-                                checked={calendarStore.selectedCalendars.length === colorsArr.length}
-                                onChange={e => dispatch(filterAllCalendarLabels(e.target.checked))}
-                                sx={{
-                                    color: '#4B0082', // Default color
-                                    '&.Mui-checked': {
-                                        color: '#4B0082', // Checked state color
-                                    },
-                                }}
-
-                            />
-                        }
-                    />
-                    {renderFilters}
-                </div> */}
       </Drawer>
     )
   } else {

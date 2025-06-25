@@ -9,6 +9,7 @@ import axios from 'axios'
 import { dark } from '@mui/material/styles/createPalette'
 import { transformBillingData } from '@/utils/transformBillingData'
 import api from '@/utils/api'
+import { useTheme } from '@emotion/react'
 
 interface BillingDetailTableProps {
   data: any
@@ -25,6 +26,8 @@ const BillingDetailTable = ({ data }: BillingDetailTableProps) => {
     render: (item: any) => JSX.Element
   }
 
+  const theme: any = useTheme()
+
   const columns: Column[] = [
     {
       id: 'clientName',
@@ -34,7 +37,11 @@ const BillingDetailTable = ({ data }: BillingDetailTableProps) => {
         // Use subRows[0] if it exists, otherwise use timelog[0]
         const client = item?.subRows ? item?.subRows[0]?.timelog[0]?.client : item?.timelog![0]?.client
         return (
-          <Typography className={`font-semibold ${dark ? 'text-[#7112B7]' : 'text-[#4B0082]'}`} color='primary'>
+          <Typography
+            className={`font-semibold`}
+            sx={{ color: theme.palette.mode === 'dark' ? theme.palette.primary.dark : theme.palette.primary.main }}
+            color='primary'
+          >
             {`${client?.firstName} ${client?.lastName}`}
           </Typography>
         )

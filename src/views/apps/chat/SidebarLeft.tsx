@@ -359,7 +359,6 @@ const SidebarLeft = (props: Props) => {
                     control={control}
                     error={errors.clientId}
                     defaultValue={''}
-                    sx={{ width: '100%', minWidth: '180px' }}
                   />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 12 }}>
@@ -370,7 +369,6 @@ const SidebarLeft = (props: Props) => {
                     control={control}
                     error={errors.otherUser}
                     defaultValue={''}
-                    sx={{ width: '100%', minWidth: '180px' }}
                   />
                 </Grid>
               </Grid>
@@ -383,7 +381,6 @@ const SidebarLeft = (props: Props) => {
                 startIcon={isCreateChatLoading ? <CircularProgress size={20} color='inherit' /> : null}
                 type='submit'
                 variant='contained'
-                className='bg-[#4B0082]'
                 disabled={isCreateChatLoading}
               >
                 Create

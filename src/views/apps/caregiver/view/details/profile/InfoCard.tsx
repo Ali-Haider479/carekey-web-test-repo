@@ -245,7 +245,10 @@ const InfoCard = () => {
                 Assigned Clients ({assignedClients?.length})
               </Typography>
               <IconButton
-                className={`${lightTheme ? 'bg-[#4B0082]' : 'bg-[#7112B7]'} h-6 w-6`}
+                className={`h-6 w-6`}
+                sx={{
+                  backgroundColor: lightTheme ? theme.palette.primary.main : theme.palette.primary.dark
+                }}
                 onClick={() => {
                   setIsModalShow(true)
                 }}
@@ -271,7 +274,10 @@ const InfoCard = () => {
                     </div>
                   </div>
                   <IconButton
-                    className={`${lightTheme ? 'bg-[#4B0082]' : 'bg-[#7112B7]'} h-6 w-6`}
+                    className={`h-6 w-6`}
+                    sx={{
+                      backgroundColor: lightTheme ? theme.palette.primary.main : theme.palette.primary.dark
+                    }}
                     onClick={() => {
                       setOpenDeleteDialog(true)
                       setSelectedUserId(data?.id)
@@ -382,7 +388,6 @@ const InfoCard = () => {
                       startIcon={assignButtonLoading ? <CircularProgress size={20} color='inherit' /> : null}
                       disabled={assignButtonLoading}
                       variant='contained'
-                      className={`${lightTheme ? 'bg-[#4B0082]' : 'bg-[#7112B7]'}`}
                     >
                       Assign Client
                     </Button>

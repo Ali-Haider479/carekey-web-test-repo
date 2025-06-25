@@ -231,7 +231,7 @@ const DocumentsSection = forwardRef<{ handleSubmit: any }, Props>(({ onFinish, d
                     />
                   </div>
 
-                  <Button className='!bg-[#4B0082] !text-white hover:!bg-[#4B0082] w-[20%]'>CREATE NEW ACCOUNT</Button>
+                  <Button className='w-[20%]'>CREATE NEW ACCOUNT</Button>
                 </div>
               </div>
             </div>

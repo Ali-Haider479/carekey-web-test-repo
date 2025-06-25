@@ -201,8 +201,6 @@ const ClientListApps = () => {
     {
       id: 'clientName',
       label: 'CLIENT NAME',
-      minWidth: 200,
-      editable: true,
       sortable: true,
       render: (user: any) => {
         const getInitials = (name: string) => {
@@ -244,10 +242,24 @@ const ClientListApps = () => {
       }
     },
     {
+      id: 'payer',
+      label: 'PAYER',
+      width: '150px',
+      sortable: true,
+      render: (item: any) => {
+        const payerName = item?.serviceAuth?.[0]?.payer ?? '--';
+        return (
+          <div className='w-full cursor-pointer min-w-20' onClick={() => handleNext(item?.id)}>
+            <Typography color='primary' className='text-sm'>
+              {payerName}
+            </Typography>
+          </div>
+        )
+      }
+    },
+    {
       id: 'admissionDate',
       label: 'ADMISSION DATE',
-      minWidth: 200,
-      editable: true,
       sortable: true,
       render: (item: any) => {
         const formatDate = (dateString: string) => {
@@ -271,8 +283,6 @@ const ClientListApps = () => {
     {
       id: 'dateOfBirth',
       label: 'BIRTH DATE',
-      minWidth: 200,
-      editable: true,
       sortable: true,
       render: (item: any) => {
         const formatDate = (dateString: string) => {
@@ -291,48 +301,42 @@ const ClientListApps = () => {
         )
       }
     },
-    {
-      id: 'ssn',
-      label: 'SOCIAL SECURITY',
-      minWidth: 200,
-      editable: true,
-      sortable: true,
-      render: (item: any) => {
-        return (
-          <div className='w-full cursor-pointer' onClick={() => handleNext(item?.id)}>
-            <Typography color='primary' className='text-sm'>
-              {item?.ssn}
-            </Typography>
-          </div>
-        )
-      }
-    },
-    {
-      id: 'insuranceCode',
-      label: 'INSURANCE CODE',
-      minWidth: 200,
-      editable: true,
-      sortable: true,
-      render: (item: any) => {
-        return (
-          <div className='w-full cursor-pointer' onClick={() => handleNext(item?.id)}>
-            <Typography color='primary' className='text-sm'>
-              {item?.insuranceCode ? item?.insuranceCode : 'N/A'}
-            </Typography>
-          </div>
-        )
-      }
-    },
+    // {
+    //   id: 'ssn',
+    //   label: 'SOCIAL SECURITY',
+    //   sortable: true,
+    //   render: (item: any) => {
+    //     return (
+    //       <div className='w-full cursor-pointer' onClick={() => handleNext(item?.id)}>
+    //         <Typography color='primary' className='text-sm'>
+    //           {item?.ssn}
+    //         </Typography>
+    //       </div>
+    //     )
+    //   }
+    // },
+    // {
+    //   id: 'insuranceCode',
+    //   label: 'INSURANCE CODE',
+    //   sortable: true,
+    //   render: (item: any) => {
+    //     return (
+    //       <div className='w-full cursor-pointer' onClick={() => handleNext(item?.id)}>
+    //         <Typography color='primary' className='text-sm'>
+    //           {item?.insuranceCode ? item?.insuranceCode : 'N/A'}
+    //         </Typography>
+    //       </div>
+    //     )
+    //   }
+    // },
     {
       id: 'emailId',
       label: 'CONTACT',
-      minWidth: 200,
-      editable: true,
       sortable: true,
       render: (user: any) => {
         return (
           <div className='w-full cursor-pointer' onClick={() => handleNext(user?.id)}>
-            <div className='space-y-1 min-w-0'>
+            <div className='space-y-1 min-w-40'>
               <div className='flex items-center text-sm min-w-0'>
                 <Mail
                   className={`w-3 h-3 mr-1 ${theme.palette.mode === 'light' ? 'text-gray-400' : 'text-gray-500'} flex-shrink-0`}
@@ -354,6 +358,28 @@ const ClientListApps = () => {
                 </Typography>
               </div>
             </div>
+          </div>
+        )
+      }
+    },
+    {
+      id: 'addresses',
+      label: 'Address',
+      width: '330px',
+      sortable: true,
+      render: (item: any) => {
+        let foundItem = item?.addresses
+          ? Array.isArray(item.addresses)
+            ? item.addresses.find((ele: any) => ele.address.addressType === 'Residential')
+            : null
+          : null
+        return (
+          <div className='w-full cursor-pointer min-w-60' onClick={() => handleNext(item?.id)}>
+            <Typography color='primary' className='text-sm'>
+              {foundItem
+                ? `${foundItem.address.address}, ${foundItem.address.city}, ${foundItem.address.state} ${foundItem.address.zipCode}`
+                : 'N/A'}
+            </Typography>
           </div>
         )
       }
@@ -437,20 +463,12 @@ const ClientListApps = () => {
               </Grid>
               <Grid container spacing={12}>
                 <Grid size={{ xs: 12, sm: 4 }}>
-                  <Button
-                    type='submit'
-                    variant='contained'
-                    className={`p-1 ${lightTheme ? 'bg-[#4B0082]' : 'bg-[#7112B7]'}`}
-                  >
+                  <Button type='submit' variant='contained' className={`p-1`}>
                     Apply
                   </Button>
                 </Grid>
                 <Grid size={{ xs: 12, sm: 4 }}>
-                  <Button
-                    onClick={handleReset}
-                    variant='contained'
-                    className={`p-1 ${lightTheme ? 'bg-[#FF5B35]' : 'bg-[#FF5B3F]'}`}
-                  >
+                  <Button onClick={handleReset} variant='contained' color='error' className={`p-1`}>
                     Reset
                   </Button>
                 </Grid>
@@ -476,7 +494,7 @@ const ClientListApps = () => {
                 <Button
                   onClick={() => router.push('/en/apps/client/add-client')}
                   variant='contained'
-                  sx={{ backgroundColor: lightTheme ? '#4B0082' : '#7112B7', color: '#fff', fontWeight: 'bold' }}
+                  sx={{ fontWeight: 'bold' }}
                 >
                   Add Client
                 </Button>
@@ -501,7 +519,6 @@ const ClientListApps = () => {
                       router.push('/en/apps/client/add-client')
                     }}
                     className='mt-4'
-                    sx={{ backgroundColor: lightTheme ? '#4B0082' : '#7112B7' }}
                   >
                     Add New Client
                   </Button>

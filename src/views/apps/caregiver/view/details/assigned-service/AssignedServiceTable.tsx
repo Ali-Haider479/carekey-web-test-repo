@@ -11,12 +11,11 @@ import styles from '../CaregiversTable.module.css'
 import { useParams, useRouter } from 'next/navigation'
 import { GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
 import DataTable from '@/@core/components/mui/DataTable'
-import { CircularProgress, List, ListItem, Switch, Typography } from '@mui/material'
+import { CircularProgress, List, ListItem, Switch, Typography, useTheme } from '@mui/material'
 import axios from 'axios'
 import { dark, light } from '@mui/material/styles/createPalette'
 import api from '@/utils/api'
 import ReactTable from '@/@core/components/mui/ReactTable'
-import { useTheme } from '@emotion/react'
 
 interface Column {
   id: string
@@ -39,6 +38,8 @@ const AssignedServiceTable = () => {
 
   const theme: any = useTheme()
   const lightTheme = theme.palette.mode === 'light'
+
+  console.log('Theme ---->> ', theme)
 
   const label = { inputProps: { 'aria-label': 'Switch demo' } }
 
@@ -158,10 +159,10 @@ const AssignedServiceTable = () => {
       minWidth: 170,
       render: item => (
         <div className='flex flex-row gap-2 mt-0'>
-          <div className='p-1 border border-[#666CFF] border-opacity-[50%] rounded-sm'>
-            <Typography className={`${lightTheme ? 'text-[#4B0082]' : 'text-[#8812b7]'}`}>
-              {item?.service?.name}
-            </Typography>
+          <div
+            className={`p-1 border ${lightTheme ? 'border-[#4B0082]' : 'border-gray-200'} border-opacity-[50%] px-2 rounded-sm`}
+          >
+            <Typography className={`${lightTheme ? 'text-[#4B0082]' : null}`}>{item?.service?.name}</Typography>
           </div>
         </div>
       )
@@ -177,7 +178,7 @@ const AssignedServiceTable = () => {
               {...label}
               checked={item?.service?.evv === true}
               onChange={() => updateEVV(item?.service)}
-              className='mr-0'
+              color='primary'
             />
           </div>
         </div>

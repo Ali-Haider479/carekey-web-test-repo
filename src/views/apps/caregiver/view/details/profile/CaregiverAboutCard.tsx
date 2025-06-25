@@ -342,7 +342,10 @@ function CaregiverAboutCard() {
   return (
     <>
       {isLoading ? (
-        <CircularProgressDeterminate variant='determinate' size={50} thickness={5} value={100} />
+        // <CircularProgressDeterminate variant='determinate' size={50} thickness={5} value={100} />
+        <div className='flex items-center justify-center p-10'>
+          <CircularProgress />
+        </div>
       ) : (
         <div>
           <Card className='w-full ml-2 shadow-md rounded-lg p-6'>
@@ -376,19 +379,13 @@ function CaregiverAboutCard() {
                   </TextField>
                 )}
                 {!isEdit && (
-                  <Button
-                    variant='contained'
-                    startIcon={<CloseIcon />}
-                    className='text-white hover:bg-indigo-800'
-                    onClick={handleCancel}
-                  >
+                  <Button variant='contained' startIcon={<CloseIcon />} onClick={handleCancel}>
                     Cancel
                   </Button>
                 )}
                 <Button
                   variant='contained'
                   startIcon={isEdit ? <EditOutlined /> : <SaveOutlined />}
-                  className={`${lightTheme ? 'bg-[#4B0082' : 'bg-[#7112B7]'} text-white`}
                   onClick={isEdit ? () => setIsEdit(false) : handleSave}
                   disabled={
                     emailError ||
@@ -464,11 +461,7 @@ function CaregiverAboutCard() {
                   />
                 ))}
               </div>
-              <Button
-                variant='contained'
-                startIcon={<AddOutlined />}
-                className={`${lightTheme ? 'bg-[#4B0082' : 'bg-[#7112B7]'} mt-[10px] text-white`}
-              >
+              <Button variant='contained' startIcon={<AddOutlined />} className={`mt-[10px] text-white`}>
                 Add Pay Rate
               </Button>
             </div>

@@ -223,13 +223,7 @@ const SendMsgForm = ({ dispatch, activeUser, isBelowSmScreen, messageInputRef, c
             <i className='bx-paper-plane' />
           </CustomIconButton>
         ) : (
-          <Button
-            variant='contained'
-            color='primary'
-            type='submit'
-            endIcon={<i className='bx-paper-plane' />}
-            sx={{ backgroundColor: '#4B0082' }}
-          >
+          <Button variant='contained' color='primary' type='submit' endIcon={<i className='bx-paper-plane' />}>
             Send
           </Button>
         )}

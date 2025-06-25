@@ -498,23 +498,13 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
                 }
                 label='OCR'
               />
-              <Button
-                variant='contained'
-                onClick={handleModalClose}
-                disabled={isLoading}
-                sx={{ backgroundColor: '#4B0082' }}
-              >
+              <Button variant='contained' onClick={handleModalClose} disabled={isLoading}>
                 Cancel
               </Button>
-              <Button
-                variant='contained'
-                onClick={handelSubmit}
-                sx={{ backgroundColor: '#4B0082' }}
-                disabled={isLoading}
-              >
+              <Button variant='contained' onClick={handelSubmit} disabled={isLoading}>
                 Submit
               </Button>
-              <Button variant='contained' component='label' sx={{ backgroundColor: '#4B0082' }} disabled={isLoading}>
+              <Button variant='contained' component='label' disabled={isLoading}>
                 Upload PDF
                 <input type='file' hidden accept='application/pdf' onChange={handlePDFUpload} />
               </Button>

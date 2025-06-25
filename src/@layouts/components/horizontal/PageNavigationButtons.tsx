@@ -35,12 +35,7 @@ export default function PageNavigationButtons({ onClickNext, onClickBack, form, 
         </Button>
 
         {/* Next Button */}
-        <Button
-          onClick={form ? form.submit : () => onClickNext()}
-          className='!bg-[#4B0082] !text-white hover:!bg-[#4B0082]'
-        >
-          NEXT
-        </Button>
+        <Button onClick={form ? form.submit : () => onClickNext()}>NEXT</Button>
       </div>
     </div>
   )

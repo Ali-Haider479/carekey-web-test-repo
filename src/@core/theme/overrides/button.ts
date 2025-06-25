@@ -83,18 +83,18 @@ const button: Theme['components'] = {
             }),
         ...(ownerState.variant === 'tonal' &&
           ownerState.color !== 'inherit' && {
-            backgroundColor: `var(--mui-palette-${ownerState.color}-lightOpacity)`,
+            backgroundColor: `var(--mui-palette-${ownerState.color}-${theme.palette.mode === 'dark' ? 'lightOpacity' : 'lighterOpacity'})`,
             color: `var(--mui-palette-${ownerState.color}-main)`,
             '&:not(.Mui-disabled):hover': {
               color: `var(--mui-palette-${ownerState.color}-contrastText)`,
-              backgroundColor: `var(--mui-palette-${ownerState.color}-dark)`,
-              borderColor: `var(--mui-palette-${ownerState.color}-dark)`,
+              backgroundColor: `var(--mui-palette-${ownerState.color}-${theme.palette.mode === 'dark' ? 'dark' : 'main'})`,
+              borderColor: `var(--mui-palette-${ownerState.color}-${theme.palette.mode === 'dark' ? 'dark' : 'main'})`,
               boxShadow: `var(--mui-customShadows-${ownerState.color}-sm)`
             },
             '&:not(.Mui-disabled):active, &.Mui-focusVisible:not(:has(span.MuiTouchRipple-root))': {
               color: `var(--mui-palette-${ownerState.color}-contrastText)`,
-              backgroundColor: `var(--mui-palette-${ownerState.color}-dark)`,
-              borderColor: `var(--mui-palette-${ownerState.color}-dark)`,
+              backgroundColor: `var(--mui-palette-${ownerState.color}-${theme.palette.mode === 'dark' ? 'dark' : 'main'})`,
+              borderColor: `var(--mui-palette-${ownerState.color}-${theme.palette.mode === 'dark' ? 'dark' : 'main'})`,
               boxShadow: 'none'
             }
           })
@@ -141,30 +141,30 @@ const button: Theme['components'] = {
             }),
         ...iconStyles(ownerState.size)
       }),
-      text: ({ ownerState }) => ({
+      text: ({ theme, ownerState }) => ({
         ...(ownerState.color !== 'inherit' && {
           '&:not(.Mui-disabled):hover, &:not(.Mui-disabled):active, &.Mui-focusVisible:not(:has(span.MuiTouchRipple-root))':
             {
-              backgroundColor: `var(--mui-palette-${ownerState.color}-lighterOpacity)`
+              backgroundColor: `var(--mui-palette-${ownerState.color}-${theme.palette.mode === 'dark' ? 'lighterOpacity' : 'lightOpacity'})`
             },
           '&.Mui-disabled': {
             color: `var(--mui-palette-${ownerState.color}-main)`
           }
         })
       }),
-      outlined: ({ ownerState }) => ({
+      outlined: ({ theme, ownerState }) => ({
         borderColor: `var(--mui-palette-${ownerState.color}-main)`,
         ...(ownerState.color !== 'inherit' && {
           '&:not(.Mui-disabled):hover': {
             color: `var(--mui-palette-${ownerState.color}-contrastText)`,
-            backgroundColor: `var(--mui-palette-${ownerState.color}-dark)`,
-            borderColor: `var(--mui-palette-${ownerState.color}-dark)`,
+            backgroundColor: `var(--mui-palette-${ownerState.color}-${theme.palette.mode === 'dark' ? 'dark' : 'light'})`,
+            borderColor: `var(--mui-palette-${ownerState.color}-${theme.palette.mode === 'dark' ? 'dark' : 'main'})`,
             boxShadow: `var(--mui-customShadows-${ownerState.color}-sm)`
           },
           '&:not(.Mui-disabled):active, &.Mui-focusVisible:not(:has(span.MuiTouchRipple-root))': {
             color: `var(--mui-palette-${ownerState.color}-contrastText)`,
-            backgroundColor: `var(--mui-palette-${ownerState.color}-dark)`,
-            borderColor: `var(--mui-palette-${ownerState.color}-dark)`,
+            backgroundColor: `var(--mui-palette-${ownerState.color}-${theme.palette.mode === 'dark' ? 'dark' : 'light'})`,
+            borderColor: `var(--mui-palette-${ownerState.color}-${theme.palette.mode === 'dark' ? 'dark' : 'main'})`,
             boxShadow: 'none'
           },
           '&.Mui-disabled': {
@@ -173,14 +173,14 @@ const button: Theme['components'] = {
           }
         })
       }),
-      contained: ({ ownerState }) => ({
+      contained: ({ theme, ownerState }) => ({
         ...(ownerState.color !== 'inherit' && {
           '&:not(.Mui-disabled):not(.MuiButtonGroup-grouped)': {
             boxShadow: `var(--mui-customShadows-${ownerState.color}-sm)`
           },
           '&:not(.Mui-disabled):active, &.Mui-focusVisible:not(:has(span.MuiTouchRipple-root))': {
             color: `var(--mui-palette-${ownerState.color}-contrastText)`,
-            backgroundColor: `var(--mui-palette-${ownerState.color}-dark)`,
+            backgroundColor: `var(--mui-palette-${ownerState.color}-${theme.palette.mode === 'dark' ? 'dark' : 'light'}`,
             boxShadow: 'none'
           },
           '&.Mui-disabled': {
