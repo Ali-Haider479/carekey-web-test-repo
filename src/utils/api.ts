@@ -18,7 +18,7 @@ api.interceptors.request.use(
     // If no session or refresh token error, redirect to sign-in
     if (!session || session.error === 'RefreshTokenError') {
       if (typeof window !== 'undefined') {
-        window.location.href = '/auth/signin'
+        window.location.href = '/auth/sign-in'
       }
       throw new Error('No valid session')
     }
@@ -54,7 +54,7 @@ api.interceptors.response.use(
         console.log('REFRESH TOKEN INSIDE API CALL----', session)
         if (!session || session.error === 'RefreshTokenError') {
           if (typeof window !== 'undefined') {
-            window.location.href = '/auth/signin'
+            window.location.href = '/auth/sign-in'
           }
           throw new Error('No valid session')
         }
@@ -83,7 +83,7 @@ api.interceptors.response.use(
       } catch (refreshError) {
         console.error('Token refresh failed:', refreshError)
         if (typeof window !== 'undefined') {
-          window.location.href = '/auth/signin'
+          window.location.href = '/auth/sign-in'
         }
         return Promise.reject(refreshError)
       }

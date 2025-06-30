@@ -41,9 +41,9 @@ const menu = (skin: Skin): Theme['components'] => ({
         },
         '&.Mui-selected': {
           backgroundColor: 'var(--mui-palette-primary-lightOpacity)',
-          color: 'var(--mui-palette-primary-main)',
+          color: `${theme.palette.mode === 'light' ? 'var(--mui-palette-primary-main)' : theme.palette.secondary.contrastText}`,
           '& .MuiListItemIcon-root': {
-            color: 'var(--mui-palette-primary-main)'
+            color: `var(--mui-palette-primary-${theme.palette.mode === 'light' ? 'main' : 'dark'})`
           },
           '&:hover, &.Mui-focused, &.Mui-focusVisible': {
             backgroundColor: 'var(--mui-palette-primary-mainOpacity)'

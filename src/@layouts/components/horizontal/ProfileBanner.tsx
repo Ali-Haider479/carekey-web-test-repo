@@ -26,8 +26,8 @@ const UploadOverlay = styled(Box)(({ theme }) => ({
 
 const ProfileBanner = ({ props }: { props: ProfileHeaderType }) => {
   const { id } = useParams()
-  const [fileUrl, setFileUrl] = useState<string | undefined>(props?.profileImg)
-  const [loading, setLoading] = useState<boolean>(true)
+  const [fileUrl, setFileUrl] = useState<string | undefined>()
+  const [loading, setLoading] = useState<boolean>(false)
   const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
 
   useEffect(() => {
@@ -39,17 +39,20 @@ const ProfileBanner = ({ props }: { props: ProfileHeaderType }) => {
   console.log('PROFILE IMAGE URL', props?.profileImg)
 
   const getProfileImage = async (key: string) => {
+    setLoading(true)
     try {
       const res = await api.get(`/${props.isClient ? 'client' : 'caregivers'}/getProfileUrl/${key}`)
       setFileUrl(res.data)
     } catch (err) {
       throw Error(`Error in fetching profile image url, ${err}`)
+    } finally {
+      setLoading(false)
     }
   }
 
   const handleImageChange = async (file: File) => {
+    setLoading(true)
     try {
-      setLoading(true)
       const formData = new FormData()
       formData.append('image', file)
       const response = await api.post(
@@ -75,9 +78,9 @@ const ProfileBanner = ({ props }: { props: ProfileHeaderType }) => {
       }
       console.log('ONE PROFILE PAYLOAD', payLoad)
       await api.post(`/account-history/log`, payLoad)
-      setLoading(false)
     } catch (error) {
       console.error('Update image error:', error)
+    } finally {
       setLoading(false)
     }
     console.log('Button is pressed')
@@ -94,20 +97,23 @@ const ProfileBanner = ({ props }: { props: ProfileHeaderType }) => {
             size={120}
             onImageChange={handleImageChange}
             allowupdate={'true'}
+            loading={loading}
           />
         </div>
 
         <div className='flex is-full justify-start self-end flex-col items-center gap-6 sm-gap-0 sm:flex-row sm:justify-between sm:items-end '>
           <div className='flex flex-col items-center sm:items-start gap-2'>
-            <div className='flex flex-row gap-4'>
-              <div>
-                <Typography variant='h4'>{props.fullName}</Typography>
-              </div>
-              <div
-                className={`py-2 px-4 ${props.status === 'CAREGIVER' ? 'bg-[#02c3eb]' : 'bg-[#4B0082]'} rounded-4xl`}
+            <div className='flex flex-row gap-3'>
+              <Typography variant='h4'>{props.fullName}</Typography>
+              <Box
+                component={'div'}
+                className={`py-2 px-4 rounded-4xl`}
+                sx={theme => ({
+                  backgroundColor: `${props.status === 'CAREGIVER' ? (theme.palette.mode === 'light' ? '#02c3eb' : '#02c3eb9F') : theme.palette.mode === 'light' ? 'primary.main' : 'primary.dark'}`
+                })}
               >
                 <Typography className='text-white font-bold'>{props.status}</Typography>
-              </div>
+              </Box>
             </div>
             <div className='flex flex-wrap gap-0 justify-center sm:justify-normal'>
               <div className='flex items-center gap-2'>

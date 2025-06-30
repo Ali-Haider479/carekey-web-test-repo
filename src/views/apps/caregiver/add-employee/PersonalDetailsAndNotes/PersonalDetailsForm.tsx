@@ -42,6 +42,8 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
     watch
   } = methods
 
+  const caregiverRole = watch('caregiverRole')
+
   // Expose handleSubmit to parent via ref
   useImperativeHandle(ref, () => ({
     handleSubmit: (onValid: (data: PersonalDetailsFormDataType) => void) => handleSubmit(onValid)
@@ -151,6 +153,8 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                     control={control}
                     error={errors.caregiverLevel}
                     label={'Caregiver Level'}
+                    isRequired={caregiverRole === 'Qulaified Professional' ? false : true}
+                    disabled={caregiverRole === 'Qulaified Professional'}
                     optionList={[
                       { key: 1, value: 'L1', optionString: 'L1' },
                       { key: 2, value: 'L2', optionString: 'L2' },

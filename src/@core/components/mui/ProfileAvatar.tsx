@@ -11,8 +11,7 @@ import Box from '@mui/material/Box'
 
 // Type Imports
 import type { ThemeColor } from '@core/types'
-import { Typography } from '@mui/material'
-import { ProfileHeaderType } from '@/types/pages/profileTypes'
+import { CircularProgress, Typography } from '@mui/material'
 import { CameraAlt } from '@mui/icons-material'
 
 export type CustomAvatarProps = AvatarProps & {
@@ -22,6 +21,7 @@ export type CustomAvatarProps = AvatarProps & {
   onImageChange?: (file: File) => Promise<void>
   placeholder_text_size?: string
   allowupdate?: string
+  loading?: boolean
 }
 
 const AvatarStyled = styled(MuiAvatar)<CustomAvatarProps>(({ skin, color, size, theme }) => {
@@ -80,7 +80,7 @@ const UploadOverlay = styled(Box)(({ theme }) => ({
 
 const ProfileAvatar = forwardRef<HTMLDivElement, CustomAvatarProps>((props: CustomAvatarProps, ref) => {
   // Props
-  const { color, skin = 'filled', size, onImageChange, ...rest } = props
+  const { color, skin = 'filled', size, onImageChange, loading, ...rest } = props
 
   // Refs
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -135,35 +135,47 @@ const ProfileAvatar = forwardRef<HTMLDivElement, CustomAvatarProps>((props: Cust
 
   return (
     <AvatarWrapper size={size}>
-      <AvatarStyled
-        ref={ref}
-        {...rest}
-        src={isInitials ? undefined : previewUrl || rest.src}
-        color={color}
-        skin={skin}
-        sx={{ ...rest.sx, width: size, height: size }}
-      >
-        {!isInitials && (
-          <Typography className={`font-bold ${props.placeholder_text_size ? props.placeholder_text_size : 'text-4xl'}`}>
-            {getInitials(altText)}
-          </Typography>
-        )}
-      </AvatarStyled>
+      {loading ? (
+        <Box
+          sx={theme => ({
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 2,
+            backgroundColor: theme.palette.primary.lighterOpacity
+          })}
+        >
+          <CircularProgress size={24} />
+        </Box>
+      ) : (
+        <AvatarStyled
+          ref={ref}
+          {...rest}
+          src={isInitials ? undefined : previewUrl || rest.src}
+          color={color}
+          skin={skin}
+          sx={{ ...rest.sx, width: size, height: size }}
+        >
+          {!isInitials && (
+            <Typography
+              className={`font-bold ${props.placeholder_text_size ? props.placeholder_text_size : 'text-4xl'}`}
+            >
+              {getInitials(altText)}
+            </Typography>
+          )}
+        </AvatarStyled>
+      )}
 
       {props.allowupdate === 'true' && (
         <UploadOverlay onClick={handleClick}>
           <CameraAlt sx={{ color: '#fff', fontSize: 40 }} />
         </UploadOverlay>
       )}
-      {/* <IconButton
-          sx={{
-            color: 'white',
-            fontSize: size ? size / 5 : undefined
-          }}
-        >
-          Change
-        </IconButton>
-      </UploadOverlay> */}
       <input
         type='file'
         ref={fileInputRef}

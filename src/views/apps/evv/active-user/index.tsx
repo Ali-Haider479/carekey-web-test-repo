@@ -17,7 +17,7 @@ const createGeoJSON = (timeLogData: any) => {
       type: 'Feature',
       geometry: {
         type: 'Point',
-        coordinates: [log.startLocation.longitude, log.startLocation.latitude]
+        coordinates: [log?.startLocation?.longitude, log?.startLocation?.latitude]
       },
       properties: {
         id: log.id,
@@ -88,8 +88,8 @@ const EvvActiveUser = () => {
         }
       })
     )
-    const updatedGeoJson = { ...geoJson, features: updatedFeatures };
-    console.log("updatedGeoJson", updatedGeoJson)
+    const updatedGeoJson = { ...geoJson, features: updatedFeatures }
+    console.log('updatedGeoJson', updatedGeoJson)
     setGeoJsonData(updatedGeoJson)
     setFormattedAddress(updatedGeoJson)
   }

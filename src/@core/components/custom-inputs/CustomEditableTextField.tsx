@@ -33,7 +33,7 @@ export const EditableField = ({
                 ? 'Female'
                 : value || ''}
           </Typography>
-        ) : name === 'state' ? (
+        ) : name.includes('state') ? (
           <TextField
             value={value || ''}
             variant='standard'
@@ -58,13 +58,13 @@ export const EditableField = ({
               </MenuItem>
             ))}
           </TextField>
-        ) : name === 'dateOfBirth' ? (
+        ) : name === 'dateOfBirth' || name === 'dischargeDate' ? (
           <AppReactDatepicker
             selected={value ? new Date(value) : null}
             onChange={(date: Date | null) => {
               onChange(name, date ? date.toISOString().split('T')[0] : '')
             }}
-            maxDate={new Date()}
+            maxDate={name === 'dateOfBirth' ? new Date() : undefined}
             dateFormat='MM/dd/yyyy'
             className='w-1/2 outline-none'
             showMonthDropdown
@@ -96,9 +96,9 @@ export const EditableField = ({
             inputProps={
               isPhoneField || name === 'payRate'
                 ? {
-                    inputMode: 'numeric',
-                    pattern: '[0-9]*'
-                  }
+                  inputMode: 'numeric',
+                  pattern: '[0-9]*'
+                }
                 : {}
             }
           />

@@ -1,6 +1,6 @@
 'use client'
-import { CheckOutlined, CloseOutlined } from '@mui/icons-material'
-import { Button, Card, CardContent, CircularProgress, Typography } from '@mui/material'
+import { CheckOutlined, CloseOutlined, Search } from '@mui/icons-material'
+import { Box, Button, Card, CardContent, CircularProgress, Typography, TextField, IconButton } from '@mui/material'
 import React, { useEffect, useState } from 'react'
 import moment from 'moment'
 import AcknowledgeSignature from './ClientSignatureSection'
@@ -11,6 +11,13 @@ import './TimesheetPdf.css'
 import './table.css'
 import { jsPDF } from 'jspdf'
 import api from '@/utils/api'
+import Dropdown from '@/@core/components/mui/DropDown'
+import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
+import MuiAccordionDetails from '@mui/material/AccordionDetails'
+import MuiAccordion, { AccordionProps } from '@mui/material/Accordion'
+import MuiAccordionSummary, { AccordionSummaryProps, accordionSummaryClasses } from '@mui/material/AccordionSummary'
+import { styled } from '@mui/material/styles'
+import ArrowForwardIosSharpIcon from '@mui/icons-material/ArrowForwardIosSharp'
 
 // Define interfaces for type safety
 interface Signature {
@@ -96,6 +103,39 @@ const DetailItem: React.FC<DetailItemProps> = ({ label, value }) => (
   </div>
 )
 
+const Accordion = styled((props: AccordionProps) => <MuiAccordion disableGutters elevation={0} square {...props} />)(
+  ({ theme }) => ({
+    border: `1px solid ${theme.palette.divider}`,
+    '&:not(:last-child)': {
+      borderBottom: 0
+    },
+    '&::before': {
+      display: 'none'
+    }
+  })
+)
+
+const AccordionSummary = styled((props: AccordionSummaryProps) => (
+  <MuiAccordionSummary expandIcon={<ArrowForwardIosSharpIcon sx={{ fontSize: '0.9rem' }} />} {...props} />
+))(({ theme }) => ({
+  backgroundColor: 'rgba(0, 0, 0, .03)',
+  flexDirection: 'row-reverse',
+  [`& .${accordionSummaryClasses.expandIconWrapper}.${accordionSummaryClasses.expanded}`]: {
+    transform: 'rotate(90deg)'
+  },
+  [`& .${accordionSummaryClasses.content}`]: {
+    marginLeft: theme.spacing(1)
+  },
+  ...theme.applyStyles('dark', {
+    backgroundColor: 'rgba(255, 255, 255, .05)'
+  })
+}))
+
+const AccordionDetails = styled(MuiAccordionDetails)(({ theme }) => ({
+  padding: theme.spacing(2),
+  borderTop: '1px solid rgba(0, 0, 0, .125)'
+}))
+
 const TimeSheets = () => {
   const { id } = useParams()
   const [timelogData, setTimelogData] = useState<ServiceEntry[]>([])
@@ -103,6 +143,48 @@ const TimeSheets = () => {
   const [clientSignature, setClientSignature] = useState<SignatureState>({ image: '', text: '', date: '' })
   const [caregiverSignature, setCaregiverSignature] = useState<SignatureState>({ image: '', text: '', date: '' })
   const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
+  const [dateRange, setDateRange] = useState<[Date | null, Date | null]>([null, null])
+  const [expanded, setExpanded] = React.useState<string | false>('panel1')
+
+  const handleChange = (panel: string) => (event: React.SyntheticEvent, newExpanded: boolean) => {
+    setExpanded(newExpanded ? panel : false)
+  }
+
+  const handleSearch = async () => {
+    if (!dateRange || dateRange.length < 2) {
+      console.log('Please select both start and end dates')
+      return
+    }
+
+    try {
+      const [startDate, endDate] = dateRange
+
+      // Format dates to YYYY-MM-DD (without time)
+      if (!startDate || !endDate) {
+        console.log('Please select both start and end dates')
+        return
+      }
+      const startDateStr = startDate.toISOString().split('T')[0]
+      const endDateStr = endDate.toISOString().split('T')[0]
+
+      console.log('Searching for date range:', startDateStr, 'to', endDateStr)
+
+      // Add query parameters
+      const params = new URLSearchParams({
+        startDate: startDateStr,
+        endDate: endDateStr
+      })
+
+      const filteredTimeLog = await api.get(`/time-log/by-client/${id}?${params.toString()}`)
+
+      console.log('filteredTimeLog-------->', filteredTimeLog)
+      return filteredTimeLog
+    } catch (error) {
+      console.error('Error fetching time logs:', error)
+      throw error
+    }
+  }
+  const [timeSheetDataLoading, setTimeSheetDataLoading] = useState<boolean>(false)
 
   // Helper function to get the latest signature
   const getLatestSignature = (data: ServiceEntry[], signatureType: 'clientSignature' | 'caregiverSignature') => {
@@ -130,6 +212,7 @@ const TimeSheets = () => {
   }
 
   const fetchTimeLog = async () => {
+    setTimeSheetDataLoading(true)
     try {
       const fetchedTimeLog = await api.get(`/time-log/client/${id}`)
       const data = fetchedTimeLog.data
@@ -138,6 +221,8 @@ const TimeSheets = () => {
       setCaregiverSignature(getLatestSignature(data, 'caregiverSignature'))
     } catch (error) {
       console.error('Error fetching data: ', error)
+    } finally {
+      setTimeSheetDataLoading(false)
     }
   }
 
@@ -611,75 +696,175 @@ const TimeSheets = () => {
 
   return (
     <>
-      <div id='timesheet-content'>
-        <Card className='h-fit w-[99%] m-2 mt-1 mb-3 shadow-md rounded-lg border-solid border-2'>
-          <div className='grid grid-cols-2 m-4 gap-3'>
-            <DetailItem
-              label='Recipient Name:'
-              value={`${timelogData[0]?.client?.firstName || ''} ${timelogData[0]?.client?.lastName || ''}`}
-            />
-            <DetailItem
-              label='Week Duration:'
-              value={`${weekDates[0]?.format('DD MMMM YYYY') || ''} - ${weekDates[weekDates.length - 1]?.format('DD MMMM YYYY') || ''}`}
-            />
-            <DetailItem
-              label='Caregiver Name:'
-              value={`${timelogData[0]?.caregiver?.firstName || ''} ${timelogData[0]?.caregiver?.lastName || ''}`}
-            />
-          </div>
-          <ReactTable
-            columns={columns}
-            data={timelogData}
-            keyExtractor={user => user.id.toString()}
-            enableRowSelect={false}
-            enablePagination={false}
-            pageSize={25}
-            stickyHeader
-            maxHeight={600}
-            containerStyle={{ borderRadius: 2 }}
-          />
-        </Card>
-        <Card className='h-fit w-[99%] ml-2 mt-3 shadow-md rounded-lg mb-3 border-solid border-2'>
-          <h2 className='text-xl pt-4 ml-4 mb-4'>Total Hours</h2>
-          <ReactTable
-            columns={tableColumns}
-            data={tableData}
-            keyExtractor={row => row.id.toString()}
-            enableRowSelect={false}
-            enablePagination={false}
-            pageSize={25}
-            stickyHeader
-            maxHeight={600}
-            containerStyle={{ borderRadius: 2 }}
-          />
-        </Card>
-        <AcknowledgeSignature data={timelogData} />
-        <AcknowledgeSignatureCaregiver data={timelogData} />
-      </div>
-      <CardContent className='mt-4 mb-4 flex justify-between'>
-        <div className='w-1/2 flex justify-start space-x-6'>
-          <Button className='mr-6' variant='contained' onClick={() => {}}>
-            Accept Timesheets
-          </Button>
-          <Button className='bg-red-600' variant='contained' onClick={() => {}}>
-            Reject Timesheets
-          </Button>
-        </div>
-        <div className='w-1/2 flex justify-end space-x-6'>
-          <Button className='bg-[#E89C00] mr-6' variant='contained' onClick={() => {}}>
-            Export to CSV
-          </Button>
-          <Button
-            className='bg-[#67C932]'
-            variant='contained'
-            onClick={exportToPDF}
-            disabled={isLoading}
-            startIcon={isLoading ? <CircularProgress size={20} color='inherit' /> : null}
+      <>
+        <div id='timesheet-content'>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 2,
+              p: 2,
+              justifyContent: 'flex-end'
+            }}
           >
-            Export PDF
-          </Button>
+            <Typography variant='body1' sx={{ whiteSpace: 'nowrap' }}>
+              Select Date Range:
+            </Typography>
+
+            <AppReactDatepicker
+              selectsRange
+              id='event-date-range'
+              startDate={dateRange[0] || null}
+              endDate={dateRange[1]}
+              selected={dateRange[0] || null}
+              dateFormat='yyyy-MM-dd'
+              maxDate={new Date()}
+              customInput={
+                <TextField fullWidth size='small' placeholder='Select date range' InputLabelProps={{ shrink: false }} />
+              }
+              onChange={(range: [Date | null, Date | null]) => {
+                const adjustForTimezone = (date: Date | null) => {
+                  if (!date) return null
+                  const newDate = new Date(date)
+                  newDate.setMinutes(newDate.getMinutes() + newDate.getTimezoneOffset())
+                  return newDate
+                }
+
+                setDateRange([adjustForTimezone(range[0]), adjustForTimezone(range[1])])
+              }}
+              dropdownMode='select'
+            />
+
+            <IconButton
+              color='primary'
+              onClick={handleSearch}
+              sx={theme => ({
+                bgcolor: theme.palette.mode === 'light' ? 'primary.main' : 'primary.dark',
+                color: 'white',
+                '&:hover': {
+                  bgcolor: theme.palette.primary.lighterOpacity
+                },
+                '&:disabled': {
+                  bgcolor: 'action.disabledBackground'
+                },
+                borderRadius: 1
+              })}
+              disabled={!dateRange}
+            >
+              <Search />
+            </IconButton>
+          </Box>
+          {timeSheetDataLoading ? (
+            <Box id='timesheet-content' className='flex justify-center items-center min-h-[250px] w-full'>
+              <CircularProgress />
+            </Box>
+          ) : (
+            <>
+              <Card className='h-fit w-[99%] m-2 mt-1 mb-3 shadow-md rounded-lg border-solid border-2'>
+                <div className='grid grid-cols-3 p-6 gap-[152px]'>
+                  <DetailItem
+                    label='Name:'
+                    value={`${timelogData[0]?.client?.firstName || ''} ${timelogData[0]?.client?.lastName || ''}`}
+                  />
+                  <DetailItem label='Total Hours:' value={'6 hrs'} />
+                  <DetailItem label='Signed Hours:' value={'4 hrs'} />
+                </div>
+              </Card>
+              <Accordion expanded={expanded === 'panel1'} onChange={handleChange('panel1')} sx={{ mx: 2 }}>
+                <AccordionSummary aria-controls='panel1d-content' id='panel1d-header'>
+                  <DetailItem
+                    label=''
+                    value={`${timelogData[0]?.caregiver?.firstName || ''} ${timelogData[0]?.caregiver?.lastName || ''}`}
+                  />
+                </AccordionSummary>
+                <AccordionDetails>
+                  <Card className='h-fit w-[99%] m-2 mt-1 mb-3 shadow-md rounded-lg border-solid border-2'>
+                    <div className='grid grid-cols-2 p-6 gap-[152px]'>
+                      <DetailItem label='Total Hours Worked:' value={'4 hrs'} />
+                    </div>
+                    <ReactTable
+                      columns={columns}
+                      data={timelogData}
+                      keyExtractor={user => user.id.toString()}
+                      enableRowSelect={false}
+                      enablePagination={false}
+                      pageSize={25}
+                      stickyHeader
+                      maxHeight={600}
+                      containerStyle={{ borderRadius: 2 }}
+                    />
+                  </Card>
+                  <AcknowledgeSignature data={timelogData} />
+                  <AcknowledgeSignatureCaregiver data={timelogData} />
+                </AccordionDetails>
+              </Accordion>
+            </>
+            // <>
+            //   <Card className='h-fit w-[99%] m-2 mt-1 mb-3 shadow-md rounded-lg border-solid border-2'>
+            //     <div className='grid grid-cols-2 p-6 gap-[152px]'>
+            //       <DetailItem
+            //         label='Recipient Name:'
+            //         value={`${timelogData[0]?.client?.firstName || ''} ${timelogData[0]?.client?.lastName || ''}`}
+            //       />
+            //       <DetailItem
+            //         label='Caregiver Name:'
+            //         value={`${timelogData[0]?.caregiver?.firstName || ''} ${timelogData[0]?.caregiver?.lastName || ''}`}
+            //       />
+            //     </div>
+            //     <ReactTable
+            //       columns={columns}
+            //       data={timelogData}
+            //       keyExtractor={user => user.id.toString()}
+            //       enableRowSelect={false}
+            //       enablePagination={false}
+            //       pageSize={25}
+            //       stickyHeader
+            //       maxHeight={600}
+            //       containerStyle={{ borderRadius: 2 }}
+            //     />
+            //   </Card>
+            //   <Card className='h-fit w-[99%] ml-2 mt-3 shadow-md rounded-lg mb-3 border-solid border-2'>
+            //     <h2 className='text-xl p-6'>Total Hours</h2>
+            //     <ReactTable
+            //       columns={tableColumns}
+            //       data={tableData}
+            //       keyExtractor={row => row.id.toString()}
+            //       enableRowSelect={false}
+            //       enablePagination={false}
+            //       pageSize={25}
+            //       stickyHeader
+            //       maxHeight={600}
+            //       containerStyle={{ borderRadius: 2 }}
+            //     />
+            //   </Card>
+            //   <AcknowledgeSignature data={timelogData} />
+            //   <AcknowledgeSignatureCaregiver data={timelogData} />
+            // </>
+          )}
         </div>
-      </CardContent>
+        <CardContent className='mt-4 mb-4 flex justify-between'>
+          {/* <div className='w-1/2 flex justify-start space-x-6'></div> */}
+          <div className='w-full flex justify-end space-x-6'>
+            <Button
+              className='bg-[#E89C00] mr-6'
+              variant='contained'
+              disabled={timeSheetDataLoading}
+              onClick={() => {}}
+            >
+              Export to CSV
+            </Button>
+            <Button
+              className='bg-[#67C932]'
+              variant='contained'
+              onClick={exportToPDF}
+              disabled={isLoading || timeSheetDataLoading}
+              startIcon={isLoading ? <CircularProgress size={20} color='inherit' /> : null}
+            >
+              Export PDF
+            </Button>
+          </div>
+        </CardContent>
+      </>
     </>
   )
 }

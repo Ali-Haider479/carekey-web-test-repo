@@ -307,7 +307,7 @@ const IncidentsTab = () => {
       <Card>
         <Typography className='text-xl p-6'>Incident Reports</Typography>
         {!incidentsData?.length ? (
-          <Typography className='flex justify-center pb-5'>No Data Available</Typography>
+          <Typography className='flex justify-center pb-16'>No Data Available</Typography>
         ) : (
           <ReactTable
             columns={newCol}

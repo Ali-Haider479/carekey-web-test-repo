@@ -13,7 +13,7 @@ type Option = {
 
 interface CustomDropDownProps {
   name: string
-  control?: any
+  control: any
   error?: any
   label: string
   optionList: Option[]

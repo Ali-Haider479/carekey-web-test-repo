@@ -12,7 +12,8 @@ import {
   Tab,
   Autocomplete,
   TextField,
-  CircularProgress
+  CircularProgress,
+  DialogContent
 } from '@mui/material'
 import { useEffect, useState } from 'react'
 import DialogCloseButton from '@/components/dialogs/DialogCloseButton'
@@ -349,7 +350,12 @@ const ServiceAuthorization = () => {
               />
             </div>
             <div className='flex justify-end gap-3'>
-              <Button startIcon={<Add />} className='w-[160px] h-10' onClick={() => setIsListModalShow(true)}>
+              <Button
+                variant='contained'
+                startIcon={<Add />}
+                className='w-[160px] h-10'
+                onClick={() => setIsListModalShow(true)}
+              >
                 ADD SA LIST
               </Button>
             </div>
@@ -411,7 +417,7 @@ const ServiceAuthorization = () => {
             <DialogCloseButton onClick={handleModalClose} disableRipple>
               <i className='bx-x' />
             </DialogCloseButton>
-            <div className='flex items-center justify-center pt-[10px] pb-[5px] w-full px-5'>
+            <DialogContent className='flex items-center justify-center pt-[10px] pb-[5px] w-full px-5'>
               <form onSubmit={handleSubmit(onSubmit)} autoComplete='off'>
                 <div>
                   <Typography className='text-xl font-semibold mt-10 mb-6'>
@@ -583,7 +589,7 @@ const ServiceAuthorization = () => {
                   </Button>
                 </div>
               </form>
-            </div>
+            </DialogContent>
           </Dialog>
           <ServiceAuthListModal
             open={isListModalShow}

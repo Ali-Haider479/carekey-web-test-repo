@@ -6,7 +6,18 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
 import api from '@/utils/api'
 import { formatDateTime } from '@/utils/helperFunctions'
 import { SearchOutlined } from '@mui/icons-material'
-import { Button, Card, CardHeader, Input, InputAdornment, MenuItem, TextField, Typography } from '@mui/material'
+import {
+  Box,
+  Button,
+  Card,
+  CardHeader,
+  CircularProgress,
+  Input,
+  InputAdornment,
+  MenuItem,
+  TextField,
+  Typography
+} from '@mui/material'
 import Grid from '@mui/material/Grid2'
 import { GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
 import axios from 'axios'
@@ -107,22 +118,14 @@ const AccountHistory = () => {
     return data.filter(action => {
       const matchesActionType = filters.actionType ? action.actionType === filters.actionType : true
 
-      const filterStartDate = filters.startDate ? new Date(filters.startDate).getTime() : null
-      const actionCreatedAt = new Date(action.createdAt).getTime()
+      const filterDate = filters.startDate ? new Date(filters.startDate).toDateString() : null
+      const actionDate = new Date(action.createdAt).toDateString()
 
-      const matchesStartDate = filterStartDate ? actionCreatedAt >= filterStartDate : true
+      const matchesDate = filterDate ? actionDate === filterDate : true
 
-      // Filter by search (admin name)
       const matchesSearch = searchQuery ? action.user.userName.toLowerCase().includes(searchQuery.toLowerCase()) : true
-      console.log('FILTER DEBUG:', {
-        actionType: action.actionType,
-        matchesActionType,
-        createdAt: action.createdAt,
-        startDate: filters.startDate,
-        matchesStartDate
-      })
 
-      return matchesActionType && matchesStartDate && matchesSearch
+      return matchesActionType && matchesDate && matchesSearch
     })
   }
 
@@ -250,7 +253,17 @@ const AccountHistory = () => {
 
         <div style={{ overflowX: 'auto' }}>
           {loading ? (
-            <Typography>Loading...</Typography>
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                minHeight: 200,
+                width: '100%'
+              }}
+            >
+              <CircularProgress />
+            </Box>
           ) : (
             <ReactTable
               data={userActions}

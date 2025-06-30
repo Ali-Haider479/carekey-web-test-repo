@@ -27,6 +27,7 @@ interface DefaultStateType {
   clientName: string
   primaryPhoneNumber: string
   serviceTypes: string
+  status: string
 }
 
 const defaultState: DefaultStateType = {
@@ -34,7 +35,8 @@ const defaultState: DefaultStateType = {
   state: '',
   serviceTypes: '',
   clientName: '',
-  primaryPhoneNumber: ''
+  primaryPhoneNumber: '',
+  status: ''
 }
 
 const ClientListApps = () => {
@@ -43,13 +45,9 @@ const ClientListApps = () => {
   const [dataWithProfileImg, setDataWithProfileImg] = useState<ClientTypes[]>([])
   const [search, setSearch] = useState('')
   const [filteredData, setFilteredData] = useState<ClientTypes[]>([])
-  const [pmiNumber, setPmiNumber] = useState<DefaultStateType>(defaultState)
-  const [state, setState] = useState<DefaultStateType>(defaultState)
-  const [serviceTypes, setServiceTypes] = useState<DefaultStateType>(defaultState)
-  const [clientName, setClientName] = useState<DefaultStateType>(defaultState)
-  const [primaryPhoneNumber, setPrimaryPhoneNumber] = useState<DefaultStateType>(defaultState)
+  const [filterParams, setFilterParams] = useState<DefaultStateType>(defaultState)
+  const [serviceTypes, setServiceTypes] = useState<any>()
   const [totalClients, setTotalClients] = useState(0)
-  const [filterData, setFilterData] = useState()
   const [isLoading, setIsLoading] = useState(true)
 
   const theme: any = useTheme()
@@ -152,15 +150,16 @@ const ClientListApps = () => {
       // Only add parameters that have values
       const queryParams = new URLSearchParams()
 
-      if (pmiNumber.pmiNumber) queryParams.append('pmiNumber', pmiNumber.pmiNumber)
-      if (primaryPhoneNumber.primaryPhoneNumber) {
-        queryParams.append('primaryPhoneNumber', primaryPhoneNumber.primaryPhoneNumber)
+      if (filterParams.pmiNumber) queryParams.append('pmiNumber', filterParams.pmiNumber)
+      if (filterParams.primaryPhoneNumber) {
+        queryParams.append('primaryPhoneNumber', filterParams.primaryPhoneNumber)
       }
-      if (clientName.clientName) {
-        queryParams.append('clientName', clientName.clientName)
+      if (filterParams.clientName) {
+        queryParams.append('clientName', filterParams.clientName)
       }
-      if (state.state) queryParams.append('state', state.state)
-      if (serviceTypes.serviceTypes) queryParams.append('serviceType', serviceTypes.serviceTypes)
+      if (filterParams.status) queryParams.append('status', filterParams.status)
+      if (filterParams.state) queryParams.append('state', filterParams.state)
+      if (filterParams.serviceTypes) queryParams.append('serviceType', filterParams.serviceTypes)
       queryParams.append('page', '1')
       queryParams.append('limit', '10')
 
@@ -184,12 +183,7 @@ const ClientListApps = () => {
 
   const handleReset = async () => {
     try {
-      setPmiNumber(defaultState)
-      setState(defaultState)
-      setServiceTypes(defaultState)
-      setClientName(defaultState)
-      setPrimaryPhoneNumber(defaultState)
-
+      setFilterParams(defaultState)
       const response = await api.get(`/client`)
       setDataWithProfileImg(response.data)
     } catch (error) {
@@ -247,7 +241,7 @@ const ClientListApps = () => {
       width: '150px',
       sortable: true,
       render: (item: any) => {
-        const payerName = item?.serviceAuth?.[0]?.payer ?? '--';
+        const payerName = item?.serviceAuth?.[0]?.payer ?? '--'
         return (
           <div className='w-full cursor-pointer min-w-20' onClick={() => handleNext(item?.id)}>
             <Typography color='primary' className='text-sm'>
@@ -405,8 +399,8 @@ const ClientListApps = () => {
                   fullWidth
                   id='client Name'
                   placeholder='Client Name'
-                  value={clientName.clientName}
-                  onChange={e => setClientName({ ...clientName, clientName: e.target.value })}
+                  value={filterParams.clientName}
+                  onChange={e => setFilterParams({ ...filterParams, clientName: e.target.value })}
                   slotProps={{
                     select: { displayEmpty: true }
                   }}
@@ -420,8 +414,8 @@ const ClientListApps = () => {
                   fullWidth
                   id='pmi-number'
                   placeholder='PMI Number'
-                  value={pmiNumber.pmiNumber}
-                  onChange={e => setPmiNumber({ ...pmiNumber, pmiNumber: e.target.value })}
+                  value={filterParams.pmiNumber}
+                  onChange={e => setFilterParams({ ...filterParams, pmiNumber: e.target.value })}
                   slotProps={{
                     select: { displayEmpty: true }
                   }}
@@ -436,17 +430,45 @@ const ClientListApps = () => {
                   fullWidth
                   id='caregiver-state'
                   placeholder='Caregiver State'
-                  value={serviceTypes.serviceTypes}
-                  onChange={e => setServiceTypes({ ...serviceTypes, serviceTypes: e.target.value })}
+                  value={filterParams.serviceTypes}
+                  onChange={e => setFilterParams({ ...filterParams, serviceTypes: e.target.value })}
                   slotProps={{
                     select: { displayEmpty: true }
                   }}
                 >
-                  <MenuItem value={'Personal Care Assistant (PCA)'}>Personal Care Assistant (PCA)</MenuItem>
-                  <MenuItem value={'Individualized Home Supports (IHS)'}>Individualized Home Supports (IHS)</MenuItem>
+                  <MenuItem value=''>
+                    <em>Select a service type</em>
+                  </MenuItem>
+                  {serviceTypes?.map((item: any, index: number) => (
+                    <MenuItem key={index} value={item.name}>
+                      {item.name}
+                    </MenuItem>
+                  ))}
                 </CustomTextField>
               </Grid>
               <Grid size={{ xs: 12, sm: 3 }}>
+                <Typography variant='h6' className='mb-2'>
+                  Status
+                </Typography>
+                <CustomTextField
+                  select
+                  fullWidth
+                  id='caregiver-state'
+                  placeholder='Client Status'
+                  value={filterParams.status}
+                  onChange={e => setFilterParams({ ...filterParams, status: e.target.value })}
+                  slotProps={{
+                    select: { displayEmpty: true }
+                  }}
+                >
+                  <MenuItem value=''>
+                    <em>Select a status</em>
+                  </MenuItem>
+                  <MenuItem value={'active'}>Active</MenuItem>
+                  <MenuItem value={'inactive'}>Inactive</MenuItem>
+                </CustomTextField>
+              </Grid>
+              {/* <Grid size={{ xs: 12, sm: 3 }}>
                 <Typography variant='h6' className='mb-2'>
                   Client Phone Number
                 </Typography>
@@ -460,7 +482,7 @@ const ClientListApps = () => {
                     select: { displayEmpty: true }
                   }}
                 />
-              </Grid>
+              </Grid> */}
               <Grid container spacing={12}>
                 <Grid size={{ xs: 12, sm: 4 }}>
                   <Button type='submit' variant='contained' className={`p-1`}>

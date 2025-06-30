@@ -123,7 +123,7 @@ const ServiceActivitiesForm = forwardRef<{ handleSubmit: any }, Props>(({ onFini
 
   const getCaregiversList = async () => {
     try {
-      const caregiversListData = await api.get(`/caregivers`)
+      const caregiversListData = await api.get(`/caregivers/only`)
       console.log('Caregivers List Data--> ', caregiversListData)
       setCaregiversList(caregiversListData)
     } catch (error) {

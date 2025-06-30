@@ -14,7 +14,8 @@ import {
   CardHeader,
   CardContent,
   FormControlLabel,
-  Checkbox
+  Checkbox,
+  DialogContent
 } from '@mui/material'
 import { useEffect, useState } from 'react'
 import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
@@ -451,7 +452,7 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
       <DialogCloseButton onClick={handleModalClose} disableRipple>
         <i className='bx-x' />
       </DialogCloseButton>
-      <Box sx={{ overflowY: 'auto', maxHeight: 'calc(90vh - 64px)', position: 'relative' }}>
+      <DialogContent sx={{ overflowY: 'auto', maxHeight: 'calc(90vh - 64px)', position: 'relative' }}>
         {isLoading && (
           <Box
             sx={{
@@ -479,7 +480,7 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
               position: 'sticky',
               top: 0,
               zIndex: 5,
-              padding: '1rem 1rem',
+              px: 3,
               backdropFilter: 'blur(10px)',
               WebkitBackdropFilter: 'blur(10px)'
             }}
@@ -797,7 +798,7 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
             </Card>
           )}
         </Box>
-      </Box>
+      </DialogContent>
     </Dialog>
   )
 }

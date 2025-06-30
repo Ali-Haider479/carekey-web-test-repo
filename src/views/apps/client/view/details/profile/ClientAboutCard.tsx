@@ -2,7 +2,6 @@
 import React, { useEffect, useState } from 'react'
 import { Button, Card, CardContent, Typography } from '@mui/material'
 import { useParams } from 'next/navigation'
-import axios from 'axios'
 import { EditOutlined, SaveOutlined } from '@mui/icons-material'
 import { EditableField } from '@/@core/components/custom-inputs/CustomEditableTextField'
 import CloseIcon from '@mui/icons-material/Close'
@@ -89,7 +88,7 @@ function ClientAboutCard() {
       console.log(data)
       const residentialAddress = data.addresses?.find(
         (addr: any) => addr.address?.addressType === 'Residential'
-      )?.address;
+      )?.address
       const formattedData = {
         firstName: data.firstName,
         middleName: data.middleName,
@@ -105,10 +104,10 @@ function ClientAboutCard() {
         emergencyContactNumber: data.emergencyContactNumber,
         emergencyEmailId: data.emergencyEmailId,
         gender: data.gender,
-        address: residentialAddress?.address || "",
-        city: residentialAddress?.city || "",
-        state: residentialAddress?.state || "",
-        zipCode: residentialAddress?.zipCode || "",
+        address: residentialAddress?.address || '',
+        city: residentialAddress?.city || '',
+        state: residentialAddress?.state || '',
+        zipCode: residentialAddress?.zipCode || '',
         admissionDate: data.admissionDate,
         dischargeDate: data.dischargeDate,
         'physician.name': data.clientPhysician?.name,
@@ -178,15 +177,14 @@ function ClientAboutCard() {
         ...prev,
         [name]: !isValid
       }))
-
-      // Format phone numbers
-      if (isValid && value) {
-        const formattedValue = formatPhoneNumber(value)
-        setFormData((prev: any) => ({
-          ...prev,
-          [name]: formattedValue
-        }))
-      }
+      const digits = value.replace(/\D/g, '')
+      if (digits.length > 10) return
+      // Format phone number
+      const formattedValue = formatPhoneNumber(value)
+      setFormData((prev: any) => ({
+        ...prev,
+        [name]: formattedValue
+      }))
     }
 
     // Zip code validation
@@ -249,7 +247,8 @@ function ClientAboutCard() {
       value: formData.primaryCellNumber,
       error: formErrors.primaryCellNumber
     },
-    { label: 'Gender', name: 'gender', value: formData.gender }
+    { label: 'Gender', name: 'gender', value: formData.gender },
+    { label: 'Discharge Date', name: 'dischargeDate', value: formData.dischargeDate }
   ]
 
   const emergencyFields = [
@@ -421,7 +420,9 @@ function ClientAboutCard() {
               />
               {field.error && (
                 <Typography className='text-error mt-1' sx={{ fontSize: '0.75rem' }}>
-                  {field.name.includes('emergencyEmailId') ? 'Please enter a valid email address' : 'Please enter a valid 10 digit number'}
+                  {field.name.includes('emergencyEmailId')
+                    ? 'Please enter a valid email address'
+                    : 'Please enter a valid 10 digit number'}
                 </Typography>
               )}
             </div>
@@ -467,7 +468,9 @@ function ClientAboutCard() {
               />
               {field.error && (
                 <Typography className='text-error mt-1' sx={{ fontSize: '0.75rem' }}>
-                  {field.name.includes('physician.zipCode') ? 'Invalid zip code format' : 'Please enter a valid 10 digit number'}
+                  {field.name.includes('physician.zipCode')
+                    ? 'Invalid zip code format'
+                    : 'Please enter a valid 10 digit number'}
                 </Typography>
               )}
             </div>
@@ -490,7 +493,9 @@ function ClientAboutCard() {
               />
               {field.error && (
                 <Typography className='text-error mt-1' sx={{ fontSize: '0.75rem' }}>
-                  {field.name.includes('caseManager.email') ? 'Please enter a valid email address' : 'Please enter a valid 10 digit number'}
+                  {field.name.includes('caseManager.email')
+                    ? 'Please enter a valid email address'
+                    : 'Please enter a valid 10 digit number'}
                 </Typography>
               )}
             </div>
@@ -513,7 +518,9 @@ function ClientAboutCard() {
               />
               {field.error && (
                 <Typography className='text-error mt-1' sx={{ fontSize: '0.75rem' }}>
-                  {field.name.includes('responsibleParty.emailAddress') ? 'Please enter a valid email address' : 'Please enter a valid 10 digit number'}
+                  {field.name.includes('responsibleParty.emailAddress')
+                    ? 'Please enter a valid email address'
+                    : 'Please enter a valid 10 digit number'}
                 </Typography>
               )}
             </div>

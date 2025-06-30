@@ -13,7 +13,7 @@ import Grid from '@mui/material/Grid2'
 // Component Imports
 import CustomTabList from '@core/components/mui/TabList'
 import ProfileBanner from '@/@layouts/components/horizontal/ProfileBanner'
-import { Typography } from '@mui/material'
+import { CircularProgress, Typography } from '@mui/material'
 import { useParams } from 'next/navigation'
 import api from '@/utils/api'
 
@@ -25,6 +25,7 @@ const ClientDetails = ({ tabContentList }: BottomBodyProps) => {
   // States
   const [activeTab, setActiveTab] = useState('profile')
   const [clientData, setClientData] = useState<any>()
+  const [isLoading, setIsLoading] = useState<boolean>(false)
 
   const { id } = useParams()
 
@@ -60,11 +61,14 @@ const ClientDetails = ({ tabContentList }: BottomBodyProps) => {
   }
 
   const fetchClientData = async () => {
+    setIsLoading(true)
     try {
       const response = await api.get(`/client/${id}`)
       setClientData(response.data)
     } catch (error) {
       console.error('Error getting Client Data: ', error)
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -78,39 +82,52 @@ const ClientDetails = ({ tabContentList }: BottomBodyProps) => {
         <Typography className='text-[34px] font-medium' gutterBottom>
           {`Client ${getTabHeading(activeTab)}`}
         </Typography>
-
-        {shouldShowBanner && (
-          <ProfileBanner
-            props={{
-              fullName: `${clientData?.firstName ? clientData?.firstName : ''} ${clientData?.lastName ? clientData?.lastName : ''}`,
-              coverImg: '/images/pages/profile-banner.png',
-              location: `${clientData?.addresses[0]?.address?.state ? clientData?.addresses[0]?.address?.state : ''}`,
-              profileImg: clientData?.profileImgUrl,
-              status: 'CLIENT',
-              isClient: true
-            }}
-          />
+        {isLoading ? (
+          <Grid
+            container
+            size={{ xs: 12, md: 12 }}
+            justifyContent='center'
+            alignItems='center'
+            style={{ minHeight: '200px' }}
+          >
+            <CircularProgress />
+          </Grid>
+        ) : (
+          <>
+            {shouldShowBanner && (
+              <ProfileBanner
+                props={{
+                  fullName: `${clientData?.firstName ? clientData?.firstName : ''} ${clientData?.lastName ? clientData?.lastName : ''}`,
+                  coverImg: '/images/pages/profile-banner.png',
+                  location: `${clientData?.addresses[0]?.address?.state ? clientData?.addresses[0]?.address?.state : ''}`,
+                  profileImg: clientData?.profileImgUrl,
+                  status: 'CLIENT',
+                  isClient: true
+                }}
+              />
+            )}
+            <Grid container spacing={6}>
+              <Grid size={{ xs: 12 }}>
+                <CustomTabList onChange={handleChange} variant='scrollable' pill='true'>
+                  <Tab value='profile' label='PROFILE' />
+                  <Tab value='e-doc' label='E-DOC' />
+                  <Tab value='forms' label='FORMS' />
+                  <Tab value='services' label='SERVICES' />
+                  <Tab value='account-history' label='LOGS' />
+                  <Tab value='time-sheets' label='TIME SHEETS' />
+                  <Tab value='service-authorization' label='SERVICE AUTHORIZATION' />
+                  <Tab value='incidents' label='INCIDENTS' />
+                  <Tab value='care-plan' label='CARE PLAN' />
+                </CustomTabList>
+              </Grid>
+              <Grid size={{ xs: 12 }}>
+                <TabPanel value={activeTab} className='p-0'>
+                  {tabContentList[activeTab]}
+                </TabPanel>
+              </Grid>
+            </Grid>
+          </>
         )}
-        <Grid container spacing={6}>
-          <Grid size={{ xs: 12 }}>
-            <CustomTabList onChange={handleChange} variant='scrollable' pill='true'>
-              <Tab value='profile' label='PROFILE' />
-              <Tab value='e-doc' label='E-DOC' />
-              <Tab value='forms' label='FORMS' />
-              <Tab value='services' label='SERVICES' />
-              <Tab value='account-history' label='LOGS' />
-              <Tab value='time-sheets' label='TIME SHEETS' />
-              <Tab value='service-authorization' label='SERVICE AUTHORIZATION' />
-              <Tab value='incidents' label='INCIDENTS' />
-              <Tab value='care-plan' label='CARE PLAN' />
-            </CustomTabList>
-          </Grid>
-          <Grid size={{ xs: 12 }}>
-            <TabPanel value={activeTab} className='p-0'>
-              {tabContentList[activeTab]}
-            </TabPanel>
-          </Grid>
-        </Grid>
       </TabContext>
     </>
   )

@@ -122,18 +122,21 @@ const AccountHistoryTable = () => {
 
   const applyFilters = (data: any[], filters: typeof defaultState, searchQuery: string) => {
     return data.filter(action => {
-      // Filter by actionType
+      // 1. Action Type Filter (unchanged)
       const matchesActionType = filters.actionType ? action.actionType === filters.actionType : true
 
-      // Filter by startDate
-      const filterStartDate = filters.startDate ? new Date(filters.startDate).getTime() : null
-      const actionCreatedAt = new Date(action.createdAt).getTime()
-      const matchesStartDate = filterStartDate ? actionCreatedAt >= filterStartDate : true
+      // 2. DATE FILTER - NOW CHECKS FOR EXACT MATCH
+      const filterDate = filters.startDate ? new Date(filters.startDate).toDateString() : null
+      const actionDate = new Date(action.createdAt).toDateString()
 
-      // Filter by search (admin name)
+      const matchesDate = filterDate
+        ? actionDate === filterDate // Exact date comparison
+        : true
+
+      // 3. Search Filter (unchanged)
       const matchesSearch = searchQuery ? action.user.userName.toLowerCase().includes(searchQuery.toLowerCase()) : true
 
-      return matchesActionType && matchesStartDate && matchesSearch
+      return matchesActionType && matchesDate && matchesSearch
     })
   }
 
@@ -189,7 +192,7 @@ const AccountHistoryTable = () => {
                   <TextField
                     fullWidth
                     size='small'
-                    label='Start Date'
+                    label='Select Date'
                     name='startDate'
                     className='mbe-6'
                     id='event-start-date'

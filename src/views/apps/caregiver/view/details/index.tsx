@@ -13,7 +13,7 @@ import Grid from '@mui/material/Grid2'
 // Component Imports
 import CustomTabList from '@core/components/mui/TabList'
 import ProfileBanner from '@/@layouts/components/horizontal/ProfileBanner'
-import { Typography } from '@mui/material'
+import { CircularProgress, Typography } from '@mui/material'
 import { useParams, useRouter } from 'next/navigation'
 import api from '@/utils/api'
 import CustomAlert from '@/@core/components/mui/Alter'
@@ -26,36 +26,40 @@ const CaregiverDetails = ({ tabContentList }: BottomBodyProps) => {
   const { id } = useParams()
   const [alertOpen, setAlertOpen] = useState(false)
   const [alertProps, setAlertProps] = useState({ message: '', severity: 'info' })
+  const [isLoading, setIsLoading] = useState<boolean>(false)
 
   // States
   const [activeTab, setActiveTab] = useState('profile')
   const [data, setData] = useState<any>()
   const router = useRouter()
 
-  useEffect(() => {
-    // Fetch data from the backend API
-    const fetchData = async () => {
-      try {
-        const response = await api.get(`/caregivers/caregiver/${id}`)
-        const fetchedData = response.data
-        console.log('Caregiver Profile Data ----> ', fetchedData)
-        setData(fetchedData)
-      } catch (error: any) {
-        // RLS return us 404 instead of 403 Forbidden error
-        if (error.response?.status === 403) {
-          setAlertOpen(true)
-          setAlertProps({
-            message: 'You do not have access to this tenant.',
-            severity: 'warning'
-          })
-          // Redirect to homepage after a delay (e.g., 3 seconds)
-          // setTimeout(() => {
-          router.push('/')
-        }
-        console.error('Error fetching data', error)
+  // Fetch data from the backend API
+  const fetchData = async () => {
+    setIsLoading(true)
+    try {
+      const response = await api.get(`/caregivers/caregiver/${id}`)
+      const fetchedData = response.data
+      console.log('Caregiver Profile Data ----> ', fetchedData)
+      setData(fetchedData)
+    } catch (error: any) {
+      // RLS return us 404 instead of 403 Forbidden error
+      if (error.response?.status === 403) {
+        setAlertOpen(true)
+        setAlertProps({
+          message: 'You do not have access to this tenant.',
+          severity: 'warning'
+        })
+        // Redirect to homepage after a delay (e.g., 3 seconds)
+        // setTimeout(() => {
+        router.push('/')
       }
+      console.error('Error fetching data', error)
+    } finally {
+      setIsLoading(false)
     }
+  }
 
+  useEffect(() => {
     fetchData()
   }, [])
 
@@ -100,34 +104,48 @@ const CaregiverDetails = ({ tabContentList }: BottomBodyProps) => {
         <Typography variant='h4' gutterBottom>
           {getTabHeading(activeTab)}
         </Typography>
-        <ProfileBanner
-          props={{
-            fullName: fullName,
-            coverImg: '/images/pages/profile-banner.png',
-            location: data?.addresses[0]?.address?.state ? data?.addresses[0]?.address?.state : '---',
-            profileImg: data?.user?.profileImageUrl,
-            status: 'CAREGIVER',
-            isClient: false,
-            userId: data?.user?.id
-          }}
-        />
-        <Grid container spacing={6}>
-          <Grid size={{ xs: 12 }}>
-            <CustomTabList onChange={handleChange} variant='scrollable' pill='true'>
-              <Tab value='profile' label='PROFILE' />
-              <Tab value='account-history' label='LOGS' />
-              <Tab value='assigned-service' label='ASSIGNED SERVICE' />
-              <Tab value='time-log' label='VIEW TIME LOG' />
-              <Tab value='schedule' label='VIEW SCHEDULE' />
-              <Tab value='documents' label='DOCUMENTS' />
-            </CustomTabList>
+        {isLoading ? (
+          <Grid
+            container
+            size={{ xs: 12, md: 12 }}
+            justifyContent='center'
+            alignItems='center'
+            style={{ minHeight: '200px' }}
+          >
+            <CircularProgress />
           </Grid>
-          <Grid size={{ xs: 12 }}>
-            <TabPanel value={activeTab} className='p-0'>
-              {tabContentList[activeTab]({ data: data })}
-            </TabPanel>
-          </Grid>
-        </Grid>
+        ) : (
+          <>
+            <ProfileBanner
+              props={{
+                fullName: fullName,
+                coverImg: '/images/pages/profile-banner.png',
+                location: data?.addresses[0]?.address?.state ? data?.addresses[0]?.address?.state : '---',
+                profileImg: data?.user?.profileImageUrl,
+                status: 'CAREGIVER',
+                isClient: false,
+                userId: data?.user?.id
+              }}
+            />
+            <Grid container spacing={6}>
+              <Grid size={{ xs: 12 }}>
+                <CustomTabList onChange={handleChange} variant='scrollable' pill='true'>
+                  <Tab value='profile' label='PROFILE' />
+                  <Tab value='account-history' label='LOGS' />
+                  <Tab value='assigned-service' label='ASSIGNED SERVICE' />
+                  <Tab value='time-log' label='VIEW TIME LOG' />
+                  <Tab value='schedule' label='VIEW SCHEDULE' />
+                  <Tab value='documents' label='DOCUMENTS' />
+                </CustomTabList>
+              </Grid>
+              <Grid size={{ xs: 12 }}>
+                <TabPanel value={activeTab} className='p-0'>
+                  {tabContentList[activeTab]({ data: data })}
+                </TabPanel>
+              </Grid>
+            </Grid>
+          </>
+        )}
       </TabContext>
     </>
   )

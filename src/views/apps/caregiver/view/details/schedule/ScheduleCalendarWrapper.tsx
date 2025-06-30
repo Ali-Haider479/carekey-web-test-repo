@@ -182,7 +182,7 @@ const AppCalendar = () => {
       />
     </>
   ) : (
-    <div className='flex items-center justify-center h-full w-full'>
+    <div className='flex items-center justify-center p-10 w-full'>
       <CircularProgress />
     </div>
   )
