@@ -73,8 +73,16 @@ const AcknowledgeSignature = ({ data }: any) => {
   const totalMinutes = Object.values(weekTotals).reduce((sum, minutes) => sum + minutes, 0)
 
   // Helper function to format date
-  const formatDateTime = (dateStr: string) => {
-    return dateStr ? moment(dateStr).format('DD/MM/YYYY HH:mm:ss') : 'N/A'
+  const formatDateTime = (dateString: string | undefined) => {
+    if (!dateString) return ''
+    return new Date(dateString).toLocaleString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    })
   }
 
   return (
