@@ -1,6 +1,16 @@
 'use client'
 import { CheckOutlined, CloseOutlined, Search } from '@mui/icons-material'
-import { Box, Button, Card, CardContent, CircularProgress, Typography, TextField, IconButton } from '@mui/material'
+import {
+  Box,
+  Button,
+  Card,
+  CardContent,
+  CircularProgress,
+  Typography,
+  TextField,
+  IconButton,
+  Checkbox
+} from '@mui/material'
 import React, { useEffect, useState } from 'react'
 import moment from 'moment'
 import AcknowledgeSignature from './ClientSignatureSection'
@@ -147,8 +157,7 @@ const TimeSheets = () => {
   const [dateRange, setDateRange] = useState<[Date | null, Date | null]>([null, null])
   const [expanded, setExpanded] = React.useState<string | false>('panel0')
   const [timeSheetDataLoading, setTimeSheetDataLoading] = useState<boolean>(false)
-  // const [clientSignature, setClientSignature] = useState<SignatureState>({ image: '', text: '', date: '' })
-  // const [caregiverSignature, setCaregiverSignature] = useState<SignatureState>({ image: '', text: '', date: '' })
+  const [filterData, setFilteredData] = useState<any[]>([])
 
   const handleChange = (panel: string) => (event: React.SyntheticEvent, newExpanded: boolean) => {
     setExpanded(newExpanded ? panel : false)
@@ -203,6 +212,7 @@ const TimeSheets = () => {
 
       const dataByCaregiverArray = Object.values(dataByCaregiver)
       setTimelogData(dataByCaregiverArray)
+      setFilteredData([])
     } catch (error) {
       console.error('Error fetching time logs:', error)
       throw error
@@ -238,11 +248,17 @@ const TimeSheets = () => {
 
       const dataByCaregiverArray = Object.values(dataByCaregiver)
       setTimelogData(dataByCaregiverArray)
-      if (dataByCaregiverArray.length > 0)
+      if (dataByCaregiverArray.length > 0) {
+        const nowDate = new Date()
         setDateRange([
           new Date(dataByCaregiverArray[0][0].payPeriodHistory.startDate),
-          new Date(dataByCaregiverArray[0][0].payPeriodHistory.endDate)
+          new Date(
+            dataByCaregiverArray[0][0].payPeriodHistory?.endDate
+              ? dataByCaregiverArray[0][0].payPeriodHistory?.endDate
+              : nowDate
+          )
         ])
+      }
     } catch (error) {
       console.error('Error fetching time log data:', error)
     } finally {
@@ -658,7 +674,7 @@ const TimeSheets = () => {
                   exportToPDF({
                     setIsLoading,
                     authUser,
-                    pdfData: timelogData,
+                    pdfData: filterData.length > 0 ? filterData : timelogData,
                     weekDates,
                     durationsByDate
                   })
@@ -710,11 +726,44 @@ const TimeSheets = () => {
                         onChange={handleChange(`panel${index}`)}
                         sx={{ mx: 2 }}
                       >
-                        <AccordionSummary aria-controls='panel1d-content' id='panel1d-header'>
-                          <DetailItem
-                            label=''
-                            value={`${item[0]?.caregiver?.firstName || ''} ${item[0]?.caregiver?.lastName || ''}`}
+                        <AccordionSummary
+                          aria-controls='panel1d-content'
+                          id='panel1d-header'
+                          sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            textAlign: 'center',
+                            justifyContent: 'space-between'
+                          }}
+                          // Prevent checkbox click from toggling accordion
+                          onClick={e => {
+                            // Only toggle if the click is NOT on the checkbox
+                            const target = e.target as HTMLElement
+                            if (target.closest('button[role="checkbox"], input[type="checkbox"]')) {
+                              e.stopPropagation()
+                            }
+                          }}
+                        >
+                          <Checkbox
+                            checked={filterData.some(
+                              (d: ServiceEntry[]) => d[0]?.caregiver?.id === item[0]?.caregiver?.id
+                            )}
+                            inputProps={{ 'aria-label': `Checkbox-${index}` }}
+                            onClick={e => e.stopPropagation()}
+                            sx={{ '& .MuiSvgIcon-root': { fontSize: 28 } }}
+                            onChange={e => {
+                              if (e.target.checked) {
+                                setFilteredData(prev => [...prev, item])
+                              } else {
+                                setFilteredData(prev =>
+                                  prev.filter((d: ServiceEntry[]) => d[0]?.caregiver?.id !== item[0]?.caregiver?.id)
+                                )
+                              }
+                            }}
                           />
+                          <Typography sx={{ mt: 1.5 }}>
+                            {`${item[0]?.caregiver?.firstName || ''} ${item[0]?.caregiver?.lastName || ''}`}
+                          </Typography>
                         </AccordionSummary>
                         <AccordionDetails>
                           <Card className='h-fit w-[99%] m-2 mt-1 mb-3 shadow-md rounded-lg border-solid border-2'>
@@ -782,7 +831,7 @@ const TimeSheets = () => {
                 //   <AcknowledgeSignature data={timelogData} />
                 //   <AcknowledgeSignatureCaregiver data={timelogData} />
                 // </>
-                <Typography className='text-center w-full'>No timesheet data found.</Typography>
+                <Typography className='text-center w-full mt-10'>No timesheet data found!.</Typography>
               )}
             </>
           )}

@@ -3,23 +3,17 @@
 // MUI Imports
 import Grid from '@mui/material/Grid2'
 import { useEffect, useState } from 'react'
-import axios from 'axios'
-
-// Component Imports
-import Dropdown from '@/@core/components/mui/DropDown'
-
 import type { ClientTypes } from '@/types/apps/clientTypes'
 import { Avatar, Button, Card, Icon, MenuItem, TextField, Typography, CircularProgress } from '@mui/material'
 import { useRouter } from 'next/navigation'
-import ReactTable from '@/@core/components/mui/ReactTable'
 import { useForm } from 'react-hook-form'
 import CustomTextField from '@/@core/components/mui/TextField'
 import { USStates } from '@/utils/constants'
 import api from '@/utils/api'
-import ClientTable from './ClientsTable'
 import TanStackTable from '@/@core/components/mui/TanStackTable'
 import { Mail, PeopleOutline, Phone } from '@mui/icons-material'
 import { useTheme } from '@emotion/react'
+import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
 
 interface DefaultStateType {
   pmiNumber: string
@@ -28,6 +22,7 @@ interface DefaultStateType {
   primaryPhoneNumber: string
   serviceTypes: string
   status: string
+  dob: string
 }
 
 const defaultState: DefaultStateType = {
@@ -36,23 +31,30 @@ const defaultState: DefaultStateType = {
   serviceTypes: '',
   clientName: '',
   primaryPhoneNumber: '',
-  status: ''
+  status: 'active',
+  dob: ''
+}
+
+const transformClientData = (data: ClientTypes[]) => {
+  return data.map(item => ({
+    ...item,
+    profileImgKey: item.profileImgUrl, // Store original key
+    profileImgUrl: null // Reset URL for lazy loading
+  }))
 }
 
 const ClientListApps = () => {
   const router = useRouter()
-  const [data, setData] = useState<ClientTypes[]>([])
   const [dataWithProfileImg, setDataWithProfileImg] = useState<ClientTypes[]>([])
   const [search, setSearch] = useState('')
   const [filteredData, setFilteredData] = useState<ClientTypes[]>([])
   const [filterParams, setFilterParams] = useState<DefaultStateType>(defaultState)
   const [serviceTypes, setServiceTypes] = useState<any>()
   const [totalClients, setTotalClients] = useState(0)
-  const [isLoading, setIsLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(false)
 
   const theme: any = useTheme()
   const lightTheme = theme.palette.mode === 'light'
-  const darkTheme = theme.palette.mode === 'dark'
 
   const statusOptions = [
     { key: 1, value: 'pending', displayValue: 'Pending' },
@@ -66,28 +68,34 @@ const ClientListApps = () => {
   }, [])
 
   const fetchData = async () => {
+    setIsLoading(true)
     try {
       const response = await api.get(`/client`)
-      console.log('RESPONSE CLIENT DATA', response)
-      setData(response.data)
-      setTotalClients(response.data.length)
+      const data = response.data
+
+      if (data?.length) {
+        const transformedData = transformClientData(data)
+        setDataWithProfileImg(transformedData)
+        setFilteredData(transformedData)
+        setTotalClients(data.length)
+        fetchProfileImages(transformedData) // Async fetch after initial render
+      } else {
+        setDataWithProfileImg([])
+        setFilteredData([])
+        setTotalClients(0)
+      }
     } catch (error) {
-      console.log('CLIENT DATA ERROR', error)
+      console.error('CLIENT DATA ERROR', error)
+      setDataWithProfileImg([])
+      setFilteredData([])
+      setTotalClients(0)
     } finally {
-      setTimeout(() => {
-        setIsLoading(false)
-      }, 600)
+      setIsLoading(false)
     }
   }
 
   useEffect(() => {
-    if (data?.length > 0) {
-      fetchProfileImages()
-    }
-  }, [data])
-
-  useEffect(() => {
-    if (!search) {
+    if (search.trim() === '') {
       setFilteredData(dataWithProfileImg)
       return
     }
@@ -109,21 +117,23 @@ const ClientListApps = () => {
     }
   }
 
-  const fetchProfileImages = async () => {
-    if (data) {
-      const dataWithPhotoUrls = await Promise.all(
-        data?.map(async (item: any) => {
-          const profileImgUrl =
-            item?.profileImgUrl !== null ? await getProfileImage(item?.profileImgUrl) : item?.profileImgUrl
-          return {
-            ...item,
-            profileImgUrl: profileImgUrl
-          }
-        })
-      )
-      setDataWithProfileImg(dataWithPhotoUrls)
-      setFilteredData(dataWithPhotoUrls)
-    }
+  const fetchProfileImages = (data: any[]) => {
+    data
+      .filter(item => item.profileImgKey)
+      .forEach(async item => {
+        try {
+          const url = await getProfileImage(item.profileImgKey)
+          updateClientProfile(item.id, url)
+        } catch (error) {
+          console.error(`Error fetching image for client ${item.id}:`, error)
+          updateClientProfile(item.id, null)
+        }
+      })
+  }
+
+  const updateClientProfile = (id: string, url: string | null) => {
+    setDataWithProfileImg(prev => prev.map(item => (item.id === id ? { ...item, profileImgUrl: url } : item)))
+    setFilteredData(prev => prev.map(item => (item.id === id ? { ...item, profileImgUrl: url } : item)))
   }
 
   const getServiceTypes = async () => {
@@ -159,6 +169,7 @@ const ClientListApps = () => {
       }
       if (filterParams.status) queryParams.append('status', filterParams.status)
       if (filterParams.state) queryParams.append('state', filterParams.state)
+      if (filterParams.dob.trim() !== '') queryParams.append('dob', filterParams.dob)
       if (filterParams.serviceTypes) queryParams.append('serviceType', filterParams.serviceTypes)
       queryParams.append('page', '1')
       queryParams.append('limit', '10')
@@ -166,16 +177,20 @@ const ClientListApps = () => {
       // If no filters are applied, fetch all data
       if (queryParams.toString() === 'page=1&limit=10') {
         const response = await api.get(`/client`)
-        setDataWithProfileImg(response.data)
-        setFilteredData(response.data)
+        const data = transformClientData(response.data)
+        setDataWithProfileImg(data)
+        setFilteredData(data)
+        fetchProfileImages(data)
         return
       }
       console.log('QUERY PARAMS', queryParams)
       // Fetch filtered data
       const filterResponse = await api.get(`/client/filtered/?${queryParams.toString()}`)
       console.log('Filter response ----> ', filterResponse.data.data)
-      setDataWithProfileImg(filterResponse.data.data)
-      setFilteredData(filterResponse.data.data)
+      const filteredData = transformClientData(filterResponse.data.data)
+      setDataWithProfileImg(filteredData)
+      setFilteredData(filteredData)
+      fetchProfileImages(filteredData)
     } catch (error) {
       console.error('error filtering data', error)
     }
@@ -390,7 +405,7 @@ const ClientListApps = () => {
                 <strong>Filters</strong>
               </span>
             </Grid>
-            <Grid container spacing={6} marginTop={4}>
+            <Grid container spacing={6} marginTop={4} sx={{ rowGap: 3 }}>
               <Grid size={{ xs: 12, sm: 3 }}>
                 <Typography variant='h6' className='mb-2'>
                   Client Name
@@ -405,6 +420,26 @@ const ClientListApps = () => {
                     select: { displayEmpty: true }
                   }}
                 />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 3 }}>
+                <Typography variant='h6' className='mb-2'>
+                  Status
+                </Typography>
+                <CustomTextField
+                  select
+                  fullWidth
+                  id='select-status'
+                  placeholder='Client Status'
+                  value={filterParams.status}
+                  onChange={e => setFilterParams({ ...filterParams, status: e.target.value })}
+                  slotProps={{
+                    select: { displayEmpty: true }
+                  }}
+                >
+                  <MenuItem value=''>All</MenuItem>
+                  <MenuItem value='active'>Active</MenuItem>
+                  <MenuItem value='inactive'>Inactive</MenuItem>
+                </CustomTextField>
               </Grid>
               <Grid size={{ xs: 12, sm: 3 }}>
                 <Typography variant='h6' className='mb-2'>
@@ -423,6 +458,30 @@ const ClientListApps = () => {
               </Grid>
               <Grid size={{ xs: 12, sm: 3 }}>
                 <Typography variant='h6' className='mb-2'>
+                  Date of Birth
+                </Typography>
+                <AppReactDatepicker
+                  selected={filterParams.dob ? new Date(filterParams.dob) : null}
+                  maxDate={new Date()}
+                  dateFormat='MM/dd/yyyy'
+                  placeholderText='Select Date of Birth'
+                  showMonthDropdown
+                  showYearDropdown
+                  customInput={<CustomTextField fullWidth />}
+                  sx={{ width: '100%' }}
+                  onChange={(date: Date | null) => {
+                    const formatLocalDate = (d: Date) => {
+                      const year = d.getFullYear()
+                      const month = String(d.getMonth() + 1).padStart(2, '0')
+                      const day = String(d.getDate()).padStart(2, '0')
+                      return `${year}-${month}-${day}`
+                    }
+                    setFilterParams({ ...filterParams, dob: date ? formatLocalDate(date) : '' })
+                  }}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 3 }}>
+                <Typography variant='h6' className='mb-2'>
                   Service types
                 </Typography>
                 <CustomTextField
@@ -436,9 +495,7 @@ const ClientListApps = () => {
                     select: { displayEmpty: true }
                   }}
                 >
-                  <MenuItem value=''>
-                    <em>Select a service type</em>
-                  </MenuItem>
+                  <MenuItem value=''>All</MenuItem>
                   {serviceTypes?.map((item: any, index: number) => (
                     <MenuItem key={index} value={item.name}>
                       {item.name}
@@ -446,54 +503,33 @@ const ClientListApps = () => {
                   ))}
                 </CustomTextField>
               </Grid>
-              <Grid size={{ xs: 12, sm: 3 }}>
-                <Typography variant='h6' className='mb-2'>
-                  Status
-                </Typography>
-                <CustomTextField
-                  select
-                  fullWidth
-                  id='caregiver-state'
-                  placeholder='Client Status'
-                  value={filterParams.status}
-                  onChange={e => setFilterParams({ ...filterParams, status: e.target.value })}
-                  slotProps={{
-                    select: { displayEmpty: true }
-                  }}
-                >
-                  <MenuItem value=''>
-                    <em>Select a status</em>
-                  </MenuItem>
-                  <MenuItem value={'active'}>Active</MenuItem>
-                  <MenuItem value={'inactive'}>Inactive</MenuItem>
-                </CustomTextField>
-              </Grid>
+
               {/* <Grid size={{ xs: 12, sm: 3 }}>
-                <Typography variant='h6' className='mb-2'>
-                  Client Phone Number
-                </Typography>
-                <CustomTextField
-                  fullWidth
-                  id='primary-phone-number'
-                  placeholder='Client Phone Number'
-                  value={primaryPhoneNumber.primaryPhoneNumber}
-                  onChange={e => setPrimaryPhoneNumber({ ...primaryPhoneNumber, primaryPhoneNumber: e.target.value })}
-                  slotProps={{
-                    select: { displayEmpty: true }
-                  }}
-                />
+              <Typography variant='h6' className='mb-2'>
+                Client Phone Number
+              </Typography>
+              <CustomTextField
+                fullWidth
+                id='primary-phone-number'
+                placeholder='Client Phone Number'
+                value={primaryPhoneNumber.primaryPhoneNumber}
+                onChange={e => setPrimaryPhoneNumber({ ...primaryPhoneNumber, primaryPhoneNumber: e.target.value })}
+                slotProps={{
+                select: { displayEmpty: true }
+                }}
+              />
               </Grid> */}
-              <Grid container spacing={12}>
-                <Grid size={{ xs: 12, sm: 4 }}>
-                  <Button type='submit' variant='contained' className={`p-1`}>
-                    Apply
-                  </Button>
-                </Grid>
-                <Grid size={{ xs: 12, sm: 4 }}>
-                  <Button onClick={handleReset} variant='contained' color='error' className={`p-1`}>
-                    Reset
-                  </Button>
-                </Grid>
+            </Grid>
+            <Grid container spacing={2} marginTop={3} justifyContent='flex-start'>
+              <Grid>
+                <Button type='submit' variant='contained' sx={{ px: 4 }}>
+                  Apply
+                </Button>
+              </Grid>
+              <Grid>
+                <Button onClick={handleReset} variant='contained' color='error' sx={{ px: 4 }}>
+                  Reset
+                </Button>
               </Grid>
             </Grid>
           </Card>
@@ -526,7 +562,7 @@ const ClientListApps = () => {
               <div className='flex items-center justify-center p-10'>
                 <CircularProgress />
               </div>
-            ) : !data.length ? ( // Changed from dataWithProfileImg to filteredData
+            ) : filteredData.length === 0 ? (
               <Card>
                 <div className='flex flex-col items-center justify-center p-10 gap-2'>
                   <Icon className='bx-folder-open text-6xl text-textSecondary' />
@@ -549,7 +585,7 @@ const ClientListApps = () => {
             ) : (
               <TanStackTable
                 columns={newColumns}
-                data={filteredData} // Changed from dataWithProfileImg to filteredData
+                data={filteredData}
                 keyExtractor={item => item.id.toString()}
                 enablePagination
                 pageSize={25}

@@ -25,6 +25,7 @@ import OcrCustomDropDown from '@/@core/components/custom-inputs/OcrCustomDropdow
 import api from '@/utils/api'
 import { extractStructuredTextFromPDF, parseServiceAgreement } from '@/utils/pdfDataExtract'
 import { useTheme } from '@emotion/react'
+import { set } from 'date-fns'
 
 interface ServiceAuthListModalProps {
   open: boolean
@@ -47,6 +48,7 @@ interface FormRow {
   totalAmount: string
   serviceRate: string
   quantity: string
+  usedUnits: string
   frequency: string
   umpiNumber: string
   taxonomy: string
@@ -55,6 +57,7 @@ interface FormRow {
   caseManagerName?: string // Optional fields from OCR
   recepientName?: string
   status?: string
+  description?: string
 }
 
 interface UploadedFile {
@@ -80,9 +83,74 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
   const [uploadedFile, setUploadedFile] = useState<UploadedFile | null>(null)
   const [billableStates, setBillableStates] = useState<boolean[]>([])
   const [ocrData, setOcrData] = useState<FormRow[]>([])
+  const [extractedData, setExtractedData] = useState<any>(null)
+  const [rawFile, setRawFile] = useState<File | null>(null)
   const authUser: AuthUser = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
   const [payerName, setPayerName] = useState<string>('MA')
   const theme: any = useTheme()
+
+  const uploadDocuments = async (
+    files: { path: string; size: number; name: string }[],
+    documentType: string,
+    id: string
+  ) => {
+    if (!files || files.length === 0) {
+      console.log(`No files found for ${documentType}. Skipping upload.`)
+      return null
+    }
+
+    try {
+      // Extract file names
+      const fileNames = files.map(file => file.name)
+
+      console.log('Files to be uploaded:', fileNames)
+
+      // Request pre-signed URLs from the backend
+      const { data: preSignedUrls } = await api.post(`/upload-document/get-signed-pdf-put-url`, fileNames)
+
+      console.log('Received Pre-Signed URLs:', preSignedUrls)
+
+      // Upload each file to S3
+      const uploadPromises = files.map(async (file, index) => {
+        const { key, url } = preSignedUrls[index] // Get corresponding pre-signed URL
+        const fileType = file.path.split('.').pop() || 'pdf' // Default to 'pdf' if undefined
+
+        console.log(`Uploading ${file.name} to S3...`)
+
+        // Upload file to S3
+        await api.put(url, file, {
+          headers: {
+            'Content-Type': 'application/pdf' // Adjust based on file type
+          }
+        })
+
+        console.log(`${file.name} uploaded successfully.`)
+
+        // Prepare metadata to store in DB
+        const body = {
+          fileName: file.name,
+          documentType,
+          fileKey: key,
+          fileType,
+          fileSize: file.size,
+          clientId: id
+        }
+
+        // Store record in backend
+        return api.post(`/client/documents`, body)
+      })
+
+      // Wait for all uploads & database records to complete
+      const results = await Promise.all(uploadPromises)
+
+      console.log('All files uploaded & records created:', results)
+
+      return results
+    } catch (error) {
+      console.error(`Error uploading ${documentType} documents:`, error)
+      return null
+    }
+  }
 
   const initialFormRow: FormRow = {
     providerId: '',
@@ -105,7 +173,9 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
     placeOfService: 'home',
     caseManagerName: '',
     recepientName: '',
-    status: ''
+    status: '',
+    description: '',
+    usedUnits: ''
   }
 
   useEffect(() => {
@@ -137,6 +207,7 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
     setBillableStates([true])
     setUploadedFile(null)
     setOcrData([])
+    setRawFile(null)
   }
 
   const handleInputChange = (index: number, field: keyof FormRow, value: string): void => {
@@ -175,20 +246,24 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
         extension: file.name.split('.').pop() || '',
         size: (file.size / 1024).toFixed(2) + ' KB'
       })
+      setRawFile(file) // Store the raw file for later use
 
       try {
         // Extract text using the helper function
         const textLines = await extractStructuredTextFromPDF(file)
-        const extractedData = parseServiceAgreement(textLines)
-        console.log('EXTRCTED DATA', extractedData)
+        console.log('TEXT LINES ---->> ', textLines)
+        const extracted = parseServiceAgreement(textLines)
+        console.log('EXTRCTED DATA', extracted)
+        setExtractedData(extracted)
         // If enableOcrDataFill is true, populate form fields with extracted data
-        if (enableOcrDataFill && extractedData.serviceItems.length > 0) {
+        if (enableOcrDataFill && extracted.serviceItems.length > 0) {
           // Map service items to form rows
-          const mappedFormData = extractedData.serviceItems
+          const mappedFormData = extracted.serviceItems
             .filter(item => item.status === 'APPROVED') // Only include approved items
             .map(item => ({
               procedureCode: item.procedureCode || '',
               modifier: item.modifiers.includes('PERSONAL') ? '' : item.modifiers,
+              description: item.description,
               startDate: formatDateString(item.startDate),
               endDate: formatDateString(item.endDate),
               serviceRate: item.rateUnit ? `$${item.rateUnit}` : '',
@@ -199,10 +274,10 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
               reimbursement: 'per unit',
               placeOfService: 'home',
               // Keep the extracted data for reference
-              providerId: extractedData.header.providerID,
-              recipientId: extractedData.header.recipientID,
-              agreementNumber: extractedData.header.agreementNumber,
-              diagnosisCode: extractedData.header.diagnosisCode
+              providerId: extracted.header.providerID,
+              recipientId: extracted.header.recipientID,
+              agreementNumber: extracted.header.agreementNumber,
+              diagnosisCode: extracted.header.diagnosisCode
             }))
 
           setFormData(mappedFormData)
@@ -305,10 +380,28 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
 
   const commonFields = getCommonFields()
 
-  // Updated handelSubmit function
-  const handelSubmit = async (): Promise<void> => {
+  // Updated handleSubmit function
+  const handleSubmit = async (): Promise<void> => {
     try {
       setIsLoading(true)
+
+      // Upload the PDF file using uploadDocuments if a file exists
+      let fileKey: string | null = null
+      // if (rawFile) {
+      //   const files = [
+      //     {
+      //       path: rawFile.name, // Use file name as path (adjust if actual path is needed)
+      //       size: rawFile.size,
+      //       name: rawFile.name
+      //     }
+      //   ]
+      //   const documentType = 'ServiceAuthorization' // Adjust based on your needs
+      //   const uploadResults = await uploadDocuments(files, documentType, clientId)
+      //   if (uploadResults && uploadResults.length > 0) {
+      //     fileKey = uploadResults[0]?.data?.fileKey // Get fileKey from the first result
+      //     console.log('Uploaded fileKey:', fileKey)
+      //   }
+      // }
 
       // Prepare service auth payloads
       const serviceAuthPayloads = formData.map((item: FormRow, index: number) => ({
@@ -321,6 +414,7 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
         endDate: item.endDate ? new Date(item.endDate) : undefined,
         serviceRate: item.serviceRate ? Number(item.serviceRate.replace(/[$,]/g, '')) : 0,
         units: item.quantity ? Number(item.quantity.replace(/,/g, '')) : 0,
+        usedUnits: item?.usedUnits ? Number(item.usedUnits.replace(/,/g, '')) : 0,
         diagnosisCode: item.diagnosisCode || '',
         umpiNumber: item.providerId || '',
         reimbursementType: item.reimbursement || 'per unit',
@@ -328,7 +422,9 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
         frequency: item.frequency || 'daily',
         clientId: clientId,
         billable: billableStates[index],
-        placeOfService: item.placeOfService || 'home'
+        placeOfService: item.placeOfService || 'home',
+        serviceName: item?.description,
+        fileKey: fileKey || null // Use the uploaded file key if available
       }))
 
       console.log('Service Auth Payloads:', serviceAuthPayloads)
@@ -337,6 +433,7 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
         serviceAuthPayloads.map((payload: any) => api.post(`/client/service-auth`, payload))
       )
       console.log('RESPONSE OCR', serviceAuthResponses)
+
       const accountHistoryPayLoad = {
         actionType: 'ClientServiceAuthCreate',
         details: `Service authorization list created for Client (ID: ${clientId}) by User (ID: ${authUser?.id})`,
@@ -344,6 +441,62 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
         clientId
       }
       await api.post(`/account-history/log`, accountHistoryPayLoad)
+
+      let createServicesResponse
+
+      // Iterate over extractedData.serviceItems to send individual payloads
+      if (extractedData?.serviceItems?.length > 0) {
+        for (const item of extractedData.serviceItems) {
+          console.log('Item to create ---->> ', item)
+          if (new Date(item.endDate) > new Date()) {
+            if (item.status === 'APPROVED') {
+              const ServiceAuthServicesPayload = {
+                name: item?.description,
+                modifierCode: item?.modifiers.includes('PERSONAL') ? '' : item?.modifiers,
+                procedureCode: item?.procedureCode || '',
+                rate: item?.rateUnit ? Number(item?.rateUnit) : 100,
+                evv: true
+              }
+
+              console.log(`Sending payload for service item:`, ServiceAuthServicesPayload)
+              createServicesResponse = await api.post(`/service/service-auth/services`, ServiceAuthServicesPayload)
+              console.log('CREATING SERVICE AUTH SERVICES ---->> ', createServicesResponse)
+              const clientServicePayload = {
+                clientId: clientId,
+                serviceAuthServiceId: createServicesResponse?.data?.id,
+                note: '',
+                evvEnforce: true
+              }
+
+              const createClientServiceResponse = await api.post(`/client/client-service`, clientServicePayload)
+              console.log('Client Service Creation Response ---->> ', createClientServiceResponse)
+            }
+          }
+        }
+      } else {
+        // Fallback to single payload if no extractedData (maintain existing behavior)
+        if (new Date(serviceAuthResponses[0].data.endDate) > new Date()) {
+          const ServiceAuthServicesPayload = {
+            name: serviceAuthResponses[0].data.serviceName,
+            modifierCode: serviceAuthResponses[0].data.modifierCode,
+            procedureCode: serviceAuthResponses[0].data.procedureCode,
+            rate: serviceAuthResponses[0].data.serviceRate,
+            evv: true
+          }
+
+          createServicesResponse = await api.post(`/service/service-auth/services`, ServiceAuthServicesPayload)
+          console.log('CREATING SERVICE AUTH SERVICES ---->> ', createServicesResponse)
+          const clientServicePayload = {
+            clientId: clientId,
+            serviceAuthServiceId: createServicesResponse?.data?.id,
+            note: '',
+            evvEnforce: true
+          }
+
+          const createClientServiceResponse = await api.post(`/client/client-service`, clientServicePayload)
+          console.log('Client Service Creation Response ---->> ', createClientServiceResponse)
+        }
+      }
 
       await fetchClientServiceAuthData()
       handleModalClose()
@@ -502,7 +655,7 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
               <Button variant='contained' onClick={handleModalClose} disabled={isLoading}>
                 Cancel
               </Button>
-              <Button variant='contained' onClick={handelSubmit} disabled={isLoading}>
+              <Button variant='contained' onClick={handleSubmit} disabled={isLoading}>
                 Submit
               </Button>
               <Button variant='contained' component='label' disabled={isLoading}>
@@ -652,6 +805,16 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
                     </Grid>
                     <Grid size={{ xs: 12, sm: 3 }}>
                       <TextField
+                        label='Service Description'
+                        value={row.description}
+                        onChange={e => handleInputChange(index, 'description', e.target.value)}
+                        fullWidth
+                        size='small'
+                        disabled={isLoading}
+                      />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 3 }}>
+                      <TextField
                         label='Procedure Code'
                         value={row.procedureCode}
                         onChange={e => handleInputChange(index, 'procedureCode', e.target.value)}
@@ -725,6 +888,16 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
                         label='Quantity'
                         value={row.quantity}
                         onChange={e => handleInputChange(index, 'quantity', e.target.value)}
+                        fullWidth
+                        size='small'
+                        disabled={isLoading}
+                      />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 3 }}>
+                      <TextField
+                        label='Used Units'
+                        value={row.usedUnits}
+                        onChange={e => handleInputChange(index, 'usedUnits', e.target.value)}
                         fullWidth
                         size='small'
                         disabled={isLoading}

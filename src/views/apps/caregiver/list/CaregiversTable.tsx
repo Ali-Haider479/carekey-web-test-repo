@@ -8,22 +8,10 @@ import { useParams, useRouter } from 'next/navigation'
 import ReactTable from '@/@core/components/mui/ReactTable'
 import { Avatar, Chip, CircularProgress, Dialog, Icon, Typography } from '@mui/material'
 import api from '@/utils/api'
-import {
-  DeleteOutline,
-  DoDisturbOn,
-  Edit,
-  Mail,
-  MailOutline,
-  PeopleOutline,
-  Phone,
-  Shield,
-  VerifiedUser,
-  Visibility
-} from '@mui/icons-material'
+import { DoDisturbOn, Mail, MailOutline, PeopleOutline, Phone, Shield, VerifiedUser } from '@mui/icons-material'
 import TanStackTable from '@/@core/components/mui/TanStackTable'
 import { useTheme } from '@emotion/react'
 import CustomAlert from '@/@core/components/mui/Alter'
-import { set } from 'date-fns'
 import DialogCloseButton from '@/components/dialogs/DialogCloseButton'
 
 type Caregiver = {

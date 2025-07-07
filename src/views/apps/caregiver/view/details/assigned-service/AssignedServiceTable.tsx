@@ -5,17 +5,14 @@ import { useEffect, useState } from 'react'
 
 // MUI Imports
 import Card from '@mui/material/Card'
+import { CircularProgress, Switch, Typography, useTheme } from '@mui/material'
 
 // CSS Module Imports
 import styles from '../CaregiversTable.module.css'
 import { useParams, useRouter } from 'next/navigation'
-import { GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
-import DataTable from '@/@core/components/mui/DataTable'
-import { CircularProgress, List, ListItem, Switch, Typography, useTheme } from '@mui/material'
-import axios from 'axios'
-import { dark, light } from '@mui/material/styles/createPalette'
-import api from '@/utils/api'
+import { GridColDef } from '@mui/x-data-grid'
 import ReactTable from '@/@core/components/mui/ReactTable'
+import api from '@/utils/api'
 
 interface Column {
   id: string
@@ -27,19 +24,16 @@ interface Column {
 const AssignedServiceTable = () => {
   // State
   const { id } = useParams()
-  const [data, setData] = useState<any>([])
+  const [data, setData] = useState<any[]>([])
   const [search, setSearch] = useState('')
   const [assignedClients, setAssignedClients] = useState<any[]>([])
-  const [clientServices, setClientServices] = useState<any>()
-  const [rowData, setRowData] = useState<any>()
+  const [clientServices, setClientServices] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
   const token = authUser?.backendAccessToken
 
-  const theme: any = useTheme()
+  const theme = useTheme()
   const lightTheme = theme.palette.mode === 'light'
-
-  console.log('Theme ---->> ', theme)
 
   const label = { inputProps: { 'aria-label': 'Switch demo' } }
 
@@ -59,20 +53,26 @@ const AssignedServiceTable = () => {
     }
   }
 
-  const fetchClientService = async (fetchedClients: any) => {
+  const fetchClientService = async (fetchedClients: any[]) => {
     try {
       setLoading(true)
       const clientServicesRes: any[] = []
 
-      // Use a for...of loop to iterate through fetchedClients
+      // Fetch services for each client
       for (const item of fetchedClients) {
         const clientId = item.client.id
+        const services: any[] = []
 
-        // Fetch services for the current client
+        // Fetch regular services
         const serviceResponse = await api.get(`/client/${clientId}/services`)
+        services.push(...(serviceResponse.data || []))
 
-        // Push only the data from the response
-        clientServicesRes.push(serviceResponse.data)
+        // Fetch service auth services
+        const serviceAuthServicesResponse = await api.get(`/client/${clientId}/service-auth/services`)
+        services.push(...(serviceAuthServicesResponse.data || []))
+
+        // Store services for this client
+        clientServicesRes.push({ clientId, services })
       }
 
       console.log('Fetched Client Services --> ', clientServicesRes)
@@ -119,12 +119,24 @@ const AssignedServiceTable = () => {
 
   useEffect(() => {
     if (assignedClients?.length > 0 && clientServices?.length > 0) {
-      const dataForTable = assignedClients.reduce((acc, item, index) => {
-        const services = clientServices[index] || []
-        const serviceEntries = services.map((service: any, serviceIndex: number) => ({
-          ...item,
-          service: service
-        }))
+      const dataForTable = assignedClients.reduce((acc, item) => {
+        // Find the services for the current client
+        const clientService = clientServices.find(cs => cs.clientId === item.client.id)
+        const services = clientService?.services || []
+
+        // Skip if no services are available
+        if (services.length === 0) {
+          return acc
+        }
+
+        // Map services to table entries, filtering out null or undefined services
+        const serviceEntries = services
+          .filter((service: any) => service.id != null) // Filter out null or undefined services
+          .map((service: any) => ({
+            ...item,
+            service,
+            clientServiceId: service.clientServiceId || service.id // Ensure clientServiceId is available for updateEVV
+          }))
         return [...acc, ...serviceEntries]
       }, [])
       console.log('Data for table: ', dataForTable)
@@ -149,7 +161,7 @@ const AssignedServiceTable = () => {
       minWidth: 170,
       render: item => (
         <Typography className='mt-0'>
-          {item?.client?.firstName} {item?.client?.lastName}
+          {item?.client?.firstName} {item?.client?.lastName}{' '}
         </Typography>
       )
     },
@@ -162,10 +174,24 @@ const AssignedServiceTable = () => {
           <div
             className={`p-1 border ${lightTheme ? 'border-[#4B0082]' : 'border-gray-200'} border-opacity-[50%] px-2 rounded-sm`}
           >
-            <Typography className={`${lightTheme ? 'text-[#4B0082]' : null}`}>{item?.service?.name}</Typography>
+            <Typography className={`${lightTheme ? 'text-[#4B0082]' : null}`}>
+              {item?.service?.name} {item?.service?.dummyService ? '(Demo Service)' : '(S.A Service)'}
+            </Typography>
           </div>
         </div>
       )
+    },
+    {
+      id: 'procedureCode',
+      label: 'PROCEDURE CODE',
+      minWidth: 170,
+      render: item => <Typography className='mt-0'> {item?.service?.procedureCode}</Typography>
+    },
+    {
+      id: 'modifierCode',
+      label: 'MODIFIER CODE',
+      minWidth: 170,
+      render: item => <Typography className='mt-0'>{item?.service?.modifierCode}</Typography>
     },
     {
       id: 'evvEnforce',
@@ -197,7 +223,7 @@ const AssignedServiceTable = () => {
           <ReactTable
             data={data}
             columns={newColumns}
-            keyExtractor={user => user.service.id.toString()}
+            keyExtractor={user => user?.service?.id?.toString()}
             enablePagination
             pageSize={25}
             stickyHeader

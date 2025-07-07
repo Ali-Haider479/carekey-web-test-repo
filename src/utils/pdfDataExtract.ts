@@ -168,7 +168,7 @@ function parseHeaderInformation(lines: string[]): ServiceAgreementHeader {
   // Extract diagnosis code
   const diagnosisLine = lines.find(line => line.includes('ICD-10 DIAGNOSIS CODE:'))
   if (diagnosisLine) {
-    const match = diagnosisLine.match(/ICD-10 DIAGNOSIS CODE:\s+([A-Z]\d{1,2}(?:\.?\d)?)/)
+    const match = diagnosisLine.match(/ICD-10 DIAGNOSIS CODE:\s+([A-Z]\d{2}(?:\.\d{1,2})?)/)
     if (match) header.diagnosisCode = match[1]
   }
 
@@ -182,17 +182,14 @@ function parseServiceItems(lines: string[]): ServiceItem[] {
   const serviceItems: ServiceItem[] = []
 
   // Find where the service items start
-  // The header line contains "LINE", "STATUS", "PROCEDURE", and "CODE"
   const headerIndex = lines.findIndex(
     line => line.includes('LINE') && line.includes('STATUS') && line.includes('PROCEDURE') && line.includes('CODE')
   )
 
   if (headerIndex === -1) {
-    // Try an alternative header format
     const altHeaderIndex = lines.findIndex(
       line => line.includes('NBR') && line.includes('STATUS') && line.includes('CODE') && line.includes('MOD')
     )
-
     if (altHeaderIndex === -1) {
       console.log('Could not find service items header')
       return serviceItems
@@ -210,21 +207,19 @@ function parseServiceItems(lines: string[]): ServiceItem[] {
       headerIndex
     ) + 1
 
-  console.log('Extracted Starting service item parsing at index:', startIndex)
+  console.log('Starting service item parsing at index:', startIndex)
 
-  // Process lines after the header
   for (let i = startIndex; i < lines.length; i++) {
     const line = lines[i].trim()
 
     // Debugging
     console.log(`Processing line ${i}: "${line}"`)
 
-    // Match line items like "03 APPROVED T1019 PERSONAL CARE SERVICES, 15 MIN"
-    // Updated regex to be more flexible with spacing and capture pattern
+    // Match service item lines (e.g., "02 APPROVED T1098 PERSONAL CARE SERVICES, 15 MN")
     const serviceLineMatch = line.match(/^(\d+)\s+(APPROVED|DENIED)\s+([A-Z0-9]+)(?:\s+([A-Z0-9]*))?\s+(.+)$/i)
 
     if (serviceLineMatch) {
-      console.log('Extracted Found service item match:', serviceLineMatch)
+      console.log('Found service item match:', serviceLineMatch)
 
       const lineNumber = serviceLineMatch[1]
       const status = serviceLineMatch[2]
@@ -243,49 +238,62 @@ function parseServiceItems(lines: string[]): ServiceItem[] {
         rateUnit: '',
         quantity: '',
         startDate: '',
-        endDate: ''
+        endDate: '',
+        notes: ''
       }
 
-      // Look for additional codes like 38U/D on next line
-      if (
-        i + 1 < lines.length &&
-        lines[i + 1].trim() &&
-        !lines[i + 1].match(/^\d+\s+(APPROVED|DENIED)/i) &&
-        !lines[i + 1].match(/Total Amount/i)
-      ) {
-        const nextLine = lines[i + 1].trim()
-        if (nextLine.match(/^\d+[A-Z]/)) {
-          // This looks like a reason code, skip it
-          console.log('Skipping reason code line:', nextLine)
-        } else {
-          serviceItem.additionalCode = nextLine
-          console.log('Found additional code:', nextLine)
-          i++
-        }
-      }
-
-      // Look ahead for additional details
+      // Look ahead for additional details (Quantity, Dates, Rate, etc.)
       let notes = ''
-      let detailsFound = false
+      let j = i + 1
 
-      for (let j = i + 1; j < Math.min(i + 15, lines.length); j++) {
+      while (j < lines.length) {
         const detailLine = lines[j].trim()
 
-        // Debug
+        // Debugging
         console.log(`Checking detail line ${j}: "${detailLine}"`)
 
-        // Check if we've hit another service item
-        if (detailLine.match(/^\d+\s+(APPROVED|DENIED)/i)) {
-          console.log('Hit next service item, stopping detail search')
+        // Stop if we hit another service item or an irrelevant section
+        if (
+          detailLine.match(/^\d+\s+(APPROVED|DENIED)/i) ||
+          detailLine.includes('AGREEMENT#') ||
+          detailLine.includes('Provider ID')
+        ) {
+          console.log('Hit next service item or section, stopping detail search')
           break
         }
 
-        // Extract total amount
-        const totalMatch = detailLine.match(/Total Amount:\s*\$([0-9,.]+)/i)
-        if (totalMatch) {
-          serviceItem.totalAmount = totalMatch[1]
-          detailsFound = true
-          console.log('Found total amount:', totalMatch[1])
+        // Extract quantity, start date, and end date from a single line
+        const quantityDateMatch = detailLine.match(
+          /Quantity:\s*([0-9,.]+)\s+Start Date:\s*(\d{2}\/\d{2}\/\d{2})\s+End Date:\s*(\d{2}\/\d{2}\/\d{2})/i
+        )
+        if (quantityDateMatch) {
+          serviceItem.quantity = quantityDateMatch[1]
+          serviceItem.startDate = quantityDateMatch[2]
+          serviceItem.endDate = quantityDateMatch[3]
+          console.log(
+            `Found quantity and dates: Quantity=${quantityDateMatch[1]}, Start=${quantityDateMatch[2]}, End=${quantityDateMatch[3]}`
+          )
+          j++
+          continue
+        }
+
+        // Extract quantity if on a separate line
+        const quantityMatch = detailLine.match(/Quantity:\s*([0-9,.]+)/i)
+        if (quantityMatch) {
+          serviceItem.quantity = quantityMatch[1]
+          console.log('Found quantity:', quantityMatch[1])
+          j++
+          continue
+        }
+
+        // Extract dates if on a separate line
+        const dateMatch = detailLine.match(/Start Date:\s*(\d{2}\/\d{2}\/\d{2})\s+End Date:\s*(\d{2}\/\d{2}\/\d{2})/i)
+        if (dateMatch) {
+          serviceItem.startDate = dateMatch[1]
+          serviceItem.endDate = dateMatch[2]
+          console.log('Found dates:', dateMatch[1], 'to', dateMatch[2])
+          j++
+          continue
         }
 
         // Extract rate/unit
@@ -293,34 +301,39 @@ function parseServiceItems(lines: string[]): ServiceItem[] {
         if (rateMatch) {
           serviceItem.rateUnit = rateMatch[1]
           console.log('Found rate/unit:', rateMatch[1])
+          j++
+          continue
         }
 
-        // Extract quantity
-        const quantityMatch = detailLine.match(/Quantity:\s*([0-9,]+)/i)
-        if (quantityMatch) {
-          serviceItem.quantity = quantityMatch[1]
-          console.log('Found quantity:', quantityMatch[1])
+        // Extract total amount
+        const totalMatch = detailLine.match(/Total Amount:\s*\$([0-9,.]+)/i)
+        if (totalMatch) {
+          serviceItem.totalAmount = totalMatch[1]
+          console.log('Found total amount:', totalMatch[1])
+          j++
+          continue
         }
 
-        // Extract dates
-        const dateMatch = detailLine.match(/Start Date:\s*(\d{2}\/\d{2}\/\d{2})\s+End Date:\s*(\d{2}\/\d{2}\/\d{2})/i)
-        if (dateMatch) {
-          serviceItem.startDate = dateMatch[1]
-          serviceItem.endDate = dateMatch[2]
-          console.log('Found dates:', dateMatch[1], 'to', dateMatch[2])
+        // Handle additional code (restrict to specific formats, e.g., 38U/D)
+        if (detailLine.match(/^[A-Z0-9]+[A-Z\/]$/i)) {
+          serviceItem.additionalCode = detailLine
+          console.log('Found additional code:', detailLine)
+          j++
+          continue
         }
 
-        // Look for reason code notes (e.g., "841 THIS LINE ITEM IS NO LONGER NEEDED.")
+        // Handle reason code notes (e.g., "606 See previous line items...")
         const reasonCodeMatch = detailLine.match(/^(\d{3})\s+(.+)$/i)
         if (reasonCodeMatch) {
           notes += (notes ? ' ' : '') + reasonCodeMatch[2]
           console.log('Found reason code note:', reasonCodeMatch[2])
+          j++
+          continue
         }
 
-        // Check if we've found a details line with Total Amount, if so, increment i
-        if (detailsFound && totalMatch) {
-          i = j
-        }
+        // If the line doesn't match any expected pattern, log it and skip
+        console.log(`Unrecognized line, skipping: "${detailLine}"`)
+        j++
       }
 
       if (notes) {
@@ -329,6 +342,9 @@ function parseServiceItems(lines: string[]): ServiceItem[] {
 
       serviceItems.push(serviceItem)
       console.log('Added service item:', serviceItem)
+
+      // Update index to the last processed line
+      i = j - 1
     }
   }
 

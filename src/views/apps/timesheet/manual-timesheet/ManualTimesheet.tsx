@@ -190,7 +190,8 @@ const ManualTimesheet = ({ caregiverList, payPeriodList }: any) => {
     try {
       if (!values.client) return
       const response = await api.get(`/client/${values.client}/services`)
-      setServiceType(response.data)
+      const serviceAuthServicesRes = await api.get(`/client/${values.client}/service-auth/services`)
+      setServiceType([...response.data, ...serviceAuthServicesRes.data])
     } catch (error) {
       console.error('Error fetching client service type:', error)
     }
@@ -203,10 +204,18 @@ const ManualTimesheet = ({ caregiverList, payPeriodList }: any) => {
       const activityIds = selectedClient?.client?.serviceActivityIds
 
       // Only fetch if we have a client and activity IDs
-      if (!values.client || !activityIds) return
+      if (!values.client || !activityIds || !values.serviceName) return
 
       const response: any = await api.get(`/activity/activities/${activityIds}`)
-      setServiceActivities(response.data.filter((item: any) => item.service.name === values.serviceName))
+      console.log('Service Acivities ---->> ', response)
+      const selectedService = serviceType?.find((item: any) => item?.name === values.serviceName)
+      console.log('Selected Service Object --->> ', selectedService)
+      setServiceActivities(
+        response.data.filter(
+          (item: any) =>
+            item.procedureCode === selectedService?.procedureCode && item.modifierCode === selectedService?.modifierCode
+        )
+      )
     } catch (error) {
       console.error('Error fetching client service activities:', error)
     }
@@ -219,7 +228,7 @@ const ManualTimesheet = ({ caregiverList, payPeriodList }: any) => {
       fetchClientServiceType()
       clientServiceActivities()
     }
-  }, [values.client])
+  }, [values.client, values.serviceName])
 
   useEffect(() => {
     if (values.serviceName) {
@@ -301,7 +310,7 @@ const ManualTimesheet = ({ caregiverList, payPeriodList }: any) => {
         signResponse = await api.post(`/signatures`, payLoad)
       }
 
-      const checkedActivityRes = await api.post(`/activity`, {
+      const checkedActivityRes = await api.post(`/activity/checked`, {
         activityIds: selectedItems
       })
       // Make the API call only if client does not exist in taken or pending
@@ -319,6 +328,7 @@ const ManualTimesheet = ({ caregiverList, payPeriodList }: any) => {
           clockIn: newClockIn.toISOString(),
           clockOut: newClockOut.toISOString(),
           tsApprovalStatus: 'Pending',
+          loggedVia: 'desktop',
           notes: values.notes,
           reason: values.reason,
           serviceId: values.service,
@@ -481,7 +491,7 @@ const ManualTimesheet = ({ caregiverList, payPeriodList }: any) => {
                 >
                   {serviceType.map((service: any) => (
                     <MenuItem key={service.id} value={service.name}>
-                      {service.name}
+                      {service.name} {service.dummyService ? '(Demo Service)' : '(S.A Service)'}
                     </MenuItem>
                   ))}
                 </Select>

@@ -31,26 +31,27 @@ const Profile = () => {
 
   return (
     <>
-      <Grid container spacing={0}>
-        <Grid size={{ xs: 12, sm: 4, md: 4 }}>
-          <InfoCard clientData={clientData} />
+      {clientDataLoading ? (
+        <Grid
+          container
+          size={{ xs: 12, sm: 12, md: 12 }}
+          justifyContent='center'
+          alignItems='center'
+          style={{ minHeight: '200px' }}
+        >
+          <CircularProgress />
         </Grid>
-        {clientDataLoading ? (
-          <Grid
-            container
-            size={{ xs: 12, sm: 6, md: 8 }}
-            justifyContent='center'
-            alignItems='center'
-            style={{ minHeight: '200px' }}
-          >
-            <CircularProgress />
+      ) : (
+        <Grid container spacing={0}>
+          <Grid size={{ xs: 12, sm: 4, md: 4 }}>
+            <InfoCard clientData={clientData} />
           </Grid>
-        ) : (
+
           <Grid size={{ xs: 12, sm: 6, md: 8 }}>
-            <ClientAboutCard />
+            <ClientAboutCard clientData={clientData} />
           </Grid>
-        )}
-      </Grid>
+        </Grid>
+      )}
     </>
   )
 }

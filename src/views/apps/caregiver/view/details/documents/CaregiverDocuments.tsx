@@ -1872,6 +1872,170 @@ const CaregiverDocuments = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
         </Dialog>
 
         <Dialog
+          open={umpiDocEditModalShow}
+          onClose={handleUmpiDocEditModalClose}
+          closeAfterTransition={false}
+          sx={{ '& .MuiDialog-paper': { overflow: 'visible' }, paddingY: 2 }}
+          maxWidth='md'
+        >
+          <DialogCloseButton onClick={handleUmpiDocEditModalClose} disableRipple>
+            <i className='bx-x' />
+          </DialogCloseButton>
+          <div className='flex items-center justify-center w-full px-5 flex-col'>
+            <form onSubmit={handleSubmit(handleEditUmpiDoc)}>
+              <div>
+                <h2 className='text-xl font-semibold mt-5 mb-4'>Edit UMPI Document</h2>
+              </div>
+              <div className='p-0'>
+                <div className='grid grid-cols-1 md:grid-cols-3 gap-6'>
+                  <div className='col-span-1 p-3 border rounded-lg'>
+                    <FileUploaderRestrictions
+                      onFilesSelected={(selectedFiles: any) => {
+                        setUmpiFile(selectedFiles)
+                      }}
+                      mimeType={['application/pdf']}
+                      fileCount={1}
+                      fileSize={25 * 1024 * 1024}
+                    />
+                  </div>
+                  <div className='col-span-2'>
+                    <h3 className='text-lg font-semibold mb-4'>Uploading Files</h3>
+                    <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>{renderFileProgress(umpiFile)}</div>
+                  </div>
+                </div>
+                <div className='grid grid-cols-1 md:grid-cols-2 gap-6 mt-6'>
+                  <CustomDropDown
+                    name='payor'
+                    control={control}
+                    error={errors.dlState}
+                    label='Payor'
+                    isRequired={false}
+                    optionList={payerOptions.map((state: any) => ({
+                      key: state.key,
+                      value: state.value,
+                      optionString: state.optionString
+                    }))}
+                    defaultValue={umpiDocToEdit?.uploadedDocument?.metaData?.payer}
+                  />
+                  <ControlledDatePicker
+                    name={'activationDate'}
+                    control={control}
+                    label={'Affiliation Date'}
+                    defaultValue={umpiDocToEdit?.uploadedDocument?.metaData?.activationDate}
+                    // error={errors.drivingLicenseExpiryDate}
+                    isRequired={false}
+                  />
+                  <ControlledDatePicker
+                    name={'expiryDate'}
+                    control={control}
+                    label={'Expiry Date'}
+                    defaultValue={umpiDocToEdit?.uploadedDocument?.expiryDate}
+                    // error={errors.drivingLicenseExpiryDate}
+                    isRequired={false}
+                  />
+                </div>
+              </div>
+              <div className='flex gap-4 justify-end mt-4 mb-4 w-full'>
+                <Button variant='outlined' color='secondary' onClick={handleUmpiDocEditModalClose}>
+                  CANCEL
+                </Button>
+                <Button
+                  startIcon={umpiDocSaveButtonLoading ? <CircularProgress size={20} color='inherit' /> : null}
+                  disabled={umpiDocSaveButtonLoading}
+                  type='submit'
+                  variant='contained'
+                  className={``}
+                >
+                  SAVE
+                </Button>
+              </div>
+            </form>
+          </div>
+        </Dialog>
+
+        <Dialog
+          open={newUmpiDocModalShow}
+          onClose={handleNewUmpiDocModalClose}
+          closeAfterTransition={false}
+          sx={{ '& .MuiDialog-paper': { overflow: 'visible' }, paddingY: 2 }}
+          maxWidth='md'
+        >
+          <DialogCloseButton onClick={handleNewUmpiDocModalClose} disableRipple>
+            <i className='bx-x' />
+          </DialogCloseButton>
+          <div className='flex items-center justify-center w-full px-5 flex-col'>
+            <form onSubmit={handleSubmit(handleAddNewUmpiDoc)}>
+              <div>
+                <h2 className='text-xl font-semibold mt-5 mb-4'>Add New UMPI Document</h2>
+              </div>
+              <div className='p-0'>
+                <div className='grid grid-cols-1 md:grid-cols-3 gap-6'>
+                  <div className='col-span-1 p-3 border rounded-lg'>
+                    <FileUploaderRestrictions
+                      onFilesSelected={(selectedFiles: any) => {
+                        setUmpiFile(selectedFiles)
+                      }}
+                      mimeType={['application/pdf']}
+                      fileCount={1}
+                      fileSize={25 * 1024 * 1024}
+                    />
+                  </div>
+                  <div className='col-span-2'>
+                    <h3 className='text-lg font-semibold mb-4'>Uploading Files</h3>
+                    <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>{renderFileProgress(umpiFile)}</div>
+                  </div>
+                </div>
+                <div className='grid grid-cols-1 md:grid-cols-2 gap-6 mt-6'>
+                  <CustomDropDown
+                    name='newPayor'
+                    control={control}
+                    error={errors.dlState}
+                    label='Payor'
+                    isRequired={false}
+                    optionList={payerOptions.map((state: any) => ({
+                      key: state.key,
+                      value: state.value,
+                      optionString: state.optionString
+                    }))}
+                    defaultValue={''}
+                  />
+                  <ControlledDatePicker
+                    name={'newActivationDate'}
+                    control={control}
+                    label={'Affiliation Date'}
+                    defaultValue={null}
+                    error={errors.newActivationDate}
+                    isRequired={false}
+                  />
+                  <ControlledDatePicker
+                    name={'newExpiryDate'}
+                    control={control}
+                    label={'Expiry Date'}
+                    defaultValue={''}
+                    // error={errors.drivingLicenseExpiryDate}
+                    isRequired={false}
+                  />
+                </div>
+              </div>
+              <div className='flex gap-4 justify-end mt-4 mb-4 w-full'>
+                <Button variant='outlined' color='secondary' onClick={handleNewUmpiDocModalClose}>
+                  CANCEL
+                </Button>
+                <Button
+                  startIcon={umpiDocSaveButtonLoading ? <CircularProgress size={20} color='inherit' /> : null}
+                  disabled={umpiDocSaveButtonLoading}
+                  type='submit'
+                  variant='contained'
+                  className={``}
+                >
+                  SAVE
+                </Button>
+              </div>
+            </form>
+          </div>
+        </Dialog>
+
+        <Dialog
           open={trainingCertificateDeleteModalShow}
           onClose={handleTrainingCertificateDeleteModalShow}
           closeAfterTransition={false}

@@ -188,7 +188,8 @@ const AddEventModal = (props: AddEventSidebarType) => {
     try {
       if (!values.client) return // Avoid fetching if client is not set
       const response = await api.get(`/client/${values.client}/services`)
-      setServiceTypes(response.data)
+      const serviceAuthServicesRes = await api.get(`/client/${values.client}/service-auth/services`)
+      setServiceTypes([...response.data, ...serviceAuthServicesRes.data])
     } catch (error) {
       console.error('Error fetching client service type:', error)
     }

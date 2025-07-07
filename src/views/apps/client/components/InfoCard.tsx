@@ -117,7 +117,7 @@ const InfoCard = (clientData: InfoCardProps) => {
   const fetchCaregivers = async () => {
     try {
       const caregiversResponse = await api.get('/caregivers/active')
-      setCaregiversList(caregiversResponse.data.filter((caregiver: any) => caregiver.caregiverRole === "Caregiver"))
+      setCaregiversList(caregiversResponse.data.filter((caregiver: any) => caregiver.caregiverRole === 'Caregiver'))
     } catch (error) {
       console.error('Error fetching caregivers: ', error)
     }
@@ -229,11 +229,15 @@ const InfoCard = (clientData: InfoCardProps) => {
                 Assigned Caregivers ({assignedCaregiver?.length})
               </h3>
               <IconButton
-                className='h-6 w-6 bg-[#4B0082]'
+                className='h-6 w-6'
+                sx={theme => ({
+                  backgroundColor:
+                    theme.palette.mode === 'dark' ? theme.palette.primary.dark : theme.palette.primary.main
+                })}
                 onClick={() => {
                   setShowCGAssignModal(true)
                 }}
-              // disabled={assignedCaregiver?.length > 0}
+                // disabled={assignedCaregiver?.length > 0}
               >
                 <Add className='text-white' />
               </IconButton>
@@ -248,12 +252,18 @@ const InfoCard = (clientData: InfoCardProps) => {
                       className='w-10 h-10'
                     />
                     <div>
-                      <Typography className='text-sm font-medium text-gray-400'>{item?.user?.caregiver.firstName} {item?.user?.caregiver.lastName}</Typography>
+                      <Typography className='text-sm font-medium text-gray-400'>
+                        {item?.user?.caregiver.firstName} {item?.user?.caregiver.lastName}
+                      </Typography>
                       <Typography className='text-sm text-[#71DD37]'>{item?.user?.emailAddress}</Typography>
                     </div>
                   </div>
                   <IconButton
-                    className='h-6 w-6 bg-[#4B0082]'
+                    className='h-6 w-6'
+                    sx={theme => ({
+                      backgroundColor:
+                        theme.palette.mode === 'dark' ? theme.palette.primary.dark : theme.palette.primary.main
+                    })}
                     onClick={() => {
                       setOpenDeleteDialog(true)
                       setSelectedUserId(item?.id)
@@ -261,12 +271,6 @@ const InfoCard = (clientData: InfoCardProps) => {
                   >
                     <Remove className='text-white' />
                   </IconButton>
-                  {/* < className="text- bg-[#666CFF]"> #4B0082*/}
-                  {/* <img
-                  className='bg-[#666CFF] bg-opacity-20 h-8 border-4 border-transparent rounded-full mt-1'
-                  src='/assets/svg-icons/openLink.svg'
-                  alt=''
-                /> */}
                 </li>
               ))}
             </ul>
@@ -276,7 +280,11 @@ const InfoCard = (clientData: InfoCardProps) => {
             <div className='flex flex-row items-center justify-between'>
               <h3 className='ml-6 text-xl font-semibold text-gray-500 mb-2'>Assigned QPs ({assignedQPs?.length})</h3>
               <IconButton
-                className='h-6 w-6 bg-[#4B0082]'
+                className='h-6 w-6'
+                sx={theme => ({
+                  backgroundColor:
+                    theme.palette.mode === 'dark' ? theme.palette.primary.dark : theme.palette.primary.main
+                })}
                 onClick={() => {
                   setShowQPAssignModal(true)
                 }}
@@ -295,12 +303,18 @@ const InfoCard = (clientData: InfoCardProps) => {
                       className='w-10 h-10'
                     />
                     <div>
-                      <Typography className='text-sm font-medium text-gray-400'>{item?.user?.caregiver.firstName} {item?.user?.caregiver.lastName}</Typography>
+                      <Typography className='text-sm font-medium text-gray-400'>
+                        {item?.user?.caregiver.firstName} {item?.user?.caregiver.lastName}
+                      </Typography>
                       <Typography className='text-sm text-[#71DD37]'>{item?.user?.emailAddress}</Typography>
                     </div>
                   </div>
                   <IconButton
-                    className='h-6 w-6 bg-[#4B0082]' //
+                    className='h-6 w-6'
+                    sx={theme => ({
+                      backgroundColor:
+                        theme.palette.mode === 'dark' ? theme.palette.primary.dark : theme.palette.primary.main
+                    })}
                     onClick={() => {
                       setOpenUnAssignQPDialog(true)
                       setSelectedUserId(item?.id)

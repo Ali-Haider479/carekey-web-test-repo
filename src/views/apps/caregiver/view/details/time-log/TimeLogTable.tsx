@@ -18,6 +18,7 @@ import { calculateHoursWorked } from '@/utils/helperFunctions'
 import api from '@/utils/api'
 import ReactTable from '@/@core/components/mui/ReactTable'
 import { useTheme } from '@emotion/react'
+import { Computer, TabletAndroid } from '@mui/icons-material'
 
 interface Column {
   id: string
@@ -180,6 +181,16 @@ const TimeLogTable = () => {
             }
           }}
         />
+      )
+    },
+    {
+      id: 'loggedVia',
+      label: 'LOGGED VIA',
+      minWidth: 50,
+      render: (item: any) => (
+        <Typography className='font-normal text-base my-3'>
+          {item.loggedVia === 'desktop' ? <Computer /> : <TabletAndroid />}
+        </Typography>
       )
     }
   ]

@@ -144,7 +144,8 @@ const ReceivedTimesheetTable = (
     try {
       if (!modalData?.client?.id) return
       const response = await api.get(`/client/${modalData.client?.id}/services`)
-      setServiceType(response.data)
+      const serviceAuthServicesRes = await api.get(`/client/${modalData.client?.id}/service-auth/services`)
+      setServiceType([...response.data, ...serviceAuthServicesRes.data])
     } catch (error) {
       console.error('Error fetching client service type:', error)
     }
@@ -1129,7 +1130,7 @@ const ReceivedTimesheetTable = (
                       optionList={serviceType?.map((item: any) => ({
                         key: item.id,
                         value: item.name,
-                        optionString: item.name
+                        optionString: `${item.name} ${item?.dummyService ? '(Demo Service)' : '(S.A Service)'}`
                       }))}
                       // disabled={!isEditing}
                     />

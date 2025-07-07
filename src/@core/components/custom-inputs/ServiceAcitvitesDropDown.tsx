@@ -23,6 +23,8 @@ import CloseIcon from '@mui/icons-material/Close'
 type ServiceType = {
   id: string
   name: string
+  procedureCode?: string
+  modifierCode?: string
 }
 
 type ActivityType = {
@@ -134,7 +136,7 @@ const ServiceAndActivities = ({ control, errors, serviceTypes, activities, isUpd
                               // Disable if selected in another section
                               disabled={item.id !== field.value && selectedServiceIds.includes(item.id)}
                             >
-                              {item.name}
+                              {item.name} {item?.procedureCode} - {item?.modifierCode}
                             </MenuItem>
                           ))}
                         </Select>

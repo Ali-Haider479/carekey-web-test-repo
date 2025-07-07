@@ -25,9 +25,9 @@ const initialErrorState = {
   'responsibleParty.emailAddress': false
 }
 
-function ClientAboutCard() {
+function ClientAboutCard({ clientData }: any) {
   const { id } = useParams()
-  const [data, setData] = useState<any>(null)
+  const [data, setData] = useState<any>(clientData)
   const [isLoading, setIsLoading] = useState(false)
   const [isEdit, setIsEdit] = useState(true)
   const [formData, setFormData] = useState<any>({})
@@ -66,10 +66,6 @@ function ClientAboutCard() {
     const pattern = /^\d{5}(-\d{4})?$/
     return pattern.test(zipCode)
   }
-
-  useEffect(() => {
-    fetchData()
-  }, [])
 
   const fetchData = async () => {
     try {

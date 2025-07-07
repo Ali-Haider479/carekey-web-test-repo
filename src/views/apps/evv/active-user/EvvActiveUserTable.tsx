@@ -164,6 +164,7 @@ const EvvActiveUserTable = ({ timeLogData, isLoading, payPeriod, fetchInitialDat
   const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
   const [alertOpen, setAlertOpen] = useState(false)
   const [alertProps, setAlertProps] = useState<any>()
+  const [clientServices, setClientServices] = useState<any>()
 
   console.log(
     'FORMATTED ADDRESS --~--~-->>',
@@ -217,30 +218,30 @@ const EvvActiveUserTable = ({ timeLogData, isLoading, payPeriod, fetchInitialDat
 
   const handleChange =
     (field: keyof ClockOutFormData) =>
-      (event: SelectChangeEvent<number[]> | React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-        if (field === 'serviceActivities') {
-          const value = (event as SelectChangeEvent<number[]>).target.value as number[]
-          setSelectedItems(value)
-          setValues(prev => ({
-            ...prev,
-            serviceActivities: value
-          }))
-        } else if (field === 'reason') {
-          const value = (event as React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>).target.value
-          setClockOutReason(value)
-          setValues(prev => ({
-            ...prev,
-            reason: value
-          }))
-        }
-
-        if (touched[field] && errors[field]) {
-          setErrors(prev => ({
-            ...prev,
-            [field]: ''
-          }))
-        }
+    (event: SelectChangeEvent<number[]> | React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      if (field === 'serviceActivities') {
+        const value = (event as SelectChangeEvent<number[]>).target.value as number[]
+        setSelectedItems(value)
+        setValues(prev => ({
+          ...prev,
+          serviceActivities: value
+        }))
+      } else if (field === 'reason') {
+        const value = (event as React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>).target.value
+        setClockOutReason(value)
+        setValues(prev => ({
+          ...prev,
+          reason: value
+        }))
       }
+
+      if (touched[field] && errors[field]) {
+        setErrors(prev => ({
+          ...prev,
+          [field]: ''
+        }))
+      }
+    }
 
   const handleDateChange = (field: keyof ClockOutFormData) => (date: Date | null) => {
     setValues(prev => ({
@@ -303,24 +304,45 @@ const EvvActiveUserTable = ({ timeLogData, isLoading, payPeriod, fetchInitialDat
     }
   }
 
+  const fetchClientServices = async (clientId: any) => {
+    try {
+      const clientServicesRes = await api.get(`/client/${clientId}/services`)
+      const clientServiceAuthServicesRes = await api.get(`/client/${clientId}/service-auth/services`)
+      setClientServices([...clientServicesRes.data, ...clientServiceAuthServicesRes.data])
+    } catch (error) {
+      console.error('Error fetching client services: ', error)
+    }
+  }
+
   const clientServiceActivities = async () => {
     try {
       const activityIds = selectedUser?.client?.serviceActivityIds
       if (!activityIds) return
+      const filteredService = clientServices?.find((item: any) => item?.name === selectedUser?.serviceName)
+      console.log('Filtered Service --->> ', filteredService)
       const response: any = await api.get(`/activity/activities/${activityIds}`)
-      setServiceActivities(response.data.filter((item: any) => item.service.name === selectedUser.serviceName))
+      setServiceActivities(
+        response?.data?.filter(
+          (item: any) =>
+            item.procedureCode === filteredService?.procedureCode && item.modifierCode === filteredService?.modifierCode
+        )
+      )
     } catch (error) {
       console.error('Error fetching client service activities:', error)
     }
   }
 
   useEffect(() => {
+    if (selectedUser?.client) {
+      fetchClientServices(selectedUser?.client?.id)
+    }
     if (selectedUser?.client?.serviceActivityIds) {
       clientServiceActivities()
     }
   }, [selectedUser])
 
   const handleModalOpen = (user: any) => {
+    console.log('Selected User --->> ', user)
     setIsModalShow(true)
     setSelectedUser(user)
   }
@@ -403,7 +425,7 @@ const EvvActiveUserTable = ({ timeLogData, isLoading, payPeriod, fetchInitialDat
         signResponse = await api.post(`/signatures`, payLoad)
       }
 
-      const checkedActivityRes = await api.post(`/activity`, {
+      const checkedActivityRes = await api.post(`/activity/checked`, {
         activityIds: values?.serviceActivities
       })
 
@@ -476,20 +498,19 @@ const EvvActiveUserTable = ({ timeLogData, isLoading, payPeriod, fetchInitialDat
       editable: false,
       sortable: true,
       render: (user: any) => {
-        console.log("USER", user);
-        const caregiverName = `${user.caregiver.firstName} ${user.caregiver.lastName}`;
-        const formattedAddressIndex = formattedAddress?.features?.findIndex((item: any) =>
-          item?.properties?.caregiverName === caregiverName);
-        console.log("formattedAddressIndex", formattedAddressIndex)
-        return (
-          user?.isCommunityVisit || !user?.startLocation ? (
-            <Typography color='primary'>Community Visit</Typography>
-          ) : (
-            // <LocationCell location={user?.startLocation} />
-            <Typography color='primary'>
-              {formattedAddress?.features[formattedAddressIndex]?.properties?.address?.formattedAddress}
-            </Typography>
-          )
+        console.log('USER', user)
+        const caregiverName = `${user.caregiver.firstName} ${user.caregiver.lastName}`
+        const formattedAddressIndex = formattedAddress?.features?.findIndex(
+          (item: any) => item?.properties?.caregiverName === caregiverName
+        )
+        console.log('formattedAddressIndex', formattedAddressIndex)
+        return user?.isCommunityVisit || !user?.startLocation ? (
+          <Typography color='primary'>Community Visit</Typography>
+        ) : (
+          // <LocationCell location={user?.startLocation} />
+          <Typography color='primary'>
+            {formattedAddress?.features[formattedAddressIndex]?.properties?.address?.formattedAddress}
+          </Typography>
         )
       }
     },

@@ -13,7 +13,12 @@ import {
   Autocomplete,
   TextField,
   CircularProgress,
-  DialogContent
+  CardHeader,
+  CardContent,
+  FormControlLabel,
+  Checkbox,
+  Box,
+  Divider
 } from '@mui/material'
 import { useEffect, useState } from 'react'
 import DialogCloseButton from '@/components/dialogs/DialogCloseButton'
@@ -28,6 +33,11 @@ import CustomTabList from '@/@core/components/mui/TabList'
 import CustomDropDown from '@/@core/components/custom-inputs/CustomDropDown'
 import { ServiceAuthListModal } from './ServiceAuthModal'
 import api from '@/utils/api'
+import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
+import CalendarTodayIcon from '@mui/icons-material/CalendarToday'
+import OcrCustomDropDown from '@/@core/components/custom-inputs/OcrCustomDropdown'
+import { placeOfServiceOptions, payerOptions } from '@/utils/constants'
+import { useTheme } from '@emotion/react'
 
 const options = [
   { label: 'Option 1', value: 'option1' },
@@ -51,6 +61,21 @@ interface ServiceAuthPayload {
   taxonomy: string
   frequency: string
   clientId: number
+  billable: boolean
+  placeOfService: string
+  serviceName: string
+}
+
+interface FormRow {
+  procedureCode: string
+  modifier: string
+  startDate: string
+  endDate: string
+  serviceRate: string
+  quantity: string
+  frequency: string
+  reimbursement: string
+  serviceName: string
 }
 
 const ServiceAuthorization = () => {
@@ -66,6 +91,8 @@ const ServiceAuthorization = () => {
   const [isEditMode, setIsEditMode] = useState(false)
   const currentDate = new Date()
   const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
+  const [billable, setBillable] = useState<boolean>(true)
+  const theme: any = useTheme()
 
   const activeServices = serviceAuthData.filter(item => {
     const endDate = new Date(item.endDate)
@@ -105,8 +132,11 @@ const ServiceAuthorization = () => {
       umpiNumber: '',
       reimbursementType: '',
       taxonomy: '',
-      frequency: ''
+      frequency: '',
+      placeOfService: 'home',
+      serviceName: ''
     })
+    setBillable(true)
     setIsModalShow(false)
     setCurrentItem(null)
     setIsEditMode(false)
@@ -121,6 +151,7 @@ const ServiceAuthorization = () => {
   const handleEdit = (item: any) => {
     setIsEditMode(true)
     setCurrentItem(item)
+    setBillable(item.billable !== undefined ? item.billable : true)
 
     const formattedStartDate = item.startDate ? new Date(item.startDate) : undefined
     const formattedEndDate = item.endDate ? new Date(item.endDate) : undefined
@@ -139,7 +170,9 @@ const ServiceAuthorization = () => {
       umpiNumber: item.umpiNumber || '',
       reimbursementType: item.reimbursementType || '',
       taxonomy: item.taxonomy || '',
-      frequency: item.frequency || ''
+      frequency: item.frequency || '',
+      placeOfService: item.placeOfService || 'home',
+      serviceName: item.serviceName || ''
     })
 
     setIsModalShow(true)
@@ -159,8 +192,61 @@ const ServiceAuthorization = () => {
     control,
     handleSubmit,
     reset,
+    watch,
+    setValue,
     formState: { errors }
   } = methods
+
+  const calculateQuantityPerFrequency = ({
+    startDate,
+    endDate,
+    quantity,
+    frequency
+  }: {
+    startDate?: string | Date
+    endDate?: string | Date
+    quantity?: string | number
+    frequency?: string
+  }): number => {
+    const parseQuantity = (qty: string | number | undefined): number => {
+      if (qty === undefined || qty === null) return NaN
+      if (typeof qty === 'number') return isNaN(qty) ? NaN : qty
+      const cleaned = qty.replace(/,/g, '')
+      const parsed = parseFloat(cleaned)
+      return isNaN(parsed) ? NaN : parsed
+    }
+
+    const parsedQuantity = parseQuantity(quantity)
+
+    if (!startDate || !endDate || isNaN(parsedQuantity) || !frequency) {
+      return NaN
+    }
+
+    const start = new Date(startDate)
+    const end = new Date(endDate)
+
+    if (isNaN(start.getTime()) || isNaN(end.getTime()) || end <= start) {
+      return NaN
+    }
+
+    const timeDiffMs = end.getTime() - start.getTime()
+    let frequencyUnits: number
+    switch (frequency.toLowerCase()) {
+      case 'daily':
+        frequencyUnits = timeDiffMs / (1000 * 60 * 60 * 24)
+        break
+      case 'weekly':
+        frequencyUnits = timeDiffMs / (1000 * 60 * 60 * 24 * 7)
+        break
+      case 'monthly':
+        frequencyUnits = timeDiffMs / (1000 * 60 * 60 * 24 * 30.42)
+        break
+      default:
+        return NaN
+    }
+
+    return frequencyUnits <= 0 ? NaN : parsedQuantity / frequencyUnits
+  }
 
   const onSubmit = async (data: any) => {
     try {
@@ -180,7 +266,10 @@ const ServiceAuthorization = () => {
         reimbursementType: data.reimbursementType,
         taxonomy: data.taxonomy,
         frequency: data.frequency,
-        clientId: clientId
+        clientId: clientId,
+        billable: billable,
+        placeOfService: data.placeOfService,
+        serviceName: data.serviceName
       }
 
       if (isEditMode && currentItem) {
@@ -259,8 +348,8 @@ const ServiceAuthorization = () => {
       )
     },
     {
-      id: 'startDate',
-      label: 'START DATE',
+      id: 'startDateEndDate',
+      label: 'START DATE / END DATE',
       minWidth: 170,
       render: (item: any) => {
         const formatDate = (dateString: string) => {
@@ -272,35 +361,50 @@ const ServiceAuthorization = () => {
           })
         }
         const startDate = formatDate(item?.startDate)
-        return <Typography>{startDate}</Typography>
-      }
-    },
-    {
-      id: 'endDate',
-      label: 'END DATE',
-      minWidth: 170,
-      render: (item: any) => {
-        const formatDate = (dateString: string) => {
-          const date = new Date(dateString)
-          return date.toLocaleDateString('en-US', {
-            month: '2-digit',
-            day: '2-digit',
-            year: 'numeric'
-          })
-        }
         const endDate = formatDate(item?.endDate)
-        return <Typography>{endDate}</Typography>
+        return (
+          <Typography>
+            {startDate} - {endDate}
+          </Typography>
+        )
       }
     },
     {
       id: 'serviceRate',
-      label: 'SERVICE RATE',
+      label: 'RATE',
       minWidth: 170,
       render: (item: any) => <Typography>{item?.serviceRate}</Typography>
     },
     {
-      id: 'units',
-      label: 'UNITS',
+      id: 'totalUnits',
+      label: 'TOTAL UNITS',
+      minWidth: 170,
+      render: (item: any) => <Typography>{item?.units}</Typography>
+    },
+    {
+      id: 'remainingUnits',
+      label: 'REMIANING UNITS',
+      minWidth: 170,
+      render: (item: any) => {
+        const remianingUnits = item?.units - item?.usedUnits
+        return <Typography>{remianingUnits}</Typography>
+      }
+    },
+    {
+      id: 'perDayHours',
+      label: 'PER DAY (HRS)',
+      minWidth: 170,
+      render: (item: any) => <Typography>{item?.units}</Typography>
+    },
+    {
+      id: 'perWeekHours',
+      label: 'PER WEEK (HRS)',
+      minWidth: 170,
+      render: (item: any) => <Typography>{item?.units}</Typography>
+    },
+    {
+      id: 'bankedHours',
+      label: 'BANKED HOURS',
       minWidth: 170,
       render: (item: any) => <Typography>{item?.units}</Typography>
     },
@@ -346,16 +450,11 @@ const ServiceAuthorization = () => {
                 renderInput={params => (
                   <TextField {...params} placeholder='Show All' variant='outlined' size='small' className='h-[56px]' />
                 )}
-                filterOptions={x => x} // Keep all options (you can adjust filtering logic)
+                filterOptions={x => x}
               />
             </div>
             <div className='flex justify-end gap-3'>
-              <Button
-                variant='contained'
-                startIcon={<Add />}
-                className='w-[160px] h-10'
-                onClick={() => setIsListModalShow(true)}
-              >
+              <Button startIcon={<Add />} className='w-[160px] h-10' onClick={() => setIsListModalShow(true)}>
                 ADD SA LIST
               </Button>
             </div>
@@ -411,185 +510,338 @@ const ServiceAuthorization = () => {
           <Dialog
             open={isModalShow}
             onClose={handleModalClose}
-            closeAfterTransition={false}
-            sx={{ '& .MuiDialog-paper': { overflow: 'visible' } }}
+            maxWidth='lg'
+            sx={{
+              '& .MuiDialog-paper': {
+                overflow: 'visible',
+                maxHeight: '90vh',
+                width: '100%'
+              },
+              '& .MuiDialogContent-root': {
+                overflowY: 'auto'
+              }
+            }}
           >
             <DialogCloseButton onClick={handleModalClose} disableRipple>
               <i className='bx-x' />
             </DialogCloseButton>
-            <DialogContent className='flex items-center justify-center pt-[10px] pb-[5px] w-full px-5'>
-              <form onSubmit={handleSubmit(onSubmit)} autoComplete='off'>
-                <div>
-                  <Typography className='text-xl font-semibold mt-10 mb-6'>
+            <Box sx={{ overflowY: 'auto', maxHeight: 'calc(90vh - 64px)', position: 'relative' }}>
+              {isLoading && (
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 10
+                  }}
+                >
+                  <CircularProgress size={40} color='success' />
+                </Box>
+              )}
+              <Box sx={{ filter: isLoading ? 'blur(0.8px)' : 'none', pointerEvents: isLoading ? 'none' : 'auto' }}>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    mb: 3,
+                    position: 'sticky',
+                    top: 0,
+                    zIndex: 5,
+                    padding: '1rem 1rem',
+                    backdropFilter: 'blur(10px)',
+                    WebkitBackdropFilter: 'blur(10px)'
+                  }}
+                >
+                  <Typography variant='h5' sx={{ fontWeight: 'bold' }}>
                     {isEditMode ? 'Edit Service Authorization' : 'Add Service Authorization'}
                   </Typography>
-                </div>
-                <Grid container spacing={4}>
-                  <Grid size={{ xs: 12, sm: 6 }}>
-                    <CustomTextField
-                      label={'Payer'}
-                      placeHolder={'Payer'}
-                      name={'payer'}
-                      defaultValue={''}
-                      type={'text'}
-                      error={errors.payer}
-                      control={control}
+                  <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, marginRight: '1rem' }}>
+                    <Button variant='contained' onClick={handleModalClose} disabled={isLoading}>
+                      Cancel
+                    </Button>
+                    <Button variant='contained' onClick={handleSubmit(onSubmit)} disabled={isLoading}>
+                      {isEditMode ? 'Update' : 'Save'}
+                    </Button>
+                  </Box>
+                </Box>
+
+                <form onSubmit={handleSubmit(onSubmit)} autoComplete='off'>
+                  <Card sx={{ mx: 2, mb: 2, boxShadow: 'rgba(0, 0, 0, 0.35) 0px 5px 20px' }}>
+                    <CardHeader title='General Info' />
+                    <CardContent>
+                      <Grid container spacing={4}>
+                        <Grid size={{ xs: 12, sm: 4 }}>
+                          <OcrCustomDropDown
+                            label='Payer'
+                            name='payer'
+                            value={watch('payer')}
+                            onChange={(e: any) => setValue('payer', e.target.value)}
+                            optionList={payerOptions}
+                            disabled={isLoading}
+                          />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 4 }}>
+                          <CustomTextField
+                            label='Member ID'
+                            placeHolder='Member ID'
+                            name='memberId'
+                            type='number'
+                            error={errors.memberId}
+                            control={control}
+                            defaultValue={''}
+                          />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 4 }}>
+                          <CustomTextField
+                            label='Service Auth Number'
+                            placeHolder='Service Auth Number'
+                            name='serviceAuthNumber'
+                            type='number'
+                            error={errors.serviceAuthNumber}
+                            control={control}
+                            defaultValue={''}
+                          />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 4 }}>
+                          <CustomTextField
+                            label='Diagnosis Code'
+                            placeHolder='Diagnosis Code'
+                            name='diagnosisCode'
+                            type='text'
+                            error={errors.diagnosisCode}
+                            control={control}
+                            defaultValue={''}
+                          />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 4 }}>
+                          <CustomTextField
+                            label='Taxonomy'
+                            placeHolder='Taxonomy'
+                            name='taxonomy'
+                            type='text'
+                            error={errors.taxonomy}
+                            control={control}
+                            defaultValue={''}
+                          />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 4 }}>
+                          <CustomTextField
+                            label='Npi/Umpi'
+                            placeHolder='Npi/Umpi'
+                            name='umpiNumber'
+                            type='text'
+                            error={errors.umpiNumber}
+                            control={control}
+                            defaultValue={''}
+                          />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 4 }}>
+                          <OcrCustomDropDown
+                            label='Place Of Service'
+                            name='placeOfService'
+                            value={watch('placeOfService')}
+                            onChange={(e: any) => setValue('placeOfService', e.target.value)}
+                            optionList={placeOfServiceOptions}
+                            disabled={isLoading}
+                          />
+                        </Grid>
+                      </Grid>
+                    </CardContent>
+
+                    <Box
+                      sx={{
+                        height: '20px',
+                        position: 'relative',
+                        '&::before': {
+                          content: '""',
+                          position: 'absolute',
+                          left: '-16px',
+                          right: '-16px',
+                          height: '5px',
+                          backgroundColor: theme.palette.mode === 'light' ? '#C1C1C1' : '#212131',
+                          boxShadow: 'rgba(0, 0, 0, 0.1) 0px -2px 5px, rgba(0, 0, 0, 0.1) 0px 2px 5px',
+                          zIndex: 0
+                        }
+                      }}
                     />
-                  </Grid>
-                  <Grid size={{ xs: 12, sm: 6 }}>
-                    <CustomTextField
-                      label={'Member Id'}
-                      placeHolder={'Member Id'}
-                      name={'memberId'}
-                      defaultValue={''}
-                      type={'number'}
-                      error={errors.memberId}
-                      control={control}
-                    />
-                  </Grid>
-                  <Grid size={{ xs: 12, sm: 6 }}>
-                    <CustomTextField
-                      label={'Service Auth Number'}
-                      placeHolder={'Service Auth Number'}
-                      name={'serviceAuthNumber'}
-                      defaultValue={''}
-                      type={'number'}
-                      error={errors.serviceAuthNumber}
-                      control={control}
-                    />
-                  </Grid>
-                  <Grid size={{ xs: 12, sm: 6 }}>
-                    <CustomTextField
-                      label={'Service Rate'}
-                      placeHolder={'Service Rate'}
-                      name={'serviceRate'}
-                      defaultValue={''}
-                      type={'number'}
-                      error={errors.serviceRate}
-                      control={control}
-                    />
-                  </Grid>
-                  <Grid size={{ xs: 12, sm: 6 }}>
-                    <ControlledDatePicker
-                      name={'startDate'}
-                      control={control}
-                      error={errors.startDate}
-                      label={'Start Date'}
-                      defaultValue={undefined}
-                    />
-                  </Grid>
-                  <Grid size={{ xs: 12, sm: 6 }}>
-                    <ControlledDatePicker
-                      name={'endDate'}
-                      control={control}
-                      error={errors.endDate}
-                      label={'End Date'}
-                      defaultValue={undefined}
-                    />
-                  </Grid>
-                  <Grid size={{ xs: 12, sm: 6 }}>
-                    <CustomTextField
-                      label={'Procedure Code'}
-                      placeHolder={'Procedure Code'}
-                      name={'procedureCode'}
-                      defaultValue={''}
-                      type={'text'}
-                      error={errors.procedureCode}
-                      control={control}
-                    />
-                  </Grid>
-                  <Grid size={{ xs: 12, sm: 6 }}>
-                    <CustomTextField
-                      label={'Modifier Code'}
-                      placeHolder={'Modifier Code'}
-                      name={'modifierCode'}
-                      defaultValue={''}
-                      type={'text'}
-                      error={errors.modifierCode}
-                      control={control}
-                      isRequired={false}
-                    />
-                  </Grid>
-                  <Grid size={{ xs: 12, sm: 6 }}>
-                    <CustomTextField
-                      label={'Units'}
-                      placeHolder={'Units'}
-                      name={'units'}
-                      defaultValue={''}
-                      type={'number'}
-                      error={errors.units}
-                      control={control}
-                    />
-                  </Grid>
-                  <Grid size={{ xs: 12, sm: 6 }}>
-                    <CustomTextField
-                      label={'Diagnosis Code'}
-                      placeHolder={'Diagnosis Code'}
-                      name={'diagnosisCode'}
-                      defaultValue={''}
-                      type={'text'}
-                      error={errors.diagnosisCode}
-                      control={control}
-                    />
-                  </Grid>
-                  <Grid size={{ xs: 12, sm: 6 }}>
-                    <CustomTextField
-                      label={'NPI/UMPI'}
-                      placeHolder={'NPI/UMPI'}
-                      name={'umpiNumber'}
-                      defaultValue={''}
-                      type={'text'}
-                      error={errors.umpiNumber}
-                      control={control}
-                    />
-                  </Grid>
-                  <Grid size={{ xs: 12, sm: 6 }}>
-                    <CustomDropDown
-                      name={'reimbursementType'}
-                      control={control}
-                      label={'Reimbursement Type'}
-                      error={errors.reimbursementType}
-                      optionList={[
-                        { key: 1, value: 'per unit', optionString: 'Per Unit' },
-                        { key: 2, value: 'per diem', optionString: 'Per Diem' }
-                      ]}
-                    />
-                  </Grid>
-                  <Grid size={{ xs: 12, sm: 6 }}>
-                    <CustomTextField
-                      label={'Taxonomy'}
-                      placeHolder={'Taxonomy'}
-                      name={'taxonomy'}
-                      defaultValue={''}
-                      type={'text'}
-                      error={errors.taxonomy}
-                      control={control}
-                    />
-                  </Grid>
-                  <Grid size={{ xs: 12, sm: 6 }}>
-                    <CustomDropDown
-                      name={'frequency'}
-                      control={control}
-                      label={'Frequency'}
-                      error={errors.frequency}
-                      optionList={[
-                        { key: 1, value: 'daily', optionString: 'Daily' },
-                        { key: 2, value: 'weekly', optionString: 'Weekly' },
-                        { key: 3, value: 'monthly', optionString: 'Monthly' }
-                      ]}
-                    />
-                  </Grid>
-                </Grid>
-                <div className='flex gap-4 justify-end mt-4 mb-4'>
-                  <Button variant='outlined' color='secondary' onClick={handleModalClose}>
-                    CANCEL
-                  </Button>
-                  <Button type='submit' variant='contained'>
-                    {isEditMode ? 'Update' : 'Save'}
-                  </Button>
-                </div>
-              </form>
-            </DialogContent>
+
+                    <Typography
+                      variant='h5'
+                      sx={{
+                        marginInlineStart: '25px'
+                      }}
+                    >
+                      Services
+                    </Typography>
+                    <CardContent>
+                      <Box sx={{ mb: 4, position: 'relative' }}>
+                        <Grid container spacing={2} alignItems='center'>
+                          <Grid size={{ xs: 12 }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2 }}>
+                              <Divider sx={{ flex: 1 }} />
+                              <Typography variant='h6' sx={{ textAlign: 'center', minWidth: '2rem' }}>
+                                1
+                              </Typography>
+                              <Divider sx={{ flex: 1 }} />
+                            </Box>
+                            <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 2 }}>
+                              <FormControlLabel
+                                control={
+                                  <Checkbox
+                                    checked={billable}
+                                    onChange={() => setBillable(!billable)}
+                                    disabled={isLoading}
+                                  />
+                                }
+                                label='Billable'
+                              />
+                            </Box>
+                          </Grid>
+                          <Grid size={{ xs: 12, sm: 3 }}>
+                            <CustomTextField
+                              label='Service Description'
+                              placeHolder='Service Description'
+                              name='serviceName'
+                              type='text'
+                              error={errors.serviceName}
+                              control={control}
+                              defaultValue={''}
+                            />
+                          </Grid>
+                          <Grid size={{ xs: 12, sm: 3 }}>
+                            <CustomTextField
+                              label='Procedure Code'
+                              placeHolder='Procedure Code'
+                              name='procedureCode'
+                              type='text'
+                              error={errors.procedureCode}
+                              control={control}
+                              defaultValue={''}
+                            />
+                          </Grid>
+                          <Grid size={{ xs: 12, sm: 3 }}>
+                            <CustomTextField
+                              label='Modifier'
+                              placeHolder='Modifier'
+                              name='modifierCode'
+                              type='text'
+                              error={errors.modifierCode}
+                              control={control}
+                              isRequired={false}
+                              defaultValue={''}
+                            />
+                          </Grid>
+                          <Grid size={{ xs: 12, sm: 3 }}>
+                            <AppReactDatepicker
+                              selectsRange
+                              startDate={watch('startDate') ? new Date(watch('startDate')) : null}
+                              endDate={watch('endDate') ? new Date(watch('endDate')) : null}
+                              id='dateRange'
+                              onChange={(dates: [Date | null, Date | null]) => {
+                                setValue('startDate', dates[0] || undefined)
+                                setValue('endDate', dates[1] || undefined)
+                              }}
+                              placeholderText='MM/DD/YYYY - MM/DD/YYYY'
+                              customInput={
+                                <TextField
+                                  fullWidth
+                                  size='small'
+                                  label='Start and End Date'
+                                  placeholder='MM/DD/YYYY - MM/DD/YYYY'
+                                  disabled={isLoading}
+                                  InputProps={{
+                                    endAdornment: (
+                                      <IconButton size='small'>
+                                        <CalendarTodayIcon style={{ scale: 1 }} />
+                                      </IconButton>
+                                    )
+                                  }}
+                                />
+                              }
+                            />
+                          </Grid>
+                          <Grid size={{ xs: 12, sm: 3 }}>
+                            <CustomTextField
+                              label='Service Rate'
+                              placeHolder='Service Rate'
+                              name='serviceRate'
+                              type='text'
+                              error={errors.serviceRate}
+                              control={control}
+                              defaultValue={''}
+                            />
+                          </Grid>
+                          <Grid size={{ xs: 12, sm: 3 }}>
+                            <OcrCustomDropDown
+                              label='Reimbursement'
+                              name='reimbursementType'
+                              value={watch('reimbursementType')}
+                              onChange={(e: any) => setValue('reimbursementType', e.target.value)}
+                              optionList={[
+                                { key: 1, value: 'per unit', optionString: 'Per Unit' },
+                                { key: 2, value: 'per diem', optionString: 'Per Diem' }
+                              ]}
+                              disabled={isLoading}
+                            />
+                          </Grid>
+                          <Grid size={{ xs: 12, sm: 3 }}>
+                            <CustomTextField
+                              label='Quantity'
+                              placeHolder='Quantity'
+                              name='units'
+                              type='text'
+                              error={errors.units}
+                              control={control}
+                              defaultValue={''}
+                            />
+                          </Grid>
+                          <Grid size={{ xs: 12, sm: 3 }}>
+                            <OcrCustomDropDown
+                              label='Frequency'
+                              name='frequency'
+                              value={watch('frequency')}
+                              onChange={(e: any) => setValue('frequency', e.target.value)}
+                              optionList={[
+                                { key: 1, value: 'daily', optionString: 'Daily' },
+                                { key: 2, value: 'weekly', optionString: 'Weekly' },
+                                { key: 3, value: 'monthly', optionString: 'Monthly' }
+                              ]}
+                              disabled={isLoading}
+                            />
+                          </Grid>
+                          <Grid size={{ xs: 12, sm: 3 }}>
+                            <Typography sx={{ paddingBottom: 0, marginBottom: -0.8 }}>
+                              Quantity per Frequency
+                            </Typography>
+                            {isNaN(
+                              calculateQuantityPerFrequency({
+                                startDate: watch('startDate'),
+                                endDate: watch('endDate'),
+                                quantity: watch('units'),
+                                frequency: watch('frequency')
+                              })
+                            )
+                              ? 'N/A'
+                              : calculateQuantityPerFrequency({
+                                  startDate: watch('startDate'),
+                                  endDate: watch('endDate'),
+                                  quantity: watch('units'),
+                                  frequency: watch('frequency')
+                                }).toFixed(2)}
+                          </Grid>
+                        </Grid>
+                      </Box>
+                    </CardContent>
+                  </Card>
+                </form>
+              </Box>
+            </Box>
           </Dialog>
           <ServiceAuthListModal
             open={isListModalShow}

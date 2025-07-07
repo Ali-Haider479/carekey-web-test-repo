@@ -3,6 +3,7 @@ import { jsPDF } from 'jspdf'
 import moment from 'moment'
 import { ServiceEntry, SignatureState } from '.'
 import './TimesheetPdf.css'
+
 interface exportToPDFProps {
   setIsLoading: Dispatch<SetStateAction<boolean>>
   authUser: any
@@ -41,7 +42,7 @@ export const exportToPDF = async ({
   setIsLoading(true)
   try {
     const doc = new jsPDF({
-      orientation: 'portrait',
+      orientation: 'landscape',
       unit: 'mm',
       format: 'a4'
     })
@@ -81,13 +82,59 @@ export const exportToPDF = async ({
         doc.setLineWidth(0.5)
         doc.line(margin, 32, pageWidth - margin, 32)
 
+        // Summary
+        let yPosition = 40
+
+        doc.setFontSize(11)
+        doc.setFont('helvetica', 'bold')
+        doc.text('Client Name:-', margin, yPosition)
+
+        doc.setFontSize(11)
+        doc.setFont('helvetica', 'normal')
+        const clientName = `${item[0]?.client?.firstName || ''} ${item[0]?.client?.lastName || ''}`
+        doc.text(clientName, margin + doc.getTextWidth('Client Name:- ') + 5, yPosition)
+
+        doc.setFontSize(11)
+        doc.setFont('helvetica', 'bold')
+        doc.text('Caregiver Name:-', margin + doc.getTextWidth('Client Name:- ' + clientName) + 55, yPosition)
+
+        doc.setFontSize(11)
+        doc.setFont('helvetica', 'normal')
+        const caregiverName = `${item[0]?.caregiver?.firstName || ''} ${item[0]?.caregiver?.lastName || ''}`
+        doc.text(
+          caregiverName,
+          margin + doc.getTextWidth('Client Name:- ' + clientName + ' Caregiver Name:- ') + 60,
+          yPosition
+        )
+
+        doc.setFontSize(11)
+        doc.setFont('helvetica', 'bold')
+        doc.text(
+          'Service:-',
+          margin + doc.getTextWidth('Client Name:- ' + clientName + ' Caregiver Name:- ' + caregiverName) + 75,
+          yPosition
+        )
+
+        doc.setFontSize(11)
+        doc.setFont('helvetica', 'normal')
+        const serviceName = `${item[0]?.serviceName || ''}`
+        doc.text(
+          serviceName,
+          margin +
+            doc.getTextWidth('Client Name:- ' + clientName + ' Caregiver Name:- ' + caregiverName + ' Service:- ') +
+            85,
+          yPosition
+        )
+
+        yPosition = yPosition + 10
+
         // Checkout Notes Section
         doc.setFontSize(12)
         doc.setFont('helvetica', 'bold')
-        doc.text('Checkout Notes', margin, 40)
+        doc.text('Checkout Notes', margin, yPosition)
         doc.setFont('helvetica', 'normal')
 
-        let yPosition = 50
+        yPosition = yPosition + 10
         const sortedTimelogDataWithNotes = [...item]
           .filter(item => item.notes !== '')
           .sort((a, b) => new Date(a.dateOfService).getTime() - new Date(b.dateOfService).getTime())
@@ -120,36 +167,40 @@ export const exportToPDF = async ({
         yPosition = 15
 
         // Client and Caregiver Info Section
-        doc.setFontSize(11)
-        doc.setFont('helvetica', 'bold')
-        doc.text(
-          `RECIPIENT NAME - ${item[0]?.client?.firstName || ''} ${item[0]?.client?.lastName || ''} (${item[0]?.client?.clientCode || ''})`,
-          margin,
-          yPosition
-        )
-        const icsText = `${item[0]?.serviceName}`
-        const icsWidth = doc.getStringUnitWidth(icsText) * 11 * 0.352778
-        doc.text(icsText, pageWidth - margin - icsWidth, yPosition)
+        const ClientCaregiverInfoSection = () => {
+          doc.setFontSize(11)
+          doc.setFont('helvetica', 'bold')
+          doc.text(
+            `RECIPIENT NAME - ${item[0]?.client?.firstName || ''} ${item[0]?.client?.lastName || ''} (${item[0]?.client?.clientCode || ''})`,
+            margin,
+            yPosition
+          )
+          const icsText = `${item[0]?.serviceName}`
+          const icsWidth = doc.getStringUnitWidth(icsText) * 11 * 0.352778
+          doc.text(icsText, pageWidth - margin - icsWidth, yPosition)
 
-        yPosition += 5
-        doc.text(
-          `CAREGIVER NAME - ${item[0]?.caregiver?.firstName || ''} ${item[0]?.caregiver?.lastName || ''}`,
-          margin,
-          yPosition
-        )
-        const startDate = moment(item[0]?.payPeriodHistory.startDate).format('MMMM DD, YYYY')
-        const endDate = moment(weekDates[weekDates.length - 1]).format('MMMM DD, YYYY')
-        const weekDurationText = `Week Duration: ${startDate} To ${endDate}`
-        const weekDurationWidth = doc.getStringUnitWidth(weekDurationText) * 11 * 0.352778
-        doc.text(weekDurationText, pageWidth - margin - weekDurationWidth, yPosition)
+          yPosition += 5
+          doc.text(
+            `CAREGIVER NAME - ${item[0]?.caregiver?.firstName || ''} ${item[0]?.caregiver?.lastName || ''}`,
+            margin,
+            yPosition
+          )
+          const startDate = moment(item[0]?.payPeriodHistory.startDate).format('MMMM DD, YYYY')
+          const endDate = moment(weekDates[weekDates.length - 1]).format('MMMM DD, YYYY')
+          const weekDurationText = `Week Duration: ${startDate} To ${endDate}`
+          const weekDurationWidth = doc.getStringUnitWidth(weekDurationText) * 11 * 0.352778
+          doc.text(weekDurationText, pageWidth - margin - weekDurationWidth, yPosition)
 
-        yPosition += 5
-        doc.setDrawColor(0, 0, 0)
-        doc.setLineWidth(0.5)
-        doc.line(margin, yPosition, pageWidth - margin, yPosition)
+          yPosition += 5
+          doc.setDrawColor(0, 0, 0)
+          doc.setLineWidth(0.5)
+          doc.line(margin, yPosition, pageWidth - margin, yPosition)
 
-        // First Table Section (Service Entries)
-        yPosition += 10
+          // First Table Section (Service Entries)
+          yPosition += 10
+        }
+
+        ClientCaregiverInfoSection()
 
         const allEntries = [...item].sort(
           (a, b) => new Date(a.dateOfService).getTime() - new Date(b.dateOfService).getTime()
@@ -219,7 +270,7 @@ export const exportToPDF = async ({
 
         const dateColWidth = 25
         const firstColWidth = 30
-        const maxColumnsPerRow = 6
+        const maxColumnsPerRow = 10
         const maxColumnsPerPage = Math.floor((pageWidth - margin * 2 - firstColWidth) / dateColWidth)
 
         let printedColumns = 0
@@ -317,6 +368,7 @@ export const exportToPDF = async ({
               if (currentY > doc.internal.pageSize.height - 20) {
                 doc.addPage()
                 currentY = 15
+                ClientCaregiverInfoSection()
                 drawHeaderRow(columnsInRow)
               }
             })
@@ -332,6 +384,7 @@ export const exportToPDF = async ({
         for (let i = 0; i < columns.length; i += maxColumnsPerPage) {
           if (i > 0) {
             doc.addPage()
+            ClientCaregiverInfoSection()
             yPosition = 15
           }
           if (printedColumns < columns.length) drawColumnsPage(i)
@@ -387,8 +440,11 @@ export const exportToPDF = async ({
 
         yPosition += 20
 
-        // Caregiver Acknowledgement Section
-        doc.setFont('helvetica', 'bold')
+        // If the next section would overflow the page, add a new page
+        if (yPosition + 20 >= doc.internal.pageSize.height - 20) {
+          doc.addPage()
+          yPosition = 15
+        }
         doc.text('Acknowledgement and Required Signatures for Caregiver', margin, yPosition)
         doc.setFont('helvetica', 'normal')
 
