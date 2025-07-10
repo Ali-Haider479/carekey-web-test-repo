@@ -1,5 +1,5 @@
 'use client'
-import { Add, MoreVert } from '@mui/icons-material'
+import { Add, Download, Edit, MoreVert } from '@mui/icons-material'
 import {
   Button,
   Card,
@@ -26,7 +26,6 @@ import { FormProvider, useForm } from 'react-hook-form'
 import CustomTextField from '@/@core/components/custom-inputs/CustomTextField'
 import ControlledDatePicker from '@/@core/components/custom-inputs/ControledDatePicker'
 import { useParams } from 'next/navigation'
-import axios from 'axios'
 import ReactTable from '@/@core/components/mui/ReactTable'
 import TabContext from '@mui/lab/TabContext'
 import CustomTabList from '@/@core/components/mui/TabList'
@@ -38,6 +37,7 @@ import CalendarTodayIcon from '@mui/icons-material/CalendarToday'
 import OcrCustomDropDown from '@/@core/components/custom-inputs/OcrCustomDropdown'
 import { placeOfServiceOptions, payerOptions } from '@/utils/constants'
 import { useTheme } from '@emotion/react'
+import CustomAlert from '@/@core/components/mui/Alter'
 
 const options = [
   { label: 'Option 1', value: 'option1' },
@@ -86,6 +86,11 @@ const ServiceAuthorization = () => {
   const [isListModalShow, setIsListModalShow] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [serviceAuthData, setServiceAuthData] = useState<any[]>([])
+  const [clientDocuments, setClientDocuments] = useState<any[]>([])
+  const [activeServices, setActiveServices] = useState<any[]>([])
+  const [alertProps, setAlertProps] = useState<any>()
+  const [alertOpen, setAlertOpen] = useState<boolean>(false)
+  const [expiredServices, setExpiredServices] = useState<any[]>([])
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const [currentItem, setCurrentItem] = useState<any>(null)
   const [isEditMode, setIsEditMode] = useState(false)
@@ -94,19 +99,141 @@ const ServiceAuthorization = () => {
   const [billable, setBillable] = useState<boolean>(true)
   const theme: any = useTheme()
 
-  const activeServices = serviceAuthData.filter(item => {
-    const endDate = new Date(item.endDate)
-    return endDate >= currentDate
-  })
+  const openPdfInNewTab = (pdfUrl: string, itemName: string) => {
+    console.log('Opening pdf with url: ', pdfUrl)
+    if (/iPhone/i.test(navigator.userAgent) || !pdfUrl.includes('data')) {
+      const a = document.createElement('a')
+      a.href = pdfUrl
+      a.target = '_blank'
+      a.click()
+    } else {
+      fetch(pdfUrl)
+        .then(response => response.blob())
+        .then(blob => {
+          const objectUrl = URL.createObjectURL(blob)
+          const win = window.open(objectUrl, '_blank')
+          if (!win) {
+            console.error('Unable to open a new tab. Please check your browser settings.')
+          } else {
+            win.document.title = itemName
+          }
+        })
+        .catch(error => {
+          console.error('Error loading PDF:', error)
+        })
+    }
+  }
 
-  const expiredServices = serviceAuthData.filter(item => {
-    const endDate = new Date(item.endDate)
-    return endDate < currentDate
-  })
+  const getPdf = async (key: string, fileName: string) => {
+    if (!key) {
+      setAlertOpen(true)
+      setAlertProps({
+        severity: 'error',
+        message: 'No document found for this service-authorization.'
+      })
+      console.log('No file key provided to getPdf function.')
+      return
+    }
+    console.log('Getting pdf with key: ', key)
+    const pdfRes = await api.get(`/client/getPdf/${key}`)
+    console.log('PDF RESPONSE --->> ', pdfRes)
+    if (pdfRes && pdfRes.status === 200) {
+      openPdfInNewTab(pdfRes.data, fileName)
+    }
+  }
 
-  const handleMenuClick = (event: React.MouseEvent<HTMLElement>, item: any) => {
-    setAnchorEl(event.currentTarget)
+  const getClientDocuments = async () => {
+    try {
+      const response = await api.get(`/client/client-documents/${clientId}`)
+      console.log('Client Documents in getClientDocuments:', response.data)
+      const serviceAuthFilteredDocuments = response.data.filter(
+        (doc: any) => doc.uploadedDocument.documentType === 'serviceAuthDocument'
+      )
+      return serviceAuthFilteredDocuments
+    } catch (error) {
+      console.error('Error fetching client documents:', error)
+      return []
+    }
+  }
+
+  const fetchClientServiceAuthData = async () => {
+    try {
+      console.log('Fetching client service auth data after creating seervice auth')
+      const fetchedData = await api.get(`/client/${clientId}/service-auth`)
+      console.log('Fetched Client Service Auth Data:', fetchedData)
+      return fetchedData?.data.length > 0 ? fetchedData.data : []
+    } catch (error) {
+      console.error('Error fetching data: ', error)
+      return []
+    }
+  }
+
+  // Fetch both datasets concurrently
+  const fetchData = async () => {
+    setIsLoading(true)
+    try {
+      const [documents, services] = await Promise.all([getClientDocuments(), fetchClientServiceAuthData()])
+      setClientDocuments(documents)
+      console.log('Fetched Client services:', services)
+      setServiceAuthData(services)
+      console.log('Fetched Client Documents:', documents)
+    } catch (error) {
+      console.error('Error fetching data:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+  useEffect(() => {
+    fetchData()
+  }, [])
+
+  // Map documents to services
+  const mapDocumentsToServices = (services: any[]) => {
+    return services.map(service => {
+      console.log('Service Data:', service)
+      console.log('Client Documents:', clientDocuments)
+      const matchingDoc = clientDocuments.find(doc => doc.uploadedDocument?.fileKey === service.fileKey)
+      console.log('Matching Document:', matchingDoc)
+      return {
+        ...service,
+        document: matchingDoc || null // Add document to service entry
+      }
+    })
+  }
+
+  // Compute active and expired services after both states are set
+  useEffect(() => {
+    if (serviceAuthData.length > 0 || clientDocuments.length > 0) {
+      const active = serviceAuthData.filter(item => {
+        const endDate = new Date(item.endDate)
+        return endDate >= currentDate
+      })
+      const expired = serviceAuthData.filter(item => {
+        const endDate = new Date(item.endDate)
+        return endDate < currentDate
+      })
+      setActiveServices(mapDocumentsToServices(active))
+      setExpiredServices(mapDocumentsToServices(expired))
+    } else if (serviceAuthData.length > 0 && clientDocuments.length === 0) {
+      const active = serviceAuthData.filter(item => {
+        const endDate = new Date(item.endDate)
+        return endDate >= currentDate
+      })
+      const expired = serviceAuthData.filter(item => {
+        const endDate = new Date(item.endDate)
+        return endDate < currentDate
+      })
+      setActiveServices(active)
+      setExpiredServices(expired)
+    }
+  }, [serviceAuthData, clientDocuments])
+
+  console.log('Active Services:', activeServices)
+  console.log('Expired Services:', expiredServices)
+
+  const handleMenuClick = (item: any) => {
     setCurrentItem(item)
+    handleEdit(item)
   }
 
   const handleMenuClose = () => {
@@ -151,7 +278,6 @@ const ServiceAuthorization = () => {
   const handleEdit = (item: any) => {
     setIsEditMode(true)
     setCurrentItem(item)
-    setBillable(item.billable !== undefined ? item.billable : true)
 
     const formattedStartDate = item.startDate ? new Date(item.startDate) : undefined
     const formattedEndDate = item.endDate ? new Date(item.endDate) : undefined
@@ -301,19 +427,6 @@ const ServiceAuthorization = () => {
     }
   }
 
-  const fetchClientServiceAuthData = async () => {
-    try {
-      const fetchedData = await api.get(`/client/${clientId}/service-auth`)
-      setServiceAuthData(fetchedData?.data.length > 0 ? fetchedData?.data : [])
-    } catch (error) {
-      console.error('Error fetching data: ', error)
-    }
-  }
-
-  useEffect(() => {
-    fetchClientServiceAuthData()
-  }, [])
-
   const handleTabChange = (event: React.SyntheticEvent, newValue: string) => {
     setSelectedTab(newValue)
   }
@@ -333,13 +446,13 @@ const ServiceAuthorization = () => {
     },
     {
       id: 'serviceAuthNumber',
-      label: 'SERVICE AUTH NO.',
+      label: 'AUTH NO.',
       minWidth: 170,
       render: (item: any) => <Typography>{item?.serviceAuthNumber}</Typography>
     },
     {
       id: 'procedureAndModifier',
-      label: 'PRO & MOD',
+      label: 'PRO/MOD',
       minWidth: 170,
       render: (item: any) => (
         <Typography>
@@ -349,7 +462,7 @@ const ServiceAuthorization = () => {
     },
     {
       id: 'startDateEndDate',
-      label: 'START DATE / END DATE',
+      label: 'DATE RANGE',
       minWidth: 170,
       render: (item: any) => {
         const formatDate = (dateString: string) => {
@@ -377,56 +490,96 @@ const ServiceAuthorization = () => {
     },
     {
       id: 'totalUnits',
-      label: 'TOTAL UNITS',
+      label: 'UNITS',
       minWidth: 170,
       render: (item: any) => <Typography>{item?.units}</Typography>
     },
     {
       id: 'remainingUnits',
-      label: 'REMIANING UNITS',
+      label: 'REM. UNITS',
       minWidth: 170,
       render: (item: any) => {
-        const remianingUnits = item?.units - item?.usedUnits
-        return <Typography>{remianingUnits}</Typography>
+        const remainingUnits = item?.units - item?.usedUnits
+        return <Typography>{remainingUnits}</Typography>
       }
     },
     {
       id: 'perDayHours',
-      label: 'PER DAY (HRS)',
+      label: 'DAILY HRS',
       minWidth: 170,
-      render: (item: any) => <Typography>{item?.units}</Typography>
+      render: (item: any) => {
+        return <Typography>{isNaN(
+          calculateQuantityPerFrequency({
+            startDate: item.startDate,
+            endDate: item.endDate,
+            quantity: item.units,
+            frequency: 'daily'
+          })
+        )
+          ? 'N/A'
+          : (calculateQuantityPerFrequency({
+            startDate: item.startDate,
+            endDate: item.endDate,
+            quantity: item.units,
+            frequency: 'daily'
+          }) / 4).toFixed(2)}</Typography>
+      }
     },
     {
       id: 'perWeekHours',
-      label: 'PER WEEK (HRS)',
+      label: 'WEEKLY HRS',
       minWidth: 170,
-      render: (item: any) => <Typography>{item?.units}</Typography>
+      render: (item: any) => {
+        return <Typography>{isNaN(
+          calculateQuantityPerFrequency({
+            startDate: item.startDate,
+            endDate: item.endDate,
+            quantity: item.units,
+            frequency: 'weekly'
+          })
+        )
+          ? 'N/A'
+          : (calculateQuantityPerFrequency({
+            startDate: item.startDate,
+            endDate: item.endDate,
+            quantity: item.units,
+            frequency: 'weekly'
+          }) / 4).toFixed(2)}</Typography>
+      }
     },
     {
       id: 'bankedHours',
-      label: 'BANKED HOURS',
+      label: 'BANKED HRS',
       minWidth: 170,
-      render: (item: any) => <Typography>{item?.units}</Typography>
+      render: (item: any) => <Typography>0</Typography>
     },
+    // {
+    //   id: 'document',
+    //   label: 'DOCUMENT',
+    //   minWidth: 170,
+    //   render: (item: any) => (
+    //     <Typography>
+    //       {item?.document ? item.document.uploadedDocument?.fileName || 'Document' : 'No Document'}
+    //     </Typography>
+    //   )
+    // },
     {
       id: 'action',
       label: 'ACTION',
       minWidth: 170,
       render: (item: any) => (
-        <>
-          <IconButton onClick={e => handleMenuClick(e, item)}>
-            <MoreVert />
-          </IconButton>
-          <Menu
-            anchorEl={anchorEl}
-            open={Boolean(anchorEl)}
-            onClose={handleMenuClose}
-            anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-            transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-          >
-            <MenuItem onClick={() => handleEdit(currentItem)}>Edit</MenuItem>
-          </Menu>
-        </>
+        <div className='flex flex-row gap-3'>
+          <Edit
+            onClick={() => {
+              handleMenuClick(item)
+            }}
+            className='cursor-pointer'
+          />
+          <Download
+            onClick={() => getPdf(item?.document?.uploadedDocument.fileKey, item?.document?.uploadedDocument.fileName)}
+            className='cursor-pointer'
+          />
+        </div>
       )
     }
   ]
@@ -437,6 +590,7 @@ const ServiceAuthorization = () => {
 
   return (
     <>
+      <CustomAlert AlertProps={alertProps} openAlert={alertOpen} setOpenAlert={setAlertOpen} />
       <FormProvider {...methods}>
         <Card className=' w-full flex flex-col h-36 p-4 shadow-md rounded-lg'>
           <span className='ml-2 text-2xl font-bold '>Filters</span>
@@ -454,7 +608,12 @@ const ServiceAuthorization = () => {
               />
             </div>
             <div className='flex justify-end gap-3'>
-              <Button startIcon={<Add />} className='w-[160px] h-10' onClick={() => setIsListModalShow(true)}>
+              <Button
+                variant='contained'
+                startIcon={<Add />}
+                className='w-[160px] h-10'
+                onClick={() => setIsListModalShow(true)}
+              >
                 ADD SA LIST
               </Button>
             </div>
@@ -829,11 +988,11 @@ const ServiceAuthorization = () => {
                             )
                               ? 'N/A'
                               : calculateQuantityPerFrequency({
-                                  startDate: watch('startDate'),
-                                  endDate: watch('endDate'),
-                                  quantity: watch('units'),
-                                  frequency: watch('frequency')
-                                }).toFixed(2)}
+                                startDate: watch('startDate'),
+                                endDate: watch('endDate'),
+                                quantity: watch('units'),
+                                frequency: watch('frequency')
+                              }).toFixed(2)}
                           </Grid>
                         </Grid>
                       </Box>
@@ -848,6 +1007,9 @@ const ServiceAuthorization = () => {
             onClose={handleListModalClose}
             clientId={id}
             fetchClientServiceAuthData={fetchClientServiceAuthData}
+            getClientDocuments={getClientDocuments}
+            serviceAuthData={serviceAuthData}
+            fetchData={fetchData}
           />
         </div>
       </FormProvider>

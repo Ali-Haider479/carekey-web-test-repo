@@ -209,7 +209,14 @@ const AddClientStepper = () => {
         addressType: 'Mailing'
       }
 
-      const clientAddressArray = [clientPrimaryAddressBody, clientSecondaryAddressBody, clientMailingAddressBody]
+      const clientAddressArray = [clientPrimaryAddressBody, clientMailingAddressBody]
+
+      if (
+        personalDetails.secondaryResidentialCity.trim() !== '' &&
+        personalDetails.secondaryResidentialState.trim() !== ''
+      ) {
+        clientAddressArray.push(clientSecondaryAddressBody)
+      }
 
       for (const addressBody of clientAddressArray) {
         const response = await api.post(`/client/address`, addressBody)

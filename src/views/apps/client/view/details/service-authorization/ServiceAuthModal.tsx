@@ -26,12 +26,18 @@ import api from '@/utils/api'
 import { extractStructuredTextFromPDF, parseServiceAgreement } from '@/utils/pdfDataExtract'
 import { useTheme } from '@emotion/react'
 import { set } from 'date-fns'
+import axios from 'axios'
+import { format } from 'path'
+import CustomAlert from '@/@core/components/mui/Alter'
 
 interface ServiceAuthListModalProps {
   open: boolean
   onClose: () => void
   clientId: any
+  serviceAuthData: any
   fetchClientServiceAuthData: () => Promise<void>
+  getClientDocuments: () => Promise<void>
+  fetchData?: () => Promise<void>
 }
 
 interface FormRow {
@@ -41,7 +47,7 @@ interface FormRow {
   caseManagerNumber: string
   diagnosisCode: string
   procedureCode: string
-  modifier: string
+  modifier: string | null
   startDate: string
   endDate: string
   procedureDescription: string
@@ -75,7 +81,10 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
   open,
   onClose,
   clientId,
-  fetchClientServiceAuthData
+  fetchClientServiceAuthData,
+  getClientDocuments,
+  fetchData,
+  serviceAuthData
 }) => {
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [enableOcrDataFill, setEnableOcrDataFill] = useState<boolean>(true)
@@ -84,16 +93,32 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
   const [billableStates, setBillableStates] = useState<boolean[]>([])
   const [ocrData, setOcrData] = useState<FormRow[]>([])
   const [extractedData, setExtractedData] = useState<any>(null)
-  const [rawFile, setRawFile] = useState<File | null>(null)
+  const [rawFile, setRawFile] = useState<any>(null)
   const authUser: AuthUser = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
   const [payerName, setPayerName] = useState<string>('MA')
+  const [clientDocuments, setClientDocuments] = useState<any>([])
+  const [alertProps, setAlertProps] = useState<any>()
+  const [alertOpen, setAlertOpen] = useState<boolean>(false)
   const theme: any = useTheme()
 
-  const uploadDocuments = async (
-    files: { path: string; size: number; name: string }[],
-    documentType: string,
-    id: string
-  ) => {
+  // const getClientDocuments = async () => {
+  //   try {
+  //     const response = await api.get(`/client/client-documents/${clientId}`)
+  //     console.log('Client Documents:', response.data)
+  //     const serviceAuthFilteredDocuments = response.data.filter(
+  //       (doc: any) => doc.documentType === 'serviceAuthDocument'
+  //     )
+  //     setClientDocuments(serviceAuthFilteredDocuments)
+  //   } catch (error) {
+  //     console.error('Error fetching client documents:', error)
+  //   }
+  // }
+
+  useEffect(() => {
+    getClientDocuments()
+  }, [])
+
+  const uploadDocuments = async (files: File[], documentType: string, id: string) => {
     if (!files || files.length === 0) {
       console.log(`No files found for ${documentType}. Skipping upload.`)
       return null
@@ -112,13 +137,14 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
 
       // Upload each file to S3
       const uploadPromises = files.map(async (file, index) => {
+        console.log('Uploading file:', file)
         const { key, url } = preSignedUrls[index] // Get corresponding pre-signed URL
-        const fileType = file.path.split('.').pop() || 'pdf' // Default to 'pdf' if undefined
+        const fileType = file.type.split('/').pop() || 'pdf' // Default to 'pdf' if undefined
 
-        console.log(`Uploading ${file.name} to S3...`)
+        console.log(`Uploading ${file.name} with URL: ${url} to S3...`)
 
         // Upload file to S3
-        await api.put(url, file, {
+        await axios.put(url, file, {
           headers: {
             'Content-Type': 'application/pdf' // Adjust based on file type
           }
@@ -159,7 +185,7 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
     caseManagerNumber: '',
     diagnosisCode: '',
     procedureCode: '',
-    modifier: '',
+    modifier: null,
     startDate: '',
     endDate: '',
     procedureDescription: '',
@@ -239,6 +265,7 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
 
   const handlePDFUpload = async (event: React.ChangeEvent<HTMLInputElement>): Promise<void> => {
     const file = event.target.files?.[0]
+    console.log('Uploaded File ---->> ', event)
     if (file && file.type === 'application/pdf') {
       setIsLoading(true)
       setUploadedFile({
@@ -262,7 +289,7 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
             .filter(item => item.status === 'APPROVED') // Only include approved items
             .map(item => ({
               procedureCode: item.procedureCode || '',
-              modifier: item.modifiers.includes('PERSONAL') ? '' : item.modifiers,
+              modifier: item.modifiers.includes('PERSONAL') ? null : item.modifiers,
               description: item.description,
               startDate: formatDateString(item.startDate),
               endDate: formatDateString(item.endDate),
@@ -367,13 +394,26 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
     setBillableStates(updatedBillableStates)
   }
 
+  const formatToLocalISO = (date: Date | null): string | null => {
+    if (!date) return null
+    const pad = (num: number) => num.toString().padStart(2, '0')
+    const year = date.getFullYear()
+    const month = pad(date.getMonth() + 1)
+    const day = pad(date.getDate())
+    const hours = pad(date.getHours())
+    const minutes = pad(date.getMinutes())
+    const seconds = pad(date.getSeconds())
+    const milliseconds = date.getMilliseconds().toString().padStart(3, '0')
+    return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}.${milliseconds}`
+  }
+
   const handleDateRangeChange = (index: number, dates: [Date | null, Date | null]): void => {
     const [startDate, endDate] = dates
     const updatedFormData = [...formData]
     updatedFormData[index] = {
       ...updatedFormData[index],
-      startDate: startDate ? startDate.toISOString() : '',
-      endDate: endDate ? endDate.toISOString() : ''
+      startDate: formatToLocalISO(startDate),
+      endDate: formatToLocalISO(endDate)
     }
     setFormData(updatedFormData)
   }
@@ -387,21 +427,24 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
 
       // Upload the PDF file using uploadDocuments if a file exists
       let fileKey: string | null = null
-      // if (rawFile) {
-      //   const files = [
-      //     {
-      //       path: rawFile.name, // Use file name as path (adjust if actual path is needed)
-      //       size: rawFile.size,
-      //       name: rawFile.name
-      //     }
-      //   ]
-      //   const documentType = 'ServiceAuthorization' // Adjust based on your needs
-      //   const uploadResults = await uploadDocuments(files, documentType, clientId)
-      //   if (uploadResults && uploadResults.length > 0) {
-      //     fileKey = uploadResults[0]?.data?.fileKey // Get fileKey from the first result
-      //     console.log('Uploaded fileKey:', fileKey)
-      //   }
-      // }
+      if (rawFile) {
+        const files = [
+          {
+            path: `./${rawFile.name}`, // Use file name as path (adjust if actual path is needed)
+            size: rawFile.size,
+            name: rawFile.name
+          }
+        ]
+        const documentType = 'serviceAuthDocument' // Adjust based on your needs
+        const uploadResults = await uploadDocuments([rawFile], documentType, clientId.toString())
+        console.log('UPLOADED RESULTS ---->> ', uploadResults)
+        if (uploadResults && uploadResults.length > 0) {
+          fileKey = uploadResults[0]?.data?.uploadedDocument?.fileKey // Get fileKey from the first result
+          console.log('Uploaded fileKey:', fileKey)
+        }
+      }
+
+      console.log('formData before submission:', formData)
 
       // Prepare service auth payloads
       const serviceAuthPayloads = formData.map((item: FormRow, index: number) => ({
@@ -409,12 +452,12 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
         memberId: item.recipientId ? Number(item.recipientId) : 0,
         serviceAuthNumber: item.agreementNumber ? Number(item.agreementNumber) : 0,
         procedureCode: item.procedureCode || '',
-        modifierCode: item.modifier || '',
+        modifierCode: item.modifier || null,
         startDate: item.startDate ? new Date(item.startDate) : undefined,
         endDate: item.endDate ? new Date(item.endDate) : undefined,
         serviceRate: item.serviceRate ? Number(item.serviceRate.replace(/[$,]/g, '')) : 0,
         units: item.quantity ? Number(item.quantity.replace(/,/g, '')) : 0,
-        usedUnits: item?.usedUnits ? Number(item.usedUnits.replace(/,/g, '')) : 0,
+        usedUnits: 0,
         diagnosisCode: item.diagnosisCode || '',
         umpiNumber: item.providerId || '',
         reimbursementType: item.reimbursement || 'per unit',
@@ -452,7 +495,7 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
             if (item.status === 'APPROVED') {
               const ServiceAuthServicesPayload = {
                 name: item?.description,
-                modifierCode: item?.modifiers.includes('PERSONAL') ? '' : item?.modifiers,
+                modifierCode: item?.modifiers.includes('PERSONAL') ? null : item?.modifiers,
                 procedureCode: item?.procedureCode || '',
                 rate: item?.rateUnit ? Number(item?.rateUnit) : 100,
                 evv: true
@@ -478,7 +521,7 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
         if (new Date(serviceAuthResponses[0].data.endDate) > new Date()) {
           const ServiceAuthServicesPayload = {
             name: serviceAuthResponses[0].data.serviceName,
-            modifierCode: serviceAuthResponses[0].data.modifierCode,
+            modifierCode: serviceAuthResponses[0].data.modifierCode || null,
             procedureCode: serviceAuthResponses[0].data.procedureCode,
             rate: serviceAuthResponses[0].data.serviceRate,
             evv: true
@@ -499,9 +542,24 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
       }
 
       await fetchClientServiceAuthData()
+      await getClientDocuments()
+      if (fetchData) {
+        await fetchData()
+      }
       handleModalClose()
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving service auth list:', error)
+      if (
+        error?.response?.data?.message?.includes(
+          'Failed to create client service auth: service-auth with same procedure code and modifier code already exists'
+        )
+      ) {
+        setAlertOpen(true)
+        setAlertProps({
+          severity: 'error',
+          message: 'Service Authorization with same procedure code and modifier code already exists.'
+        })
+      }
     } finally {
       setIsLoading(false)
     }
@@ -587,391 +645,384 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
   }
 
   return (
-    <Dialog
-      open={open}
-      onClose={handleModalClose}
-      maxWidth='lg'
-      sx={{
-        '& .MuiDialog-paper': {
-          overflow: 'visible',
-          maxHeight: '90vh',
-          width: '100%'
-        },
-        '& .MuiDialogContent-root': {
-          overflowY: 'auto'
-        }
-      }}
-    >
-      <DialogCloseButton onClick={handleModalClose} disableRipple>
-        <i className='bx-x' />
-      </DialogCloseButton>
-      <DialogContent sx={{ overflowY: 'auto', maxHeight: 'calc(90vh - 64px)', position: 'relative' }}>
-        {isLoading && (
-          <Box
-            sx={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              zIndex: 10
-            }}
-          >
-            <CircularProgress size={40} color='success' />
-          </Box>
-        )}
-        <Box sx={{ filter: isLoading ? 'blur(0.8px)' : 'none', pointerEvents: isLoading ? 'none' : 'auto' }}>
-          <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              mb: 3,
-              position: 'sticky',
-              top: 0,
-              zIndex: 5,
-              px: 3,
-              backdropFilter: 'blur(10px)',
-              WebkitBackdropFilter: 'blur(10px)'
-            }}
-          >
-            <Typography variant='h5' sx={{ fontWeight: 'bold' }}>
-              Service Authorization List
-            </Typography>
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, marginRight: '1rem' }}>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={enableOcrDataFill}
-                    onChange={event => setEnableOcrDataFill(event.target.checked)}
-                    disabled={isLoading}
-                  />
-                }
-                label='OCR'
-              />
-              <Button variant='contained' onClick={handleModalClose} disabled={isLoading}>
-                Cancel
-              </Button>
-              <Button variant='contained' onClick={handleSubmit} disabled={isLoading}>
-                Submit
-              </Button>
-              <Button variant='contained' component='label' disabled={isLoading}>
-                Upload PDF
-                <input type='file' hidden accept='application/pdf' onChange={handlePDFUpload} />
-              </Button>
-            </Box>
-          </Box>
-
-          {/* General Info Card */}
-          <Card sx={{ mx: 2, mb: 2, boxShadow: 'rgba(0, 0, 0, 0.35) 0px 5px 20px' }}>
-            <CardHeader title='General Info' />
-            <CardContent>
-              <Grid container spacing={4}>
-                <Grid size={{ xs: 12, sm: 4 }}>
-                  {/* <TextField label='Payer' value={commonFields.payer} fullWidth size='small' disabled={isLoading} /> */}
-                  <OcrCustomDropDown
-                    label='Payer'
-                    name='payer'
-                    value={payerName}
-                    onChange={(e: any) => setPayerName(e.target.value)}
-                    optionList={payerOptions}
-                    disabled={isLoading}
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 4 }}>
-                  <TextField
-                    label='Member ID'
-                    value={commonFields.memberId}
-                    onChange={e => handleCommonFieldChange('memberId', e.target.value)}
-                    fullWidth
-                    size='small'
-                    disabled={isLoading}
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 4 }}>
-                  <TextField
-                    label='Service Auth Number'
-                    value={commonFields.serviceAuthNumber}
-                    onChange={e => handleCommonFieldChange('serviceAuthNumber', e.target.value)}
-                    fullWidth
-                    size='small'
-                    disabled={isLoading}
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 4 }}>
-                  <TextField
-                    label='Diagnosis Code'
-                    value={commonFields.diagnosisCode}
-                    onChange={e => handleCommonFieldChange('diagnosisCode', e.target.value)}
-                    fullWidth
-                    size='small'
-                    disabled={isLoading}
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 4 }}>
-                  <TextField
-                    label='Taxonomy'
-                    value={commonFields.taxonomy}
-                    onChange={e => handleCommonFieldChange('taxonomy', e.target.value)}
-                    fullWidth
-                    size='small'
-                    disabled={isLoading}
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 4 }}>
-                  <TextField
-                    label='Npi/Umpi'
-                    value={commonFields.umpiNumber}
-                    onChange={e => handleCommonFieldChange('umpiNumber', e.target.value)}
-                    fullWidth
-                    size='small'
-                    disabled={isLoading}
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 4 }}>
-                  <OcrCustomDropDown
-                    label='Place Of Service'
-                    name='placeOfService'
-                    value={commonFields.placeOfService}
-                    onChange={(e: any) => handleCommonFieldChange('placeOfService', e.target.value)}
-                    optionList={placeOfServiceOptions}
-                    disabled={isLoading}
-                  />
-                </Grid>
-              </Grid>
-            </CardContent>
-
+    <>
+      <CustomAlert AlertProps={alertProps} openAlert={alertOpen} setOpenAlert={setAlertOpen} />
+      <Dialog
+        open={open}
+        onClose={handleModalClose}
+        maxWidth='lg'
+        sx={{
+          '& .MuiDialog-paper': {
+            overflow: 'visible',
+            maxHeight: '90vh',
+            width: '100%'
+          },
+          '& .MuiDialogContent-root': {
+            overflowY: 'auto'
+          }
+        }}
+      >
+        <DialogCloseButton onClick={handleModalClose} disableRipple>
+          <i className='bx-x' />
+        </DialogCloseButton>
+        <DialogContent sx={{ overflowY: 'auto', maxHeight: 'calc(90vh - 64px)', position: 'relative' }}>
+          {isLoading && (
             <Box
               sx={{
-                height: '20px',
-                position: 'relative',
-                '&::before': {
-                  content: '""',
-                  position: 'absolute',
-                  left: '-16px',
-                  right: '-16px',
-                  height: '5px',
-                  backgroundColor: theme.palette.mode === 'light' ? '#C1C1C1' : '#212131',
-                  boxShadow: 'rgba(0, 0, 0, 0.1) 0px -2px 5px, rgba(0, 0, 0, 0.1) 0px 2px 5px',
-                  zIndex: 0
-                }
-              }}
-            />
-
-            <Typography
-              variant='h5'
-              sx={{
-                marginInlineStart: '25px'
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 10
               }}
             >
-              Services
-            </Typography>
-            <CardContent>
-              {formData.map((row: FormRow, index: number) => (
-                <Box key={index} sx={{ mb: 4, position: 'relative' }}>
-                  <Grid container spacing={2} alignItems='center'>
-                    <Grid size={{ xs: 12 }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2 }}>
-                        <Divider sx={{ flex: 1 }} />
-                        <Typography variant='h6' sx={{ textAlign: 'center', minWidth: '2rem' }}>
-                          {index + 1}
-                        </Typography>
-                        <Divider sx={{ flex: 1 }} />
-                      </Box>
-                      {formData.length >= 1 && (
-                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 2 }}>
-                          <FormControlLabel
-                            control={
-                              <Checkbox
-                                checked={billableStates[index]}
-                                onChange={() => handleBillableChange(index)}
-                                disabled={isLoading}
-                              />
-                            }
-                            label='Billable'
-                          />
-                          <Typography
-                            onClick={() => handleRemoveRow(index)}
-                            className='text-sm text-red-500 cursor-pointer'
-                            sx={{ pointerEvents: isLoading ? 'none' : 'auto' }}
-                          >
-                            Remove
+              <CircularProgress size={40} color='success' />
+            </Box>
+          )}
+          <Box sx={{ filter: isLoading ? 'blur(0.8px)' : 'none', pointerEvents: isLoading ? 'none' : 'auto' }}>
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                mb: 3,
+                position: 'sticky',
+                top: 0,
+                zIndex: 5,
+                px: 3,
+                backdropFilter: 'blur(10px)',
+                WebkitBackdropFilter: 'blur(10px)'
+              }}
+            >
+              <Typography variant='h5' sx={{ fontWeight: 'bold' }}>
+                Service Authorization List
+              </Typography>
+              <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, marginRight: '1rem' }}>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={enableOcrDataFill}
+                      onChange={event => setEnableOcrDataFill(event.target.checked)}
+                      disabled={isLoading}
+                    />
+                  }
+                  label='OCR'
+                />
+                <Button variant='contained' onClick={handleModalClose} disabled={isLoading}>
+                  Cancel
+                </Button>
+                <Button variant='contained' onClick={handleSubmit} disabled={isLoading}>
+                  Submit
+                </Button>
+                <Button variant='contained' component='label' disabled={isLoading}>
+                  Upload PDF
+                  <input type='file' hidden accept='application/pdf' onChange={handlePDFUpload} />
+                </Button>
+              </Box>
+            </Box>
+
+            {/* General Info Card */}
+            <Card sx={{ mx: 2, mb: 2, boxShadow: 'rgba(0, 0, 0, 0.35) 0px 5px 20px' }}>
+              <CardHeader title='General Info' />
+              <CardContent>
+                <Grid container spacing={4}>
+                  <Grid size={{ xs: 12, sm: 4 }}>
+                    {/* <TextField label='Payer' value={commonFields.payer} fullWidth size='small' disabled={isLoading} /> */}
+                    <OcrCustomDropDown
+                      label='Payer'
+                      name='payer'
+                      value={payerName}
+                      onChange={(e: any) => setPayerName(e.target.value)}
+                      optionList={payerOptions}
+                      disabled={isLoading}
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 4 }}>
+                    <TextField
+                      label='Member ID'
+                      value={commonFields.memberId}
+                      onChange={e => handleCommonFieldChange('memberId', e.target.value)}
+                      fullWidth
+                      size='small'
+                      disabled={isLoading}
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 4 }}>
+                    <TextField
+                      label='Service Auth Number'
+                      value={commonFields.serviceAuthNumber}
+                      onChange={e => handleCommonFieldChange('serviceAuthNumber', e.target.value)}
+                      fullWidth
+                      size='small'
+                      disabled={isLoading}
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 4 }}>
+                    <TextField
+                      label='Diagnosis Code'
+                      value={commonFields.diagnosisCode}
+                      onChange={e => handleCommonFieldChange('diagnosisCode', e.target.value)}
+                      fullWidth
+                      size='small'
+                      disabled={isLoading}
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 4 }}>
+                    <TextField
+                      label='Taxonomy'
+                      value={commonFields.taxonomy}
+                      onChange={e => handleCommonFieldChange('taxonomy', e.target.value)}
+                      fullWidth
+                      size='small'
+                      disabled={isLoading}
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 4 }}>
+                    <TextField
+                      label='Npi/Umpi'
+                      value={commonFields.umpiNumber}
+                      onChange={e => handleCommonFieldChange('umpiNumber', e.target.value)}
+                      fullWidth
+                      size='small'
+                      disabled={isLoading}
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 4 }}>
+                    <OcrCustomDropDown
+                      label='Place Of Service'
+                      name='placeOfService'
+                      value={commonFields.placeOfService}
+                      onChange={(e: any) => handleCommonFieldChange('placeOfService', e.target.value)}
+                      optionList={placeOfServiceOptions}
+                      disabled={isLoading}
+                    />
+                  </Grid>
+                </Grid>
+              </CardContent>
+
+              <Box
+                sx={{
+                  height: '20px',
+                  position: 'relative',
+                  '&::before': {
+                    content: '""',
+                    position: 'absolute',
+                    left: '-16px',
+                    right: '-16px',
+                    height: '5px',
+                    backgroundColor: theme.palette.mode === 'light' ? '#C1C1C1' : '#212131',
+                    boxShadow: 'rgba(0, 0, 0, 0.1) 0px -2px 5px, rgba(0, 0, 0, 0.1) 0px 2px 5px',
+                    zIndex: 0
+                  }
+                }}
+              />
+
+              <Typography
+                variant='h5'
+                sx={{
+                  marginInlineStart: '25px'
+                }}
+              >
+                Services
+              </Typography>
+              <CardContent>
+                {formData.map((row: FormRow, index: number) => (
+                  <Box key={index} sx={{ mb: 4, position: 'relative' }}>
+                    <Grid container spacing={2} alignItems='center'>
+                      <Grid size={{ xs: 12 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2 }}>
+                          <Divider sx={{ flex: 1 }} />
+                          <Typography variant='h6' sx={{ textAlign: 'center', minWidth: '2rem' }}>
+                            {index + 1}
                           </Typography>
+                          <Divider sx={{ flex: 1 }} />
                         </Box>
-                      )}
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 3 }}>
-                      <TextField
-                        label='Service Description'
-                        value={row.description}
-                        onChange={e => handleInputChange(index, 'description', e.target.value)}
-                        fullWidth
-                        size='small'
-                        disabled={isLoading}
-                      />
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 3 }}>
-                      <TextField
-                        label='Procedure Code'
-                        value={row.procedureCode}
-                        onChange={e => handleInputChange(index, 'procedureCode', e.target.value)}
-                        fullWidth
-                        size='small'
-                        disabled={isLoading}
-                      />
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 3 }}>
-                      <TextField
-                        label='Modifier'
-                        value={row.modifier}
-                        onChange={e => handleInputChange(index, 'modifier', e.target.value)}
-                        fullWidth
-                        size='small'
-                        disabled={isLoading}
-                      />
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 3 }}>
-                      <AppReactDatepicker
-                        selectsRange
-                        startDate={row.startDate ? new Date(row.startDate) : null}
-                        endDate={row.endDate ? new Date(row.endDate) : null}
-                        id={`dateRange_${index}`}
-                        onChange={(dates: [Date | null, Date | null]) => handleDateRangeChange(index, dates)}
-                        placeholderText='MM/DD/YYYY - MM/DD/YYYY'
-                        customInput={
-                          <TextField
-                            fullWidth
-                            size='small'
-                            label='Start and End Date'
-                            placeholder='MM/DD/YYYY - MM/DD/YYYY'
-                            disabled={isLoading}
-                            InputProps={{
-                              endAdornment: (
-                                <IconButton size='small'>
-                                  <CalendarTodayIcon style={{ scale: 1 }} />
-                                </IconButton>
-                              )
-                            }}
-                          />
-                        }
-                        // popperPlacement='bottom'
-                      />
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 3 }}>
-                      <TextField
-                        label='Service Rate'
-                        value={row.serviceRate}
-                        onChange={e => handleInputChange(index, 'serviceRate', e.target.value)}
-                        fullWidth
-                        size='small'
-                        disabled={isLoading}
-                      />
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 3 }}>
-                      <OcrCustomDropDown
-                        label='Reimbursement'
-                        name={`reimbursement_${index}`}
-                        value={row.reimbursement}
-                        onChange={(e: any) => handleInputChange(index, 'reimbursement', e.target.value as string)}
-                        optionList={[
-                          { key: 1, value: 'per unit', optionString: 'Per Unit' },
-                          { key: 2, value: 'per diem', optionString: 'Per Diem' }
-                        ]}
-                        disabled={isLoading}
-                      />
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 3 }}>
-                      <TextField
-                        label='Quantity'
-                        value={row.quantity}
-                        onChange={e => handleInputChange(index, 'quantity', e.target.value)}
-                        fullWidth
-                        size='small'
-                        disabled={isLoading}
-                      />
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 3 }}>
-                      <TextField
-                        label='Used Units'
-                        value={row.usedUnits}
-                        onChange={e => handleInputChange(index, 'usedUnits', e.target.value)}
-                        fullWidth
-                        size='small'
-                        disabled={isLoading}
-                      />
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 3 }}>
-                      <OcrCustomDropDown
-                        label='Frequency'
-                        name={`frequency_${index}`}
-                        value={row.frequency}
-                        onChange={(e: any) => handleInputChange(index, 'frequency', e.target.value as string)}
-                        optionList={[
-                          { key: 1, value: 'daily', optionString: 'Daily' },
-                          { key: 2, value: 'weekly', optionString: 'Weekly' },
-                          { key: 3, value: 'monthly', optionString: 'Monthly' }
-                        ]}
-                        disabled={isLoading}
-                      />
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 3 }}>
-                      <Typography sx={{ paddingBottom: 0, marginBottom: -0.8 }}>Quantity per Frequency </Typography>
-                      {isNaN(
-                        calculateQuantityPerFrequency({
-                          startDate: row.startDate,
-                          endDate: row.endDate,
-                          quantity: row.quantity,
-                          frequency: row.frequency
-                        })
-                      )
-                        ? 'N/A'
-                        : calculateQuantityPerFrequency({
+                        {formData.length >= 1 && (
+                          <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 2 }}>
+                            <FormControlLabel
+                              control={
+                                <Checkbox
+                                  checked={billableStates[index]}
+                                  onChange={() => handleBillableChange(index)}
+                                  disabled={isLoading}
+                                />
+                              }
+                              label='Billable'
+                            />
+                            <Typography
+                              onClick={() => handleRemoveRow(index)}
+                              className='text-sm text-red-500 cursor-pointer'
+                              sx={{ pointerEvents: isLoading ? 'none' : 'auto' }}
+                            >
+                              Remove
+                            </Typography>
+                          </Box>
+                        )}
+                      </Grid>
+                      <Grid size={{ xs: 12, sm: 3 }}>
+                        <TextField
+                          label='Service Description'
+                          value={row.description}
+                          onChange={e => handleInputChange(index, 'description', e.target.value)}
+                          fullWidth
+                          size='small'
+                          disabled={isLoading}
+                        />
+                      </Grid>
+                      <Grid size={{ xs: 12, sm: 3 }}>
+                        <TextField
+                          label='Procedure Code'
+                          value={row.procedureCode}
+                          onChange={e => handleInputChange(index, 'procedureCode', e.target.value)}
+                          fullWidth
+                          size='small'
+                          disabled={isLoading}
+                        />
+                      </Grid>
+                      <Grid size={{ xs: 12, sm: 3 }}>
+                        <TextField
+                          label='Modifier'
+                          value={row.modifier}
+                          onChange={e => handleInputChange(index, 'modifier', e.target.value)}
+                          fullWidth
+                          size='small'
+                          disabled={isLoading}
+                        />
+                      </Grid>
+                      <Grid size={{ xs: 12, sm: 3 }}>
+                        <AppReactDatepicker
+                          selectsRange
+                          startDate={row.startDate ? new Date(row.startDate) : null}
+                          endDate={row.endDate ? new Date(row.endDate) : null}
+                          id={`dateRange_${index}`}
+                          onChange={(dates: [Date | null, Date | null]) => handleDateRangeChange(index, dates)}
+                          placeholderText='MM/DD/YYYY - MM/DD/YYYY'
+                          customInput={
+                            <TextField
+                              fullWidth
+                              size='small'
+                              label='Start and End Date'
+                              placeholder='MM/DD/YYYY - MM/DD/YYYY'
+                              disabled={isLoading}
+                              InputProps={{
+                                endAdornment: (
+                                  <IconButton size='small'>
+                                    <CalendarTodayIcon style={{ scale: 1 }} />
+                                  </IconButton>
+                                )
+                              }}
+                            />
+                          }
+                          // popperPlacement='bottom'
+                        />
+                      </Grid>
+                      <Grid size={{ xs: 12, sm: 3 }}>
+                        <TextField
+                          label='Service Rate'
+                          value={row.serviceRate}
+                          onChange={e => handleInputChange(index, 'serviceRate', e.target.value)}
+                          fullWidth
+                          size='small'
+                          disabled={isLoading}
+                        />
+                      </Grid>
+                      <Grid size={{ xs: 12, sm: 3 }}>
+                        <OcrCustomDropDown
+                          label='Reimbursement'
+                          name={`reimbursement_${index}`}
+                          value={row.reimbursement}
+                          onChange={(e: any) => handleInputChange(index, 'reimbursement', e.target.value as string)}
+                          optionList={[
+                            { key: 1, value: 'per unit', optionString: 'Per Unit' },
+                            { key: 2, value: 'per diem', optionString: 'Per Diem' }
+                          ]}
+                          disabled={isLoading}
+                        />
+                      </Grid>
+                      <Grid size={{ xs: 12, sm: 3 }}>
+                        <TextField
+                          label='Quantity'
+                          value={row.quantity}
+                          onChange={e => handleInputChange(index, 'quantity', e.target.value)}
+                          fullWidth
+                          size='small'
+                          disabled={isLoading}
+                        />
+                      </Grid>
+                      <Grid size={{ xs: 12, sm: 3 }}>
+                        <OcrCustomDropDown
+                          label='Frequency'
+                          name={`frequency_${index}`}
+                          value={row.frequency}
+                          onChange={(e: any) => handleInputChange(index, 'frequency', e.target.value as string)}
+                          optionList={[
+                            { key: 1, value: 'daily', optionString: 'Daily' },
+                            { key: 2, value: 'weekly', optionString: 'Weekly' },
+                            { key: 3, value: 'monthly', optionString: 'Monthly' }
+                          ]}
+                          disabled={isLoading}
+                        />
+                      </Grid>
+                      <Grid size={{ xs: 12, sm: 3 }}>
+                        <Typography sx={{ paddingBottom: 0, marginBottom: -0.8 }}>Quantity per Frequency </Typography>
+                        {isNaN(
+                          calculateQuantityPerFrequency({
                             startDate: row.startDate,
                             endDate: row.endDate,
                             quantity: row.quantity,
                             frequency: row.frequency
-                          }).toFixed(2)}{' '}
+                          })
+                        )
+                          ? 'N/A'
+                          : calculateQuantityPerFrequency({
+                              startDate: row.startDate,
+                              endDate: row.endDate,
+                              quantity: row.quantity,
+                              frequency: row.frequency
+                            }).toFixed(2)}{' '}
+                      </Grid>
                     </Grid>
-                  </Grid>
-                  {index === formData.length - 1 && (
-                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
-                      <Typography
-                        onClick={handleAddRow}
-                        className='text-sm text-green-400 cursor-pointer'
-                        sx={{ pointerEvents: isLoading ? 'none' : 'auto' }}
-                      >
-                        Add
-                      </Typography>
-                    </Box>
-                  )}
-                </Box>
-              ))}
-            </CardContent>
-          </Card>
-
-          {/* PDF Attachment Card */}
-          {uploadedFile && (
-            <Card sx={{ mx: 2, mb: 2, boxShadow: 'rgba(0, 0, 0, 0.35) 0px 5px 20px' }}>
-              <CardHeader title='PDF Attachment' />
-              <CardContent>
-                <Grid container spacing={4}>
-                  <Grid size={{ xs: 12 }}>
-                    <Box>
-                      <Typography variant='subtitle1'>Uploaded PDF Details:</Typography>
-                      <Typography variant='body2'>File Name: {uploadedFile.name}</Typography>
-                      <Typography variant='body2'>File Extension: {uploadedFile.extension}</Typography>
-                      <Typography variant='body2'>File Size: {uploadedFile.size}</Typography>
-                    </Box>
-                  </Grid>
-                </Grid>
+                    {index === formData.length - 1 && (
+                      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+                        <Typography
+                          onClick={handleAddRow}
+                          className='text-sm text-green-400 cursor-pointer'
+                          sx={{ pointerEvents: isLoading ? 'none' : 'auto' }}
+                        >
+                          Add
+                        </Typography>
+                      </Box>
+                    )}
+                  </Box>
+                ))}
               </CardContent>
             </Card>
-          )}
-        </Box>
-      </DialogContent>
-    </Dialog>
+
+            {/* PDF Attachment Card */}
+            {uploadedFile && (
+              <Card sx={{ mx: 2, mb: 2, boxShadow: 'rgba(0, 0, 0, 0.35) 0px 5px 20px' }}>
+                <CardHeader title='PDF Attachment' />
+                <CardContent>
+                  <Grid container spacing={4}>
+                    <Grid size={{ xs: 12 }}>
+                      <Box>
+                        <Typography variant='subtitle1'>Uploaded PDF Details:</Typography>
+                        <Typography variant='body2'>File Name: {uploadedFile.name}</Typography>
+                        <Typography variant='body2'>File Extension: {uploadedFile.extension}</Typography>
+                        <Typography variant='body2'>File Size: {uploadedFile.size}</Typography>
+                      </Box>
+                    </Grid>
+                  </Grid>
+                </CardContent>
+              </Card>
+            )}
+          </Box>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }

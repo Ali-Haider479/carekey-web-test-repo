@@ -324,7 +324,9 @@ const EvvActiveUserTable = ({ timeLogData, isLoading, payPeriod, fetchInitialDat
       setServiceActivities(
         response?.data?.filter(
           (item: any) =>
-            item.procedureCode === filteredService?.procedureCode && item.modifierCode === filteredService?.modifierCode
+            item.procedureCode === filteredService?.procedureCode &&
+            (item.modifierCode === filteredService?.modifierCode ||
+              (item.modifierCode === null && filteredService?.modifierCode === null))
         )
       )
     } catch (error) {

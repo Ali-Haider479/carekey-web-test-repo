@@ -55,6 +55,8 @@ const ClientDetails = ({ tabContentList }: BottomBodyProps) => {
         return '/ Incidents'
       case 'care-plan':
         return '/ Care Plan'
+      case 'documents':
+        return '/ Documents'
       default:
         return ''
     }
@@ -94,18 +96,16 @@ const ClientDetails = ({ tabContentList }: BottomBodyProps) => {
           </Grid>
         ) : (
           <>
-            {shouldShowBanner && (
-              <ProfileBanner
-                props={{
-                  fullName: `${clientData?.firstName ? clientData?.firstName : ''} ${clientData?.lastName ? clientData?.lastName : ''}`,
-                  coverImg: '/images/pages/profile-banner.png',
-                  location: `${clientData?.addresses[0]?.address?.state ? clientData?.addresses[0]?.address?.state : ''}`,
-                  profileImg: clientData?.profileImgUrl,
-                  status: 'CLIENT',
-                  isClient: true
-                }}
-              />
-            )}
+            <ProfileBanner
+              props={{
+                fullName: `${clientData?.firstName ? clientData?.firstName : ''} ${clientData?.lastName ? clientData?.lastName : ''}`,
+                coverImg: '/images/pages/profile-banner.png',
+                location: `${clientData?.addresses[0]?.address?.state ? clientData?.addresses[0]?.address?.state : ''}`,
+                profileImg: clientData?.profileImgUrl,
+                status: 'CLIENT',
+                isClient: true
+              }}
+            />
             <Grid container spacing={6}>
               <Grid size={{ xs: 12 }}>
                 <CustomTabList onChange={handleChange} variant='scrollable' pill='true'>
@@ -115,9 +115,10 @@ const ClientDetails = ({ tabContentList }: BottomBodyProps) => {
                   <Tab value='services' label='SERVICES' />
                   <Tab value='account-history' label='LOGS' />
                   <Tab value='time-sheets' label='TIME SHEETS' />
-                  <Tab value='service-authorization' label='SERVICE AUTHORIZATION' />
+                  <Tab value='service-authorization' label='SERVICE AUTH' />
                   <Tab value='incidents' label='INCIDENTS' />
                   <Tab value='care-plan' label='CARE PLAN' />
+                  {/* <Tab value='documents' label='DOCUMENTS' /> */}
                 </CustomTabList>
               </Grid>
               <Grid size={{ xs: 12 }}>

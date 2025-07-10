@@ -20,8 +20,9 @@ import Grid from '@mui/material/Grid2'
 import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
 import { Close as CloseIcon } from '@mui/icons-material'
 import api from '@/utils/api'
-import { setHours, setMinutes, setSeconds } from 'date-fns'
+import { set, setHours, setMinutes, setSeconds } from 'date-fns'
 import { calculateStartAndEndDate } from '@/utils/helperFunctions'
+import CustomAlert from '@/@core/components/mui/Alter'
 
 interface DefaultStateType {
   currentWeek: string
@@ -39,6 +40,7 @@ interface DefaultStateType {
   checkedActivityId: number
   reason: string
   payperiod: string | number | null
+  clientServiceId: any
 }
 
 const defaultState: DefaultStateType = {
@@ -56,7 +58,8 @@ const defaultState: DefaultStateType = {
   clockOut: null,
   checkedActivityId: 0,
   reason: '',
-  payperiod: null
+  payperiod: null,
+  clientServiceId: null
 }
 
 interface PickerProps {
@@ -74,7 +77,7 @@ const ManualTimesheet = ({ caregiverList, payPeriodList }: any) => {
     payperiod: false,
     caregiver: false,
     client: false,
-    serviceName: false,
+    clientServiceId: false,
     dateOfService: false,
     clockIn: false,
     clockOut: false,
@@ -87,6 +90,10 @@ const ManualTimesheet = ({ caregiverList, payPeriodList }: any) => {
   const [clientUsers, setClientUsers] = useState<any>([])
   const [serviceType, setServiceType] = useState<any[]>([])
   const [serviceActivities, setServiceActivities] = useState<any>([])
+  const [cleintServiceAuth, setClientServiceAuth] = useState<any>([])
+  const [selectedService, setSelectedService] = useState<any>([])
+  const [alertOpen, setAlertOpen] = useState(false)
+  const [alertProps, setAlertProps] = useState<any>()
 
   const [payperiodWeeks, setPayperiodWeeks] = useState([])
 
@@ -131,7 +138,7 @@ const ManualTimesheet = ({ caregiverList, payPeriodList }: any) => {
       payperiod: !values.payperiod,
       caregiver: !values.caregiver,
       client: !values.client,
-      serviceName: !values.serviceName,
+      clientServiceId: !values.clientServiceId,
       dateOfService: !values.dateOfService,
       clockIn: !values.clockIn,
       clockOut: !values.clockOut,
@@ -186,6 +193,25 @@ const ManualTimesheet = ({ caregiverList, payPeriodList }: any) => {
     if (values.caregiver) fetchClientUsers()
   }, [values.caregiver])
 
+  const fetchClientServiceAuth = async () => {
+    console.log('Fetching client service auth...')
+    try {
+      if (!values.client) return
+      console.log('Fetching client service auth for client:', values.client)
+      const response = await api.get(`/client/${values.client}/service-auth`)
+      console.log('Client Service Auth Response ---->> ', response.data)
+      setClientServiceAuth(response.data)
+    } catch (error) {
+      console.error('Error fetching client service auth:', error)
+    }
+  }
+
+  useEffect(() => {
+    if (values.client && values.clientServiceId) {
+      fetchClientServiceAuth()
+    }
+  }, [values.client, values.clientServiceId])
+
   const fetchClientServiceType = async () => {
     try {
       if (!values.client) return
@@ -197,6 +223,8 @@ const ManualTimesheet = ({ caregiverList, payPeriodList }: any) => {
     }
   }
 
+  console.log('Service Type List ---->> ', serviceType)
+
   const clientServiceActivities = async () => {
     try {
       // Find the selected client from clientUsers array
@@ -204,16 +232,19 @@ const ManualTimesheet = ({ caregiverList, payPeriodList }: any) => {
       const activityIds = selectedClient?.client?.serviceActivityIds
 
       // Only fetch if we have a client and activity IDs
-      if (!values.client || !activityIds || !values.serviceName) return
+      if (!values.client || !activityIds || !values.clientServiceId) return
 
       const response: any = await api.get(`/activity/activities/${activityIds}`)
       console.log('Service Acivities ---->> ', response)
-      const selectedService = serviceType?.find((item: any) => item?.name === values.serviceName)
+      const selectedService = serviceType?.find((item: any) => item?.clientServiceId === values.clientServiceId)
       console.log('Selected Service Object --->> ', selectedService)
+      setSelectedService(selectedService)
       setServiceActivities(
         response.data.filter(
           (item: any) =>
-            item.procedureCode === selectedService?.procedureCode && item.modifierCode === selectedService?.modifierCode
+            item.procedureCode === selectedService?.procedureCode &&
+            (item.modifierCode === selectedService?.modifierCode ||
+              (item.modifierCode === null && selectedService?.modifierCode === null))
         )
       )
     } catch (error) {
@@ -226,15 +257,14 @@ const ManualTimesheet = ({ caregiverList, payPeriodList }: any) => {
       setSelectedItems([])
       setServiceActivities([])
       fetchClientServiceType()
-      clientServiceActivities()
     }
-  }, [values.client, values.serviceName])
+  }, [values.client, values.clientServiceId])
 
   useEffect(() => {
-    if (values.serviceName) {
+    if (values.clientServiceId) {
       clientServiceActivities()
     }
-  }, [values.serviceName])
+  }, [values.clientServiceId])
 
   useEffect(() => {
     const processedData = payPeriodList.map((range: any) => calculateStartAndEndDateNew(range))
@@ -272,7 +302,7 @@ const ManualTimesheet = ({ caregiverList, payPeriodList }: any) => {
       payperiod: false,
       caregiver: false,
       client: false,
-      serviceName: false,
+      clientServiceId: false,
       dateOfService: false,
       clockIn: false,
       clockOut: false,
@@ -281,6 +311,7 @@ const ManualTimesheet = ({ caregiverList, payPeriodList }: any) => {
   }
 
   console.log('Pay Period Value', values.payperiod)
+  console.log('Selected clientServiceId', values.clientServiceId)
   console.log('Week Range = ', weekRange)
 
   const onSubmit = async () => {
@@ -322,6 +353,52 @@ const ManualTimesheet = ({ caregiverList, payPeriodList }: any) => {
         newClockIn.setFullYear(serviceDate.getFullYear(), serviceDate.getMonth(), serviceDate.getDate())
         newClockOut.setFullYear(serviceDate.getFullYear(), serviceDate.getMonth(), serviceDate.getDate())
 
+        const hoursWorked = (newClockOut.getTime() - newClockIn.getTime()) / (1000 * 60 * 60)
+        const roundedHoursWorked = Math.round(hoursWorked * 4) / 4 // Round to the nearest quarter hour
+        const unitsUsed = Math.ceil(roundedHoursWorked * 4) // Convert to quarter hours
+
+        const corrospondingServiceAuth = cleintServiceAuth.find(
+          (item: any) =>
+            item?.modifierCode === selectedService?.modifierCode &&
+            (item?.procedureCode === selectedService?.procedureCode ||
+              (item?.procedureCode === null && selectedService?.procedureCode === null))
+        )
+
+        const allowedUnits = Math.ceil(corrospondingServiceAuth?.units - corrospondingServiceAuth?.usedUnits)
+
+        if (unitsUsed > allowedUnits) {
+          setIsLoading(false)
+          setAlertOpen(true)
+          setAlertProps({
+            severity: 'error',
+            message: `You cannot use more than ${allowedUnits} units for this service.`
+          })
+          setValues(defaultState)
+          setSelectedItems([])
+          setErrors({
+            payperiod: false,
+            caregiver: false,
+            client: false,
+            clientServiceId: false,
+            dateOfService: false,
+            clockIn: false,
+            clockOut: false,
+            activities: false
+          })
+          return
+        }
+
+        const newunitsUsed = Math.ceil(Number(corrospondingServiceAuth?.usedUnits) + unitsUsed)
+
+        console.log('New Units Used --->> ', newunitsUsed)
+
+        const modifiedServiceAuth = {
+          ...corrospondingServiceAuth,
+          usedUnits: newunitsUsed
+        }
+
+        await api.patch(`/client/service-auth/${corrospondingServiceAuth?.id}`, modifiedServiceAuth)
+
         const modifiedEvent = {
           dateOfService: values?.dateOfService,
           manualEntry: true,
@@ -331,11 +408,10 @@ const ManualTimesheet = ({ caregiverList, payPeriodList }: any) => {
           loggedVia: 'desktop',
           notes: values.notes,
           reason: values.reason,
-          serviceId: values.service,
+          clientServiceId: values.clientServiceId?.clientServiceId,
           clientId: values.client,
           caregiverId: values.caregiver,
           checkedActivityId: checkedActivityRes.data.id,
-          serviceName: values.serviceName,
           payPeriodHistoryId: values.payperiod,
           signatureId:
             currentClientPendingSigns.length > 0 ? currentClientPendingSigns[0].signatureId : signResponse?.data?.id,
@@ -349,7 +425,7 @@ const ManualTimesheet = ({ caregiverList, payPeriodList }: any) => {
         payperiod: false,
         caregiver: false,
         client: false,
-        serviceName: false,
+        clientServiceId: false,
         dateOfService: false,
         clockIn: false,
         clockOut: false,
@@ -368,7 +444,7 @@ const ManualTimesheet = ({ caregiverList, payPeriodList }: any) => {
     return (
       values.caregiver &&
       values.client &&
-      values.serviceName &&
+      values.clientServiceId &&
       values.dateOfService &&
       values.clockIn &&
       values.clockOut &&
@@ -386,6 +462,7 @@ const ManualTimesheet = ({ caregiverList, payPeriodList }: any) => {
 
   return (
     <>
+      <CustomAlert AlertProps={alertProps} openAlert={alertOpen} setOpenAlert={setAlertOpen} />
       <Card className='w-full h-fit' sx={{ p: 2, borderRadius: 1, boxShadow: 2 }}>
         <CardHeader
           title='Add Your Manually Timesheet Details'
@@ -478,24 +555,26 @@ const ManualTimesheet = ({ caregiverList, payPeriodList }: any) => {
             </Grid>
 
             <Grid sx={{ pb: 2 }} size={{ xs: 12, md: 6 }}>
-              <FormControl required fullWidth size='small' variant='outlined' error={errors.serviceName}>
+              <FormControl required fullWidth size='small' variant='outlined' error={errors.clientServiceId}>
                 <InputLabel id='service-select-label'>Select Service</InputLabel>
                 <Select
                   labelId='service-select-label'
-                  value={values.serviceName}
+                  value={values.clientServiceId}
                   label='Select Service *'
                   onChange={e => {
-                    setValues({ ...values, serviceName: e.target.value })
-                    setErrors(prev => ({ ...prev, serviceName: !e.target.value }))
+                    setValues({ ...values, clientServiceId: e.target.value })
+                    setErrors(prev => ({ ...prev, clientServiceId: !e.target.value }))
                   }}
                 >
                   {serviceType.map((service: any) => (
-                    <MenuItem key={service.id} value={service.name}>
+                    <MenuItem key={service.id} value={service.clientServiceId}>
                       {service.name} {service.dummyService ? '(Demo Service)' : '(S.A Service)'}
                     </MenuItem>
                   ))}
                 </Select>
-                {errors.serviceName && <span style={{ color: 'red', fontSize: '12px' }}>This field is required</span>}
+                {errors.clientServiceId && (
+                  <span style={{ color: 'red', fontSize: '12px' }}>This field is required</span>
+                )}
               </FormControl>
             </Grid>
 

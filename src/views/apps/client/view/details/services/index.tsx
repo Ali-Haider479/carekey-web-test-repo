@@ -67,6 +67,8 @@ const CareplanTab = () => {
   const prevClientServiceIdsRef = useRef<string[]>([]) // Tracks ClientServiceJoin IDs (cs.id)
   const prevSelectedServiceIdsRef = useRef<string[]>([])
 
+  const [isDataLoading, setIsDataLoading] = useState(false);
+
   const methods = useForm<FormValues>({
     defaultValues: {
       services: []
@@ -122,7 +124,7 @@ const CareplanTab = () => {
         id: response.data.id.toString(),
         title: response.data.title,
         procedureCode: response.data.procedureCode,
-        modifierCode: response.data.modifierCode,
+        modifierCode: response.data.modifierCode || null,
         serviceId: response.data.service ? response.data.service.id.toString() : null
       }
       // Update servicesActivities
@@ -156,6 +158,7 @@ const CareplanTab = () => {
   }
 
   const fetchClient = async () => {
+    setIsDataLoading(true)
     try {
       const [servicesResponse, activitiesResponse, allServicesResponse, serviceAuthServicesResponse] =
         await Promise.all([
@@ -184,7 +187,7 @@ const CareplanTab = () => {
         name: svc.name,
         note: validClientServices.find((cs: any) => cs.service?.id === svc.id)?.note || '',
         procedureCode: svc.procedureCode || '',
-        modifierCode: svc.modifierCode || '',
+        modifierCode: svc.modifierCode || null,
         dummyService: true
       }))
 
@@ -193,7 +196,7 @@ const CareplanTab = () => {
         name: svc.name,
         note: validClientServices.find((cs: any) => cs.serviceAuthService?.id === svc.id)?.note || '',
         procedureCode: svc.procedureCode || '',
-        modifierCode: svc.modifierCode || '',
+        modifierCode: svc.modifierCode || null,
         dummyService: false
       }))
 
@@ -204,7 +207,8 @@ const CareplanTab = () => {
         note: item.note || '',
         procedureCode:
           item?.service !== null ? item.service?.procedureCode : item.serviceAuthService?.procedureCode || '',
-        modifierCode: item?.service !== null ? item.service?.modifierCode : item.serviceAuthService?.modifierCode || '',
+        modifierCode:
+          item?.service !== null ? item.service?.modifierCode : item.serviceAuthService?.modifierCode || null,
         dummyService: item?.service !== null ? true : false
       }))
 
@@ -225,7 +229,7 @@ const CareplanTab = () => {
         serviceId: act.service ? act.service.id.toString() : null,
         title: act.title,
         procedureCode: act.procedureCode || '',
-        modifierCode: act.modifierCode || ''
+        modifierCode: act.modifierCode || null
       })) as ActivityType[]
 
       console.log('All Activities ---->> ', allActivities)
@@ -235,7 +239,7 @@ const CareplanTab = () => {
       const serviceActivityIds = clientData.serviceActivityIds || []
       const formServices = validClientServices.map((cs: any) => {
         const serviceProcedureCode = cs.service?.procedureCode || cs.serviceAuthService?.procedureCode || ''
-        const serviceModifierCode = cs.service?.modifierCode || cs.serviceAuthService?.modifierCode || ''
+        const serviceModifierCode = cs.service?.modifierCode || cs.serviceAuthService?.modifierCode || null
         return {
           id: cs.id.toString(), // ClientServiceJoin ID
           service: cs.service?.id?.toString() || cs.serviceAuthService?.id?.toString(), // Service ID or ServiceAuthService ID
@@ -265,18 +269,21 @@ const CareplanTab = () => {
           formServices.length > 0
             ? formServices
             : [
-                {
-                  service: '',
-                  serviceNotes: '',
-                  serviceActivities: [],
-                  customActivities: false,
-                  customActivitiesTextField: ''
-                }
-              ]
+              {
+                service: '',
+                serviceNotes: '',
+                serviceActivities: [],
+                customActivities: false,
+                customActivitiesTextField: ''
+              }
+            ]
       })
     } catch (error) {
       console.error('Error fetching client data:', error)
       setErrorMessage('Failed to fetch client data')
+    }
+    finally {
+      setIsDataLoading(false)
     }
   }
 
@@ -297,7 +304,7 @@ const CareplanTab = () => {
           act =>
             act.procedureCode === selectedService?.procedureCode &&
             (act.modifierCode === selectedService?.modifierCode ||
-              (act.modifierCode === '' && selectedService?.modifierCode === null))
+              (act.modifierCode === null && selectedService?.modifierCode === null))
         )
         console.log('Available Activities for Service', selectedServiceId, '---->> ', availableActivities)
         const updatedActivities = availableActivities
@@ -478,7 +485,11 @@ const CareplanTab = () => {
   }
 
   return (
-    <FormProvider {...methods}>
+    <>{isDataLoading ? (
+      <Box id='timesheet-content' className='flex justify-center items-center min-h-[250px] w-full'>
+        <CircularProgress />
+      </Box>
+    ) : (<FormProvider {...methods}>
       <form onSubmit={handleSubmit(onSubmit)}>
         <Card>
           <CardContent>
@@ -510,13 +521,13 @@ const CareplanTab = () => {
                     act =>
                       (act.procedureCode === selectedService?.procedureCode &&
                         act.modifierCode === selectedService?.modifierCode) ||
-                      (act.modifierCode === '' && selectedService?.modifierCode === null)
+                      (act.modifierCode === null && selectedService?.modifierCode === null)
                   )
                   const serviceAuthActivities = servicesActivities.filter(
                     act =>
                       (act.procedureCode === selectedService?.procedureCode &&
                         act.modifierCode === selectedService?.modifierCode) ||
-                      (act.modifierCode === '' && selectedService?.modifierCode === null)
+                      (act.modifierCode === null && selectedService?.modifierCode === null)
                   )
                   const isDummyService = selectedService?.dummyService ?? true
                   const customActivitiesEnabled = watch(`services.${index}.customActivities`)
@@ -711,7 +722,9 @@ const CareplanTab = () => {
           </Box>
         </Card>
       </form>
-    </FormProvider>
+    </FormProvider>)}
+    </>
+
   )
 }
 

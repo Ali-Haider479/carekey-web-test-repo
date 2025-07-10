@@ -19,6 +19,7 @@ const TimeSheetsTab = dynamic(() => import('@/views/apps/client/view/details/tim
 const ServiceAuthorizationTab = dynamic(() => import('@/views/apps/client/view/details/service-authorization'))
 const IncidentsTab = dynamic(() => import('@/views/apps/client/view/details/incidents'))
 const CarePlanTab = dynamic(() => import('@/views/apps/client/view/details/care-plan'))
+const DocumentsTab = dynamic(() => import('@/views/apps/client/view/details/documents'))
 
 // Vars
 const tabContentList = () => ({
@@ -30,7 +31,8 @@ const tabContentList = () => ({
   'time-sheets': <TimeSheetsTab />,
   'service-authorization': <ServiceAuthorizationTab />,
   incidents: <IncidentsTab />,
-  'care-plan': <CarePlanTab />
+  'care-plan': <CarePlanTab />,
+  documents: <DocumentsTab />
 })
 
 const ClientViewTab = () => {

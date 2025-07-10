@@ -87,7 +87,7 @@ const ProfileBanner = ({ props }: { props: ProfileHeaderType }) => {
   }
   return (
     <Card className='mb-5'>
-      <CardMedia image={props.coverImg} className='bs-[250px]' />
+      <CardMedia image={props.coverImg} className='bs-[100px]' />
       <CardContent className='flex gap-6 justify-center flex-col items-center md:items-end md:flex-row !pt-0 md:justify-start'>
         <div className='flex items-center justify-center rounded-bs-md mbs-[-40px] border-[5px] mis-[-5px] border-b-0 border-backgroundPaper bg-backgroundPaper'>
           <ProfileAvatar
