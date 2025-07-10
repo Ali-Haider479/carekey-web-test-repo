@@ -99,6 +99,7 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
   const [clientDocuments, setClientDocuments] = useState<any>([])
   const [alertProps, setAlertProps] = useState<any>()
   const [alertOpen, setAlertOpen] = useState<boolean>(false)
+  const [serviceAuthServices, setServiceAuthServices] = useState<any>([])
   const theme: any = useTheme()
 
   // const getClientDocuments = async () => {
@@ -114,8 +115,19 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
   //   }
   // }
 
+  const fetchServiceAuthServices = async () => {
+    try {
+      const response = await api.get(`/service/service-auth/services`)
+      console.log('Response from service auth services:', response.data)
+      setServiceAuthServices(response.data)
+    } catch (error) {
+      console.error('Error fetching service auth services:', error)
+    }
+  }
+
   useEffect(() => {
     getClientDocuments()
+    fetchServiceAuthServices()
   }, [])
 
   const uploadDocuments = async (files: File[], documentType: string, id: string) => {
@@ -491,34 +503,60 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
       if (extractedData?.serviceItems?.length > 0) {
         for (const item of extractedData.serviceItems) {
           console.log('Item to create ---->> ', item)
+          const compareService = serviceAuthServices.find(
+            (service: any) =>
+              service.procedureCode === item.procedureCode &&
+              (service.modifierCode === item.modifiers || (service.modifierCode === null && item.modifiers === null))
+          )
+          console.log('Compare Service (If block) ---->> ', compareService)
           if (new Date(item.endDate) > new Date()) {
             if (item.status === 'APPROVED') {
-              const ServiceAuthServicesPayload = {
-                name: item?.description,
-                modifierCode: item?.modifiers.includes('PERSONAL') ? null : item?.modifiers,
-                procedureCode: item?.procedureCode || '',
-                rate: item?.rateUnit ? Number(item?.rateUnit) : 100,
-                evv: true
-              }
+              if (!compareService) {
+                const ServiceAuthServicesPayload = {
+                  name: item?.description,
+                  modifierCode: item?.modifiers.includes('PERSONAL') ? null : item?.modifiers,
+                  procedureCode: item?.procedureCode || '',
+                  rate: item?.rateUnit ? Number(item?.rateUnit) : 100,
+                  evv: true
+                }
 
-              console.log(`Sending payload for service item:`, ServiceAuthServicesPayload)
-              createServicesResponse = await api.post(`/service/service-auth/services`, ServiceAuthServicesPayload)
-              console.log('CREATING SERVICE AUTH SERVICES ---->> ', createServicesResponse)
-              const clientServicePayload = {
-                clientId: clientId,
-                serviceAuthServiceId: createServicesResponse?.data?.id,
-                note: '',
-                evvEnforce: true
-              }
+                console.log(`Sending payload for service item:`, ServiceAuthServicesPayload)
+                createServicesResponse = await api.post(`/service/service-auth/services`, ServiceAuthServicesPayload)
+                console.log('CREATING SERVICE AUTH SERVICES ---->> ', createServicesResponse)
+                const clientServicePayload = {
+                  clientId: clientId,
+                  serviceAuthServiceId: createServicesResponse?.data?.id,
+                  note: '',
+                  evvEnforce: true
+                }
 
-              const createClientServiceResponse = await api.post(`/client/client-service`, clientServicePayload)
-              console.log('Client Service Creation Response ---->> ', createClientServiceResponse)
+                const createClientServiceResponse = await api.post(`/client/client-service`, clientServicePayload)
+                console.log('Client Service Creation Response ---->> ', createClientServiceResponse)
+              } else {
+                console.log('Service already exists, skipping creation.')
+                const clientServicePayload = {
+                  clientId: clientId,
+                  serviceAuthServiceId: compareService.id,
+                  note: '',
+                  evvEnforce: true
+                }
+
+                const createClientServiceResponse = await api.post(`/client/client-service`, clientServicePayload)
+                console.log('Client Service Creation Response ---->> ', createClientServiceResponse)
+              }
             }
           }
         }
       } else {
         // Fallback to single payload if no extractedData (maintain existing behavior)
         if (new Date(serviceAuthResponses[0].data.endDate) > new Date()) {
+          const compareService = serviceAuthServices.find(
+            (service: any) =>
+              service.procedureCode === serviceAuthResponses[0].data.procedureCode &&
+              (service.modifierCode === serviceAuthResponses[0].data.modifierCode ||
+                (service.modifierCode === null && serviceAuthResponses[0].data.modifierCode === null))
+          )
+          console.log('Compare Service (Else block) ---->> ', compareService)
           const ServiceAuthServicesPayload = {
             name: serviceAuthResponses[0].data.serviceName,
             modifierCode: serviceAuthResponses[0].data.modifierCode || null,
@@ -527,22 +565,37 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
             evv: true
           }
 
-          createServicesResponse = await api.post(`/service/service-auth/services`, ServiceAuthServicesPayload)
-          console.log('CREATING SERVICE AUTH SERVICES ---->> ', createServicesResponse)
-          const clientServicePayload = {
-            clientId: clientId,
-            serviceAuthServiceId: createServicesResponse?.data?.id,
-            note: '',
-            evvEnforce: true
-          }
+          if (!compareService) {
+            console.log('Service does not exist, creating new service.')
+            createServicesResponse = await api.post(`/service/service-auth/services`, ServiceAuthServicesPayload)
+            console.log('CREATING SERVICE AUTH SERVICES ---->> ', createServicesResponse)
+            const clientServicePayload = {
+              clientId: clientId,
+              serviceAuthServiceId: createServicesResponse?.data?.id,
+              note: '',
+              evvEnforce: true
+            }
 
-          const createClientServiceResponse = await api.post(`/client/client-service`, clientServicePayload)
-          console.log('Client Service Creation Response ---->> ', createClientServiceResponse)
+            const createClientServiceResponse = await api.post(`/client/client-service`, clientServicePayload)
+            console.log('Client Service Creation Response ---->> ', createClientServiceResponse)
+          } else {
+            console.log('Service already exists, skipping creation.')
+            const clientServicePayload = {
+              clientId: clientId,
+              serviceAuthServiceId: compareService.id,
+              note: '',
+              evvEnforce: true
+            }
+
+            const createClientServiceResponse = await api.post(`/client/client-service`, clientServicePayload)
+            console.log('Client Service Creation Response ---->> ', createClientServiceResponse)
+          }
         }
       }
 
       await fetchClientServiceAuthData()
       await getClientDocuments()
+      await fetchServiceAuthServices()
       if (fetchData) {
         await fetchData()
       }
@@ -551,13 +604,13 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
       console.error('Error saving service auth list:', error)
       if (
         error?.response?.data?.message?.includes(
-          'Failed to create client service auth: service-auth with same procedure code and modifier code already exists'
+          'Failed to create client service auth: Service auth date range conflicts with existing service auth date range'
         )
       ) {
         setAlertOpen(true)
         setAlertProps({
           severity: 'error',
-          message: 'Service Authorization with same procedure code and modifier code already exists.'
+          message: 'Service auth date range conflicts with existing service auth date range'
         })
       }
     } finally {
