@@ -23,11 +23,11 @@ interface FormModalProps {
 // Updated styled components to match the design
 const StyledDialog = styled(Dialog)(({ theme }) => ({
   '& .MuiDialog-paper': {
-    width: '350px',
+    width: '500px',
     borderRadius: '8px',
     overflow: 'hidden',
     [theme.breakpoints.up('md')]: {
-      width: '420px'
+      width: '570px'
     }
   }
 }))

@@ -25,6 +25,8 @@ import { Controller, useForm } from 'react-hook-form'
 import DropdownWithChips from '@/@core/components/custom-inputs/DropdownWithChips'
 import { useParams } from 'next/navigation'
 import { generateCarePlanPDF } from './carePlanPDF'
+import { areObjectsEqual, isEmpty } from '@/utils/helperFunctions'
+import ControlledDatePicker from '@/@core/components/custom-inputs/ControledDatePicker'
 
 interface ActivityNote {
   assistanceLevel?: string
@@ -122,6 +124,21 @@ const CarePlan = () => {
 
   const selectedServiceTypeId = watch('serviceType')
   const selectedActivities = watch('serviceActivities') || []
+
+  const formValues = methods.getValues()
+  const isFormEmpty =
+    isEmpty(formValues.dueDate) &&
+    isEmpty(formValues.lastCompletedDate) === null &&
+    isEmpty(formValues.qpAssigned) &&
+    // isEmpty(formValues.dischargePlans) &&
+    isEmpty(formValues.serviceType) &&
+    isEmpty(formValues.serviceAuth) &&
+    isEmpty(formValues?.serviceActivities) &&
+    isEmpty(formValues.frequency) &&
+    isEmpty(formValues.otherTasks) &&
+    isEmpty(formValues.rehabPotential) &&
+    isEmpty(formValues?.notes)
+  const isDisabled = areObjectsEqual(formValues, initialFormState) || isFormEmpty
 
   useEffect(() => {
     if (selectedServiceTypeId !== '') {
@@ -263,6 +280,7 @@ const CarePlan = () => {
                 activities: activities
               })
             }}
+            disabled={isDisabled}
           >
             Download PDF
           </Button>
@@ -284,7 +302,6 @@ const CarePlan = () => {
                 }
               }) || []
             }
-            isRequired={false}
             loading={loading}
           />
           <CustomDropDown
@@ -301,7 +318,6 @@ const CarePlan = () => {
                 }
               }) || []
             }
-            isRequired={false}
             loading={loading}
           />
           <CustomDropDown
@@ -318,36 +334,23 @@ const CarePlan = () => {
                 }
               }) || []
             }
-            isRequired={false}
-            // loading={loading}
+          // loading={loading}
           />
-          <AppReactDatepicker
-            {...register('dueDate', { required: false })}
-            selected={watch('dueDate')}
-            onChange={date => {
-              console.log('Date:', date)
-              setValue('dueDate', date)
-            }}
-            placeholderText='MM/DD/YYYY'
-            customInput={<TextField fullWidth size='small' name='dueDate' label='Due Date' placeholder='MM/DD/YYYY' />}
+          <ControlledDatePicker
+            control={control}
+            name='dueDate'
+            label='Due Date'
+            defaultValue={undefined}
+            error={!!errors.dueDate}
+            minDate={new Date()}
           />
-          <AppReactDatepicker
-            {...register('lastCompletedDate', { required: false })}
-            selected={watch('lastCompletedDate')}
-            onChange={date => {
-              console.log('Date:', date)
-              setValue('lastCompletedDate', date)
-            }}
-            placeholderText='MM/DD/YYYY'
-            customInput={
-              <TextField
-                fullWidth
-                size='small'
-                name='lastCompletedDate'
-                label='Last Completed Date'
-                placeholder='MM/DD/YYYY'
-              />
-            }
+          <ControlledDatePicker
+            control={control}
+            name='lastCompletedDate'
+            label='Last Completed Date'
+            defaultValue={undefined}
+            error={!!errors.lastCompletedDate}
+            minDate={new Date()}
           />
           <CustomDropDown
             name={'frequency'}
@@ -355,7 +358,6 @@ const CarePlan = () => {
             label={'Frequency'}
             error={errors.frequency}
             optionList={frequencyOptions}
-            isRequired={false}
           />
           <CustomDropDown
             name={'rehabPotential'}
@@ -363,7 +365,6 @@ const CarePlan = () => {
             label={'Rehab Potential'}
             error={errors.rehabPotential}
             optionList={rehabPotentialOptions}
-            isRequired={false}
           />
           <TextField
             {...register('otherTasks', { required: false })}
@@ -470,7 +471,7 @@ const CarePlan = () => {
         <Button
           variant='contained'
           type='submit'
-          disabled={componentMode === 'preview' || submitting}
+          disabled={submitting}
           endIcon={submitting ? <CircularProgress size={20} /> : null}
         >
           {submitting ? 'Submitting...' : 'Submit'}

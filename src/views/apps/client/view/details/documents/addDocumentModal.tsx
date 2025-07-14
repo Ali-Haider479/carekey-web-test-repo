@@ -8,7 +8,7 @@ interface addDocumentModalProps {
   openModal: boolean
   setOpenModal: Dispatch<SetStateAction<boolean>>
   uploadingNewDocuments: boolean
-  handleNewFilesUpload: () => void
+  handleNewFilesUpload: () => Promise<void>
   newDocuments: any[]
   setNewDocuments: Dispatch<SetStateAction<File[]>>
 }
@@ -46,6 +46,15 @@ const AddNewDocumentModal: React.FC<addDocumentModalProps> = ({
     ))
   }
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (newDocuments.length === 0) {
+      // Add error state
+      return
+    }
+    await handleNewFilesUpload()
+  }
+
   return (
     <Dialog
       open={openModal}
@@ -58,7 +67,7 @@ const AddNewDocumentModal: React.FC<addDocumentModalProps> = ({
         <i className='bx-x' />
       </DialogCloseButton>
       <div className='flex items-center justify-center w-full px-5 flex-col'>
-        <form onSubmit={handleNewFilesUpload}>
+        <form onSubmit={handleSubmit}>
           <div>
             <h2 className='text-xl font-semibold mt-5 mb-4'>Add New Document</h2>
           </div>

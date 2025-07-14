@@ -1,5 +1,6 @@
 import { format, parseISO } from 'date-fns'
 import { toZonedTime } from 'date-fns-tz'
+import { serviceStatuses } from './constants'
 
 export const calculateHoursWorked = (clockIn: string, clockOut: string) => {
   // Parse the clock-in and clock-out times
@@ -102,4 +103,50 @@ export const calculateStartAndEndDate = (range: any) => {
     startDate: startDate.toISOString().split('T')[0],
     endDate: endDate.toISOString().split('T')[0]
   }
+}
+
+export const getStatusColors = (status: string) => {
+  const statusObj = serviceStatuses.find(s => s.id === status)
+  return statusObj || serviceStatuses[0] // Default to 'scheduled' if not found
+}
+
+export const getShortStatusName = (status: string) => {
+  const shortNames: { [key: string]: string } = {
+    scheduled: 'Sched',
+    worked: 'Worked',
+    missed: 'Missed',
+    billed: 'Billed',
+    approved: 'Approved'
+  }
+  return shortNames[status] || status
+}
+
+export const formatTimeTo12hr = (timeString: string) => {
+  const [hours] = timeString.split(':')
+  const hour12 = parseInt(hours) % 12 || 12
+  const ampm = parseInt(hours) >= 12 ? 'PM' : 'AM'
+  return `${hour12}:${timeString.substring(3, 5)} ${ampm}`
+}
+export const areObjectsEqual = (obj1: any, obj2: any) => {
+  if (obj1 === obj2) return true
+  if (typeof obj1 !== 'object' || typeof obj2 !== 'object' || obj1 == null || obj2 == null) {
+    return false
+  }
+  const keys1 = Object.keys(obj1)
+  const keys2 = Object.keys(obj2)
+  if (keys1.length !== keys2.length) return false
+  for (const key of keys1) {
+    if (!keys2.includes(key) || !areObjectsEqual(obj1[key], obj2[key])) {
+      return false
+    }
+  }
+  return true
+}
+
+export const isEmpty = (value: any): boolean => {
+  if (value == null) return true // Handles null and undefined
+  if (typeof value === 'string') return value.trim() === ''
+  if (Array.isArray(value)) return value.length === 0
+  if (typeof value === 'object') return Object.keys(value).length === 0
+  return false
 }

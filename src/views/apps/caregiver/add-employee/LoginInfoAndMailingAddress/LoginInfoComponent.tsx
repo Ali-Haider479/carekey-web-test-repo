@@ -141,9 +141,9 @@ const LoginInfoComponent = forwardRef<{ handleSubmit: any }, Props>(
               {/* Account Login Information */}
               <h2 className='text-xl font-semibold mb-6'>Account Login Information</h2>
               <Grid container spacing={4}>
-                <Grid size={{ xs: 12, sm: 4 }}>
-                  {/* Username */}
-                  <CustomTextField
+                {/* <Grid size={{ xs: 12, sm: 4 }}> */}
+                {/* Username */}
+                {/* <CustomTextField
                     label={'Username'}
                     placeHolder={'JohnDoe'}
                     name={'userName'}
@@ -151,8 +151,8 @@ const LoginInfoComponent = forwardRef<{ handleSubmit: any }, Props>(
                     type={'text'}
                     error={errors.userName}
                     control={control}
-                  />
-                </Grid>
+                  /> */}
+                {/* </Grid> */}
 
                 <Grid size={{ xs: 12, sm: 4 }}>
                   {/* Email Address */}

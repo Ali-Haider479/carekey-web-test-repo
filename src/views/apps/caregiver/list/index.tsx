@@ -16,7 +16,6 @@ const CaregiverList = () => {
   const [isLoading, setIsLoading] = useState(true)
   const [isUserDeleted, setIsUserDeleted] = useState(false)
   const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
-  const token = authUser?.backendAccessToken
 
   const fetchInitialData = async () => {
     try {

@@ -1,15 +1,8 @@
-// Data Imports
-import AppFullCalendar from '@/libs/styles/AppFullCalendar'
-import ScheduleCalendarWrapper from '@/views/apps/schedule/calendar-view/ScheduleCalendarWrapper'
-// import CalendarView from '@/views/apps/schedule/view'
-import { Card } from '@mui/material'
+import Calendar from '@/views/apps/schedule/calendar-view'
+import React from 'react'
 
-const CalendarViewApp = async () => {
-  return (
-    <AppFullCalendar className='app-calendar'>
-      <ScheduleCalendarWrapper />
-    </AppFullCalendar>
-  )
+const page = () => {
+  return <Calendar />
 }
 
-export default CalendarViewApp
+export default page

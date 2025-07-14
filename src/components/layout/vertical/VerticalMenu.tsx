@@ -52,8 +52,8 @@ const RenderExpandIcon = ({ open, transitionDuration }: RenderExpandIconProps) =
 )
 
 const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
-  const dispatch = useDispatch();
-  const chatUnReadMessageStatus = useSelector((state: RootState) => state.notificationReducer.chatUnReadMessageStatus);
+  const dispatch = useDispatch()
+  const chatUnReadMessageStatus = useSelector((state: RootState) => state.notificationReducer.chatUnReadMessageStatus)
   // Hooks
   const theme = useTheme()
   const params = useParams()
@@ -76,27 +76,27 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
   useEffect(() => {
     const fetchUserUnreadMessagesCount = async () => {
       try {
-        const response = await api.get(`chat/unread-messages-count/${authUser.id}`);
-        dispatch(setChatUnReadMessageStatus(response.data));
+        const response = await api.get(`chat/unread-messages-count/${authUser.id}`)
+        dispatch(setChatUnReadMessageStatus(response.data))
       } catch (error: any) {
-        console.error('Error fetching unread message count:', error);
+        console.error('Error fetching unread message count:', error)
       }
     }
 
-    fetchUserUnreadMessagesCount();
+    fetchUserUnreadMessagesCount()
   }, [dispatch])
 
   return (
     <ScrollWrapper
       {...(isBreakpointReached
         ? {
-          className: 'bs-full overflow-y-auto overflow-x-hidden',
-          onScroll: container => scrollMenu(container, false)
-        }
+            className: 'bs-full overflow-y-auto overflow-x-hidden',
+            onScroll: container => scrollMenu(container, false)
+          }
         : {
-          options: { wheelPropagation: false, suppressScrollX: true },
-          onScrollY: container => scrollMenu(container, true)
-        })}
+            options: { wheelPropagation: false, suppressScrollX: true },
+            onScrollY: container => scrollMenu(container, true)
+          })}
     >
       <Menu
         popoutMenuOffset={{ mainAxis: 27 }}
@@ -187,7 +187,7 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
         {/* Schedules - requires Calendar permission */}
         {hasPermission('Calendar') && (
           <MenuItem
-            href={`/${locale}/apps/schedules/list`}
+            href={`/${locale}/apps/schedules/calendar-view`}
             icon={<i className='bx-calendar-alt' />}
             exactMatch={false}
             activeUrl='/apps/schedules'
@@ -229,10 +229,12 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
             activeUrl='/apps/chat'
             suffix={
               chatUnReadMessageStatus ? (
-                <span className="relative inline-block">
-                  <span className="absolute top-[-5] right-0 w-3 h-3 bg-red-500 rounded-full" />
+                <span className='relative inline-block'>
+                  <span className='absolute top-[-5] right-0 w-3 h-3 bg-red-500 rounded-full' />
                 </span>
-              ) : ""
+              ) : (
+                ''
+              )
             }
             onActiveChange={() => dispatch(setChatUnReadMessageStatus(false))}
           >

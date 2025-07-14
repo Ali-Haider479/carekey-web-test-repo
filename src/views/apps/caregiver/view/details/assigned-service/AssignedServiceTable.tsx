@@ -30,7 +30,6 @@ const AssignedServiceTable = () => {
   const [clientServices, setClientServices] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
-  const token = authUser?.backendAccessToken
 
   const theme = useTheme()
   const lightTheme = theme.palette.mode === 'light'

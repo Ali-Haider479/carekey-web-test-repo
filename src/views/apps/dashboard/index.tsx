@@ -56,8 +56,8 @@ const AppDashboard = () => {
           const dashboardData = dashboardResponse?.data
 
           // Fetch shifts data (Active Shifts, Missed Shifts)
-          const shiftsResponse = await api.get(`/time-log/dashboard/active-missed-shifts/${tenantId}`)
-          const shiftsData = shiftsResponse?.data
+          // const shiftsResponse = await api.get(`/time-log/dashboard/active-missed-shifts/${tenantId}`);
+          // const shiftsData = shiftsResponse?.data
 
           setDashboardData({
             caregiverCount: dashboardData.caregiverCount,
@@ -65,9 +65,13 @@ const AppDashboard = () => {
             clientsWithoutServiceAuthCount: dashboardData.clientsWithoutServiceAuthCount,
             clientsWithoutServiceAuth: dashboardData.clientsWithoutServiceAuth
           })
+          // setShiftsData({
+          //   activeShiftsCount: shiftsData.activeShiftsCount,
+          //   missedShiftsCount: shiftsData.missedShiftsCount
+          // })
           setShiftsData({
-            activeShiftsCount: shiftsData.activeShiftsCount,
-            missedShiftsCount: shiftsData.missedShiftsCount
+            activeShiftsCount: 0,
+            missedShiftsCount: 0
           })
         }
       } catch (error) {

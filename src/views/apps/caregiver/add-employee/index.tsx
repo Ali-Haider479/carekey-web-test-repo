@@ -55,7 +55,6 @@ const EmployeeStepper = () => {
   const [alertOpen, setAlertOpen] = useState(false)
   const [alertProps, setAlertProps] = useState<any>()
   const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
-  const token = authUser?.backendAccessToken
   const router = useRouter()
   const theme = useTheme<Theme>()
 
@@ -129,7 +128,7 @@ const EmployeeStepper = () => {
     try {
       setIsLoading(true)
       const userPayload = {
-        userName: loginInfo.userName,
+        userName: `${caregiverData.firstName} ${caregiverData.lastName}`,
         emailAddress: loginInfo.emailAddress.toLowerCase(),
         password: loginInfo.password,
         additionalEmailAddress: loginInfo.additionalEmailAddress.toLowerCase(),
@@ -302,7 +301,7 @@ const EmployeeStepper = () => {
         loginInfoFormRef.current?.handleSubmit((data: FormDataType) => {
           setLoginInfo((prevData: any) => ({ ...prevData, ...data, addressType: 'Mailing' }))
           setActiveStep(prevActiveStep => prevActiveStep + 1)
-          console.log('Email in lower case:', loginInfo.emailAddress.toLowerCase())
+          console.log('Email in lower case:', loginInfo.emailAddress)
         })()
         break
       case 2:

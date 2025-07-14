@@ -19,22 +19,9 @@ import {
 import axios from 'axios'
 import FormModal from '@/@core/components/mui/Modal'
 import { AddEventSidebarType, AddEventType } from '@/types/apps/calendarTypes'
-import { Alert, CircularProgress, Grid2 as Grid, patch, Snackbar, useTheme } from '@mui/material'
+import { Alert, CircularProgress, Grid2 as Grid, patch, Snackbar } from '@mui/material'
 import CustomAlert from '@/@core/components/mui/Alter'
 import api from '@/utils/api'
-import { serviceStatuses, staffRatio } from '@/utils/constants'
-import {
-  AccessTime as Clock,
-  PeopleAlt as Users,
-  Work as Briefcase,
-  Person as User,
-  HowToReg as UserCheck,
-  CalendarToday as Calendar,
-  EditNote as Note,
-  KeyboardArrowDown as ChevronDown,
-  ExpandLess as ChevronUp
-} from '@mui/icons-material'
-import { formatTimeTo12hr } from '@/utils/helperFunctions'
 
 interface PickerProps {
   label?: string
@@ -46,16 +33,13 @@ interface PickerProps {
 
 interface DefaultStateType {
   title: string
+  status: string
   endDate: Date
   startDate: Date
   caregiver: string | undefined
   client: string
   service: string
   assignedHours: number | string
-  status: string
-  staffRatio: string
-  frequency?: string
-  serviceAuth: string
   startTime: Date
   endTime: Date
   notes: string
@@ -69,17 +53,14 @@ const defaultState: DefaultStateType = {
   client: '',
   service: '',
   endDate: new Date(),
+  status: 'pending',
   startDate: new Date(),
   startTime: new Date(),
   endTime: new Date(),
   assignedHours: 0,
   notes: '',
   location: '',
-  payPeriod: '',
-  staffRatio: '',
-  status: 'scheduled',
-  serviceAuth: '',
-  frequency: ''
+  payPeriod: ''
 }
 
 /**
@@ -167,13 +148,7 @@ const AddEventModal = (props: AddEventSidebarType) => {
   const [serviceActivities, setServiceActivities] = useState<any>([])
   const [isAddEventLoading, setIsAddEventLoading] = useState(false)
   const [clientServiceAuth, setClientServiceAuth] = useState<any>()
-  const [selectedService, setSelectedService] = useState<any>()
-  const [selectedServiceAuth, setSelectedServiceAuth] = useState<any>()
-  const [activeClientServiceAuth, setActiveClientServiceAuth] = useState<any>()
-  const [serviceAuthUnitsRemaining, setServiceAuthUnitsRemaining] = useState<any>(0)
   const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
-  const [showPreview, setShowPreview] = useState(true)
-  const theme = useTheme()
 
   const fetchClientServiceAuth = async () => {
     try {
@@ -191,7 +166,7 @@ const AddEventModal = (props: AddEventSidebarType) => {
     if (values.client) {
       fetchClientServiceAuth()
     }
-  }, [values.client, calendarStore.selectedEvent])
+  }, [values.client])
 
   const isFormValid = () => {
     return (
@@ -225,7 +200,7 @@ const AddEventModal = (props: AddEventSidebarType) => {
 
   useEffect(() => {
     fetchClientUsers()
-  }, [values.caregiver, calendarStore.selectedEvent])
+  }, [values.caregiver])
 
   const fetchClientServiceType = async () => {
     try {
@@ -252,39 +227,7 @@ const AddEventModal = (props: AddEventSidebarType) => {
   useEffect(() => {
     fetchClientServiceType()
     clientServiceActivities()
-  }, [values.client, calendarStore.selectedEvent])
-
-  useEffect(() => {
-    if (values.service) {
-      console.log('Service Type ---->> ', serviceType, values.service)
-      const filteredServiceType = serviceType.find(item => item.clientServiceId === values.service)
-      console.log('Filtered ServiceType ----->> ', filteredServiceType)
-      setSelectedService(filteredServiceType)
-      const corrospondingServiceAuth = clientServiceAuth?.filter(
-        (item: any) =>
-          item.procedureCode === filteredServiceType.procedureCode &&
-          (item.modifierCode === filteredServiceType.modifierCode ||
-            (item.modifierCode === null && filteredServiceType.modifierCode === null))
-      )
-      console.log('Corrosponding Service Auth for service: ', corrospondingServiceAuth)
-      const activeCorrospondingServiceAuth = corrospondingServiceAuth?.filter(
-        (item: any) => new Date(item.endDate) > new Date()
-      )
-      console.log('Active Service Auths: ', activeCorrospondingServiceAuth)
-      setActiveClientServiceAuth(activeCorrospondingServiceAuth)
-    }
-  }, [values.service, calendarStore.selectedEvent])
-
-  useEffect(() => {
-    if (values.serviceAuth && clientServiceAuth?.length > 0) {
-      const selectedServiceAuth = clientServiceAuth.find((item: any) => item.id === values.serviceAuth)
-      console.log('Selected Service Auth: ', selectedServiceAuth)
-      setSelectedServiceAuth(selectedServiceAuth)
-      const remainingUnits = selectedServiceAuth?.units - selectedServiceAuth?.usedUnits
-      console.log('Remaining Units in Service Auth: ', remainingUnits)
-      setServiceAuthUnitsRemaining(remainingUnits)
-    }
-  }, [values.serviceAuth, calendarStore.selectedEvent])
+  }, [values.client])
 
   const PickersComponent = forwardRef(({ ...props }: PickerProps, ref) => {
     return (
@@ -311,7 +254,6 @@ const AddEventModal = (props: AddEventSidebarType) => {
   const resetToStoredValues = useCallback(() => {
     if (calendarStore.selectedEvent !== null) {
       const event = calendarStore.selectedEvent
-      console.log('Resetting to stored values for event:', event)
       setValue('title', event.title || '')
       setValues({
         title: event.title || '',
@@ -319,17 +261,14 @@ const AddEventModal = (props: AddEventSidebarType) => {
         startDate: event.start !== null ? event.start : new Date(),
         startTime: event.start !== null ? event.start : new Date(),
         endTime: event.end !== null ? event.end : event.start,
-        caregiver: event?.caregiver?.id || event?.caregiver,
-        client: event?.client?.id || event.client,
-        service: event?.clientService?.id,
-        assignedHours: event?.assignedHours,
-        notes: event?.notes,
-        location: event?.location,
-        status: 'scheduled',
-        frequency: event?.frequency || '',
-        payPeriod: props?.payPeriod?.id,
-        staffRatio: event?.staffRatio || '',
-        serviceAuth: event?.serviceAuth?.id || event?.serviceAuth
+        status: (event?.extendedProps?.status || 'waiting').toLowerCase(),
+        caregiver: event?.extendedProps?.caregiver?.id || event?.extendedProps?.caregiver,
+        client: event?.extendedProps?.client?.id || event?.extendedProps?.client,
+        service: event?.extendedProps?.service?.id || event?.extendedProps?.service,
+        assignedHours: event?.extendedProps?.assignedHours,
+        notes: event?.extendedProps?.notes,
+        location: event?.extendedProps?.location,
+        payPeriod: props?.payPeriod?.id
       })
     }
   }, [setValue, calendarStore.selectedEvent])
@@ -370,7 +309,7 @@ const AddEventModal = (props: AddEventSidebarType) => {
       setIsAddEventLoading(false)
       return
     }
-    if (selectedServiceAuth && new Date(selectedServiceAuth.endDate) < new Date()) {
+    if (clientServiceAuth?.length > 0 && clientServiceAuth[0]?.endDate < new Date()) {
       setAlertOpen(true)
       setAlertMessage({
         message: 'The service auth has expired. Please update the service auth before creating a schedule',
@@ -385,7 +324,7 @@ const AddEventModal = (props: AddEventSidebarType) => {
     const endDate =
       isEdited && calendarStore?.selectedEvent
         ? typeof assignedHours === 'number'
-          ? new Date(new Date(startDate).getTime() + assignedHours * 60 * 60 * 1000)
+          ? new Date(startDate.getTime() + assignedHours * 60 * 60 * 1000)
           : values.endDate
         : values.endDate
 
@@ -393,22 +332,6 @@ const AddEventModal = (props: AddEventSidebarType) => {
 
     // Calculate total days including cases where it crosses midnight
     const totalDays = calculateTotalDays(startDate, endDate)
-
-    const unitsPerDay = Math.ceil(Number(assignedHours) * 4)
-    const totalUsedUnits = Number(unitsPerDay) * Number(totalDays)
-
-    const totalUsedHours = (totalUsedUnits / 4).toFixed(2)
-    const remainingHours = (serviceAuthUnitsRemaining / 4).toFixed(2)
-
-    if (totalUsedUnits > serviceAuthUnitsRemaining) {
-      setAlertOpen(true)
-      setAlertMessage({
-        message: `Total units (${totalUsedUnits}) exceed remaining authorized units (${serviceAuthUnitsRemaining}).`,
-        severity: 'error'
-      })
-      setIsAddEventLoading(false)
-      return
-    }
 
     let currentDate = new Date(startDate)
 
@@ -426,18 +349,15 @@ const AddEventModal = (props: AddEventSidebarType) => {
         title: values.title,
         start: finalStartDate,
         end: finalEndDate,
-        status: 'scheduled',
-        staffRatio: values.staffRatio,
-        frequency: values.frequency,
+        status: values.status,
         caregiverId: values.caregiver,
         clientId: values.client,
-        clientServiceId: values.service,
+        serviceId: values.service,
         assignedHours: assignedHours,
         notes: values.notes || '',
         location: values.location || '',
         payPeriod: props?.payPeriod?.id,
-        tenantId: authUser?.tenant?.id,
-        serviceAuthId: values.serviceAuth
+        tenantId: authUser?.tenant?.id
       })
 
       // Move to the next day without modifying endDate
@@ -485,7 +405,6 @@ const AddEventModal = (props: AddEventSidebarType) => {
         }
       } finally {
         setIsEditedOff
-        setIsAddEventLoading(false)
       }
     } else {
       try {
@@ -559,164 +478,8 @@ const AddEventModal = (props: AddEventSidebarType) => {
             {alertMessage?.message}
           </Alert>
         )}
-        {isEdited && calendarStore.selectedEvent && (
-          <div className='rounded-lg p-4 mb-4'>
-            <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-              <div className='space-y-3'>
-                <div className='flex items-center space-x-2'>
-                  <User className='w-4 h-4 text-gray-500' />
-                  <span
-                    className={`text-sm font-medium ${theme.palette.mode === 'light' ? 'text-gray-700' : 'text-gray-300'}`}
-                  >
-                    Client:
-                  </span>
-                  <span className={`text-sm ${theme.palette.mode === 'light' ? 'text-gray-900' : 'text-white'}`}>
-                    {calendarStore?.selectedEvent.client
-                      ? `${calendarStore.selectedEvent.client.firstName} ${calendarStore.selectedEvent.client.lastName}`
-                      : 'Unknown Client'}
-                  </span>
-                </div>
-                <div className='flex items-center space-x-2'>
-                  <UserCheck className='w-4 h-4 text-gray-500' />
-                  <span
-                    className={`text-sm font-medium ${theme.palette.mode === 'light' ? 'text-gray-700' : 'text-gray-300'}`}
-                  >
-                    Caregiver:
-                  </span>
-                  <span className={`text-sm ${theme.palette.mode === 'light' ? 'text-gray-900' : 'text-white'}`}>
-                    {calendarStore?.selectedEvent?.caregiver
-                      ? `${calendarStore?.selectedEvent?.caregiver.firstName} ${calendarStore?.selectedEvent?.caregiver.lastName}`
-                      : 'Unknown Caregiver'}
-                  </span>
-                </div>
-                <div className='flex items-center space-x-2'>
-                  <Briefcase className='w-4 h-4 text-gray-500' />
-                  <span
-                    className={`text-sm font-medium ${theme.palette.mode === 'light' ? 'text-gray-700' : 'text-gray-300'}`}
-                  >
-                    Service:
-                  </span>
-                  <span className={`text-sm ${theme.palette.mode === 'light' ? 'text-gray-900' : 'text-white'}`}>
-                    {calendarStore?.selectedEvent?.clientService?.service?.name ||
-                      calendarStore?.selectedEvent?.clientService?.serviceAuthService?.name ||
-                      'Unknown Service'}
-                  </span>
-                </div>
-                <div className='flex items-center space-x-2'>
-                  <Users className='w-4 h-4 text-gray-500' />
-                  <span
-                    className={`text-sm font-medium ${theme.palette.mode === 'light' ? 'text-gray-700' : 'text-gray-300'}`}
-                  >
-                    Staff Ratio:
-                  </span>
-                  <span className={`text-sm ${theme.palette.mode === 'light' ? 'text-gray-900' : 'text-white'}`}>
-                    {calendarStore?.selectedEvent?.staffRatio || 'NAN'}
-                  </span>
-                </div>
-              </div>
-              <div className='space-y-3'>
-                <div className='flex items-center space-x-2'>
-                  <Calendar className='w-4 h-4 text-gray-500' />
-                  <span
-                    className={`text-sm font-medium ${theme.palette.mode === 'light' ? 'text-gray-700' : 'text-gray-300'}`}
-                  >
-                    Date:
-                  </span>
-                  <span className={`text-sm ${theme.palette.mode === 'light' ? 'text-gray-900' : 'text-white'}`}>
-                    {new Date(calendarStore?.selectedEvent.start).toLocaleDateString()}
-                  </span>
-                </div>
-                <div className='flex items-center space-x-2'>
-                  <Clock className='w-4 h-4 text-gray-500' />
-                  <span
-                    className={`text-sm font-medium ${theme.palette.mode === 'light' ? 'text-gray-700' : 'text-gray-300'}`}
-                  >
-                    Time:
-                  </span>
-                  <span className={`text-sm ${theme.palette.mode === 'light' ? 'text-gray-900' : 'text-white'}`}>
-                    {new Date(calendarStore?.selectedEvent.start).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })} -{' '}
-                    {new Date(calendarStore?.selectedEvent.end).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
-                  </span>
-                </div>
-                <div className='flex items-center space-x-2'>
-                  <Clock className='w-4 h-4 text-gray-500' />
-                  <span
-                    className={`text-sm font-medium ${theme.palette.mode === 'light' ? 'text-gray-700' : 'text-gray-300'}`}
-                  >
-                    Exceeded Units:
-                  </span>
-                  <span className={`text-sm ${theme.palette.mode === 'light' ? 'text-gray-900' : 'text-white'}`}>
-                    {calendarStore?.selectedEvent?.timelog?.exceededUnits || 0}
-                  </span>
-                </div>
-                {calendarStore?.selectedEvent.notes && (
-                  <div className='flex items-start space-x-2'>
-                    <Note className='w-4 h-4 text-gray-500' />
-                    <span
-                      className={`text-sm font-medium ${theme.palette.mode === 'light' ? 'text-gray-700' : 'text-gray-300'}`}
-                    >
-                      Notes:
-                    </span>
-                    <span className={`text-sm ${theme.palette.mode === 'light' ? 'text-gray-900' : 'text-white'}`}>
-                      {calendarStore?.selectedEvent.notes}
-                    </span>
-                  </div>
-                )}
-              </div>
-            </div>
-            <Box
-              sx={{
-                display: 'flex',
-                flexDirection: 'row',
-                justifyContent: 'center' // This will push content to the right
-              }}
-            >
-              <Button
-                className='mt-4'
-                variant='text'
-                style={{ display: showPreview ? 'block' : 'none' }}
-                onClick={() => {
-                  setShowPreview(false)
-                }}
-                endIcon={<ChevronDown />}
-              >
-                Show Edit Modal
-              </Button>
-            </Box>
-          </div>
-        )}
-        <div
-          className='flex items-center justify-center pt-[20px] pb-[20px] w-full px-4'
-          style={{
-            display:
-              !isEdited || !calendarStore?.selectedEvent
-                ? 'block'
-                : isEdited && calendarStore?.selectedEvent && !showPreview
-                  ? 'block'
-                  : 'none'
-          }}
-        >
+        <div className='flex items-center justify-center pt-[20px] pb-[20px] w-full px-5'>
           <form onSubmit={handleSubmit(onSubmit)} autoComplete='off'>
-            {isEdited && calendarStore?.selectedEvent && (
-              <Box
-                sx={{
-                  display: 'flex',
-                  flexDirection: 'row',
-                  justifyContent: 'flex-end' // This will push content to the right
-                }}
-              >
-                <Button
-                  variant='text'
-                  style={{ marginRight: '10px' }}
-                  onClick={() => {
-                    setShowPreview(true)
-                  }}
-                  endIcon={<ChevronUp className='w-4 h-4' />}
-                >
-                  Hide Edit Modal
-                </Button>
-              </Box>
-            )}
             {/* <Controller
             name='title'
             control={control}
@@ -753,7 +516,7 @@ const AddEventModal = (props: AddEventSidebarType) => {
               id='caregiver-schedule'
               onChange={e => setValues({ ...values, caregiver: e.target.value })}
             >
-              {props?.caregiverList?.length > 0 ? (
+              {props?.caregiverList.length > 0 ? (
                 props?.caregiverList.map((caregiver: any) => (
                   <MenuItem key={caregiver.id} value={caregiver.id}>
                     {`${caregiver.firstName} ${caregiver.lastName}`}
@@ -789,39 +552,15 @@ const AddEventModal = (props: AddEventSidebarType) => {
               select
               fullWidth
               className='mbe-3'
-              label='Service type'
+              label='Event type'
               value={values?.service}
               id='service-schedule'
               onChange={e => setValues({ ...values, service: e.target.value })}
             >
               {serviceType?.length > 0 ? (
-                serviceType
-                  ?.filter(item => item.dummyService === false)
-                  .map((service: any) => (
-                    <MenuItem key={service.id} value={service.clientServiceId}>
-                      {service.name} {`(${service?.procedureCode} - ${service?.modifierCode || 'N/A'})`}{' '}
-                      {service?.dummyService ? '(Demo Service)' : '(S.A Service)'}
-                    </MenuItem>
-                  ))
-              ) : (
-                <MenuItem disabled>No options available</MenuItem>
-              )}
-            </CustomTextField>
-
-            <CustomTextField
-              select
-              fullWidth
-              className='mbe-3'
-              label='Service Auth'
-              value={values?.serviceAuth}
-              id='service-auth'
-              onChange={e => setValues({ ...values, serviceAuth: e.target.value })}
-            >
-              {activeClientServiceAuth?.length > 0 ? (
-                activeClientServiceAuth.map((serviceAuth: any) => (
-                  <MenuItem key={serviceAuth.id} value={serviceAuth.id}>
-                    {serviceAuth.serviceName}{' '}
-                    {`(${serviceAuth?.startDate?.split('T')[0]} - ${serviceAuth?.endDate?.split('T')[0]})`}
+                serviceType?.map((service: any) => (
+                  <MenuItem key={service.id} value={service.id}>
+                    {service.name}
                   </MenuItem>
                 ))
               ) : (
@@ -1020,48 +759,6 @@ const AddEventModal = (props: AddEventSidebarType) => {
                   }
                 />
               </Grid>
-              <Grid size={{ xs: 12, md: 12 }}>
-                <CustomTextField
-                  select
-                  fullWidth
-                  className='mbe-3'
-                  label='Staff Ratio'
-                  value={values?.staffRatio}
-                  id='staff-ratio-schedule'
-                  onChange={e => setValues({ ...values, staffRatio: e.target.value })}
-                >
-                  {staffRatio?.length > 0 ? (
-                    staffRatio?.map((item: any) => (
-                      <MenuItem key={item.id} value={item.name}>
-                        {item.name} - {item.description}
-                      </MenuItem>
-                    ))
-                  ) : (
-                    <MenuItem disabled>No options available</MenuItem>
-                  )}
-                </CustomTextField>
-              </Grid>
-              <Grid size={{ xs: 12, md: 12 }}>
-                <CustomTextField
-                  select
-                  fullWidth
-                  className='mbe-3'
-                  label='Frequency'
-                  value={values?.frequency}
-                  id='frequency-schedule'
-                  onChange={e => setValues({ ...values, frequency: e.target.value })}
-                >
-                  <MenuItem key={1} value={'daily'}>
-                    Daily
-                  </MenuItem>
-                  <MenuItem key={2} value={'weekly'}>
-                    Weekly
-                  </MenuItem>
-                  <MenuItem key={3} value={'monthly'}>
-                    Monthly
-                  </MenuItem>
-                </CustomTextField>
-              </Grid>
             </Grid>
             {/* <CustomTextField
             select
@@ -1099,7 +796,7 @@ const AddEventModal = (props: AddEventSidebarType) => {
                   <Button variant='outlined' color='secondary' onClick={handleModalClose}>
                     CANCEL
                   </Button>
-                  <Button type='submit' variant='contained' disabled={!isEdited || isAddEventLoading}>
+                  <Button type='submit' variant='contained' className='bg-[#4B0082]' disabled={!isFormValid()}>
                     Update
                   </Button>
                   {/* <Button variant='outlined' color='secondary' onClick={resetToStoredValues}>
@@ -1117,6 +814,7 @@ const AddEventModal = (props: AddEventSidebarType) => {
                   <Button
                     type='submit'
                     variant='contained'
+                    className='bg-[#4B0082]'
                     startIcon={isAddEventLoading ? <CircularProgress size={20} color='inherit' /> : null}
                     disabled={!isFormValid() || isAddEventLoading}
                   >

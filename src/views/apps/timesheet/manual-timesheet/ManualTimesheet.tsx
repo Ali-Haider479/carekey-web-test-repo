@@ -90,7 +90,7 @@ const ManualTimesheet = ({ caregiverList, payPeriodList }: any) => {
   const [clientUsers, setClientUsers] = useState<any>([])
   const [serviceType, setServiceType] = useState<any[]>([])
   const [serviceActivities, setServiceActivities] = useState<any>([])
-  const [cleintServiceAuth, setClientServiceAuth] = useState<any>([])
+  const [clientServiceAuth, setClientServiceAuth] = useState<any>([])
   const [selectedService, setSelectedService] = useState<any>([])
   const [alertOpen, setAlertOpen] = useState(false)
   const [alertProps, setAlertProps] = useState<any>()
@@ -344,8 +344,7 @@ const ManualTimesheet = ({ caregiverList, payPeriodList }: any) => {
       const checkedActivityRes = await api.post(`/activity/checked`, {
         activityIds: selectedItems
       })
-      // Make the API call only if client does not exist in taken or pending
-      // const signResponse: any = await api.post(`/signatures`, payLoad)
+
       if (checkedActivityRes.status === 201) {
         const serviceDate = new Date(values.dateOfService)
         let newClockIn = new Date(values.clockIn)
@@ -357,82 +356,184 @@ const ManualTimesheet = ({ caregiverList, payPeriodList }: any) => {
         const roundedHoursWorked = Math.round(hoursWorked * 4) / 4 // Round to the nearest quarter hour
         const unitsUsed = Math.ceil(roundedHoursWorked * 4) // Convert to quarter hours
 
-        const corrospondingServiceAuth = cleintServiceAuth.find(
-          (item: any) =>
-            item?.modifierCode === selectedService?.modifierCode &&
-            (item?.procedureCode === selectedService?.procedureCode ||
-              (item?.procedureCode === null && selectedService?.procedureCode === null))
-        )
+        if (clientServiceAuth.length === 0) {
+          console.log("VALUES", values)
+          const modifiedEvent = {
+            dateOfService: values?.dateOfService,
+            manualEntry: true,
+            clockIn: newClockIn.toISOString(),
+            clockOut: newClockOut.toISOString(),
+            tsApprovalStatus: 'Pending',
+            loggedVia: 'desktop',
+            notes: values.notes,
+            reason: values.reason,
+            clientServiceId: values.clientServiceId,
+            clientId: values.client,
+            caregiverId: values.caregiver,
+            checkedActivityId: checkedActivityRes.data.id,
+            payPeriodHistoryId: values.payperiod,
+            signatureId:
+              currentClientPendingSigns.length > 0 ? currentClientPendingSigns[0].signatureId : signResponse?.data?.id,
+            tenantId: authUser?.tenant?.id
+          }
+          console.log("PAYLOAD", modifiedEvent)
 
-        const allowedUnits = Math.ceil(corrospondingServiceAuth?.units - corrospondingServiceAuth?.usedUnits)
+          const timelogResponse = await api.post(`/time-log`, modifiedEvent)
+        } else {
+          const correspondingServiceAuth = clientServiceAuth.find(
+            (item: any) =>
+              item?.modifierCode === selectedService?.modifierCode &&
+              (item?.procedureCode === selectedService?.procedureCode ||
+                (item?.procedureCode === null && selectedService?.procedureCode === null))
+          )
 
-        if (unitsUsed > allowedUnits) {
-          setIsLoading(false)
-          setAlertOpen(true)
-          setAlertProps({
-            severity: 'error',
-            message: `You cannot use more than ${allowedUnits} units for this service.`
+          const allowedUnits = Math.ceil(correspondingServiceAuth?.units - correspondingServiceAuth?.usedUnits)
+
+          if (unitsUsed > allowedUnits) {
+            setIsLoading(false)
+            setAlertOpen(true)
+            setAlertProps({
+              severity: 'error',
+              message: `You cannot use more than ${allowedUnits} units for this service.`
+            })
+            setValues(defaultState)
+            setSelectedItems([])
+            setErrors({
+              payperiod: false,
+              caregiver: false,
+              client: false,
+              clientServiceId: false,
+              dateOfService: false,
+              clockIn: false,
+              clockOut: false,
+              activities: false
+            })
+            return
+          }
+
+          const newUnitsUsed = Math.ceil(Number(correspondingServiceAuth?.usedUnits) + unitsUsed)
+
+          console.log('New Units Used --->> ', newUnitsUsed)
+
+          const modifiedServiceAuth = {
+            ...correspondingServiceAuth,
+            usedUnits: newUnitsUsed
+          }
+
+          await api.patch(`/client/service-auth/${correspondingServiceAuth?.id}`, modifiedServiceAuth)
+
+          // Fetch schedules and filter
+          const schedules: any = await api.get('/schedule')
+          console.log('Schedules --->> ', schedules?.data)
+          const filteredSchedule = schedules?.data?.filter(
+            (item: any) => item.caregiver.id === values.caregiver && item.client.id === values.client
+          )
+          console.log('Filtered Schedules ---->> ', filteredSchedule)
+
+          // Check for schedule overlap in local timezone
+          const timezoneOffset = new Date().getTimezoneOffset() * 60 * 1000
+          const scheduleOverlap = filteredSchedule?.find((item: any) => {
+            // Convert schedule start and end from UTC to local timezone (PKT)
+            const utcStart = new Date(item.start)
+            const utcEnd = new Date(item.end)
+            const scheduleStart = new Date(utcStart.getTime() - timezoneOffset)
+            const scheduleEnd = new Date(utcEnd.getTime() - timezoneOffset)
+
+            // Convert newClockIn and newClockOut from UTC to local timezone (PKT)
+            const shiftStart = new Date(newClockIn.getTime() - timezoneOffset)
+            const shiftEnd = new Date(newClockOut.getTime() - timezoneOffset)
+
+            // Validate dates
+            if (
+              isNaN(scheduleStart.getTime()) ||
+              isNaN(scheduleEnd.getTime()) ||
+              isNaN(shiftStart.getTime()) ||
+              isNaN(shiftEnd.getTime())
+            ) {
+              console.warn(`Invalid dates for schedule ID ${item.id} or shift`)
+              return false
+            }
+
+            // Compare dates (year, month, day) in local timezone
+            const scheduleDate = new Date(scheduleStart.getFullYear(), scheduleStart.getMonth(), scheduleStart.getDate())
+            const shiftDate = new Date(shiftStart.getFullYear(), shiftStart.getMonth(), shiftStart.getDate())
+
+            if (scheduleDate.getTime() !== shiftDate.getTime()) {
+              console.log(
+                `Date mismatch for schedule ID ${item.id}: ${scheduleDate.toISOString()} vs ${shiftDate.toISOString()}`
+              )
+              return false
+            }
+
+            // Log dates and times for debugging (in local timezone)
+            console.log(
+              'Dates to compare --->> ',
+              scheduleStart.toISOString(),
+              scheduleEnd.toISOString(),
+              ' --- With --- ',
+              shiftStart.toISOString(),
+              shiftEnd.toISOString(),
+              ' --- Result --- ',
+              shiftStart.getTime() <= scheduleEnd.getTime() && shiftEnd.getTime() >= scheduleStart.getTime()
+            )
+
+            // Check for time overlap: start1 <= end2 && end1 >= start2
+            return shiftStart.getTime() <= scheduleEnd.getTime() && shiftEnd.getTime() >= scheduleStart.getTime()
           })
-          setValues(defaultState)
-          setSelectedItems([])
-          setErrors({
-            payperiod: false,
-            caregiver: false,
-            client: false,
-            clientServiceId: false,
-            dateOfService: false,
-            clockIn: false,
-            clockOut: false,
-            activities: false
-          })
-          return
+
+          console.log('Schedule Overlapping...... : ', scheduleOverlap)
+
+          const modifiedEvent = {
+            dateOfService: values?.dateOfService,
+            manualEntry: true,
+            clockIn: newClockIn.toISOString(),
+            clockOut: newClockOut.toISOString(),
+            tsApprovalStatus: 'Pending',
+            loggedVia: 'desktop',
+            notes: values.notes,
+            reason: values.reason,
+            clientServiceId: values.clientServiceId,
+            clientId: values.client,
+            caregiverId: values.caregiver,
+            checkedActivityId: checkedActivityRes.data.id,
+            payPeriodHistoryId: values.payperiod,
+            signatureId:
+              currentClientPendingSigns.length > 0 ? currentClientPendingSigns[0].signatureId : signResponse?.data?.id,
+            tenantId: authUser?.tenant?.id
+          }
+          console.log("PAYLOAD", modifiedEvent)
+
+          const timelogResponse = await api.post(`/time-log`, modifiedEvent)
+
+          if (scheduleOverlap && scheduleOverlap?.status === 'scheduled') {
+            console.log('Schedule Overlap detected.....', scheduleOverlap)
+            const scheduleDto = {
+              timeLogId: timelogResponse.data.id,
+              caregiverId: values.caregiver,
+              status: 'worked'
+            }
+            const updateSchedule = await api.patch(`/schedule/${scheduleOverlap?.id}`, scheduleDto)
+            console.log('Schedule Updated: ', updateSchedule)
+          }
         }
 
-        const newunitsUsed = Math.ceil(Number(corrospondingServiceAuth?.usedUnits) + unitsUsed)
 
-        console.log('New Units Used --->> ', newunitsUsed)
 
-        const modifiedServiceAuth = {
-          ...corrospondingServiceAuth,
-          usedUnits: newunitsUsed
-        }
-
-        await api.patch(`/client/service-auth/${corrospondingServiceAuth?.id}`, modifiedServiceAuth)
-
-        const modifiedEvent = {
-          dateOfService: values?.dateOfService,
-          manualEntry: true,
-          clockIn: newClockIn.toISOString(),
-          clockOut: newClockOut.toISOString(),
-          tsApprovalStatus: 'Pending',
-          loggedVia: 'desktop',
-          notes: values.notes,
-          reason: values.reason,
-          clientServiceId: values.clientServiceId?.clientServiceId,
-          clientId: values.client,
-          caregiverId: values.caregiver,
-          checkedActivityId: checkedActivityRes.data.id,
-          payPeriodHistoryId: values.payperiod,
-          signatureId:
-            currentClientPendingSigns.length > 0 ? currentClientPendingSigns[0].signatureId : signResponse?.data?.id,
-          tenantId: authUser?.tenant?.id
-        }
-        await api.post(`/time-log`, modifiedEvent)
+        setValues(defaultState)
+        setSelectedItems([])
+        setErrors({
+          payperiod: false,
+          caregiver: false,
+          client: false,
+          clientServiceId: false,
+          dateOfService: false,
+          clockIn: false,
+          clockOut: false,
+          activities: false
+        })
+        setOpenSuccessSnackbar(true)
+        setIsLoading(false)
       }
-      setValues(defaultState)
-      setSelectedItems([])
-      setErrors({
-        payperiod: false,
-        caregiver: false,
-        client: false,
-        clientServiceId: false,
-        dateOfService: false,
-        clockIn: false,
-        clockOut: false,
-        activities: false
-      })
-      setOpenSuccessSnackbar(true)
-      setIsLoading(false)
     } catch (error) {
       setIsLoading(false)
       console.log('Error:', error)

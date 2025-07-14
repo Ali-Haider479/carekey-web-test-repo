@@ -78,7 +78,7 @@ const AddClientStepper = () => {
   }
 
   const uploadDocuments = async (
-    files: { path: string; size: number; name: string }[],
+    files: File[],
     documentType: string,
     id: string,
     expiryDate?: string,
@@ -103,7 +103,7 @@ const AddClientStepper = () => {
       // Upload each file to S3
       const uploadPromises = files.map(async (file, index) => {
         const { key, url } = preSignedUrls[index] // Get corresponding pre-signed URL
-        const fileType = file.path.split('.').pop() || 'pdf' // Default to 'pdf' if undefined
+        const fileType = file.type || 'pdf' // Default to 'pdf' if undefined
 
         console.log(`Uploading ${file.name} to S3...`)
 
@@ -309,7 +309,7 @@ const AddClientStepper = () => {
       const createCarePlanDueResponse = await api.post(`/client/careplan`, createCarePlanDueBody)
       console.log('Create Care Plan Due Data --> ', filteredCarePlanDueBody)
 
-      console.log('New Docs', Docs)
+      console.log('New Docs', Docs.documentFiles)
 
       const documentUpload = [uploadDocuments(Docs.documentFiles, 'other', clientId.toString())]
 

@@ -124,3 +124,53 @@ export const payerOptions = [
   { key: 8, value: 'Hennipin Health', optionString: 'Hennipin Health' },
   { key: 9, value: 'South Coutry Health', optionString: 'South Coutry Health' }
 ]
+
+export const serviceStatuses = [
+  {
+    id: 'scheduled',
+    name: 'Scheduled',
+    description: 'Service is scheduled but not yet provided',
+    color: '#3b82f6', // Blue - attention needed
+    bgColor: '#dbeafe',
+    borderColor: '#2563eb'
+  },
+  {
+    id: 'worked',
+    name: 'Worked',
+    description: 'Service was provided and documented',
+    color: '#57534e', // Darker stone-brown - muted but visible, good contrast
+    bgColor: '#e7e5e4',
+    borderColor: '#78716c'
+  },
+  {
+    id: 'approved',
+    name: 'Approved',
+    description: 'Service billing has been approved for payment',
+    color: '#7c3aed', // Purple - final approval, distinct from green
+    bgColor: '#ede9fe',
+    borderColor: '#6d28d9'
+  },
+  {
+    id: 'billed',
+    name: 'Billed',
+    description: 'Service has been billed to insurance/Medicaid',
+    color: '#22c55e', // Green - perfect for money/billing/payments
+    bgColor: '#dcfce7',
+    borderColor: '#16a34a'
+  },
+  {
+    id: 'missed',
+    name: 'Missed',
+    description: 'Service was scheduled but not provided',
+    color: '#ef4444', // Red - requires attention
+    bgColor: '#fee2e2',
+    borderColor: '#dc2626'
+  }
+]
+
+export const staffRatio = [
+  { id: 1, name: '1:1', description: '(1 employee : 1 client)' },
+  { id: 2, name: '1:2', description: '(1 employee : 2 clients)' },
+  { id: 3, name: '1:3', description: '(1 employee : 3 clients)' },
+  { id: 4, name: '1:4', description: '(1 employee : 4 clients)' }
+]

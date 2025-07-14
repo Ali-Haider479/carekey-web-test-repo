@@ -118,7 +118,7 @@ const ClientDetails = ({ tabContentList }: BottomBodyProps) => {
                   <Tab value='service-authorization' label='SERVICE AUTH' />
                   <Tab value='incidents' label='INCIDENTS' />
                   <Tab value='care-plan' label='CARE PLAN' />
-                  {/* <Tab value='documents' label='DOCUMENTS' /> */}
+                  <Tab value='documents' label='DOCUMENTS' />
                 </CustomTabList>
               </Grid>
               <Grid size={{ xs: 12 }}>

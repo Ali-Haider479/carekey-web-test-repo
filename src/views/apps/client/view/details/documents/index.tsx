@@ -19,8 +19,6 @@ const Documents = () => {
   const [newDocumentsUploading, setNewDocumentsUploading] = useState<boolean>(false)
   const [newDocumentsToUpload, setNewDocumentsToUpload] = useState<File[]>([])
   const [itemToDelete, setItemToDelete] = useState<any>()
-  const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
-  const token = authUser?.backendAccessToken
 
   const getDocuments = async () => {
     try {
@@ -110,7 +108,6 @@ const Documents = () => {
     // expiryDate?: string,
     // additionalMetadata?: Record<string, any>
   ) => {
-    console.log('Here---->', files)
     if (!files || files.length === 0) {
       console.log(`No files found for ${documentType}. Skipping upload.`)
       return null
@@ -126,21 +123,18 @@ const Documents = () => {
       const { data: preSignedUrls } = await api.post(`/upload-document/get-signed-pdf-put-url`, fileNames)
 
       console.log('Received Pre-Signed URLs:', preSignedUrls)
-
+      if (!Array.isArray(preSignedUrls) || preSignedUrls.length !== files.length) {
+        throw new Error('Invalid pre-signed URLs response from server')
+      }
       // Upload each file to S3
       const uploadPromises = files.map(async (file, index) => {
         const { key, url } = preSignedUrls[index] // Get corresponding pre-signed URL
-        const fileType = file.type.split('/').pop() || 'pdf' // Default to 'pdf' if undefined
+        const fileType = file.type
 
         console.log(`Uploading ${file.name} to S3..., url ${url}`)
 
         // Upload file to S3
-        await axios.put(url, file, {
-          headers: {
-            'Content-Type': 'application/pdf', // Adjust based on file type
-            Authorization: `Bearer ${token}`
-          }
-        })
+        const s3UploadedDocRes = await axios.put(url, file)
 
         console.log(`${file.name} uploaded successfully.`)
 
@@ -153,11 +147,9 @@ const Documents = () => {
           fileSize: file.size,
           clientId: id
         }
-        console.log(body)
 
         // Store record in backend
         const dbResponse = await api.post(`/client/documents`, body)
-        console.log(`Database record created for ${file.name}:`, dbResponse.data)
         return dbResponse.data
       })
 
@@ -176,9 +168,6 @@ const Documents = () => {
   const handleAddNewFilesUpload = async () => {
     try {
       setNewDocumentsUploading(true)
-      //   const metaData = {
-      //     documentName: 'client-document'
-      //   }
       console.log('Uploaded-Files', newDocumentsToUpload)
       //   const expiryDate = new Date()
       //   expiryDate.setFullYear(expiryDate.getFullYear() + 1)
@@ -242,7 +231,7 @@ const Documents = () => {
               onClick={() => setNewDocumentsModalShow(true)}
               className={` mr-5 mb-4 cursor-pointer`}
               startIcon={<Add />}
-            // disabled={otherDocuments?.length === 3}
+              // disabled={otherDocuments?.length === 3}
             >
               Add
             </Button>
