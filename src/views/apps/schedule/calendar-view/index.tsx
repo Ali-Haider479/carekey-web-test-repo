@@ -1,6 +1,6 @@
 'use client'
 import { useAppDispatch } from '@/hooks/useDispatch'
-import { addEvent, fetchEvents, selectedEvent, updateEvent } from '@/redux-store/slices/calendar'
+import { addEvent, fetchEvents, selectedEvent, updateEvent, setSelectedDate } from '@/redux-store/slices/calendar'
 import { CalendarType } from '@/types/apps/calendarTypes'
 import api from '@/utils/api'
 import { serviceStatuses } from '@/utils/constants'
@@ -73,12 +73,16 @@ const Calendar = () => {
     if (label.includes('caregiver')) {
       console.log('Inside caregiver')
       const filtered = localEvents.filter(event => event.caregiver?.id === value)
+      console.log('Filtered cg events ---->> ', filtered)
+      setSelectedCaregiverFilter(value)
       setFilteredRoleEvents((prev: any) => ({ ...prev, caregiverEvents: filtered }))
       // dispatch(filterCaregiverSchedules(value))
       setIsClient(false)
     } else if (label.includes('client')) {
       console.log('inside client')
       const filtered = localEvents.filter(event => event.client?.id === value)
+      console.log('Filtered client events ---->> ', filtered)
+      setSelectedClientFilter(value)
       setFilteredRoleEvents((prev: any) => ({ ...prev, clientEvents: filtered }))
       // dispatch(filterClientSchedules(value))
       setIsClient(true)
@@ -113,26 +117,26 @@ const Calendar = () => {
   useEffect(() => {
     const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
     console.log('LOGGED USER', authUser)
-      ; (async () => {
-        try {
-          const response = await Promise.all([
-            api.get(`/caregivers`),
-            api.get(`/client`),
-            api.get(`/service`),
-            api.get(`/pay-period/tenant/${authUser?.tenant?.id}`)
-          ])
-          setCaregiverList(response[0].data)
-          setClientList(response[1].data)
-          setServiceList(response[2].data)
-          setPayPeriod(response[3].data)
-        } catch (error) {
-          console.log('ERROR', error)
-        }
-      })()
+    ;(async () => {
+      try {
+        const response = await Promise.all([
+          api.get(`/caregivers`),
+          api.get(`/client`),
+          api.get(`/service`),
+          api.get(`/pay-period/tenant/${authUser?.tenant?.id}`)
+        ])
+        setCaregiverList(response[0].data)
+        setClientList(response[1].data)
+        setServiceList(response[2].data)
+        setPayPeriod(response[3].data)
+      } catch (error) {
+        console.log('ERROR', error)
+      }
+    })()
   }, [])
   const [currentDate, setCurrentDate] = useState(new Date())
   const [events, setEvents] = useState(localEvents)
-  const [selectedDate, setSelectedDate] = useState<string | null>(null)
+  // const [selectedDate, setSelectedDate] = useState<string | null>(null)
   const [isEventModalOpen, setIsEventModalOpen] = useState(false)
   const [isServiceAgreementModalOpen, setIsServiceAgreementModalOpen] = useState(false)
   const [localSelectedEvent, setLocalSelectedEvent] = useState<Event | null>(null)
@@ -159,8 +163,8 @@ const Calendar = () => {
   const filteredEvents = useMemo(() => {
     console.log('Events---->', localEvents)
     return localEvents.filter(event => {
-      const clientMatch = !selectedClientFilter || event.clientId === selectedClientFilter
-      const caregiverMatch = !selectedCaregiverFilter || event.caregiverId === selectedCaregiverFilter
+      const clientMatch = selectedClientFilter === '' || event.client.id === selectedClientFilter
+      const caregiverMatch = selectedCaregiverFilter === '' || event.caregiver.id === selectedCaregiverFilter
       const statusMatch = !statusFilter || event.status === statusFilter
       return clientMatch && caregiverMatch && statusMatch
     })
@@ -197,7 +201,16 @@ const Calendar = () => {
 
   const handleDayClick = (day: Date | null) => {
     if (!day) return
-    const dateStr = day.toISOString().split('T')[0]
+    const dateStr = new Date(day).toISOString().split('T')[0]
+    console.log(
+      'Date string in handleDayClick ---->> ',
+      dateStr,
+      'Type of dateStr: ',
+      typeof dateStr,
+      ' and day --->> ',
+      day
+    )
+    dispatch(setSelectedDate(day))
     setSelectedDate(dateStr)
     setLocalSelectedEvent(null)
     // setIsEventModalOpen(true)
@@ -267,7 +280,7 @@ const Calendar = () => {
 
     const dateStr = format(day.toISOString(), 'M-dd-yyyy') //.split('T')[0]
     const dayEvents = eventsByDate[dateStr] || []
-    console.log(expandedDays);
+    console.log(expandedDays)
     const isExpanded = expandedDays.has(dateStr)
 
     // Apply current filters to day events
@@ -282,7 +295,11 @@ const Calendar = () => {
     const maxVisible = 1
 
     if (filteredEvents.length === 0) return null
-    console.log(isExpanded ? filteredEvents : filteredEvents.slice(0, maxVisible), filteredEvents, filteredEvents.slice(0, maxVisible));
+    console.log(
+      isExpanded ? filteredEvents : filteredEvents.slice(0, maxVisible),
+      filteredEvents,
+      filteredEvents.slice(0, maxVisible)
+    )
 
     const visibleEvents = isExpanded ? filteredEvents : filteredEvents.slice(0, maxVisible)
     const hiddenCount = filteredEvents.length - maxVisible
@@ -364,7 +381,7 @@ const Calendar = () => {
           p: 4
         }}
       >
-        <CalenderFilters />
+        <CalenderFilters filterEvent={filterEvent} />
       </Box>
 
       <Box
@@ -467,8 +484,9 @@ const Calendar = () => {
                 <Button
                   key={status.id}
                   onClick={() => setStatusFilter(statusFilter === status.id ? null : status.id)}
-                  className={`flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-1 rounded-full text-xs font-medium border transition-all duration-200 hover:shadow-md ${statusFilter === status.id ? 'ring-2 ring-offset-1 transform scale-105' : 'hover:scale-105'
-                    }`}
+                  className={`flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-1 rounded-full text-xs font-medium border transition-all duration-200 hover:shadow-md ${
+                    statusFilter === status.id ? 'ring-2 ring-offset-1 transform scale-105' : 'hover:scale-105'
+                  }`}
                   sx={{
                     backgroundColor: statusFilter === status.id ? status.color : status.bgColor,
                     borderColor: status.color,
@@ -529,7 +547,7 @@ const Calendar = () => {
               const dateStr = format(day.toISOString(), 'M-dd-yyyy')
               const dayEvents = eventsByDate[dateStr] || []
               const isExpanded = expandedDays.has(dateStr)
-              console.log(expandedDays.has(dateStr), expandedDays, dateStr);
+              console.log(expandedDays.has(dateStr), expandedDays, dateStr)
 
               // Consistent height for better uniformity
               const getHeightClass = () => {
@@ -547,9 +565,10 @@ const Calendar = () => {
                   onClick={() => handleDayClick(day)}
                   className={`
                     ${getHeightClass()} p-2 cursor-pointer transition-all duration-300 touch-manipulation rounded-md border flex flex-col
-                    ${isExpanded
-                      ? 'overflow-visible z-10 shadow-lg border-blue-300 dark:border-blue-500 relative'
-                      : `overflow-hidden border-[${theme.palette.background.paperChannel}]`
+                    ${
+                      isExpanded
+                        ? 'overflow-visible z-10 shadow-lg border-blue-300 dark:border-blue-500 relative'
+                        : `overflow-hidden border-[${theme.palette.background.paperChannel}]`
                     }
                     ${!isCurrentMonth ? 'opacity-40' : ''}
                     ${isCurrentDay ? 'ring-2 ring-blue-500 dark:ring-blue-400' : ''}

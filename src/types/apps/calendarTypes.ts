@@ -22,6 +22,7 @@ export type CalendarType = {
   filteredEvents: EventInput[]
   selectedEvent: null | any
   selectedCalendars: CalendarFiltersType[]
+  selectedDate: null | string
 }
 
 export type AddEventType = Omit<EventInput, 'id'>
@@ -52,4 +53,5 @@ export type AddEventSidebarType = {
   handleUpdateEvent: (updatedEvent: any) => void
   payPeriod?: any
   data?: any
+  selectedDate?: any
 }

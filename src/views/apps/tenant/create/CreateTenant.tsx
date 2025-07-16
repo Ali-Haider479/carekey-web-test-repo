@@ -185,21 +185,22 @@ const CreateTenant = (props: Props) => {
         roleId: 2
       }
       const response = await api.post(`/tenant`, tenantPayload)
-      const localDate = new Date()
-      localDate.setHours(0, 0, 0, 0)
-      const IsoString = new Date(localDate.toISOString())
-      const localTime = localDate.toISOString().split('T')[1].split('.')[0]
+      // #-----------Code Commented as pay period is now creating at backend-------------#"
+      // const localDate = new Date()
+      // localDate.setHours(0, 0, 0, 0)
+      // const IsoString = new Date(localDate.toISOString())
+      // const localTime = localDate.toISOString().split('T')[1].split('.')[0]
 
-      const payload = {
-        startDate: IsoString,
-        startTime: localTime,
-        endDate: null,
-        endTime: null,
-        tenantId: response?.data?.id,
-        numberOfWeeks: 1
-      }
-      const payperiod = await api.post(`/pay-period`, payload)
-      router.replace(`/en/apps/accounts/tenant-list`)
+      // const payload = {
+      //   startDate: IsoString,
+      //   startTime: localTime,
+      //   endDate: null,
+      //   endTime: null,
+      //   tenantId: response?.data?.id,
+      //   numberOfWeeks: 1
+      // }
+      // const payperiod = await api.post(`/pay-period`, payload)
+      if (response.data) router.replace(`/en/apps/accounts/tenant-list`)
     } catch (error: any) {
       console.log('ERROR', error)
       if (error.response?.data?.message?.includes('Email already exists')) {

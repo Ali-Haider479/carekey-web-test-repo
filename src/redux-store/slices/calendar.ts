@@ -1,9 +1,6 @@
-// Third-party Imports
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import type { PayloadAction } from '@reduxjs/toolkit'
 import type { EventInput } from '@fullcalendar/core'
-
-// Type Imports
 import type { CalendarFiltersType, CalendarType } from '@/types/apps/calendarTypes'
 import api from '@/utils/api'
 
@@ -16,20 +13,11 @@ const initialState: CalendarType & { loading: boolean; error: string | null } = 
   selectedEvent: null,
   selectedCalendars: ['Personal', 'Business', 'Family', 'Holiday', 'ETC'],
   loading: false,
-  error: null
+  error: null,
+  selectedDate: null
 }
 
-// Create async thunk for fetching events
-// export const fetchEvents = createAsyncThunk('calendar/fetchEvents', async (_, { rejectWithValue }) => {
-//   try {
-//     const response = await api.get('http://192.168.18.192:8080/schedule')
-
-//     return response.data
-//   } catch (error: any) {
-//     return rejectWithValue(error.response?.data || 'Failed to fetch events')
-//   }
-// })
-
+// Async thunk for fetching events
 export const fetchEvents = createAsyncThunk('calendar/fetchEvents', async (_, { rejectWithValue }) => {
   try {
     const response = await api.get(`/schedule`)
@@ -119,6 +107,9 @@ export const calendarSlice = createSlice({
     clearFilter: state => {
       state.clientEvents = []
       state.caregiverEvents = []
+    },
+    setSelectedDate: (state, action) => {
+      state.selectedDate = action.payload
     }
   },
   extraReducers: builder => {
@@ -129,8 +120,22 @@ export const calendarSlice = createSlice({
       })
       .addCase(fetchEvents.fulfilled, (state, action) => {
         state.loading = false
-        state.events = action.payload
-        state.filteredEvents = action.payload
+        // Map events to check dates and set status to 'missed' if both start and end dates are in the past
+        const currentDate = new Date()
+        state.events = action.payload.map((event: any) => {
+          const startDate = new Date(event.start)
+          const endDate = event.end ? new Date(event.end) : startDate // Handle cases where end date is not provided
+
+          // Check if both start and end dates are before the current date
+          if (startDate < currentDate && endDate < currentDate && event.status === 'scheduled') {
+            return { ...event, status: 'missed' }
+          }
+          if (event.timelog !== null && event.status === 'worked' && event.timelog.tsApprovalStatus === 'Approved') {
+            return { ...event, status: 'approved' }
+          }
+          return event
+        })
+        state.filteredEvents = state.events
       })
       .addCase(fetchEvents.rejected, (state, action) => {
         state.loading = false
@@ -149,7 +154,8 @@ export const {
   filterCaregiverSchedules,
   filterClientSchedules,
   filterAllCalendarLabels,
-  clearFilter
+  clearFilter,
+  setSelectedDate
 } = calendarSlice.actions
 
 export default calendarSlice.reducer

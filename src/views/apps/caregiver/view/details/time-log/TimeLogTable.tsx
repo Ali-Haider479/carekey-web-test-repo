@@ -156,18 +156,9 @@ const TimeLogTable = () => {
       label: 'MANUAL',
       minWidth: 170,
       render: item => (
-        <Chip
-          label={item?.manualEntry === true ? 'Yes' : 'No'}
+        <Typography
+          className='font-normal text-base my-3'
           sx={{
-            backgroundColor:
-              item?.manualEntry === true
-                ? theme.palette.mode === 'light'
-                  ? theme.palette.success.lightOpacity
-                  : theme.palette.success.lighterOpacity
-                : theme.palette.mode === 'light'
-                  ? theme.palette.warning.lightOpacity
-                  : theme.palette.warning.lighterOpacity,
-            borderRadius: '20px',
             color:
               item?.manualEntry === true
                 ? theme.palette.mode === 'light'
@@ -175,21 +166,10 @@ const TimeLogTable = () => {
                   : theme.palette.success.dark
                 : theme.palette.mode === 'light'
                   ? theme.palette.warning.main
-                  : theme.palette.warning.dark,
-            '& .MuiChip-label': {
-              padding: '0 15px'
-            }
+                  : theme.palette.warning.dark
           }}
-        />
-      )
-    },
-    {
-      id: 'loggedVia',
-      label: 'LOGGED VIA',
-      minWidth: 50,
-      render: (item: any) => (
-        <Typography className='font-normal text-base my-3'>
-          {item.loggedVia === 'desktop' ? <Computer /> : <TabletAndroid />}
+        >
+          {item?.manualEntry === true && item.loggedVia === 'desktop' ? <Computer /> : <TabletAndroid />}
         </Typography>
       )
     }

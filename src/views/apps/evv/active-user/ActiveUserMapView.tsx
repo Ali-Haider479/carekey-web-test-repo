@@ -1,7 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react'
-import { Card } from '@mui/material'
-import FleetMap from '../../logistics/fleet/FleetMap'
 import Radar from 'radar-sdk-js'
+import 'radar-sdk-js/dist/radar.css'
 
 Radar.initialize(process.env.NEXT_PUBLIC_RADAR_TEST_PUBLISHABLE_KEY || '')
 
@@ -25,11 +24,14 @@ const ActiveUserMapView = ({
       return null
     }
 
-    const initialViewState = useMemo(() => ({
-      longitude: timeLogData[0].startLocation.longitude,
-      latitude: timeLogData[0].startLocation.latitude,
-      zoom: 13
-    }), [timeLogData])
+    const initialViewState = useMemo(
+      () => ({
+        longitude: timeLogData[0].startLocation.longitude,
+        latitude: timeLogData[0].startLocation.latitude,
+        zoom: 13
+      }),
+      [timeLogData]
+    )
 
     const [expanded, setExpanded] = useState(0)
     const [viewState, setViewState] = useState(initialViewState)
@@ -46,14 +48,15 @@ const ActiveUserMapView = ({
       })
 
       // Wait for map to fully load before adding markers
-      radarMap.on('load', () => {// Force resize to ensure proper layout calculation
+      radarMap.on('load', () => {
+        // Force resize to ensure proper layout calculation
         setTimeout(() => {
           radarMap.resize()
           // Add markers for each coordinate
-          geoJsonData.features.forEach((feature: any) => {
+          geoJsonData.features.forEach((feature: any, index: number) => {
             const { coordinates } = feature.geometry
             const { caregiverName, clientName, address } = feature.properties
-            const popupText = `${caregiverName} for ${clientName}${address ? `<br>Address: ${address}` : ''}`
+            const popupText = `${caregiverName} for ${clientName} ${address ? `Address: ${address.formattedAddress}` : ''}`
 
             // Validate coordinates
             if (!coordinates || !Array.isArray(coordinates) || coordinates.length !== 2) {
@@ -61,23 +64,25 @@ const ActiveUserMapView = ({
               return
             }
 
+            console.log(`coordinates ${index}---->`, coordinates)
+
             // Create marker with fixed positioning
-            const marker = Radar.ui.marker({
-              html: `<div style="background-color: red; width: 10px; height: 10px; border-radius: 50%; transform: translate(-50%, -50%);"></div>`,
-              popup: {
-                text: popupText,
-                closeOnClick: true,
-                offset: 10
-              }
-            })
-              .setLngLat([Number(coordinates[0]), Number(coordinates[1])]) // Ensure numeric coordinates
+            Radar.ui
+              .marker({
+                popup: {
+                  html: `<div style="color: rgba(0,0,0,0.7); padding: 1.5px;">${popupText}</div>`, // Popup content
+                  closeOnClick: true,
+                  offset: 10
+                }
+              })
+              .setLngLat([Number(coordinates[0]), Number(coordinates[1])])
               .addTo(radarMap)
           })
 
           // Log map center and bounds for debugging
-          console.log('Map Center:', radarMap.getCenter());
-          console.log('Map Bounds:', radarMap.getBounds());
-          console.log('GeoJSON Data:', geoJsonData);
+          console.log('Map Center:', radarMap.getCenter())
+          console.log('Map Bounds:', radarMap.getBounds())
+          console.log('GeoJSON Data:', geoJsonData)
           // Additional debugging
           console.log('Map dimensions:', radarMap.getContainer().offsetWidth, 'x', radarMap.getContainer().offsetHeight)
         }, 100) // Short delay allows layout stabilization
@@ -87,13 +92,15 @@ const ActiveUserMapView = ({
 
       // Update view state on map move
       radarMap.on('moveend', () => {
-        const center = radarMap.getCenter();
+        const center = radarMap.getCenter()
         setViewState({
           longitude: center.lng,
           latitude: center.lat,
           zoom: radarMap.getZoom()
         })
       })
+
+      radarMap.fitToMarkers({ padding: 20 })
 
       // Cleanup on unmount
       return () => {
@@ -104,17 +111,16 @@ const ActiveUserMapView = ({
     console.log('GEO JSON data with addresses', geoJsonData)
 
     return (
-      <div className='h-[40vh] w-[75vw]'>
-        <div
-          id='map'
-          style={{
-            width: '75vw',
-            height: '40vh',
-            position: 'relative', // Changed to relative for proper marker containment
-            overflow: 'hidden' // Prevent markers from overflowing
-          }}
-        />
-      </div>
+      <div
+        id='map'
+        style={{
+          width: '100%',
+          height: '40vh',
+          position: 'relative', // Changed to relative for proper marker containment
+          overflow: 'hidden', // Prevent markers from overflowing
+          borderRadius: '4px'
+        }}
+      />
     )
   }
   return null // Handle case when timeLogData is empty

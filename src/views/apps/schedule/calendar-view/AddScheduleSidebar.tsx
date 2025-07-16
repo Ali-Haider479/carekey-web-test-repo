@@ -5,7 +5,7 @@ import Button from '@mui/material/Button'
 import MenuItem from '@mui/material/MenuItem'
 import IconButton from '@mui/material/IconButton'
 import Typography from '@mui/material/Typography'
-import { useForm, Controller } from 'react-hook-form'
+import { useForm, Controller, FormProvider } from 'react-hook-form'
 import CustomTextField from '@core/components/mui/TextField'
 import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
 import {
@@ -14,12 +14,23 @@ import {
   fetchEvents,
   filterEvents,
   selectedEvent,
+  setSelectedDate,
   updateEvent
 } from '@/redux-store/slices/calendar'
 import axios from 'axios'
 import FormModal from '@/@core/components/mui/Modal'
 import { AddEventSidebarType, AddEventType } from '@/types/apps/calendarTypes'
-import { Alert, CircularProgress, Grid2 as Grid, patch, Snackbar, useTheme } from '@mui/material'
+import {
+  Alert,
+  Checkbox,
+  CircularProgress,
+  Dialog,
+  FormLabel,
+  Grid2 as Grid,
+  patch,
+  Snackbar,
+  useTheme
+} from '@mui/material'
 import CustomAlert from '@/@core/components/mui/Alter'
 import api from '@/utils/api'
 import { serviceStatuses, staffRatio } from '@/utils/constants'
@@ -35,6 +46,8 @@ import {
   ExpandLess as ChevronUp
 } from '@mui/icons-material'
 import { formatTimeTo12hr } from '@/utils/helperFunctions'
+import DialogCloseButton from '@/components/dialogs/DialogCloseButton'
+import { useAppDispatch } from '@/hooks/useDispatch'
 
 interface PickerProps {
   label?: string
@@ -151,13 +164,14 @@ function createTimeFrames(startDate: Date, assignedHours: number) {
 const AddEventModal = (props: AddEventSidebarType) => {
   const {
     calendarStore,
-    dispatch,
+    // dispatch,
     addEventSidebarOpen,
     handleAddEventSidebarToggle,
     isEdited,
     setIsEditedOff,
     handleAddEvent,
-    handleUpdateEvent
+    handleUpdateEvent,
+    selectedDate
   } = props
   const [values, setValues] = useState<DefaultStateType>(defaultState)
   const [alertOpen, setAlertOpen] = useState<boolean>(false)
@@ -171,9 +185,33 @@ const AddEventModal = (props: AddEventSidebarType) => {
   const [selectedServiceAuth, setSelectedServiceAuth] = useState<any>()
   const [activeClientServiceAuth, setActiveClientServiceAuth] = useState<any>()
   const [serviceAuthUnitsRemaining, setServiceAuthUnitsRemaining] = useState<any>(0)
+  const [isDeleteModalShow, setIsDeleteModalShow] = useState<boolean>(false)
+  const [bulkDeleteChecked, setBulkDeleteChecked] = useState<boolean>(false)
+  const [deleteButtonLoading, setDeleteButtonLoading] = useState<boolean>(false)
+  const [bulkEditChecked, setBulkEditChecked] = useState<boolean>(false)
   const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
   const [showPreview, setShowPreview] = useState(true)
   const theme = useTheme()
+
+  console.log('calendarStore in Add Schedule Side Bar ---->', calendarStore)
+
+  const dispatch = useAppDispatch()
+
+  const handleBulkDeleteChange = () => {
+    if (!bulkDeleteChecked) {
+      setBulkDeleteChecked(true)
+    } else {
+      setBulkDeleteChecked(false)
+    }
+  }
+
+  const handleBulkEditChange = () => {
+    if (!bulkEditChecked) {
+      setBulkEditChecked(true)
+    } else {
+      setBulkEditChecked(false)
+    }
+  }
 
   const fetchClientServiceAuth = async () => {
     try {
@@ -262,9 +300,9 @@ const AddEventModal = (props: AddEventSidebarType) => {
       setSelectedService(filteredServiceType)
       const corrospondingServiceAuth = clientServiceAuth?.filter(
         (item: any) =>
-          item.procedureCode === filteredServiceType.procedureCode &&
-          (item.modifierCode === filteredServiceType.modifierCode ||
-            (item.modifierCode === null && filteredServiceType.modifierCode === null))
+          item.procedureCode === filteredServiceType?.procedureCode &&
+          (item.modifierCode === filteredServiceType?.modifierCode ||
+            (item.modifierCode === null && filteredServiceType?.modifierCode === null))
       )
       console.log('Corrosponding Service Auth for service: ', corrospondingServiceAuth)
       const activeCorrospondingServiceAuth = corrospondingServiceAuth?.filter(
@@ -305,6 +343,7 @@ const AddEventModal = (props: AddEventSidebarType) => {
     setValue,
     clearErrors,
     handleSubmit,
+    register,
     formState: { errors }
   } = useForm({ defaultValues: { title: '' } })
 
@@ -316,7 +355,7 @@ const AddEventModal = (props: AddEventSidebarType) => {
       setValues({
         title: event.title || '',
         endDate: event.end !== null ? event.end : event.start,
-        startDate: event.start !== null ? event.start : new Date(),
+        startDate: event.start !== null ? new Date(event.start) : new Date(),
         startTime: event.start !== null ? event.start : new Date(),
         endTime: event.end !== null ? event.end : event.start,
         caregiver: event?.caregiver?.id || event?.caregiver,
@@ -336,13 +375,23 @@ const AddEventModal = (props: AddEventSidebarType) => {
 
   const resetToEmptyValues = useCallback(() => {
     setValue('title', '')
-    setValues(defaultState)
-  }, [setValue])
+    console.log('Value of selected Date in resetToEmptyValues --->>', calendarStore)
+    setValues({
+      ...defaultState,
+      startDate: calendarStore?.selectedDate
+        ? mergeDateWithTime(new Date(calendarStore?.selectedDate), values.startTime)
+        : new Date(),
+      endDate: calendarStore?.selectedDate
+        ? mergeDateWithTime(new Date(calendarStore?.selectedDate), values.endTime)
+        : new Date()
+    })
+  }, [setValue, calendarStore])
 
   const handleModalClose = () => {
     setValues(defaultState)
     clearErrors()
     dispatch(selectedEvent(null))
+    dispatch(setSelectedDate(null))
     handleAddEventSidebarToggle()
     setAlertOpen(false)
   }
@@ -390,6 +439,7 @@ const AddEventModal = (props: AddEventSidebarType) => {
         : values.endDate
 
     const bulkEvents: AddEventType[] = []
+    const editBulkEvents: AddEventType[] = []
 
     // Calculate total days including cases where it crosses midnight
     const totalDays = calculateTotalDays(startDate, endDate)
@@ -414,7 +464,8 @@ const AddEventModal = (props: AddEventSidebarType) => {
 
     for (let i = 0; i < totalDays; i++) {
       const eventStartDate = new Date(currentDate)
-      const finalStartDate = mergeDateWithTime(eventStartDate, values.startTime)
+      const eventStartTime = new Date(values.startTime)
+      const finalStartDate = mergeDateWithTime(eventStartDate, eventStartTime)
       // const finalEndDate = new Date(finalStartDate.getTime() + assignedHours * 60 * 60 * 1000)
       const finalEndDate =
         typeof assignedHours === 'number'
@@ -464,15 +515,60 @@ const AddEventModal = (props: AddEventSidebarType) => {
       }
       try {
         if (bulkEvents.length === 1) {
-          console.log('CALENDER STORE', calendarStore)
-          const eventId = calendarStore?.selectedEvent?.id
-          console.log('EVENT ID', eventId)
-          const patchBody = {
-            ...bulkEvents[0]
+          if (bulkEditChecked) {
+            const matchingEvents = calendarStore?.events?.filter((event: any) => {
+              const eventStart = event?.start?.split('T')[1]
+              const eventEnd = event?.end?.split('T')[1]
+              const selectedEventStart = calendarStore?.selectedEvent?.start?.split('T')[1]
+              const selectedEventEnd = calendarStore?.selectedEvent?.end?.split('T')[1]
+              return (
+                eventStart === selectedEventStart &&
+                eventEnd === selectedEventEnd &&
+                event.caregiver.id === calendarStore.selectedEvent.caregiver.id &&
+                event.client.id === calendarStore.selectedEvent.client.id
+              )
+            })
+            console.log('Found Matching Events ---->> ', matchingEvents)
+            const bulkUpdatePayload = matchingEvents.map((event: any) => {
+              const { start, end, ...updateScheduleDto } = bulkEvents[0]
+              // Preserve original event date, update time based on assignedHours
+              const originalEndDate = new Date(event.end)
+              const updatedEndTime = new Date(
+                new Date(event.start).getTime() +
+                  (typeof assignedHours === 'number' ? assignedHours * 60 * 60 * 1000 : 0)
+              )
+              const finalEndDate = new Date(
+                originalEndDate.getFullYear(),
+                originalEndDate.getMonth(),
+                originalEndDate.getDate(),
+                updatedEndTime.getHours(),
+                updatedEndTime.getMinutes(),
+                updatedEndTime.getSeconds()
+              )
+              return {
+                id: event.id,
+                updateScheduleDto: {
+                  ...updateScheduleDto,
+                  end: finalEndDate
+                }
+              }
+            })
+            const updatedSchedules = await api.patch('/schedule/bulk', bulkUpdatePayload)
+            updatedSchedules.data.forEach((updatedSchedule: any) => {
+              handleUpdateEvent(updatedSchedule)
+            })
+            handleModalClose()
+          } else {
+            console.log('CALENDER STORE', calendarStore)
+            const eventId = calendarStore?.selectedEvent?.id
+            console.log('EVENT ID', eventId)
+            const patchBody = {
+              ...bulkEvents[0]
+            }
+            const updatedSchedule = await api.patch(`/schedule/${eventId}`, patchBody)
+            handleUpdateEvent(updatedSchedule.data)
+            handleModalClose()
           }
-          const updatedSchedule = await api.patch(`/schedule/${eventId}`, patchBody)
-          handleUpdateEvent(updatedSchedule.data)
-          handleModalClose()
         }
       } catch (error: any) {
         console.error('Error updating schedule:', error)
@@ -508,6 +604,67 @@ const AddEventModal = (props: AddEventSidebarType) => {
     dispatch(filterEvents())
     setIsAddEventLoading(false)
   }
+
+  console.log('Bulk Delete checkbox state ---->> ', bulkDeleteChecked)
+
+  const handleDeleteSchedule = async () => {
+    console.log('Inside handle Delete function.......')
+    setDeleteButtonLoading(true)
+    try {
+      if (!bulkDeleteChecked) {
+        const delScheduleRes = await api.delete(`/schedule/${calendarStore?.selectedEvent?.id}`)
+        console.log('Delete Schedule Response ---->> ', delScheduleRes)
+      } else {
+        const matchingEvents = calendarStore?.events?.filter((event: any) => {
+          const eventStart = event?.start?.split('T')[1]
+          const eventEnd = event?.end?.split('T')[1]
+          const selectedEventStart = calendarStore?.selectedEvent?.start?.split('T')[1]
+          const selectedEventEnd = calendarStore?.selectedEvent?.end?.split('T')[1]
+          return (
+            eventStart === selectedEventStart &&
+            eventEnd === selectedEventEnd &&
+            event.caregiver.id === calendarStore.selectedEvent.caregiver.id &&
+            event.client.id === calendarStore.selectedEvent.client.id
+          )
+        })
+        console.log('Found Matching Events ---->> ', matchingEvents)
+        if (matchingEvents.length === 0) {
+          setTimeout(() => {
+            setAlertOpen(true)
+            setAlertMessage({
+              message: 'No corresponding schedules found to delete',
+              severity: 'warning'
+            })
+          }, 5000)
+          const delScheduleRes = await api.delete(`/schedule/${calendarStore?.selectedEvent?.id}`)
+          console.log('Delete Schedule Response ---->> ', delScheduleRes)
+        } else {
+          for (const event of matchingEvents) {
+            console.log('EVENT IN FOR LOOP --->> ', event)
+            try {
+              const delScheduleRes = await api.delete(`/schedule/${event.id}`)
+              console.log('Delete Schedule Response ---->> ', delScheduleRes)
+            } catch (error) {
+              console.error('Error Deleting Schedule: ', error)
+            }
+          }
+        }
+      }
+      dispatch(fetchEvents())
+      dispatch(filterEvents())
+      setIsDeleteModalShow(false)
+      setBulkDeleteChecked(false)
+      handleAddEventSidebarToggle()
+    } catch (error) {
+      console.error('Error deleting scheudle: ', error)
+    } finally {
+      setDeleteButtonLoading(false)
+    }
+  }
+
+  const handleDelete = () => setIsDeleteModalShow(true)
+
+  const handleDeleteModalClose = () => setIsDeleteModalShow(false)
 
   const mergeDateWithTime = (date: Date, time: Date): Date => {
     const mergedDate = new Date(date)
@@ -553,6 +710,7 @@ const AddEventModal = (props: AddEventSidebarType) => {
         }
         handleCancel={handleModalClose}
         bodyStyle={{ padding: 0 }}
+        handleDelete={handleDelete}
       >
         {alertOpen === true && (
           <Alert onClose={() => setAlertOpen(false)} severity={alertMessage?.severity}>
@@ -634,8 +792,15 @@ const AddEventModal = (props: AddEventSidebarType) => {
                     Time:
                   </span>
                   <span className={`text-sm ${theme.palette.mode === 'light' ? 'text-gray-900' : 'text-white'}`}>
-                    {new Date(calendarStore?.selectedEvent.start).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })} -{' '}
-                    {new Date(calendarStore?.selectedEvent.end).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
+                    {new Date(calendarStore?.selectedEvent.start).toLocaleTimeString([], {
+                      hour: 'numeric',
+                      minute: '2-digit'
+                    })}{' '}
+                    -{' '}
+                    {new Date(calendarStore?.selectedEvent.end).toLocaleTimeString([], {
+                      hour: 'numeric',
+                      minute: '2-digit'
+                    })}
                   </span>
                 </div>
                 <div className='flex items-center space-x-2'>
@@ -679,6 +844,7 @@ const AddEventModal = (props: AddEventSidebarType) => {
                   setShowPreview(false)
                 }}
                 endIcon={<ChevronDown />}
+                disabled={calendarStore?.selectedEvent?.status !== 'scheduled'}
               >
                 Show Edit Modal
               </Button>
@@ -1093,6 +1259,12 @@ const AddEventModal = (props: AddEventSidebarType) => {
               className='mbe-3'
               id='event-notes'
             />
+            {calendarStore.selectedEvent && (
+              <div>
+                <Checkbox checked={bulkEditChecked} onChange={handleBulkEditChange} />
+                <FormLabel>Edit all schedules for the matching start time and end time</FormLabel>
+              </div>
+            )}
             <div className='flex gap-4 justify-end'>
               {calendarStore.selectedEvent && calendarStore.selectedEvent.title.length ? (
                 <>
@@ -1128,6 +1300,46 @@ const AddEventModal = (props: AddEventSidebarType) => {
           </form>
         </div>
       </FormModal>
+      <Dialog
+        open={isDeleteModalShow}
+        onClose={handleDeleteModalClose}
+        closeAfterTransition={false}
+        sx={{ '& .MuiDialog-paper': { overflow: 'visible' } }}
+        maxWidth='md'
+      >
+        <DialogCloseButton onClick={handleDeleteModalClose} disableRipple>
+          <i className='bx-x' />
+        </DialogCloseButton>
+        <form onSubmit={handleSubmit(handleDeleteSchedule)}>
+          <div className='flex items-center justify-center w-full px-5 flex-col'>
+            <div>
+              <h2 className='text-xl font-semibold mt-10 mb-6'>Delete Schedule</h2>
+            </div>
+            <div>
+              <Typography className='mb-3 font-semibold'>Are you sure you want to delete this schedule?</Typography>
+            </div>
+            <div>
+              <div>
+                <Checkbox checked={bulkDeleteChecked} onChange={handleBulkDeleteChange} />
+                <FormLabel>Delete all schedules for the matching start time and end time</FormLabel>
+              </div>
+            </div>
+            <div className='flex gap-4 justify-end mt-4 mb-4 w-full'>
+              <Button variant='outlined' color='secondary' onClick={handleDeleteModalClose}>
+                NO
+              </Button>
+              <Button
+                type='submit'
+                variant='contained'
+                disabled={deleteButtonLoading}
+                startIcon={deleteButtonLoading ? <CircularProgress color='inherit' size={24} /> : null}
+              >
+                YES
+              </Button>
+            </div>
+          </div>
+        </form>
+      </Dialog>
     </>
   )
 }

@@ -36,7 +36,12 @@ const TenantRight = ({ tabContentList }: { tabContentList: { [key: string]: Reac
                 iconPosition='start'
               />
               <Tab icon={<i className='bx-bell' />} value='notifications' label='Notifications' iconPosition='start' />
-              {/* <Tab icon={<i className='bx-link' />} value='connections' label='Connections' iconPosition='start' /> */}
+              <Tab
+                icon={<i className='bx-link' />}
+                value='configurations'
+                label='Configurations'
+                iconPosition='start'
+              />
             </CustomTabList>
           </Grid>
           <Grid size={{ xs: 12 }}>

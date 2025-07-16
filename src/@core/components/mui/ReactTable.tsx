@@ -374,13 +374,13 @@ function ReactTable<T extends { subRows?: T[] }>({
             } as SxProps<Theme>
           }
         >
-          {hasSubRows && (
-            <TableCell padding='none' sx={{ width: '48px' }}>
+          <TableCell padding='none' sx={{ width: '48px' }}>
+            {hasSubRows && (
               <IconButton size='small' onClick={() => handleExpand(id)} sx={{ ml: 1 }}>
                 {isItemExpanded ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
               </IconButton>
-            </TableCell>
-          )}
+            )}
+          </TableCell>
           {enableRowSelect && (
             <TableCell padding='checkbox'>
               <Checkbox checked={isItemSelected} onChange={() => handleSelect(id, item)} />
@@ -445,7 +445,7 @@ function ReactTable<T extends { subRows?: T[] }>({
                 }
               }}
             >
-              {/* <TableCell padding='none' sx={{ width: '48px' }} /> */}
+              <TableCell padding='none' sx={{ width: '48px' }} />
               {enableRowSelect && (
                 <TableCell padding='checkbox'>
                   <Checkbox

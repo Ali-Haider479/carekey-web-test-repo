@@ -10,6 +10,7 @@ import {
   Typography
 } from '@mui/material'
 import CloseIcon from '@mui/icons-material/Close'
+import { DeleteOutline } from '@mui/icons-material'
 
 interface FormModalProps {
   isModalOpen: boolean
@@ -18,6 +19,7 @@ interface FormModalProps {
   title?: string
   handleCancel?: () => void
   bodyStyle?: React.CSSProperties
+  handleDelete?: () => void
 }
 
 // Updated styled components to match the design
@@ -34,8 +36,11 @@ const StyledDialog = styled(Dialog)(({ theme }) => ({
 
 const StyledDialogTitle = styled(DialogTitle)(({ theme }) => ({
   textAlign: 'left',
-  padding: '16px 24px',
+  padding: '16px 20px',
   borderBottom: `1px solid ${theme.palette.divider}`,
+  display: 'flex', // Add flexbox
+  alignItems: 'center', // Vertically center items
+  justifyContent: 'space-between', // Space between title and icons
   '& h3': {
     margin: 0,
     fontSize: '16px',
@@ -46,10 +51,14 @@ const StyledDialogTitle = styled(DialogTitle)(({ theme }) => ({
 }))
 
 const CloseButton = styled(IconButton)(({ theme }) => ({
-  position: 'absolute',
-  right: 12,
-  top: '50%',
-  transform: 'translateY(-50%)',
+  color: theme.palette.grey[500],
+  padding: 4,
+  '& .MuiSvgIcon-root': {
+    fontSize: '20px'
+  }
+}))
+
+const DeleteButton = styled(IconButton)(({ theme }) => ({
   color: theme.palette.grey[500],
   padding: 4,
   '& .MuiSvgIcon-root': {
@@ -86,6 +95,7 @@ const FormModal: React.FC<FormModalProps> = ({
   children,
   title = '',
   handleCancel,
+  handleDelete,
   bodyStyle
 }) => {
   const closeModalHandler = () => {
@@ -118,13 +128,24 @@ const FormModal: React.FC<FormModalProps> = ({
     <StyledDialog open={isModalOpen} onClose={handleCancel || closeModalHandler} maxWidth={false}>
       <StyledDialogTitle>
         <Typography className='font-bold'>{title}</Typography>
-        <CloseButton
-          aria-label='close'
-          onClick={handleCancel || closeModalHandler}
-          className='rounded-full bg-[#32475C8A] text-white'
-        >
-          <CloseIcon />
-        </CloseButton>
+        <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+          <DeleteButton
+            aria-label='delete'
+            className='rounded-full bg-[#32475C8A] hover:bg-red-400'
+            onClick={handleDelete}
+            sx={{ color: '#fff' }} // Ensure white color for consistency
+          >
+            <DeleteOutline />
+          </DeleteButton>
+          <CloseButton
+            aria-label='close'
+            onClick={handleCancel || closeModalHandler}
+            className='rounded-full bg-[#32475C8A]'
+            sx={{ color: '#fff' }}
+          >
+            <CloseIcon />
+          </CloseButton>
+        </div>
       </StyledDialogTitle>
       {mainContent}
     </StyledDialog>

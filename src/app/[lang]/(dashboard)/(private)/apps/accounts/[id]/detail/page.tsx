@@ -28,13 +28,15 @@ const TenantOverViewTab = dynamic(() => import('@/views/apps/tenant/view/tenant-
 const TenantSecurityTab = dynamic(() => import('@/views/apps/tenant/view/tenant-right/security'))
 const TenantBillingPlans = dynamic(() => import('@/views/apps/tenant/view/tenant-right/billing-plans'))
 const TenantNotificationsTab = dynamic(() => import('@/views/apps/tenant/view/tenant-right/notifications'))
+const TenantConfigurationsTab = dynamic(() => import('@/views/apps/tenant/view/tenant-right/configurations'))
 
 // Vars
 const tabContentList = (data?: PricingPlanType[]): { [key: string]: ReactElement } => ({
-    overview: <TenantOverViewTab />,
-    security: <TenantSecurityTab />,
-    'billing-plans': <TenantBillingPlans data={data} />,
-    notifications: <TenantNotificationsTab />
+  overview: <TenantOverViewTab />,
+  security: <TenantSecurityTab />,
+  'billing-plans': <TenantBillingPlans data={data} />,
+  notifications: <TenantNotificationsTab />,
+  configurations: <TenantConfigurationsTab />
 })
 
 /**
@@ -56,19 +58,19 @@ const tabContentList = (data?: PricingPlanType[]): { [key: string]: ReactElement
 } */
 
 const TenantViewTab = async () => {
-    // Vars
-    const data = await getPricingData()
+  // Vars
+  const data = await getPricingData()
 
-    return (
-        <Grid container spacing={6}>
-            <Grid size={{ xs: 12, lg: 4, md: 5 }}>
-                <TenantLeftOverview />
-            </Grid>
-            <Grid size={{ xs: 12, lg: 8, md: 7 }}>
-                <TenantRight tabContentList={tabContentList(data)} />
-            </Grid>
-        </Grid>
-    )
+  return (
+    <Grid container spacing={6}>
+      <Grid size={{ xs: 12, lg: 4, md: 5 }}>
+        <TenantLeftOverview />
+      </Grid>
+      <Grid size={{ xs: 12, lg: 8, md: 7 }}>
+        <TenantRight tabContentList={tabContentList(data)} />
+      </Grid>
+    </Grid>
+  )
 }
 
 export default TenantViewTab

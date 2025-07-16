@@ -3,7 +3,7 @@ import Dropdown from '@/@core/components/mui/DropDown'
 import { useAppDispatch } from '@/hooks/useDispatch'
 import { clearFilter, filterCaregiverSchedules } from '@/redux-store/slices/calendar'
 import api from '@/utils/api'
-import { Grid2 as Grid, Typography } from '@mui/material'
+import { Grid2 as Grid, MenuItem, TextField, Typography } from '@mui/material'
 import axios from 'axios'
 import React, { useEffect, useState } from 'react'
 
@@ -15,9 +15,10 @@ const CalenderFilters = ({ filterEvent }: any) => {
 
   const [caregivers, setCaregivers] = useState<any>()
   const [clients, setCllients] = useState<any>()
-  const [selectedCaregiver, setSelectedCaregiver] = useState<number>(0)
-  const [selectedClient, setSelectedClient] = useState<number>(0)
+  const [selectedCaregiver, setSelectedCaregiver] = useState<string | number>('')
+  const [selectedClient, setSelectedClient] = useState<string | number>('')
   const [selectedRole, setSelectedRole] = useState<any>('caregiver')
+  const [assignedClients, setAssignedClients] = useState<any>(null)
 
   const dispatch = useAppDispatch()
 
@@ -31,6 +32,33 @@ const CalenderFilters = ({ filterEvent }: any) => {
       console.error('Error fetching data: ', error)
     }
   }
+
+  const fetchAssignClient = async () => {
+    try {
+      // Fetch assigned clients
+      const caregivers = await api.get(`/caregivers/caregiver/${Number(selectedCaregiver)}`)
+      console.log('CAREGIVER USER ', caregivers)
+      const clientResponse = await api.get(`/user/clientUsers/${caregivers?.data?.user?.id}`)
+      const fetchedClient = clientResponse.data
+
+      console.log('Assigned Client --> ', fetchedClient)
+
+      // Update state with the fetched clients
+      setAssignedClients(fetchedClient)
+    } catch (error) {
+      console.error('Error fetching assigned clients: ', error)
+    }
+  }
+
+  useEffect(() => {
+    if (selectedCaregiver !== '') {
+      fetchAssignClient()
+      filterEvent(Number(selectedCaregiver), 'caregiver')
+      filterEvent('', 'client')
+    } else {
+      setAssignedClients(null)
+    }
+  }, [selectedCaregiver])
 
   const fetchClientsList = async () => {
     try {
@@ -76,45 +104,78 @@ const CalenderFilters = ({ filterEvent }: any) => {
       </Typography>
       <Grid container spacing={4} sx={{ marginBottom: 3 }}>
         <Grid size={{ xs: 12, md: 6 }}>
-          <Typography className='mb-2'>Select a Role</Typography>
-          <Dropdown
-            setValue={(id: any) => {
-              setSelectedRole(id)
+          <Typography className='mb-2'>Select a Caregiver</Typography>
+          <TextField
+            select
+            size='small'
+            fullWidth
+            placeholder='Caregivers'
+            id='select-caregiver'
+            value={selectedCaregiver}
+            onChange={e => {
+              if (e.target.value !== '') {
+                setSelectedCaregiver(Number(e.target.value))
+                filterEvent(Number(e.target.value), 'caregiver')
+              } else {
+                setSelectedCaregiver('')
+                setSelectedClient('')
+                filterEvent('', 'caregiver')
+                filterEvent('', 'client')
+              }
             }}
-            value={selectedRole}
-            options={userRole?.map((item: any) => ({ key: item.id, value: item.value, displayValue: item.name }))}
-            onChange={(e: any) => handleRoleChange(e)}
-          />
+            slotProps={{
+              select: { displayEmpty: true }
+            }}
+          >
+            <MenuItem value='' className=''>
+              All Caregivers
+            </MenuItem>
+            {caregivers?.map((item: any) => (
+              <MenuItem key={item.id} value={item.id} className=''>
+                {item.firstName} {item.lastName}
+              </MenuItem>
+            ))}
+          </TextField>
         </Grid>
         <Grid size={{ xs: 12, md: 6 }}>
-          <Typography className='mb-2'>Select a {selectedRole}</Typography>
-          <Dropdown
-            value={selectedRole === 'caregiver' ? selectedCaregiver : selectedClient}
-            setValue={
-              selectedRole === 'caregiver'
-                ? (id: any) => {
-                    filterEvent(id, 'caregiver')
-                    setSelectedCaregiver(id)
-                  }
-                : (id: any) => {
-                    filterEvent(id, 'client')
-                    setSelectedClient(id)
-                  }
-            }
-            options={
-              selectedRole === 'caregiver'
-                ? caregivers?.map((item: any) => ({
-                    key: item.id,
-                    value: item.id,
-                    displayValue: `${item.firstName} ${item.lastName}`
-                  }))
-                : clients?.map((item: any) => ({
-                    key: item.id,
-                    value: item.id,
-                    displayValue: `${item.firstName} ${item.lastName}`
-                  }))
-            }
-          />
+          <Typography className='mb-2'>{assignedClients ? 'Select an Assigned Client' : 'Select a Client'}</Typography>
+          <TextField
+            select
+            size='small'
+            fullWidth
+            placeholder='Cleints'
+            id='select-cleint'
+            value={selectedClient}
+            onChange={e => {
+              if (e.target.value !== '') {
+                setSelectedClient(Number(e.target.value))
+                filterEvent(Number(e.target.value), 'client')
+              } else {
+                setSelectedClient('')
+                filterEvent('', 'client')
+              }
+            }}
+            slotProps={{
+              select: { displayEmpty: true }
+            }}
+          >
+            {!assignedClients && (
+              <MenuItem value='' className=''>
+                All Clients
+              </MenuItem>
+            )}
+            {assignedClients
+              ? assignedClients?.map((item: any) => (
+                  <MenuItem key={item.client.id} value={item.client.id} className=''>
+                    {item.client.firstName} {item.client.lastName}
+                  </MenuItem>
+                ))
+              : clients?.map((item: any) => (
+                  <MenuItem key={item.id} value={item.id} className=''>
+                    {item.firstName} {item.lastName}
+                  </MenuItem>
+                ))}
+          </TextField>
         </Grid>
       </Grid>
     </>

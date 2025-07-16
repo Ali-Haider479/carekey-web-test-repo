@@ -36,9 +36,9 @@ const OverViewTab = async () => {
       <Grid size={{ xs: 12 }}>
         <ClientSubscriptions />
       </Grid>
-      <Grid size={{ xs: 12 }}>
+      {/* <Grid size={{ xs: 12 }}>
         <UserActivityTimeLine />
-      </Grid>
+      </Grid> */}
       <Grid size={{ xs: 12 }}>
         <InvoiceListTable invoiceData={invoiceData} />
       </Grid>
