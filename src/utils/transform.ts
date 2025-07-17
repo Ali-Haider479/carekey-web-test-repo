@@ -35,6 +35,22 @@ interface Client {
   [key: string]: any
 }
 
+interface Service {
+  evv: boolean
+  id: number
+  name: string
+  procedureCode: string
+  modifierCode: string
+}
+
+interface ClientService {
+  evvEnforce: boolean
+  id: number
+  note: string
+  service: Service
+  serviceAuthService: Service
+}
+
 interface TimeEntry {
   id: number
   dateOfService: string
@@ -54,6 +70,7 @@ interface TimeEntry {
   client: Client
   checkedActivity: any
   billing: any
+  clientService: ClientService
 }
 
 interface GroupedTimeEntry {
@@ -65,6 +82,7 @@ interface GroupedTimeEntry {
   serviceName: string
   signature: Signature // Added signature to main object
   subRows?: TimeEntry[] // Includes full TimeEntry with signature
+  clientService: Pick<ClientService, 'id' | 'evvEnforce' | 'note' | 'service' | 'serviceAuthService'>
 }
 
 export function transformTimesheetDataTwo(entries: TimeEntry[]): GroupedTimeEntry[] {
@@ -111,9 +129,21 @@ export function transformTimesheetDataTwo(entries: TimeEntry[]): GroupedTimeEntr
 
   // Transform each group into a GroupedTimeEntry
   return Object.entries(groupedByPair).map(([key, groupEntries]) => {
-    const { caregiver, client } = groupEntries[0]
+    const { caregiver, client, clientService } = groupEntries[0]
+
+    // Ensure clientService is properly structured
+    const formattedClientService: Pick<ClientService, 'id' | 'evvEnforce' | 'note' | 'service' | 'serviceAuthService'> =
+      {
+        id: clientService?.id ?? 0, // Provide fallback if undefined
+        evvEnforce: clientService?.evvEnforce ?? true,
+        note: clientService?.note ?? '',
+        service: clientService?.service,
+        serviceAuthService: clientService?.serviceAuthService
+      }
+
     // Find billing data where claimStatus is 'Approved'
     const approvedBilling = groupEntries.find(entry => entry.billing?.claimStatus === 'Approved')?.billing || {}
+
     // If only one entry, return it directly without subRows
     if (groupEntries.length === 1) {
       const entry = groupEntries[0]
@@ -137,6 +167,7 @@ export function transformTimesheetDataTwo(entries: TimeEntry[]): GroupedTimeEntr
           lastName: client.lastName,
           serviceAuth: client.serviceAuth
         },
+        clientService: formattedClientService, // Always include clientService
         tsApprovalStatus: entry.tsApprovalStatus,
         serviceName: entry.serviceName,
         updatedBy: entry.updatedBy,
@@ -222,7 +253,8 @@ export function transformTimesheetDataTwo(entries: TimeEntry[]): GroupedTimeEntr
       subRows: subRowsWithActivities,
       startLocation: latestStartLocation,
       endLocation: latestEndLocation,
-      billing: Object.keys(approvedBilling).length > 0 ? { dummyRow: true, ...approvedBilling } : approvedBilling
+      billing: Object.keys(approvedBilling).length > 0 ? { dummyRow: true, ...approvedBilling } : approvedBilling,
+      clientService: formattedClientService // Always include clientService
     }
   })
 }

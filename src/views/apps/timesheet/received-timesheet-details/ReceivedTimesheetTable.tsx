@@ -151,6 +151,8 @@ const ReceivedTimesheetTable = (
     }
   }
 
+  console.log('Timesheet Data ----->> ', data)
+
   console.log('Modal Data ---->> ', modalData)
 
   console.log('WEEK RANGE ----->> ', weekRange)
@@ -403,7 +405,7 @@ const ReceivedTimesheetTable = (
     setValue('clockOutTime', localClockOutTime.split('T')[1])
     setValue('hoursWorked', calculateHoursWorked(user.clockIn, user.clockOut) || user.hrsWorked || '')
     setValue('dateOfService', localDateOfService.split('T')[0])
-    setValue('serviceName', user.serviceName || '')
+    setValue('serviceName', user?.clientService?.id || '')
     setValue('updatedBy', user.updatedBy?.userName || 'N/A')
     setValue('updatedAt', user.updatedAt ? new Date(user.updatedAt).toISOString().split('T')[0] : '')
     setValue('notes', user.notes || '')
@@ -893,10 +895,16 @@ const ReceivedTimesheetTable = (
       editable: false,
       sortable: true,
       render: (user: any) => (
-        <Tooltip title={user?.serviceName || ''} placement='top'>
+        <Tooltip
+          title={user?.clientService?.service?.name || user?.clientService?.serviceAuthService?.name || ''}
+          placement='top'
+        >
           <Typography color='primary'>
-            {user?.serviceName?.slice(0, 20) || '---'}
-            {user?.serviceName?.length > 20 ? '...' : ''}
+            {user?.clientService?.service?.name?.slice(0, 20) ||
+              user?.clientService?.serviceAuthService?.name?.slice(0, 20) ||
+              '---'}
+            {user?.clientService?.service?.name?.length > 20 ? '...' : ''}
+            {user?.clientService?.serviceAuthService?.name?.length > 20 ? '...' : ''}
           </Typography>
         </Tooltip>
       )
@@ -947,7 +955,14 @@ const ReceivedTimesheetTable = (
                         minute: '2-digit',
                         hour12: true
                       })}`
-                    : 'In: ---'}
+                    : 'In: ---'}{' '}
+                  {user?.clockOut?.length > 0
+                    ? `Out: ${new Date(user?.clockOut).toLocaleTimeString('en-US', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: true
+                      })}`
+                    : 'Out: ---'}
                 </Typography>
               </>
             )
@@ -1127,9 +1142,10 @@ const ReceivedTimesheetTable = (
                       label={'Service Name'}
                       isRequired={false}
                       disabled={!isEditing}
+                      defaultValue={modalData?.clientService?.id}
                       optionList={serviceType?.map((item: any) => ({
                         key: item.id,
-                        value: item.name,
+                        value: item.clientServiceId,
                         optionString: `${item.name} ${item?.dummyService ? '(Demo Service)' : '(S.A Service)'}`
                       }))}
                       // disabled={!isEditing}

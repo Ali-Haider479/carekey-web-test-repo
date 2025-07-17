@@ -357,7 +357,7 @@ const ManualTimesheet = ({ caregiverList, payPeriodList }: any) => {
         const unitsUsed = Math.ceil(roundedHoursWorked * 4) // Convert to quarter hours
 
         if (clientServiceAuth.length === 0) {
-          console.log("VALUES", values)
+          console.log('VALUES', values)
           const modifiedEvent = {
             dateOfService: values?.dateOfService,
             manualEntry: true,
@@ -376,7 +376,7 @@ const ManualTimesheet = ({ caregiverList, payPeriodList }: any) => {
               currentClientPendingSigns.length > 0 ? currentClientPendingSigns[0].signatureId : signResponse?.data?.id,
             tenantId: authUser?.tenant?.id
           }
-          console.log("PAYLOAD", modifiedEvent)
+          console.log('PAYLOAD', modifiedEvent)
 
           const timelogResponse = await api.post(`/time-log`, modifiedEvent)
         } else {
@@ -455,7 +455,11 @@ const ManualTimesheet = ({ caregiverList, payPeriodList }: any) => {
             }
 
             // Compare dates (year, month, day) in local timezone
-            const scheduleDate = new Date(scheduleStart.getFullYear(), scheduleStart.getMonth(), scheduleStart.getDate())
+            const scheduleDate = new Date(
+              scheduleStart.getFullYear(),
+              scheduleStart.getMonth(),
+              scheduleStart.getDate()
+            )
             const shiftDate = new Date(shiftStart.getFullYear(), shiftStart.getMonth(), shiftStart.getDate())
 
             if (scheduleDate.getTime() !== shiftDate.getTime()) {
@@ -501,7 +505,7 @@ const ManualTimesheet = ({ caregiverList, payPeriodList }: any) => {
               currentClientPendingSigns.length > 0 ? currentClientPendingSigns[0].signatureId : signResponse?.data?.id,
             tenantId: authUser?.tenant?.id
           }
-          console.log("PAYLOAD", modifiedEvent)
+          console.log('PAYLOAD', modifiedEvent)
 
           const timelogResponse = await api.post(`/time-log`, modifiedEvent)
 
@@ -516,8 +520,6 @@ const ManualTimesheet = ({ caregiverList, payPeriodList }: any) => {
             console.log('Schedule Updated: ', updateSchedule)
           }
         }
-
-
 
         setValues(defaultState)
         setSelectedItems([])
@@ -596,7 +598,15 @@ const ManualTimesheet = ({ caregiverList, payPeriodList }: any) => {
                 >
                   {payperiodWeeks.map((payperiod: any) => (
                     <MenuItem key={payperiod?.id} value={payperiod?.id}>
-                      {`${payperiod.startDate} to ${payperiod.endDate} ${payperiod.current ? '(Current)' : ''}`}
+                      {`${new Date(payperiod?.startDate).toLocaleDateString('en-US', {
+                        month: '2-digit',
+                        day: '2-digit',
+                        year: 'numeric'
+                      })} to ${new Date(payperiod?.endDate).toLocaleDateString('en-US', {
+                        month: '2-digit',
+                        day: '2-digit',
+                        year: 'numeric'
+                      })} ${payperiod.current ? '(Current)' : ''}`}
                     </MenuItem>
                   ))}
                 </Select>

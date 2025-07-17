@@ -16,9 +16,10 @@ export const calculateHoursWorked = (clockIn: string, clockOut: string) => {
 
   // Convert milliseconds to hours
   const hours = differenceMs / (1000 * 60 * 60)
+  const roundedHours = Math.round(hours * 4) / 4
 
   // Round to two decimal places
-  return hours.toFixed(2)
+  return roundedHours.toFixed(2)
 }
 
 export const formatToLocalTime = (gmtDate: any) => {
