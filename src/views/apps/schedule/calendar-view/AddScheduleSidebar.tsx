@@ -559,11 +559,26 @@ const AddEventModal = (props: AddEventSidebarType) => {
             })
             handleModalClose()
           } else {
+            const { start, end } = bulkEvents[0]
+            // Preserve original event date, update time based on assignedHours
+            const originalEndDate = new Date(end)
+            const updatedEndTime = new Date(
+              new Date(start).getTime() + (typeof assignedHours === 'number' ? assignedHours * 60 * 60 * 1000 : 0)
+            )
+            const finalEndDate = new Date(
+              originalEndDate.getFullYear(),
+              originalEndDate.getMonth(),
+              originalEndDate.getDate(),
+              updatedEndTime.getHours(),
+              updatedEndTime.getMinutes(),
+              updatedEndTime.getSeconds()
+            )
             console.log('CALENDER STORE', calendarStore)
             const eventId = calendarStore?.selectedEvent?.id
             console.log('EVENT ID', eventId)
             const patchBody = {
-              ...bulkEvents[0]
+              ...bulkEvents[0],
+              end: finalEndDate
             }
             const updatedSchedule = await api.patch(`/schedule/${eventId}`, patchBody)
             handleUpdateEvent(updatedSchedule.data)

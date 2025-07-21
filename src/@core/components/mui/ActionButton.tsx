@@ -103,38 +103,27 @@ const ActionButton = ({
           <Typography className='font-semibold'>Delete</Typography>
         </MenuItem>
       </Menu> */}
-      <Grid container spacing={0}>
-        <Grid size={{ xs: 12, sm: 3 }}>
-          <Button
-            sx={{ padding: 0 }}
-            size='small'
-            onClick={() => handleViewDetails(user, 'view')}
-            disabled={!!user.subRows && user.subRows.length > 0}
-          >
-            <Visibility sx={{ mr: 1 }} fontSize='small' />
-          </Button>
-        </Grid>
-        <Grid size={{ xs: 12, sm: 3 }}>
-          <Button
-            sx={{ padding: 0 }}
-            size='small'
-            onClick={() => handleViewDetails(user, 'edit')}
-            disabled={!!user.subRows && user.subRows.length > 0}
-          >
-            <EditIcon sx={{ mr: 1 }} fontSize='small' />
-          </Button>
-        </Grid>
-        <Grid size={{ xs: 12, sm: 3 }}>
-          <Button
-            sx={{ padding: 0 }}
-            onClick={handleDeleteClick}
-            size='small'
-            disabled={!!user.subRows && user.subRows.length > 0}
-          >
-            <DeleteIcon sx={{ mr: 1 }} fontSize='small' color='error' />
-          </Button>
-        </Grid>
-      </Grid>
+      <Box sx={{ display: 'flex', gap: 1.5, width: 110 }}>
+        <IconButton
+          size='small'
+          onClick={() => handleViewDetails(user, 'view')}
+          disabled={!!user.subRows && user.subRows.length > 0}
+        >
+          <Visibility sx={{ mr: 0 }} fontSize='small' />
+        </IconButton>
+
+        <IconButton
+          size='small'
+          onClick={() => handleViewDetails(user, 'edit')}
+          disabled={!!user.subRows && user.subRows.length > 0}
+        >
+          <EditIcon sx={{ mr: 0 }} fontSize='small' />
+        </IconButton>
+
+        <IconButton onClick={handleDeleteClick} size='small' disabled={!!user.subRows && user.subRows.length > 0}>
+          <DeleteIcon sx={{ mr: 0 }} fontSize='small' color='error' />
+        </IconButton>
+      </Box>
       <FormProvider {...methods}>
         <Dialog
           open={isDeleteModalShow}

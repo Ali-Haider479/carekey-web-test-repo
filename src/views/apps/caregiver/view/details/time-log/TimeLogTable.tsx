@@ -12,7 +12,7 @@ import axios from 'axios'
 import { useParams, useRouter } from 'next/navigation'
 import { GridColDef } from '@mui/x-data-grid'
 import DataTable from '@/@core/components/mui/DataTable'
-import { Chip, CircularProgress, Typography } from '@mui/material'
+import { Chip, CircularProgress, Typography, Tooltip } from '@mui/material'
 import AdUnitsIcon from '@mui/icons-material/AdUnits'
 import { calculateHoursWorked } from '@/utils/helperFunctions'
 import api from '@/utils/api'
@@ -156,21 +156,23 @@ const TimeLogTable = () => {
       label: 'MANUAL',
       minWidth: 170,
       render: item => (
-        <Typography
-          className='font-normal text-base my-3'
-          sx={{
-            color:
-              item?.manualEntry === true
-                ? theme.palette.mode === 'light'
-                  ? theme.palette.success.main
-                  : theme.palette.success.dark
-                : theme.palette.mode === 'light'
-                  ? theme.palette.warning.main
-                  : theme.palette.warning.dark
-          }}
-        >
-          {item?.manualEntry === true && item.loggedVia === 'desktop' ? <Computer /> : <TabletAndroid />}
-        </Typography>
+        <Tooltip title={item?.manualEntry ? 'Yes' : 'No'}>
+          <Typography
+            className='font-normal text-base my-3'
+            sx={{
+              color:
+                item?.manualEntry === true
+                  ? theme.palette.mode === 'light'
+                    ? theme.palette.success.main
+                    : theme.palette.success.dark
+                  : theme.palette.mode === 'light'
+                    ? theme.palette.warning.main
+                    : theme.palette.warning.dark
+            }}
+          >
+            {item?.manualEntry === true && item.loggedVia === 'desktop' ? <Computer /> : <TabletAndroid />}
+          </Typography>
+        </Tooltip>
       )
     }
   ]

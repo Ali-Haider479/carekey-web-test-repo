@@ -318,15 +318,22 @@ const EvvActiveUserTable = ({ timeLogData, isLoading, payPeriod, fetchInitialDat
     try {
       const activityIds = selectedUser?.client?.serviceActivityIds
       if (!activityIds) return
-      const filteredService = clientServices?.find((item: any) => item?.name === selectedUser?.serviceName)
-      console.log('Filtered Service --->> ', filteredService)
       const response: any = await api.get(`/activity/activities/${activityIds}`)
       setServiceActivities(
         response?.data?.filter(
           (item: any) =>
-            item.procedureCode === filteredService?.procedureCode &&
-            (item.modifierCode === filteredService?.modifierCode ||
-              (item.modifierCode === null && filteredService?.modifierCode === null))
+            item.procedureCode ===
+              (selectedUser.clientService.service
+                ? selectedUser.clientService.service?.procedureCode
+                : selectedUser.clientService.serviceAuthService?.procedureCode) &&
+            (item.modifierCode ===
+              (selectedUser.clientService.service
+                ? selectedUser.clientService.service?.modifierCode
+                : selectedUser.clientService.serviceAuthService?.modifierCode) ||
+              (item.modifierCode === null &&
+                (selectedUser.clientService.service
+                  ? selectedUser.clientService.service?.modifierCode
+                  : selectedUser.clientService.serviceAuthService?.modifierCode) === null))
         )
       )
     } catch (error) {
@@ -483,7 +490,11 @@ const EvvActiveUserTable = ({ timeLogData, isLoading, payPeriod, fetchInitialDat
       minWidth: 170,
       editable: false,
       sortable: true,
-      render: (user: any) => <Typography color='primary'>{user?.serviceName}</Typography>
+      render: (user: any) => (
+        <Typography color='primary'>
+          {user?.clientService?.service?.name || user?.clientService?.serviceAuthService?.name}
+        </Typography>
+      )
     },
     {
       id: 'clockIn',

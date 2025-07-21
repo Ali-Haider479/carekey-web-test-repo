@@ -1,5 +1,15 @@
 import React, { useEffect, useState } from 'react'
-import { Card, CardHeader, CardContent, MenuItem, Button, TextField, IconButton, Grid2 as Grid } from '@mui/material'
+import {
+  Card,
+  CardHeader,
+  CardContent,
+  MenuItem,
+  Button,
+  TextField,
+  IconButton,
+  Grid2 as Grid,
+  Box
+} from '@mui/material'
 import { useForm } from 'react-hook-form'
 import api from '@/utils/api'
 
@@ -137,7 +147,7 @@ const ReceivedTimesheetFilters = ({
                 ))}
               </TextField>
             </Grid>
-            <Grid container spacing={195}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
               <Grid container spacing={12}>
                 <Grid size={{ xs: 12, sm: 4 }}>
                   <Button type='submit' variant='outlined' className='p-1'>
@@ -150,7 +160,7 @@ const ReceivedTimesheetFilters = ({
                   </Button>
                 </Grid>
               </Grid>
-              <Grid container spacing={12}>
+              <Grid container spacing={12} sx={{ ml: 'auto' }}>
                 <Grid size={{ xs: 12, sm: 4 }}>
                   <Button
                     variant='outlined'
@@ -173,7 +183,7 @@ const ReceivedTimesheetFilters = ({
                   </Button>
                 </Grid>
               </Grid>
-            </Grid>
+            </Box>
           </Grid>
         </CardContent>
       </Card>

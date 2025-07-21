@@ -29,6 +29,7 @@ import { set } from 'date-fns'
 import axios from 'axios'
 import { format } from 'path'
 import CustomAlert from '@/@core/components/mui/Alter'
+import { description } from 'valibot'
 
 interface ServiceAuthListModalProps {
   open: boolean
@@ -47,7 +48,7 @@ interface FormRow {
   caseManagerNumber: string
   diagnosisCode: string
   procedureCode: string
-  modifier: string | null
+  modifierCode: string | null
   startDate: string
   endDate: string
   procedureDescription: string
@@ -64,6 +65,7 @@ interface FormRow {
   recepientName?: string
   status?: string
   description?: string
+  serviceName?: string
 }
 
 interface UploadedFile {
@@ -100,6 +102,7 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
   const [alertProps, setAlertProps] = useState<any>()
   const [alertOpen, setAlertOpen] = useState<boolean>(false)
   const [serviceAuthServices, setServiceAuthServices] = useState<any>([])
+  const [allServices, setAllServices] = useState<any>()
   const theme: any = useTheme()
 
   // const getClientDocuments = async () => {
@@ -125,9 +128,19 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
     }
   }
 
+  const fetchAllServices = async () => {
+    try {
+      const response = await api.get('/service')
+      setAllServices(response.data)
+    } catch (error) {
+      console.error('Error fetching services: ', error)
+    }
+  }
+
   useEffect(() => {
     getClientDocuments()
     fetchServiceAuthServices()
+    fetchAllServices()
   }, [])
 
   const uploadDocuments = async (files: File[], documentType: string, id: string) => {
@@ -197,7 +210,7 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
     caseManagerNumber: '',
     diagnosisCode: '',
     procedureCode: '',
-    modifier: null,
+    modifierCode: null,
     startDate: '',
     endDate: '',
     procedureDescription: '',
@@ -213,6 +226,7 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
     recepientName: '',
     status: '',
     description: '',
+    serviceName: '',
     usedUnits: ''
   }
 
@@ -275,6 +289,8 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
     setFormData(updatedData as FormRow[])
   }
 
+  console.log('FORM DATAAA ==========>> ', formData)
+
   const handlePDFUpload = async (event: React.ChangeEvent<HTMLInputElement>): Promise<void> => {
     const file = event.target.files?.[0]
     console.log('Uploaded File ---->> ', event)
@@ -299,25 +315,50 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
           // Map service items to form rows
           const mappedFormData = extracted.serviceItems
             .filter(item => item.status === 'APPROVED') // Only include approved items
-            .map(item => ({
-              procedureCode: item.procedureCode || '',
-              modifier: item.modifiers.includes('PERSONAL') ? null : item.modifiers,
-              description: item.description,
-              startDate: formatDateString(item.startDate),
-              endDate: formatDateString(item.endDate),
-              serviceRate: item.rateUnit ? `$${item.rateUnit}` : '',
-              quantity: item.quantity ? item.quantity.replace(/,/g, '') : '',
-              // Default values for missing fields
-              frequency: 'daily',
-              taxonomy: '',
-              reimbursement: 'per unit',
-              placeOfService: 'home',
-              // Keep the extracted data for reference
-              providerId: extracted.header.providerID,
-              recipientId: extracted.header.recipientID,
-              agreementNumber: extracted.header.agreementNumber,
-              diagnosisCode: extracted.header.diagnosisCode
-            }))
+            .map(item => {
+              // Find matching service in allServices
+              const matchingService = allServices.find((service: any) => {
+                const isProcedureCodeMatch = service.procedureCode?.trim() === item.procedureCode?.trim()
+                const isModifierMatch =
+                  service.modifierCode === item.modifiers ||
+                  (service.modifierCode == null && (item.modifiers == null || item.modifiers.includes('PERSONAL'))) // Handle null/undefined
+
+                console.log('Checking service:', {
+                  serviceProcedureCode: service.procedureCode,
+                  serviceModifierCode: service.modifierCode,
+                  itemProcedureCode: item.procedureCode,
+                  itemModifiers: item.modifiers,
+                  isProcedureCodeMatch,
+                  isModifierMatch
+                })
+
+                return isProcedureCodeMatch && isModifierMatch
+              })
+
+              console.log('Service matched with item ---~---~--->> ', matchingService)
+
+              return {
+                procedureCode: item.procedureCode || '',
+                modifierCode: item.modifiers.includes('PERSONAL') ? null : item.modifiers,
+                description: item.description,
+                serviceName: matchingService ? matchingService?.name : item.description,
+                startDate: formatDateString(item.startDate),
+                endDate: formatDateString(item.endDate),
+                serviceRate: item.rateUnit ? `$${item.rateUnit}` : '',
+                quantity: item.quantity ? item.quantity.replace(/,/g, '') : '',
+                // Default values for missing fields
+                frequency: 'daily',
+                taxonomy: '',
+                reimbursement: 'per unit',
+                placeOfService: 'home',
+                // Keep the extracted data for reference
+                providerId: extracted.header.providerID,
+                recipientId: extracted.header.recipientID,
+                agreementNumber: extracted.header.agreementNumber,
+                diagnosisCode: extracted.header.diagnosisCode,
+                status: 'APPROVED'
+              }
+            })
 
           setFormData(mappedFormData)
           setBillableStates(mappedFormData.map(() => true))
@@ -464,7 +505,7 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
         memberId: item.recipientId ? Number(item.recipientId) : 0,
         serviceAuthNumber: item.agreementNumber ? Number(item.agreementNumber) : 0,
         procedureCode: item.procedureCode || '',
-        modifierCode: item.modifier || null,
+        modifierCode: item.modifierCode || null,
         startDate: item.startDate ? new Date(item.startDate) : undefined,
         endDate: item.endDate ? new Date(item.endDate) : undefined,
         serviceRate: item.serviceRate ? Number(item.serviceRate.replace(/[$,]/g, '')) : 0,
@@ -478,7 +519,7 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
         clientId: clientId,
         billable: billableStates[index],
         placeOfService: item.placeOfService || 'home',
-        serviceName: item?.description,
+        serviceName: item?.serviceName,
         fileKey: fileKey || null // Use the uploaded file key if available
       }))
 
@@ -501,22 +542,24 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
 
       // Iterate over extractedData.serviceItems to send individual payloads
       if (extractedData?.serviceItems?.length > 0) {
-        for (const item of extractedData.serviceItems) {
+        for (const item of formData) {
           console.log('Item to create ---->> ', item)
           const compareService = serviceAuthServices.find(
             (service: any) =>
               service.procedureCode === item.procedureCode &&
-              (service.modifierCode === item.modifiers || (service.modifierCode === null && item.modifiers === null))
+              (service.modifierCode === item.modifierCode ||
+                (service.modifierCode === null && item.modifierCode === null))
           )
           console.log('Compare Service (If block) ---->> ', compareService)
           if (new Date(item.endDate) > new Date()) {
             if (item.status === 'APPROVED') {
               if (!compareService) {
                 const ServiceAuthServicesPayload = {
-                  name: item?.description,
-                  modifierCode: item?.modifiers.includes('PERSONAL') ? null : item?.modifiers,
+                  name: item?.serviceName,
+                  description: item?.description,
+                  modifierCode: item?.modifierCode?.includes('PERSONAL') ? null : item?.modifierCode,
                   procedureCode: item?.procedureCode || '',
-                  rate: item?.rateUnit ? Number(item?.rateUnit) : 100,
+                  rate: item?.serviceRate ? Number(item?.serviceRate?.split('$')[1]) : 100,
                   evv: true
                 }
 
@@ -559,6 +602,7 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
           console.log('Compare Service (Else block) ---->> ', compareService)
           const ServiceAuthServicesPayload = {
             name: serviceAuthResponses[0].data.serviceName,
+            description: serviceAuthResponses[0].data.serviceName,
             modifierCode: serviceAuthResponses[0].data.modifierCode || null,
             procedureCode: serviceAuthResponses[0].data.procedureCode,
             rate: serviceAuthResponses[0].data.serviceRate,
@@ -918,6 +962,16 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
                       </Grid>
                       <Grid size={{ xs: 12, sm: 3 }}>
                         <TextField
+                          label='Service Name'
+                          value={row.serviceName}
+                          onChange={e => handleInputChange(index, 'serviceName', e.target.value)}
+                          fullWidth
+                          size='small'
+                          disabled={isLoading}
+                        />
+                      </Grid>
+                      <Grid size={{ xs: 12, sm: 3 }}>
+                        <TextField
                           label='Service Description'
                           value={row.description}
                           onChange={e => handleInputChange(index, 'description', e.target.value)}
@@ -939,8 +993,8 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
                       <Grid size={{ xs: 12, sm: 3 }}>
                         <TextField
                           label='Modifier'
-                          value={row.modifier}
-                          onChange={e => handleInputChange(index, 'modifier', e.target.value)}
+                          value={row.modifierCode}
+                          onChange={e => handleInputChange(index, 'modifierCode', e.target.value)}
                           fullWidth
                           size='small'
                           disabled={isLoading}

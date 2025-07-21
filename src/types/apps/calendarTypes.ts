@@ -40,7 +40,7 @@ export type SidebarLeftProps = {
 
 export type AddEventSidebarType = {
   calendarStore: CalendarType
-  calendarApi: any
+  calendarApi?: any
   dispatch: Dispatch
   addEventSidebarOpen: boolean
   handleAddEventSidebarToggle: () => void

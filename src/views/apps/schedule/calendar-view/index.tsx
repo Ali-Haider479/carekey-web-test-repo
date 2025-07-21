@@ -32,87 +32,25 @@ interface Event {
 
 const Calendar = () => {
   const theme = useTheme()
-  const [calendarApi, setCalendarApi] = useState<null | any>(null)
   const [caregiverList, setCaregiverList] = useState<[] | any>([])
   const [clientList, setClientList] = useState<[] | any>([])
   const [serviceList, setServiceList] = useState<[] | any>([])
   const [payPeriod, setPayPeriod] = useState<[] | any>([])
   const [isEdited, setIsEdited] = useState<boolean>(false)
-  const [isClient, setIsClient] = useState<boolean>(false)
   const [localEvents, setLocalEvents] = useState<any[]>([])
-  const [filteredRoleEvents, setFilteredRoleEvents] = useState<{ caregiverEvents: any[]; clientEvents: any[] }>({
-    caregiverEvents: [],
-    clientEvents: []
-  })
+  const [currentDate, setCurrentDate] = useState(new Date())
   const [openAddEventModal, setOpenAddEventModal] = useState<boolean>(false)
+  const [expandedDays, setExpandedDays] = useState(new Set())
+  const [selectedClientFilter, setSelectedClientFilter] = useState('')
+  const [selectedCaregiverFilter, setSelectedCaregiverFilter] = useState('')
+  const [statusFilter, setStatusFilter] = useState<string | null>(null)
 
   // Hooks
   const dispatch = useAppDispatch()
   const calendarStore = useSelector((state: { calendarReducer: CalendarType }) => state.calendarReducer)
-  console.log('calendarStore---->', calendarStore)
-  const mdAbove = useMediaQuery((theme: Theme) => theme.breakpoints.up('md'))
 
   const isEditedOn = () => setIsEdited(true)
   const isEditedOff = () => setIsEdited(false)
-
-  console.log('IS Edited Schedule Calendar Wrapper:', isEdited)
-
-  useEffect(() => {
-    setLocalEvents(calendarStore.events)
-  }, [calendarStore.events])
-
-  useEffect(() => {
-    if (isEdited === false) {
-      console.log('Flag', isEdited)
-      dispatch(fetchEvents())
-    }
-  }, [dispatch, isEdited])
-
-  const filterEvent = (value: any, label: any) => {
-    console.log('filter value --> ', value, label)
-    if (label.includes('caregiver')) {
-      console.log('Inside caregiver')
-      const filtered = localEvents.filter(event => event.caregiver?.id === value)
-      console.log('Filtered cg events ---->> ', filtered)
-      setSelectedCaregiverFilter(value)
-      setFilteredRoleEvents((prev: any) => ({ ...prev, caregiverEvents: filtered }))
-      // dispatch(filterCaregiverSchedules(value))
-      setIsClient(false)
-    } else if (label.includes('client')) {
-      console.log('inside client')
-      const filtered = localEvents.filter(event => event.client?.id === value)
-      console.log('Filtered client events ---->> ', filtered)
-      setSelectedClientFilter(value)
-      setFilteredRoleEvents((prev: any) => ({ ...prev, clientEvents: filtered }))
-      // dispatch(filterClientSchedules(value))
-      setIsClient(true)
-    }
-  }
-
-  const handleAddEvent = (newEvent: any) => {
-    setLocalEvents(prevEvents => [...prevEvents, ...newEvent])
-    setFilteredRoleEvents(prev => ({
-      ...prev,
-      caregiverEvents: isClient ? prev.caregiverEvents : [...(prev.caregiverEvents || []), ...newEvent],
-      clientEvents: isClient ? [...(prev.clientEvents || []), ...newEvent] : prev.clientEvents
-    }))
-    setIsEdited(false)
-    dispatch(addEvent(newEvent))
-  }
-
-  const handleUpdateEvent = (updatedEvent: any) => {
-    setLocalEvents(prevEvents => prevEvents.map(event => (event.id === updatedEvent.id ? updatedEvent : event)))
-    setFilteredRoleEvents(prev => ({
-      ...prev,
-      caregiverEvents: isClient
-        ? prev.caregiverEvents
-        : prev.caregiverEvents.map(event => (event.id === updatedEvent.id ? updatedEvent : event)),
-      clientEvents: isClient
-        ? prev.clientEvents.map(event => (event.id === updatedEvent.id ? updatedEvent : event))
-        : prev.clientEvents
-    }))
-    dispatch(updateEvent(updatedEvent))
-  }
 
   useEffect(() => {
     const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
@@ -134,22 +72,40 @@ const Calendar = () => {
       }
     })()
   }, [])
-  const [currentDate, setCurrentDate] = useState(new Date())
-  const [events, setEvents] = useState(localEvents)
-  // const [selectedDate, setSelectedDate] = useState<string | null>(null)
-  const [isEventModalOpen, setIsEventModalOpen] = useState(false)
-  const [isServiceAgreementModalOpen, setIsServiceAgreementModalOpen] = useState(false)
-  const [localSelectedEvent, setLocalSelectedEvent] = useState<Event | null>(null)
-  const [expandedDays, setExpandedDays] = useState(new Set())
 
-  // Scheduling confirmation state
-  const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState(false)
-  const [lastScheduledEvents, setLastScheduledEvents] = useState(null)
+  useEffect(() => {
+    setLocalEvents(calendarStore.events)
+  }, [calendarStore.events])
 
-  // Main page filters
-  const [selectedClientFilter, setSelectedClientFilter] = useState('')
-  const [selectedCaregiverFilter, setSelectedCaregiverFilter] = useState('')
-  const [statusFilter, setStatusFilter] = useState<string | null>(null)
+  useEffect(() => {
+    if (isEdited === false) {
+      console.log('Flag', isEdited)
+      dispatch(fetchEvents())
+    }
+  }, [dispatch, isEdited])
+
+  const filterEvent = (value: any, label: any) => {
+    if (label.includes('caregiver')) {
+      const filtered = localEvents.filter(event => event.caregiver?.id === value)
+      setSelectedCaregiverFilter(value)
+      // dispatch(filterCaregiverSchedules(value))
+    } else if (label.includes('client')) {
+      const filtered = localEvents.filter(event => event.client?.id === value)
+      setSelectedClientFilter(value)
+      // dispatch(filterClientSchedules(value))
+    }
+  }
+
+  const handleAddEvent = (newEvent: any) => {
+    setLocalEvents(prevEvents => [...prevEvents, ...newEvent])
+    setIsEdited(false)
+    dispatch(addEvent(newEvent))
+  }
+
+  const handleUpdateEvent = (updatedEvent: any) => {
+    setLocalEvents(prevEvents => prevEvents.map(event => (event.id === updatedEvent.id ? updatedEvent : event)))
+    dispatch(updateEvent(updatedEvent))
+  }
 
   const monthStart = startOfMonth(currentDate)
   const monthEnd = endOfMonth(currentDate)
@@ -161,7 +117,6 @@ const Calendar = () => {
 
   // Filter events based on selected client, caregiver, and status
   const filteredEvents = useMemo(() => {
-    console.log('Events---->', localEvents)
     return localEvents.filter(event => {
       const clientMatch = selectedClientFilter === '' || event.client.id === selectedClientFilter
       const caregiverMatch = selectedCaregiverFilter === '' || event.caregiver.id === selectedCaregiverFilter
@@ -170,16 +125,13 @@ const Calendar = () => {
     })
   }, [localEvents, selectedClientFilter, selectedCaregiverFilter, statusFilter])
 
-  console.log('Filtered Events--->', filteredEvents)
-
   // Group filtered events by date
   const eventsByDate = useMemo(() => {
     return filteredEvents.reduce(
       (acc, event) => {
-        // Ensure event.date is a string (e.g., 'YYYY-MM-DD')
-        // const dateKey =
-        //   typeof event.start === 'string' && event.start.includes('T') ? event.start.split('T')[0] : event.start
-        const dateKey = new Date(event.start).toLocaleDateString().split('/').join('-')
+        const eventStartDate = event.start || event[0].start
+        // const dateKey = new Date(event.start).toLocaleDateString().split('/').join('-')
+        const dateKey = format(new Date(eventStartDate).toISOString(), 'M-dd-yyyy')
 
         if (!acc[dateKey]) {
           acc[dateKey] = []
@@ -202,53 +154,20 @@ const Calendar = () => {
   const handleDayClick = (day: Date | null) => {
     if (!day) return
     const dateStr = new Date(day).toISOString().split('T')[0]
-    console.log(
-      'Date string in handleDayClick ---->> ',
-      dateStr,
-      'Type of dateStr: ',
-      typeof dateStr,
-      ' and day --->> ',
-      day
-    )
     dispatch(setSelectedDate(day))
     setSelectedDate(dateStr)
-    setLocalSelectedEvent(null)
-    // setIsEventModalOpen(true)
     dispatch(selectedEvent(null))
-
     setOpenAddEventModal(true)
     isEditedOn()
   }
 
   const handleEventClick = (event: Event, e: React.MouseEvent) => {
     e.stopPropagation()
-    setLocalSelectedEvent(event)
     setSelectedDate(event.start)
     dispatch(selectedEvent(event))
-    // setIsEventModalOpen(true)
     setOpenAddEventModal(true)
     isEditedOn()
   }
-
-  const handleSaveEvent = (eventData: Event | Event[], isBulk = false) => {
-    if (isBulk) {
-      dispatch(addEvent(eventData as Event[]))
-    } else if (localSelectedEvent) {
-      dispatch(updateEvent(eventData as Event))
-    } else {
-      dispatch(addEvent([eventData as Event]))
-    }
-    setIsEventModalOpen(false)
-  }
-
-  const handleDeleteEvent = (eventId: string) => {
-    setEvents(prev => prev.filter(e => e.id !== eventId))
-  }
-
-  //   const handleSaveServiceAgreement = agreementData => {
-  //     // In a real app, this would save to a backend
-  //     // You could also update a service agreements state here
-  //   }
 
   const toggleDayExpansion = (dateStr: string) => {
     setExpandedDays(prev => {
@@ -277,10 +196,8 @@ const Calendar = () => {
 
   const renderDayEvents = (day: { toISOString: () => string }) => {
     if (!day) return null
-
     const dateStr = format(day.toISOString(), 'M-dd-yyyy') //.split('T')[0]
     const dayEvents = eventsByDate[dateStr] || []
-    console.log(expandedDays)
     const isExpanded = expandedDays.has(dateStr)
 
     // Apply current filters to day events
@@ -295,11 +212,6 @@ const Calendar = () => {
     const maxVisible = 1
 
     if (filteredEvents.length === 0) return null
-    console.log(
-      isExpanded ? filteredEvents : filteredEvents.slice(0, maxVisible),
-      filteredEvents,
-      filteredEvents.slice(0, maxVisible)
-    )
 
     const visibleEvents = isExpanded ? filteredEvents : filteredEvents.slice(0, maxVisible)
     const hiddenCount = filteredEvents.length - maxVisible
@@ -308,12 +220,7 @@ const Calendar = () => {
       <div className='flex-1 flex flex-col space-y-1 mt-1 min-h-10'>
         <div className='space-y-1 overflow-hidden'>
           {visibleEvents.map((event: any, index: number) => (
-            <EventBubble
-              key={event.id}
-              event={event}
-              onClick={e => handleEventClick(event, e)}
-              onDelete={() => handleDeleteEvent(event.id)}
-            />
+            <EventBubble key={event.id} event={event} onClick={e => handleEventClick(event, e)} onDelete={() => {}} />
           ))}
         </div>
 
@@ -350,18 +257,6 @@ const Calendar = () => {
 
   const getFilteredEventCount = () => {
     return filteredEvents.length
-  }
-
-  const getSelectedClientName = () => {
-    if (!selectedClientFilter) return null
-    const client = clientList.find((c: any) => c.id === selectedClientFilter)
-    return client ? `${client.firstName} ${client.lastName}` : null
-  }
-
-  const getSelectedCaregiverName = () => {
-    if (!selectedCaregiverFilter) return null
-    const caregiver = caregiverList.find((c: any) => c.id === selectedCaregiverFilter)
-    return caregiver ? `${caregiver.firstName} ${caregiver.lastName}` : null
   }
 
   const getSelectedStatusName = () => {
@@ -628,7 +523,6 @@ const Calendar = () => {
       </Box>
       <AddEventModal
         dispatch={dispatch}
-        calendarApi={calendarApi}
         calendarStore={{ ...calendarStore, events: localEvents }}
         addEventSidebarOpen={openAddEventModal}
         handleAddEventSidebarToggle={() => setOpenAddEventModal(!openAddEventModal)}

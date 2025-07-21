@@ -57,6 +57,8 @@ interface TimeEntry {
   manualEntry: boolean
   clockIn: string
   clockOut: string
+  editedClockIn: string | null
+  editedClockOut: string | null
   notes: string
   tsApprovalStatus: string
   serviceName: string
@@ -173,11 +175,16 @@ export function transformTimesheetDataTwo(entries: TimeEntry[]): GroupedTimeEntr
         updatedBy: entry.updatedBy,
         updatedAt: entry.updatedAt,
         clockIn: entry.clockIn,
+        editedClockIn: entry.editedClockIn,
+        editedClockOut: entry.editedClockOut,
         startLocation: entry.startLocation,
         endLocation: entry.endLocation,
         clockOut: entry.clockOut,
         signature: entry.signature,
-        hrsWorked: calculateHoursWorked(entry.clockIn, entry.clockOut),
+        hrsWorked:
+          entry.editedClockIn && entry.editedClockOut
+            ? calculateHoursWorked(entry.editedClockIn, entry.editedClockOut)
+            : calculateHoursWorked(entry.clockIn, entry.clockOut),
         activities: getActivities(entry),
         billing: entry.billing
       }
@@ -210,7 +217,11 @@ export function transformTimesheetDataTwo(entries: TimeEntry[]): GroupedTimeEntr
 
     // Calculate total hours worked for all entries
     const totalHours = sortedEntries.reduce((sum, entry) => {
-      const hours = parseFloat(calculateHoursWorked(entry.clockIn, entry.clockOut))
+      const hours = parseFloat(
+        entry.editedClockIn && entry.editedClockOut
+          ? calculateHoursWorked(entry.editedClockIn, entry.editedClockOut)
+          : calculateHoursWorked(entry.clockIn, entry.clockOut)
+      )
       return isNaN(hours) ? sum : sum + hours
     }, 0)
     const hrsWorked = totalHours > 0 ? totalHours.toFixed(2) : '---'
@@ -244,6 +255,8 @@ export function transformTimesheetDataTwo(entries: TimeEntry[]): GroupedTimeEntr
       serviceName: uniqueServices.join(', '),
       clockIn: '',
       clockOut: '',
+      editedClockIn: '',
+      editedClockOut: '',
       hrsWorked,
       activities: parentActivities,
       signature: {

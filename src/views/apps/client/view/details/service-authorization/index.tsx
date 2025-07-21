@@ -64,6 +64,8 @@ interface ServiceAuthPayload {
   billable: boolean
   placeOfService: string
   serviceName: string
+  description: string
+  clientServiceId: number | null
 }
 
 interface FormRow {
@@ -97,6 +99,7 @@ const ServiceAuthorization = () => {
   const currentDate = new Date()
   const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
   const [billable, setBillable] = useState<boolean>(true)
+  const [clientServices, setClientServices] = useState<any>()
   const theme: any = useTheme()
 
   const openPdfInNewTab = (pdfUrl: string, itemName: string) => {
@@ -168,15 +171,32 @@ const ServiceAuthorization = () => {
     }
   }
 
+  const fetchClientServices = async () => {
+    try {
+      const servicesResponse = await api.get(`/client/${clientId}/services`)
+      const serviceAuthServicesResponse = await api.get(`/client/${clientId}/service-auth/services`)
+      const combinedResponse = [...servicesResponse.data, ...serviceAuthServicesResponse.data]
+      return combinedResponse
+    } catch (error) {
+      console.error('Error fetching services: ', error)
+    }
+  }
+
   // Fetch both datasets concurrently
   const fetchData = async () => {
     setIsLoading(true)
     try {
-      const [documents, services] = await Promise.all([getClientDocuments(), fetchClientServiceAuthData()])
+      const [documents, services, clientServices] = await Promise.all([
+        getClientDocuments(),
+        fetchClientServiceAuthData(),
+        fetchClientServices()
+      ])
       setClientDocuments(documents)
-      console.log('Fetched Client services:', services)
+      console.log('Fetched Client services-auths:', services)
       setServiceAuthData(services)
       console.log('Fetched Client Documents:', documents)
+      setClientServices(clientServices)
+      console.log('Fetched client services: ', clientServices)
     } catch (error) {
       console.error('Error fetching data:', error)
     } finally {
@@ -377,6 +397,12 @@ const ServiceAuthorization = () => {
   const onSubmit = async (data: any) => {
     try {
       setIsLoading(true)
+      const matchingClientService = await clientServices?.find(
+        (item: any) =>
+          item.dummyService === false &&
+          item.procedureCode === data.procedureCode &&
+          (item.modifierCode === data.modifierCode || (item.modifierCode === null && data.modifierCode === null))
+      )
       const serviceAuthPayload: ServiceAuthPayload = {
         payer: data.payer,
         memberId: Number(data.memberId),
@@ -395,7 +421,9 @@ const ServiceAuthorization = () => {
         clientId: clientId,
         billable: billable,
         placeOfService: data.placeOfService,
-        serviceName: data.serviceName
+        serviceName: data.serviceName,
+        description: data?.description || data.serviceName,
+        clientServiceId: matchingClientService ? matchingClientService?.clientServiceId : null
       }
 
       if (isEditMode && currentItem) {
@@ -508,21 +536,27 @@ const ServiceAuthorization = () => {
       label: 'DAILY HRS',
       minWidth: 170,
       render: (item: any) => {
-        return <Typography>{isNaN(
-          calculateQuantityPerFrequency({
-            startDate: item.startDate,
-            endDate: item.endDate,
-            quantity: item.units,
-            frequency: 'daily'
-          })
+        return (
+          <Typography>
+            {isNaN(
+              calculateQuantityPerFrequency({
+                startDate: item.startDate,
+                endDate: item.endDate,
+                quantity: item.units,
+                frequency: 'daily'
+              })
+            )
+              ? 'N/A'
+              : (
+                  calculateQuantityPerFrequency({
+                    startDate: item.startDate,
+                    endDate: item.endDate,
+                    quantity: item.units,
+                    frequency: 'daily'
+                  }) / 4
+                ).toFixed(2)}
+          </Typography>
         )
-          ? 'N/A'
-          : (calculateQuantityPerFrequency({
-            startDate: item.startDate,
-            endDate: item.endDate,
-            quantity: item.units,
-            frequency: 'daily'
-          }) / 4).toFixed(2)}</Typography>
       }
     },
     {
@@ -530,21 +564,27 @@ const ServiceAuthorization = () => {
       label: 'WEEKLY HRS',
       minWidth: 170,
       render: (item: any) => {
-        return <Typography>{isNaN(
-          calculateQuantityPerFrequency({
-            startDate: item.startDate,
-            endDate: item.endDate,
-            quantity: item.units,
-            frequency: 'weekly'
-          })
+        return (
+          <Typography>
+            {isNaN(
+              calculateQuantityPerFrequency({
+                startDate: item.startDate,
+                endDate: item.endDate,
+                quantity: item.units,
+                frequency: 'weekly'
+              })
+            )
+              ? 'N/A'
+              : (
+                  calculateQuantityPerFrequency({
+                    startDate: item.startDate,
+                    endDate: item.endDate,
+                    quantity: item.units,
+                    frequency: 'weekly'
+                  }) / 4
+                ).toFixed(2)}
+          </Typography>
         )
-          ? 'N/A'
-          : (calculateQuantityPerFrequency({
-            startDate: item.startDate,
-            endDate: item.endDate,
-            quantity: item.units,
-            frequency: 'weekly'
-          }) / 4).toFixed(2)}</Typography>
       }
     },
     {
@@ -864,11 +904,22 @@ const ServiceAuthorization = () => {
                           </Grid>
                           <Grid size={{ xs: 12, sm: 3 }}>
                             <CustomTextField
-                              label='Service Description'
-                              placeHolder='Service Description'
+                              label='Service Name'
+                              placeHolder='Service Name'
                               name='serviceName'
                               type='text'
                               error={errors.serviceName}
+                              control={control}
+                              defaultValue={''}
+                            />
+                          </Grid>
+                          <Grid size={{ xs: 12, sm: 3 }}>
+                            <CustomTextField
+                              label='Service Description'
+                              placeHolder='Service Description'
+                              name='serviceDesciption'
+                              type='text'
+                              error={errors.serviceDesciption}
                               control={control}
                               defaultValue={''}
                             />
@@ -988,11 +1039,11 @@ const ServiceAuthorization = () => {
                             )
                               ? 'N/A'
                               : calculateQuantityPerFrequency({
-                                startDate: watch('startDate'),
-                                endDate: watch('endDate'),
-                                quantity: watch('units'),
-                                frequency: watch('frequency')
-                              }).toFixed(2)}
+                                  startDate: watch('startDate'),
+                                  endDate: watch('endDate'),
+                                  quantity: watch('units'),
+                                  frequency: watch('frequency')
+                                }).toFixed(2)}
                           </Grid>
                         </Grid>
                       </Box>

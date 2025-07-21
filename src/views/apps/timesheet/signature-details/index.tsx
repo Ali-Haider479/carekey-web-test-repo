@@ -31,11 +31,11 @@ const SignatureDetails = () => {
 
       // setTimeLogData(response.data.filter((item: any) => item.clockOut != null))
       // setTimeLogData(transformTimesheetDataTwo(response.data.filter((item: any) => item.clockOut != null)))
-       setTimeLogData(
-              response?.data?.length > 0
-                ? transformTimesheetDataTwo(response.data.filter((item: any) => item.clockOut != null))
-                : []
-            )
+      setTimeLogData(
+        response?.data?.length > 0
+          ? transformTimesheetDataTwo(response.data.filter((item: any) => item.clockOut != null))
+          : []
+      )
 
       setIsLoading(false)
     } catch (error) {
@@ -47,14 +47,14 @@ const SignatureDetails = () => {
   // Handler for filter updates
   const handleFilteredData = (filteredData: any) => {
     // setTimeLogData(filteredData)
-    if (filteredData.length === 0) {
-      setAlertOpen(true)
-      setAlertProps({
-        message: 'User not found in the data.',
-        severity: 'error'
-      })
-      return
-    }
+    // if (filteredData.length === 0) {
+    //   setAlertOpen(true)
+    //   setAlertProps({
+    //     message: 'User not found in the data.',
+    //     severity: 'error'
+    //   })
+    //   return
+    // }
     setTimeLogData(transformTimesheetDataTwo(filteredData))
   }
 

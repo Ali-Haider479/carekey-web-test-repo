@@ -48,7 +48,7 @@ const ClientDetails = ({ tabContentList }: BottomBodyProps) => {
       case 'services':
         return '/ Services'
       case 'time-sheets':
-        return '/ Time Sheets'
+        return '/ Time Logs'
       case 'service-authorization':
         return '/ Service Authorization'
       case 'incidents':
