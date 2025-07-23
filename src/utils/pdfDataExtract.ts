@@ -19,7 +19,7 @@ interface ServiceItem {
   lineNumber: string
   status: string
   procedureCode: string
-  modifiers: string
+  modifiers: string | null
   description: string
   additionalCode?: string // For codes like 38U/D
   totalAmount: string
@@ -224,7 +224,7 @@ function parseServiceItems(lines: string[]): ServiceItem[] {
       const lineNumber = serviceLineMatch[1]
       const status = serviceLineMatch[2]
       const procedureCode = serviceLineMatch[3]
-      const modifiers = serviceLineMatch[4] || ''
+      const modifiers = serviceLineMatch[4] || null
       const description = serviceLineMatch[5].trim()
 
       // Initialize the service item

@@ -28,7 +28,7 @@ const tabContentList = () => ({
   services: <ServicesTab />,
   forms: <FormsTab />,
   'account-history': <AccHistoryTab />,
-  'time-sheets': <TimeSheetsTab />,
+  timelogs: <TimeSheetsTab />,
   'service-authorization': <ServiceAuthorizationTab />,
   incidents: <IncidentsTab />,
   'care-plan': <CarePlanTab />,

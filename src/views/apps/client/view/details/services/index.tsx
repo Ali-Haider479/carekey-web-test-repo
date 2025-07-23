@@ -67,7 +67,7 @@ const CareplanTab = () => {
   const prevClientServiceIdsRef = useRef<string[]>([]) // Tracks ClientServiceJoin IDs (cs.id)
   const prevSelectedServiceIdsRef = useRef<string[]>([])
 
-  const [isDataLoading, setIsDataLoading] = useState(false);
+  const [isDataLoading, setIsDataLoading] = useState(false)
 
   const methods = useForm<FormValues>({
     defaultValues: {
@@ -269,20 +269,19 @@ const CareplanTab = () => {
           formServices.length > 0
             ? formServices
             : [
-              {
-                service: '',
-                serviceNotes: '',
-                serviceActivities: [],
-                customActivities: false,
-                customActivitiesTextField: ''
-              }
-            ]
+                {
+                  service: '',
+                  serviceNotes: '',
+                  serviceActivities: [],
+                  customActivities: false,
+                  customActivitiesTextField: ''
+                }
+              ]
       })
     } catch (error) {
       console.error('Error fetching client data:', error)
       setErrorMessage('Failed to fetch client data')
-    }
-    finally {
+    } finally {
       setIsDataLoading(false)
     }
   }
@@ -485,246 +484,250 @@ const CareplanTab = () => {
   }
 
   return (
-    <>{isDataLoading ? (
-      <Box id='timesheet-content' className='flex justify-center items-center min-h-[250px] w-full'>
-        <CircularProgress />
-      </Box>
-    ) : (<FormProvider {...methods}>
-      <form onSubmit={handleSubmit(onSubmit)}>
-        <Card>
-          <CardContent>
-            {errorMessage && (
-              <Box mb={2}>
-                <Typography color='error'>{errorMessage}</Typography>
-              </Box>
-            )}
-            <Box display='flex' justifyContent='space-between' alignItems='center' mb={2}>
-              <Typography className='text-xl font-semibold'>Update Services and Activities</Typography>
-              <Button startIcon={<AddIcon />} onClick={addNewService} disabled={isAddDisabled} variant='contained'>
-                Add Service
-              </Button>
-            </Box>
+    <>
+      {isDataLoading ? (
+        <Box id='timesheet-content' className='flex justify-center items-center min-h-[250px] w-full'>
+          <CircularProgress />
+        </Box>
+      ) : (
+        <FormProvider {...methods}>
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <Card>
+              <CardContent>
+                {errorMessage && (
+                  <Box mb={2}>
+                    <Typography color='error'>{errorMessage}</Typography>
+                  </Box>
+                )}
+                <Box display='flex' justifyContent='space-between' alignItems='center' mb={2}>
+                  <Typography className='text-xl font-semibold'>Update Services and Activities</Typography>
+                  <Button startIcon={<AddIcon />} onClick={addNewService} disabled={isAddDisabled} variant='contained'>
+                    Add Service
+                  </Button>
+                </Box>
 
-            {loading ? (
-              <Box
-                component={'div'}
-                sx={{ height: '300px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
-              >
-                <CircularProgress />
-              </Box>
-            ) : (
-              <>
-                {fields.map((field, index) => {
-                  const selectedServiceId = watchedServices[index]?.service || ''
-                  const selectedService = clientServices.find(svc => svc.id === selectedServiceId)
-                  const availableActivities = servicesActivities.filter(
-                    act =>
-                      (act.procedureCode === selectedService?.procedureCode &&
-                        act.modifierCode === selectedService?.modifierCode) ||
-                      (act.modifierCode === null && selectedService?.modifierCode === null)
-                  )
-                  const serviceAuthActivities = servicesActivities.filter(
-                    act =>
-                      (act.procedureCode === selectedService?.procedureCode &&
-                        act.modifierCode === selectedService?.modifierCode) ||
-                      (act.modifierCode === null && selectedService?.modifierCode === null)
-                  )
-                  const isDummyService = selectedService?.dummyService ?? true
-                  const customActivitiesEnabled = watch(`services.${index}.customActivities`)
-                  const customActivityField = watch(`services.${index}.customActivitiesTextField`)
+                {loading ? (
+                  <Box
+                    component={'div'}
+                    sx={{ height: '300px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+                  >
+                    <CircularProgress />
+                  </Box>
+                ) : (
+                  <>
+                    {fields.map((field, index) => {
+                      const selectedServiceId = watchedServices[index]?.service || ''
+                      const selectedService = clientServices.find(svc => svc.id === selectedServiceId)
+                      const availableActivities = servicesActivities.filter(
+                        act =>
+                          act.procedureCode === selectedService?.procedureCode &&
+                          (act.modifierCode === selectedService?.modifierCode ||
+                            (act.modifierCode === null && selectedService?.modifierCode === null))
+                      )
+                      const serviceAuthActivities = servicesActivities.filter(
+                        act =>
+                          act.procedureCode === selectedService?.procedureCode &&
+                          (act.modifierCode === selectedService?.modifierCode ||
+                            (act.modifierCode === null && selectedService?.modifierCode === null))
+                      )
+                      const isDummyService = selectedService?.dummyService ?? true
+                      const customActivitiesEnabled = watch(`services.${index}.customActivities`)
+                      const customActivityField = watch(`services.${index}.customActivitiesTextField`)
 
-                  console.log('Selected Service --->> ', selectedServiceId, selectedService)
-                  console.log('Custom Activities Enabled ---->> ', customActivitiesEnabled)
+                      console.log('Selected Service --->> ', selectedServiceId, selectedService)
+                      console.log('Custom Activities Enabled ---->> ', customActivitiesEnabled)
 
-                  return (
-                    <React.Fragment key={field.id}>
-                      <Box mb={4} p={2} borderRadius={2}>
-                        <Box display='flex' justifyContent='space-between' alignItems='center' mb={2}>
-                          <Typography className='text-xl font-semibold'>Service Name</Typography>
-                        </Box>
-
-                        <Grid container spacing={5}>
-                          <Grid size={{ xs: 12 }}>
-                            <Controller
-                              name={`services.${index}.service`}
-                              control={control}
-                              rules={{ required: 'Service is required' }}
-                              render={({ field }) => (
-                                <FormControl fullWidth error={!!errors.services?.[index]?.service}>
-                                  <InputLabel size='small'>Select Service</InputLabel>
-                                  <Select
-                                    {...field}
-                                    label='Select Service'
-                                    size='small'
-                                    value={field.value || ''}
-                                    onChange={e => field.onChange(e.target.value)}
-                                  >
-                                    {clientServices.map(item => (
-                                      <MenuItem
-                                        key={`${item.id}-${item.name}`}
-                                        value={item.id}
-                                        disabled={selectedServiceIds.includes(item.id) && item.id !== field.value}
-                                      >
-                                        {item.name} ({item.procedureCode || 'N/A'} - {item.modifierCode || 'N/A'})
-                                        {item.dummyService ? ' (Demo Service)' : ' (S.A Service)'}
-                                      </MenuItem>
-                                    ))}
-                                  </Select>
-                                  {errors.services?.[index]?.service && (
-                                    <FormHelperText>{errors.services[index]?.service?.message}</FormHelperText>
-                                  )}
-                                </FormControl>
-                              )}
-                            />
-                          </Grid>
-                          <Grid size={{ xs: 12 }}>
-                            <Controller
-                              name={`services.${index}.serviceNotes`}
-                              control={control}
-                              render={({ field }) => (
-                                <TextField
-                                  {...field}
-                                  label='Service Notes'
-                                  placeholder='Service Notes'
-                                  type='text'
-                                  size='small'
-                                  fullWidth
-                                />
-                              )}
-                            />
-                          </Grid>
-                          <Grid size={{ xs: 12 }}>
+                      return (
+                        <React.Fragment key={field.id}>
+                          <Box mb={4} p={2} borderRadius={2}>
                             <Box display='flex' justifyContent='space-between' alignItems='center' mb={2}>
-                              <Typography className='text-xl font-semibold'>Service Activities</Typography>
-                              <Box display='flex' alignItems='center'>
-                                <FormLabel>Custom Activities</FormLabel>
-                                <Checkbox
-                                  {...register(`services.${index}.customActivities`)}
-                                  checked={customActivitiesEnabled}
-                                  onChange={(event: any) => handleEnableChange(index, event)}
-                                  disabled={!watch(`services.${index}.service`)}
-                                />
-                              </Box>
+                              <Typography className='text-xl font-semibold'>Service Name</Typography>
                             </Box>
-                            {customActivitiesEnabled && (
-                              <Box display='flex' alignItems='center' mb={2}>
+
+                            <Grid container spacing={5}>
+                              <Grid size={{ xs: 12 }}>
                                 <Controller
-                                  name={`services.${index}.customActivitiesTextField`}
+                                  name={`services.${index}.service`}
                                   control={control}
-                                  rules={{
-                                    required: customActivitiesEnabled ? 'Custom activity name is required' : false
-                                  }}
+                                  rules={{ required: 'Service is required' }}
+                                  render={({ field }) => (
+                                    <FormControl fullWidth error={!!errors.services?.[index]?.service}>
+                                      <InputLabel size='small'>Select Service</InputLabel>
+                                      <Select
+                                        {...field}
+                                        label='Select Service'
+                                        size='small'
+                                        value={field.value || ''}
+                                        onChange={e => field.onChange(e.target.value)}
+                                      >
+                                        {clientServices.map(item => (
+                                          <MenuItem
+                                            key={`${item.id}-${item.name}`}
+                                            value={item.id}
+                                            disabled={selectedServiceIds.includes(item.id) && item.id !== field.value}
+                                          >
+                                            {item.name} ({item.procedureCode || 'N/A'} - {item.modifierCode || 'N/A'})
+                                            {item.dummyService ? ' (Demo Service)' : ' (S.A Service)'}
+                                          </MenuItem>
+                                        ))}
+                                      </Select>
+                                      {errors.services?.[index]?.service && (
+                                        <FormHelperText>{errors.services[index]?.service?.message}</FormHelperText>
+                                      )}
+                                    </FormControl>
+                                  )}
+                                />
+                              </Grid>
+                              <Grid size={{ xs: 12 }}>
+                                <Controller
+                                  name={`services.${index}.serviceNotes`}
+                                  control={control}
                                   render={({ field }) => (
                                     <TextField
                                       {...field}
-                                      label='Activity Name'
-                                      placeholder='Activity Name'
+                                      label='Service Notes'
+                                      placeholder='Service Notes'
                                       type='text'
                                       size='small'
                                       fullWidth
-                                      error={!!errors.services?.[index]?.customActivitiesTextField}
-                                      helperText={errors.services?.[index]?.customActivitiesTextField?.message}
                                     />
                                   )}
                                 />
-                                <Button
-                                  startIcon={
-                                    customActivityButtonLoading ? (
-                                      <CircularProgress size={20} color='inherit' />
-                                    ) : (
-                                      <AddIcon />
-                                    )
-                                  }
-                                  disabled={customActivityButtonLoading || !customActivityField}
-                                  onClick={() => handleAddCustomActivity(index, customActivityField)}
-                                  variant='contained'
-                                  className='ml-2'
-                                >
-                                  Add
-                                </Button>
-                              </Box>
-                            )}
-                            <Controller
-                              name={`services.${index}.serviceActivities`}
-                              control={control}
-                              rules={{ required: 'At least one activity is required' }}
-                              render={({ field: { value = [], onChange, ...field } }) => (
-                                <FormControl fullWidth error={!!errors.services?.[index]?.serviceActivities}>
-                                  <InputLabel size='small'>Select Activities</InputLabel>
-                                  <Select
-                                    {...field}
-                                    multiple
-                                    renderValue={() => ''}
-                                    value={Array.isArray(value) ? value : []}
-                                    label='Select Activities'
-                                    size='small'
-                                    onChange={e => onChange(e.target.value as string[])}
-                                    open={openSelect[`${index}`] || false}
-                                    onOpen={() => setOpenSelect(prev => ({ ...prev, [`${index}`]: true }))}
-                                    onClose={() => setOpenSelect(prev => ({ ...prev, [`${index}`]: false }))}
-                                  >
-                                    {(isDummyService ? availableActivities : serviceAuthActivities).map(svc => (
-                                      <MenuItem key={svc.id} value={svc.id}>
-                                        {svc.title}
-                                      </MenuItem>
-                                    ))}
-                                  </Select>
-                                  {errors.services?.[index]?.serviceActivities && (
-                                    <FormHelperText>
-                                      {errors.services[index]?.serviceActivities?.message}
-                                    </FormHelperText>
-                                  )}
-                                  <Box className='flex flex-wrap gap-2 mt-2'>
-                                    {Array.isArray(value) &&
-                                      value.map(itemId => {
-                                        const activitySet = isDummyService ? availableActivities : serviceAuthActivities
-                                        const selectedActivity = activitySet.find(s => s.id === itemId)
-                                        return (
-                                          selectedActivity && (
-                                            <Chip
-                                              key={itemId}
-                                              label={selectedActivity.title}
-                                              onDelete={() => handleDeleteActivity(itemId, onChange, value)}
-                                              deleteIcon={
-                                                <CloseIcon className='text-sm text-[#8592A3] border-2 rounded' />
-                                              }
-                                              className='mt-2 text-[#8592A3] text-sm py-1'
-                                              aria-label={`Remove ${selectedActivity.title}`}
-                                            />
-                                          )
-                                        )
-                                      })}
+                              </Grid>
+                              <Grid size={{ xs: 12 }}>
+                                <Box display='flex' justifyContent='space-between' alignItems='center' mb={2}>
+                                  <Typography className='text-xl font-semibold'>Service Activities</Typography>
+                                  <Box display='flex' alignItems='center'>
+                                    <FormLabel>Custom Activities</FormLabel>
+                                    <Checkbox
+                                      {...register(`services.${index}.customActivities`)}
+                                      checked={customActivitiesEnabled}
+                                      onChange={(event: any) => handleEnableChange(index, event)}
+                                      disabled={!watch(`services.${index}.service`)}
+                                    />
                                   </Box>
-                                </FormControl>
-                              )}
-                            />
-                          </Grid>
-                        </Grid>
-                      </Box>
-                      <Box className='w-full border-t border-[#4d4d4e] my-4' />
-                    </React.Fragment>
-                  )
-                })}
-              </>
-            )}
-          </CardContent>
-          <Box display='flex' justifyContent='flex-end' p={2}>
-            <Button
-              startIcon={saveChangesButtonLoading ? <CircularProgress size={20} color='inherit' /> : null}
-              disabled={saveChangesButtonLoading || loading}
-              type='submit'
-              variant='contained'
-              color='primary'
-              className='mr-4 mb-2'
-            >
-              Save Changes
-            </Button>
-          </Box>
-        </Card>
-      </form>
-    </FormProvider>)}
+                                </Box>
+                                {customActivitiesEnabled && (
+                                  <Box display='flex' alignItems='center' mb={2}>
+                                    <Controller
+                                      name={`services.${index}.customActivitiesTextField`}
+                                      control={control}
+                                      rules={{
+                                        required: customActivitiesEnabled ? 'Custom activity name is required' : false
+                                      }}
+                                      render={({ field }) => (
+                                        <TextField
+                                          {...field}
+                                          label='Activity Name'
+                                          placeholder='Activity Name'
+                                          type='text'
+                                          size='small'
+                                          fullWidth
+                                          error={!!errors.services?.[index]?.customActivitiesTextField}
+                                          helperText={errors.services?.[index]?.customActivitiesTextField?.message}
+                                        />
+                                      )}
+                                    />
+                                    <Button
+                                      startIcon={
+                                        customActivityButtonLoading ? (
+                                          <CircularProgress size={20} color='inherit' />
+                                        ) : (
+                                          <AddIcon />
+                                        )
+                                      }
+                                      disabled={customActivityButtonLoading || !customActivityField}
+                                      onClick={() => handleAddCustomActivity(index, customActivityField)}
+                                      variant='contained'
+                                      className='ml-2'
+                                    >
+                                      Add
+                                    </Button>
+                                  </Box>
+                                )}
+                                <Controller
+                                  name={`services.${index}.serviceActivities`}
+                                  control={control}
+                                  rules={{ required: 'At least one activity is required' }}
+                                  render={({ field: { value = [], onChange, ...field } }) => (
+                                    <FormControl fullWidth error={!!errors.services?.[index]?.serviceActivities}>
+                                      <InputLabel size='small'>Select Activities</InputLabel>
+                                      <Select
+                                        {...field}
+                                        multiple
+                                        renderValue={() => ''}
+                                        value={Array.isArray(value) ? value : []}
+                                        label='Select Activities'
+                                        size='small'
+                                        onChange={e => onChange(e.target.value as string[])}
+                                        open={openSelect[`${index}`] || false}
+                                        onOpen={() => setOpenSelect(prev => ({ ...prev, [`${index}`]: true }))}
+                                        onClose={() => setOpenSelect(prev => ({ ...prev, [`${index}`]: false }))}
+                                      >
+                                        {(isDummyService ? availableActivities : serviceAuthActivities).map(svc => (
+                                          <MenuItem key={svc.id} value={svc.id}>
+                                            {svc.title}
+                                          </MenuItem>
+                                        ))}
+                                      </Select>
+                                      {errors.services?.[index]?.serviceActivities && (
+                                        <FormHelperText>
+                                          {errors.services[index]?.serviceActivities?.message}
+                                        </FormHelperText>
+                                      )}
+                                      <Box className='flex flex-wrap gap-2 mt-2'>
+                                        {Array.isArray(value) &&
+                                          value.map(itemId => {
+                                            const activitySet = isDummyService
+                                              ? availableActivities
+                                              : serviceAuthActivities
+                                            const selectedActivity = activitySet.find(s => s.id === itemId)
+                                            return (
+                                              selectedActivity && (
+                                                <Chip
+                                                  key={itemId}
+                                                  label={selectedActivity.title}
+                                                  onDelete={() => handleDeleteActivity(itemId, onChange, value)}
+                                                  deleteIcon={
+                                                    <CloseIcon className='text-sm text-[#8592A3] border-2 rounded' />
+                                                  }
+                                                  className='mt-2 text-[#8592A3] text-sm py-1'
+                                                  aria-label={`Remove ${selectedActivity.title}`}
+                                                />
+                                              )
+                                            )
+                                          })}
+                                      </Box>
+                                    </FormControl>
+                                  )}
+                                />
+                              </Grid>
+                            </Grid>
+                          </Box>
+                          <Box className='w-full border-t border-[#4d4d4e] my-4' />
+                        </React.Fragment>
+                      )
+                    })}
+                  </>
+                )}
+              </CardContent>
+              <Box display='flex' justifyContent='flex-end' p={2}>
+                <Button
+                  startIcon={saveChangesButtonLoading ? <CircularProgress size={20} color='inherit' /> : null}
+                  disabled={saveChangesButtonLoading || loading}
+                  type='submit'
+                  variant='contained'
+                  color='primary'
+                  className='mr-4 mb-2'
+                >
+                  Save Changes
+                </Button>
+              </Box>
+            </Card>
+          </form>
+        </FormProvider>
+      )}
     </>
-
   )
 }
 

@@ -64,7 +64,7 @@ interface ServiceAuthPayload {
   billable: boolean
   placeOfService: string
   serviceName: string
-  description: string
+  serviceDescription: string
   clientServiceId: number | null
 }
 
@@ -281,7 +281,8 @@ const ServiceAuthorization = () => {
       taxonomy: '',
       frequency: '',
       placeOfService: 'home',
-      serviceName: ''
+      serviceName: '',
+      serviceDescription: ''
     })
     setBillable(true)
     setIsModalShow(false)
@@ -318,7 +319,8 @@ const ServiceAuthorization = () => {
       taxonomy: item.taxonomy || '',
       frequency: item.frequency || '',
       placeOfService: item.placeOfService || 'home',
-      serviceName: item.serviceName || ''
+      serviceName: item.serviceName || '',
+      serviceDescription: item.serviceDescription || ''
     })
 
     setIsModalShow(true)
@@ -422,7 +424,7 @@ const ServiceAuthorization = () => {
         billable: billable,
         placeOfService: data.placeOfService,
         serviceName: data.serviceName,
-        description: data?.description || data.serviceName,
+        serviceDescription: data?.serviceDescription || data.serviceName,
         clientServiceId: matchingClientService ? matchingClientService?.clientServiceId : null
       }
 
@@ -917,9 +919,9 @@ const ServiceAuthorization = () => {
                             <CustomTextField
                               label='Service Description'
                               placeHolder='Service Description'
-                              name='serviceDesciption'
+                              name='serviceDescription'
                               type='text'
-                              error={errors.serviceDesciption}
+                              error={errors.serviceDescription}
                               control={control}
                               defaultValue={''}
                             />

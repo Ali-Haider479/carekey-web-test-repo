@@ -75,7 +75,11 @@ const EvvCompletedShiftsTable = ({ timeLogData, isLoading }: Props) => {
       minWidth: 170,
       editable: true,
       sortable: true,
-      render: (user: any) => <Typography color='primary'>{user?.serviceName}</Typography>
+      render: (user: any) => (
+        <Typography color='primary'>
+          {user?.clientService?.service?.name || user?.clientService?.serviceAuthService?.name}
+        </Typography>
+      )
     },
     {
       id: 'evv',
@@ -85,7 +89,7 @@ const EvvCompletedShiftsTable = ({ timeLogData, isLoading }: Props) => {
       sortable: true,
       render: (user: any) => (
         <div
-          className={`${settings.mode === 'light' ? (user?.checkedActivity?.activities?.[0]?.service?.evv === true ? 'bg-[#b8f093]' : 'bg-[#ffa6a3]') : user?.checkedActivity?.activities?.[0]?.service?.evv === true ? 'bg-[#4f8634]' : 'bg-[#953d45]'} justify-center items-center rounded-2xl py-1 px-4`}
+          className={`w-16 ${settings.mode === 'light' ? (user?.checkedActivity?.activities?.[0]?.service?.evv === true ? 'bg-[#b8f093]' : 'bg-[#ffa6a3]') : user?.checkedActivity?.activities?.[0]?.service?.evv === true ? 'bg-[#4f8634]' : 'bg-[#953d45]'} justify-center items-center rounded-2xl py-1 px-4`}
         >
           <Typography
             color='primary'
@@ -103,7 +107,7 @@ const EvvCompletedShiftsTable = ({ timeLogData, isLoading }: Props) => {
       editable: false,
       sortable: true,
       render: (user: any) => (
-        <Typography color='primary'>{`${user?.client?.authService?.[0]?.procedureCode ?? ''}-${user?.client?.authService?.[0]?.modifierCode ?? ''}`}</Typography>
+        <Typography color='primary'>{`${user?.client?.authService?.[0]?.procedureCode ?? ''}${user?.client?.authService?.[0]?.modifierCode ? '-' : ''}${user?.client?.authService?.[0]?.modifierCode ?? ''}`}</Typography>
       )
     },
     {

@@ -148,7 +148,7 @@ const TenantTableFilters = ({
             </CustomTextField>
           </Grid>
           <Grid size={{ xs: 12, sm: 3 }}>
-            <Button type='submit' variant='outlined' className='mt-1 p-1'>
+            <Button type='submit' variant='contained' className='mt-1 p-1'>
               Apply
             </Button>
           </Grid>

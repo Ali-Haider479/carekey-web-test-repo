@@ -91,13 +91,19 @@ export function transformTimesheetDataTwo(entries: TimeEntry[]): GroupedTimeEntr
   if (!Array.isArray(entries) || !entries.length) {
     return []
   }
-  console.log('ENTRIES', entries)
 
-  // Group entries by caregiver.id and client.id
+  // Group entries by caregiver.id, client.id, and service details
   const groupedByPair: { [key: string]: TimeEntry[] } = {}
 
   entries.forEach(entry => {
-    const key = `${entry.caregiver.id}-${entry.client.id}`
+    // Get service ID from either service or serviceAuthService
+    const serviceId = entry.clientService?.service
+      ? entry.clientService.service.id
+      : entry.clientService?.serviceAuthService?.id || 'no-service'
+
+    // Create a key that includes caregiver, client, and service details
+    const key = `${entry.caregiver.id}-${entry.client.id}-${serviceId}`
+
     if (!groupedByPair[key]) {
       groupedByPair[key] = []
     }
@@ -172,6 +178,7 @@ export function transformTimesheetDataTwo(entries: TimeEntry[]): GroupedTimeEntr
         clientService: formattedClientService, // Always include clientService
         tsApprovalStatus: entry.tsApprovalStatus,
         serviceName: entry.serviceName,
+        manualEntry: entry.manualEntry,
         updatedBy: entry.updatedBy,
         updatedAt: entry.updatedAt,
         clockIn: entry.clockIn,
@@ -208,6 +215,7 @@ export function transformTimesheetDataTwo(entries: TimeEntry[]): GroupedTimeEntr
 
     const dateRange = `${formatDate(startDate)} - ${formatDate(endDate)}`
     const hasAllSameStatus = sortedEntries.every(entry => entry.tsApprovalStatus === sortedEntries[0].tsApprovalStatus)
+    const hasAllSameManual = sortedEntries.every(entry => entry.manualEntry === sortedEntries[0].manualEntry)
     const hasAllSameSignatureStatus = sortedEntries.every(
       entry => entry.signature.signatureStatus === sortedEntries[0].signature.signatureStatus
     )
@@ -252,6 +260,7 @@ export function transformTimesheetDataTwo(entries: TimeEntry[]): GroupedTimeEntr
         serviceAuth: client.serviceAuth
       },
       tsApprovalStatus: hasAllSameStatus ? sortedEntries[0].tsApprovalStatus : 'Mixed',
+      manualEntry: hasAllSameManual ? sortedEntries[0].manualEntry : 'Mixed',
       serviceName: uniqueServices.join(', '),
       clockIn: '',
       clockOut: '',

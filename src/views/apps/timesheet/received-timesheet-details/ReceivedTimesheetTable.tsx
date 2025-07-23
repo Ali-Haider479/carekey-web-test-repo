@@ -2,7 +2,17 @@
 
 import { useState, useEffect, forwardRef } from 'react'
 import Card from '@mui/material/Card'
-import { Button, Chip, CircularProgress, Dialog, Grid2 as Grid, TextField, Tooltip, Typography } from '@mui/material'
+import {
+  Box,
+  Button,
+  Chip,
+  CircularProgress,
+  Dialog,
+  Grid2 as Grid,
+  TextField,
+  Tooltip,
+  Typography
+} from '@mui/material'
 import ActionButton from '@/@core/components/mui/ActionButton'
 import ReactTable from '@/@core/components/mui/ReactTable'
 import { calculateHoursWorked, calculateStartAndEndDate, formatToLocalTime } from '@/utils/helperFunctions'
@@ -148,7 +158,8 @@ const ReceivedTimesheetTable = (
   const clockInDateString = new Date(watch('clockInDate'))
   const clockOutDateString = new Date(watch('clockOutDate'))
   const editedClockInDateString = watch('editedClockInDate') === '' ? undefined : new Date(watch('editedClockInDate'))
-  const editedClockOutDateString = watch('editedClockOutDate') === '' ? undefined : new Date('editedClockOutDate')
+  const editedClockOutDateString =
+    watch('editedClockOutDate') === '' ? undefined : new Date(watch('editedClockOutDate'))
   console.log('Edited worked hours value ---->>> ', editedClockInDateString, editedClockOutDateString)
   const tsApprovalStatus = watch('tsApprovalStatus')
   const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
@@ -1050,7 +1061,7 @@ const ReceivedTimesheetTable = (
       editable: true,
       sortable: true,
       render: (user: any) => (
-        <Tooltip title={user?.manualEntry ? 'Yes' : 'No'}>
+        <Tooltip title={user?.manualEntry === 'Mixed' ? 'Mixed' : user?.manualEntry === true ? 'Yes' : 'No'}>
           <Typography
             className='font-normal text-base my-3'
             sx={theme => ({
@@ -1064,7 +1075,15 @@ const ReceivedTimesheetTable = (
                     : theme.palette.warning.dark
             })}
           >
-            {user?.manualEntry === true && user.loggedVia === 'desktop' ? <Computer /> : <TabletAndroid />}
+            {user?.manualEntry === 'Mixed' ? (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <Computer /> | <TabletAndroid />
+              </Box>
+            ) : user?.manualEntry === true && user.loggedVia === 'desktop' ? (
+              <Computer />
+            ) : (
+              <TabletAndroid />
+            )}
           </Typography>
         </Tooltip>
       )
@@ -1165,244 +1184,245 @@ const ReceivedTimesheetTable = (
             />
           </Card>
         </div>
-        <div>
-          <Dialog
-            open={isModalShow}
-            onClose={handleModalClose}
-            closeAfterTransition={false}
-            sx={{ '& .MuiDialog-paper': { overflow: 'auto' } }}
+
+        <Dialog
+          open={isModalShow}
+          onClose={handleModalClose}
+          closeAfterTransition={false}
+          sx={{ '& .MuiDialog-paper': { overflow: 'hidden', p: 2 } }}
+        >
+          <DialogCloseButton
+            onClick={() => handleModalClose()}
+            disableRipple
+            sx={{ position: 'absolute', right: 8, top: 8 }}
           >
-            <DialogCloseButton onClick={() => handleModalClose()} disableRipple>
-              <i className='bx-x' />
-            </DialogCloseButton>
-            <div className='flex items-center justify-center pt-[10px] pb-[5px] w-full px-5'>
-              <form onSubmit={handleSubmit(onSubmit)} autoComplete='off'>
-                <div className='flex flex-row justify-between items-center'>
-                  <Typography className='text-xl font-semibold mt-5 mb-6'>Timesheet Details</Typography>
-                  <Button variant='contained' onClick={toggleEditing}>
-                    {isEditing ? 'Cancel' : 'Edit'}
-                  </Button>
-                </div>
-                <Grid container spacing={4}>
-                  <Grid size={{ xs: 12, sm: 6 }}>
-                    <CustomTextField
-                      label='Client Name'
-                      name='clientName'
-                      defaultValue={modalData ? `${modalData.client?.firstName} ${modalData.client?.lastName}` : ''}
-                      type='text'
-                      control={control}
-                      disabled
-                      placeHolder={'Client Name'}
-                      isRequired={false}
-                    />
-                  </Grid>
-                  <Grid size={{ xs: 12, sm: 6 }}>
-                    <CustomTextField
-                      label='Caregiver Name'
-                      name='caregiverName'
-                      defaultValue={
-                        modalData ? `${modalData.caregiver?.firstName} ${modalData.caregiver?.lastName}` : ''
-                      }
-                      type='text'
-                      control={control}
-                      disabled
-                      placeHolder={'Caregiver Name'}
-                      isRequired={false}
-                    />
-                  </Grid>
-                  <Grid size={{ xs: 12, sm: 6 }}>
-                    <CustomDropDown
-                      name={'serviceName'}
-                      control={control}
-                      label={'Service Name'}
-                      isRequired={false}
-                      disabled={!isEditing}
-                      defaultValue={modalData?.clientService?.id}
-                      optionList={serviceType?.map((item: any) => ({
-                        key: item.id,
-                        value: item.clientServiceId,
-                        optionString: `${item.name} ${item?.dummyService ? '(Demo Service)' : '(S.A Service)'}`
-                      }))}
-                      // disabled={!isEditing}
-                    />
-                  </Grid>
-                  <Grid size={{ xs: 12, sm: 6 }}>
+            <i className='bx-x' />
+          </DialogCloseButton>
+          <div className='flex flex-row justify-between items-center mb-2 mt-3 px-6'>
+            <Typography className='text-xl font-semibold'>Timesheet Details</Typography>
+            <Button variant='contained' onClick={toggleEditing}>
+              {isEditing ? 'Cancel' : 'Edit'}
+            </Button>
+          </div>
+          <div className='flex items-center justify-center pt-[120px] pb-[5px] w-full px-5 overflow-y-auto'>
+            <form onSubmit={handleSubmit(onSubmit)} autoComplete='off'>
+              <Grid container spacing={4}>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <CustomTextField
+                    label='Client Name'
+                    name='clientName'
+                    defaultValue={modalData ? `${modalData.client?.firstName} ${modalData.client?.lastName}` : ''}
+                    type='text'
+                    control={control}
+                    disabled
+                    placeHolder={'Client Name'}
+                    isRequired={false}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <CustomTextField
+                    label='Caregiver Name'
+                    name='caregiverName'
+                    defaultValue={modalData ? `${modalData.caregiver?.firstName} ${modalData.caregiver?.lastName}` : ''}
+                    type='text'
+                    control={control}
+                    disabled
+                    placeHolder={'Caregiver Name'}
+                    isRequired={false}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <CustomDropDown
+                    name={'serviceName'}
+                    control={control}
+                    label={'Service Name'}
+                    isRequired={false}
+                    disabled={!isEditing}
+                    defaultValue={modalData?.clientService?.id}
+                    optionList={serviceType?.map((item: any) => ({
+                      key: item.id,
+                      value: item.clientServiceId,
+                      optionString: `${item.name} ${item?.dummyService ? '(Demo Service)' : '(S.A Service)'}`
+                    }))}
+                    // disabled={!isEditing}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <ControlledDatePicker
+                    name={'clockInDate'}
+                    error={errors.dateOfService}
+                    control={control}
+                    label={'Date of Service'}
+                    defaultValue={''}
+                    isRequired={true}
+                    disabled={true}
+                    rules={{
+                      required: 'Date of service is required'
+                    }}
+                  />
+                </Grid>
+                <Typography>Original Worked Hours: </Typography>
+                <Grid container spacing={2}>
+                  <Grid size={{ xs: 12, sm: 3 }}>
                     <ControlledDatePicker
                       name={'clockInDate'}
-                      error={errors.dateOfService}
+                      error={errors.clockInDate}
                       control={control}
-                      label={'Date of Service'}
+                      label={'Clock In Date'}
                       defaultValue={''}
                       isRequired={true}
                       disabled={true}
+                      selected={clockInDateString}
+                      endDate={clockOutDateString || undefined}
+                      startDate={clockInDateString || undefined}
+                      minDate={new Date(weekRange.startDate)}
+                      maxDate={weekRange.endDate > currentDate ? new Date() : new Date(weekRange.endDate)}
                       rules={{
-                        required: 'Date of service is required'
+                        required: 'Clock In Date is required'
                       }}
                     />
                   </Grid>
-                  <Typography>Original Worked Hours: </Typography>
-                  <Grid container spacing={2}>
-                    <Grid size={{ xs: 12, sm: 3 }}>
-                      <ControlledDatePicker
-                        name={'clockInDate'}
-                        error={errors.clockInDate}
-                        control={control}
-                        label={'Clock In Date'}
-                        defaultValue={''}
-                        isRequired={true}
-                        disabled={true}
-                        selected={clockInDateString}
-                        endDate={clockOutDateString || undefined}
-                        startDate={clockInDateString || undefined}
-                        minDate={new Date(weekRange.startDate)}
-                        maxDate={weekRange.endDate > currentDate ? new Date() : new Date(weekRange.endDate)}
-                        rules={{
-                          required: 'Clock In Date is required'
-                        }}
-                      />
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 3 }}>
-                      <AppReactDatepicker
-                        showTimeSelect
-                        showTimeSelectOnly
-                        timeIntervals={15}
-                        required
-                        dateFormat='hh:mm aa'
-                        id='clock-in-time-picker'
-                        disabled={true}
-                        selected={parseTimeStringToDate(watch('clockInTime'))}
-                        onChange={(date: Date | null) => {
-                          if (date) {
-                            const timeString = date.toLocaleTimeString('en-US', {
-                              hour: '2-digit',
-                              minute: '2-digit',
-                              second: '2-digit',
-                              hour12: false
-                            })
-                            setValue('clockInTime', timeString)
-                            setValue('clockOutTime', null) // Set clockOutDate to clockInDate
-                          }
-                        }}
-                        customInput={
-                          <PickersComponent
-                            label='Clock In Time'
-                            registername='clockInTime'
-                            error={!!errors.clockInTime}
-                            id='clock-in-time'
-                          />
+                  <Grid size={{ xs: 12, sm: 3 }}>
+                    <AppReactDatepicker
+                      showTimeSelect
+                      showTimeSelectOnly
+                      timeIntervals={15}
+                      required
+                      dateFormat='hh:mm aa'
+                      id='clock-in-time-picker'
+                      disabled={true}
+                      selected={parseTimeStringToDate(watch('clockInTime'))}
+                      onChange={(date: Date | null) => {
+                        if (date) {
+                          const timeString = date.toLocaleTimeString('en-US', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            second: '2-digit',
+                            hour12: false
+                          })
+                          setValue('clockInTime', timeString)
+                          setValue('clockOutTime', null) // Set clockOutDate to clockInDate
                         }
-                      />
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 3 }}>
-                      <ControlledDatePicker
-                        name={'clockOutDate'}
-                        error={errors.clockOutDate}
-                        control={control}
-                        label={'Clock Out Date'}
-                        defaultValue={''}
-                        isRequired={true}
-                        disabled={true}
-                        selected={clockOutDateString}
-                        minDate={clockInDateString || undefined}
-                        maxDate={weekRange.endDate > currentDate ? new Date() : new Date(weekRange.endDate)}
-                        rules={{
-                          required: 'Clock Out Date is required',
-                          validate: (value: any) => {
-                            if (!clockInDateString || !value) return true // Skip if either is empty
-                            return new Date(value) >= clockInDateString
-                              ? true
-                              : 'Clock Out Date must be on or after Clock In Date'
-                          }
-                        }}
-                      />
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 3 }}>
-                      <AppReactDatepicker
-                        showTimeSelect
-                        showTimeSelectOnly
-                        timeIntervals={15}
-                        dateFormat='hh:mm aa'
-                        required
-                        id='clock-out-time-picker'
-                        disabled={true}
-                        selected={parseTimeStringToDate(watch('clockOutTime'))}
-                        minTime={(() => {
-                          if (!clockInDateString || !clockOutDateString) return new Date()
-                          const clockInTime: any = parseTimeStringToDate(watch('clockInTime'))
-                          // Check if dates are the same
-                          const isSameDate = clockInDateString.toDateString() === clockOutDateString.toDateString()
-
-                          if (isSameDate) {
-                            const minutes = clockInTime?.getMinutes()
-                            const roundedMinutes = Math.ceil(minutes / 15) * 15
-                            const nextInterval = new Date(
-                              clockInDateString.getFullYear(),
-                              clockInDateString.getMonth(),
-                              clockInDateString.getDate(),
-                              clockInTime?.getHours(),
-                              clockInTime?.getMinutes(),
-                              clockInTime?.getSeconds(),
-                              clockInTime?.getMilliseconds()
-                            )
-
-                            if (minutes === roundedMinutes) {
-                              nextInterval.setMinutes(minutes + 15)
-                            } else {
-                              nextInterval.setMinutes(roundedMinutes)
-                            }
-
-                            return nextInterval
-                          } else {
-                            // If different date, start from beginning of day
-                            return setSeconds(setMinutes(setHours(new Date(), 0), 0), 0)
-                          }
-                        })()}
-                        maxTime={(() => {
-                          if (!clockInDateString || !clockOutDateString) return new Date()
-                          const isCurrentDate = clockOutDateString.toDateString() === new Date().toDateString()
-
-                          if (isCurrentDate) {
-                            const now = new Date()
-                            const minutes = now.getMinutes()
-                            const roundedMinutes = Math.floor(minutes / 15) * 15
-
-                            const previousInterval = new Date(
-                              clockOutDateString.getFullYear(),
-                              clockOutDateString.getMonth(),
-                              clockOutDateString.getDate(),
-                              now.getHours(),
-                              roundedMinutes,
-                              0, // Set seconds to 0
-                              0 // Set milliseconds to 0
-                            )
-
-                            return previousInterval
-                          } else {
-                            // If previous date, set to end of day
-                            return setSeconds(setMinutes(setHours(new Date(clockOutDateString), 23), 59), 59)
-                          }
-                        })()}
-                        onChange={(date: Date | null) => {
-                          if (date) {
-                            const timeString = date.toLocaleTimeString('en-US', {
-                              hour: '2-digit',
-                              minute: '2-digit',
-                              second: '2-digit',
-                              hour12: false
-                            })
-                            setValue('clockOutTime', timeString)
-                          }
-                        }}
-                        customInput={
-                          <PickersComponent
-                            label='Clock Out Time'
-                            registername='clockOutTime'
-                            error={!!errors.clockOutTime}
-                            id='clock-out-time'
-                          />
+                      }}
+                      customInput={
+                        <PickersComponent
+                          label='Clock In Time'
+                          registername='clockInTime'
+                          error={!!errors.clockInTime}
+                          id='clock-in-time'
+                        />
+                      }
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 3 }}>
+                    <ControlledDatePicker
+                      name={'clockOutDate'}
+                      error={errors.clockOutDate}
+                      control={control}
+                      label={'Clock Out Date'}
+                      defaultValue={''}
+                      isRequired={true}
+                      disabled={true}
+                      selected={clockOutDateString}
+                      minDate={clockInDateString || undefined}
+                      maxDate={weekRange.endDate > currentDate ? new Date() : new Date(weekRange.endDate)}
+                      rules={{
+                        required: 'Clock Out Date is required',
+                        validate: (value: any) => {
+                          if (!clockInDateString || !value) return true // Skip if either is empty
+                          return new Date(value) >= clockInDateString
+                            ? true
+                            : 'Clock Out Date must be on or after Clock In Date'
                         }
-                      />
-                    </Grid>
+                      }}
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 3 }}>
+                    <AppReactDatepicker
+                      showTimeSelect
+                      showTimeSelectOnly
+                      timeIntervals={15}
+                      dateFormat='hh:mm aa'
+                      required
+                      id='edited-clock-out-time-picker'
+                      disabled
+                      selected={parseTimeStringToDate(watch('clockOutTime'))}
+                      minTime={(() => {
+                        if (!clockInDateString || !clockOutDateString) return new Date()
+                        const clockInTime: any = parseTimeStringToDate(watch('editedClockInTime'))
+                        // Check if dates are the same
+                        const isSameDate = clockInDateString.toDateString() === clockOutDateString.toDateString()
+
+                        if (isSameDate) {
+                          const minutes = clockInTime?.getMinutes()
+                          const roundedMinutes = Math.ceil(minutes / 15) * 15
+                          const nextInterval = new Date(
+                            clockInDateString.getFullYear(),
+                            clockInDateString.getMonth(),
+                            clockInDateString.getDate(),
+                            clockInTime?.getHours(),
+                            clockInTime?.getMinutes(),
+                            clockInTime?.getSeconds(),
+                            clockInTime?.getMilliseconds()
+                          )
+
+                          if (minutes === roundedMinutes) {
+                            nextInterval.setMinutes(minutes + 15)
+                          } else {
+                            nextInterval.setMinutes(roundedMinutes)
+                          }
+
+                          return nextInterval
+                        } else {
+                          // If different date, start from beginning of day
+                          return setSeconds(setMinutes(setHours(new Date(), 0), 0), 0)
+                        }
+                      })()}
+                      maxTime={(() => {
+                        if (!clockInDateString || !clockOutDateString) return new Date()
+                        const isCurrentDate = clockOutDateString.toDateString() === new Date().toDateString()
+
+                        if (isCurrentDate) {
+                          const now = new Date()
+                          const minutes = now.getMinutes()
+                          const roundedMinutes = Math.floor(minutes / 15) * 15
+
+                          const previousInterval = new Date(
+                            clockOutDateString.getFullYear(),
+                            clockOutDateString.getMonth(),
+                            clockOutDateString.getDate(),
+                            now.getHours(),
+                            roundedMinutes,
+                            0, // Set seconds to 0
+                            0 // Set milliseconds to 0
+                          )
+
+                          return previousInterval
+                        } else {
+                          // If previous date, set to end of day
+                          return setSeconds(setMinutes(setHours(new Date(clockOutDateString), 23), 59), 59)
+                        }
+                      })()}
+                      onChange={(date: Date | null) => {
+                        if (date) {
+                          const timeString = date.toLocaleTimeString('en-US', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            second: '2-digit',
+                            hour12: false
+                          })
+                          setValue('editedClockOutTime', timeString)
+                        }
+                      }}
+                      customInput={
+                        <PickersComponent
+                          label='Clock Out Time'
+                          registername='clockOutTime'
+                          error={!!errors.clockOutTime}
+                          id='clock-out-time'
+                        />
+                      }
+                    />
                   </Grid>
                   <Typography>Edited worked Hours: </Typography>
                   <Grid container spacing={2}>
@@ -1466,8 +1486,8 @@ const ReceivedTimesheetTable = (
                         defaultValue={''}
                         isRequired={true}
                         disabled={!isEditing}
-                        selected={clockOutDateString}
-                        minDate={clockOutDateString || undefined}
+                        selected={editedClockOutDateString}
+                        minDate={editedClockInDateString || undefined}
                         maxDate={weekRange.endDate > currentDate ? new Date() : new Date(weekRange.endDate)}
                         rules={{
                           required: 'Edited Clock Out Date is required',
@@ -1491,59 +1511,56 @@ const ReceivedTimesheetTable = (
                         disabled={!isEditing}
                         selected={parseTimeStringToDate(watch('editedClockOutTime'))}
                         minTime={(() => {
-                          if (!clockInDateString || !clockOutDateString) return new Date()
+                          // Use edited clock-in and clock-out dates
+                          if (!editedClockInDateString || !editedClockOutDateString) {
+                            // Fallback to start of day if dates are not set
+                            return setSeconds(setMinutes(setHours(new Date(), 0), 0), 0)
+                          }
                           const clockInTime: any = parseTimeStringToDate(watch('editedClockInTime'))
-                          // Check if dates are the same
-                          const isSameDate = clockInDateString.toDateString() === clockOutDateString.toDateString()
+                          // Check if edited clock-in and clock-out dates are the same
+                          const isSameDate =
+                            editedClockInDateString.toDateString() === editedClockOutDateString.toDateString()
 
-                          if (isSameDate) {
-                            const minutes = clockInTime?.getMinutes()
-                            const roundedMinutes = Math.ceil(minutes / 15) * 15
+                          if (isSameDate && clockInTime) {
                             const nextInterval = new Date(
-                              clockInDateString.getFullYear(),
-                              clockInDateString.getMonth(),
-                              clockInDateString.getDate(),
-                              clockInTime?.getHours(),
-                              clockInTime?.getMinutes(),
-                              clockInTime?.getSeconds(),
-                              clockInTime?.getMilliseconds()
+                              editedClockInDateString.getFullYear(),
+                              editedClockInDateString.getMonth(),
+                              editedClockInDateString.getDate(),
+                              clockInTime.getHours(),
+                              clockInTime.getMinutes() + 15, // Add exactly 15 minutes
+                              0,
+                              0
                             )
-
-                            if (minutes === roundedMinutes) {
-                              nextInterval.setMinutes(minutes + 15)
-                            } else {
-                              nextInterval.setMinutes(roundedMinutes)
-                            }
-
                             return nextInterval
                           } else {
                             // If different date, start from beginning of day
-                            return setSeconds(setMinutes(setHours(new Date(), 0), 0), 0)
+                            return setSeconds(setMinutes(setHours(new Date(editedClockOutDateString), 0), 0), 0)
                           }
                         })()}
                         maxTime={(() => {
-                          if (!clockInDateString || !clockOutDateString) return new Date()
-                          const isCurrentDate = clockOutDateString.toDateString() === new Date().toDateString()
+                          if (!editedClockOutDateString) {
+                            // Fallback to end of day if date is not set
+                            return setSeconds(setMinutes(setHours(new Date(), 23), 59), 59)
+                          }
+                          const isCurrentDate = editedClockOutDateString.toDateString() === new Date().toDateString()
 
                           if (isCurrentDate) {
                             const now = new Date()
                             const minutes = now.getMinutes()
                             const roundedMinutes = Math.floor(minutes / 15) * 15
-
                             const previousInterval = new Date(
-                              clockOutDateString.getFullYear(),
-                              clockOutDateString.getMonth(),
-                              clockOutDateString.getDate(),
+                              editedClockOutDateString.getFullYear(),
+                              editedClockOutDateString.getMonth(),
+                              editedClockOutDateString.getDate(),
                               now.getHours(),
                               roundedMinutes,
-                              0, // Set seconds to 0
-                              0 // Set milliseconds to 0
+                              0,
+                              0
                             )
-
                             return previousInterval
                           } else {
-                            // If previous date, set to end of day
-                            return setSeconds(setMinutes(setHours(new Date(clockOutDateString), 23), 59), 59)
+                            // If not current date, set to end of day
+                            return setSeconds(setMinutes(setHours(new Date(editedClockOutDateString), 23), 59), 59)
                           }
                         })()}
                         onChange={(date: Date | null) => {
@@ -1648,18 +1665,18 @@ const ReceivedTimesheetTable = (
                     />
                   </Grid>
                 </Grid>
-                <div className='flex gap-4 justify-end mt-6 pb-5'>
-                  <Button variant='outlined' color='secondary' onClick={handleModalClose}>
-                    CANCEL
-                  </Button>
-                  <Button type='submit' variant='contained' className='bg-[#4B0082]'>
-                    SAVE
-                  </Button>
-                </div>
-              </form>
-            </div>
-          </Dialog>
-        </div>
+              </Grid>
+              <div className='flex gap-4 justify-end mt-6 pb-5'>
+                <Button variant='outlined' color='secondary' onClick={handleModalClose}>
+                  CANCEL
+                </Button>
+                <Button type='submit' variant='contained' className='bg-[#4B0082]'>
+                  SAVE
+                </Button>
+              </div>
+            </form>
+          </div>
+        </Dialog>
       </FormProvider>
     </>
   )

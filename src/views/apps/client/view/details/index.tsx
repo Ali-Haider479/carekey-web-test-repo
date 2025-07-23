@@ -47,7 +47,7 @@ const ClientDetails = ({ tabContentList }: BottomBodyProps) => {
         return '/ Account History'
       case 'services':
         return '/ Services'
-      case 'time-sheets':
+      case 'timelogs':
         return '/ Time Logs'
       case 'service-authorization':
         return '/ Service Authorization'
@@ -114,7 +114,7 @@ const ClientDetails = ({ tabContentList }: BottomBodyProps) => {
                   <Tab value='forms' label='FORMS' />
                   <Tab value='services' label='SERVICES' />
                   <Tab value='account-history' label='LOGS' />
-                  <Tab value='time-sheets' label='TIME LOGS' />
+                  <Tab value='timelogs' label='TIME LOGS' />
                   <Tab value='service-authorization' label='SERVICE AUTH' />
                   <Tab value='incidents' label='INCIDENTS' />
                   <Tab value='care-plan' label='CARE PLAN' />

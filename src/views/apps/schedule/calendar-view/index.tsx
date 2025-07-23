@@ -45,6 +45,8 @@ const Calendar = () => {
   const [selectedCaregiverFilter, setSelectedCaregiverFilter] = useState('')
   const [statusFilter, setStatusFilter] = useState<string | null>(null)
 
+  const lightTheme = theme.palette.mode === 'light'
+
   // Hooks
   const dispatch = useAppDispatch()
   const calendarStore = useSelector((state: { calendarReducer: CalendarType }) => state.calendarReducer)
@@ -342,7 +344,7 @@ const Calendar = () => {
                 <Button
                   onClick={collapseAllDays}
                   variant='text'
-                  className='text-xs px-3 py-1 rounded-md transition-colors font-medium'
+                  className={`text-xs px-3 py-1 ${lightTheme ? 'bg-gray-100 text-gray-600 hover:bg-gray-200' : 'bg-gray-700  text-gray-300  hover:bg-gray-600'} rounded-md transition-colors font-medium`}
                 >
                   Collapse All
                 </Button>
@@ -350,7 +352,7 @@ const Calendar = () => {
                 <Button
                   onClick={expandAllDays}
                   variant='text'
-                  className='text-xs px-3 py-1 rounded-md transition-colors font-medium'
+                  className={`text-xs px-3 py-1 ${lightTheme ? 'bg-blue-100 text-blue-600 hover:bg-blue-200' : 'bg-blue-900/20  text-blue-400  hover:bg-blue-900/40'} rounded-md transition-colors font-medium`}
                 >
                   Expand All
                 </Button>

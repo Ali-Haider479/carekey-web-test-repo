@@ -150,12 +150,12 @@ const ReceivedTimesheetFilters = ({
             <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
               <Grid container spacing={12}>
                 <Grid size={{ xs: 12, sm: 4 }}>
-                  <Button type='submit' variant='outlined' className='p-1'>
+                  <Button type='submit' variant='contained' className='p-1'>
                     Apply
                   </Button>
                 </Grid>
                 <Grid size={{ xs: 12, sm: 4 }}>
-                  <Button onClick={handleReset} color='error' variant='outlined' className='p-1'>
+                  <Button onClick={handleReset} color='error' variant='contained' className='p-1'>
                     Reset
                   </Button>
                 </Grid>
@@ -163,7 +163,7 @@ const ReceivedTimesheetFilters = ({
               <Grid container spacing={12} sx={{ ml: 'auto' }}>
                 <Grid size={{ xs: 12, sm: 4 }}>
                   <Button
-                    variant='outlined'
+                    variant='contained'
                     className='p-1'
                     onClick={handleApprove}
                     disabled={selectedRows.length === 0}
@@ -174,7 +174,7 @@ const ReceivedTimesheetFilters = ({
                 <Grid size={{ xs: 12, sm: 4 }}>
                   <Button
                     color='error'
-                    variant='outlined'
+                    variant='contained'
                     className='p-1'
                     onClick={handleReject}
                     disabled={selectedRows.length === 0}

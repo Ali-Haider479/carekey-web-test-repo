@@ -115,12 +115,12 @@ const AdminApprovalFilters = ({ onFilterApplied }: AdminApprovalFiltersProps) =>
             </Grid>
             <Grid container spacing={12}>
               <Grid size={{ xs: 12, sm: 4 }}>
-                <Button type='submit' variant='outlined' className='p-1'>
+                <Button type='submit' variant='contained' className='p-1'>
                   Apply
                 </Button>
               </Grid>
               <Grid size={{ xs: 12, sm: 4 }}>
-                <Button onClick={handleReset} color='error' variant='outlined' className='p-1'>
+                <Button onClick={handleReset} color='error' variant='contained' className='p-1'>
                   Reset
                 </Button>
               </Grid>

@@ -64,7 +64,7 @@ interface FormRow {
   caseManagerName?: string // Optional fields from OCR
   recepientName?: string
   status?: string
-  description?: string
+  serviceDescription?: string
   serviceName?: string
 }
 
@@ -225,7 +225,7 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
     caseManagerName: '',
     recepientName: '',
     status: '',
-    description: '',
+    serviceDescription: '',
     serviceName: '',
     usedUnits: ''
   }
@@ -339,8 +339,8 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
 
               return {
                 procedureCode: item.procedureCode || '',
-                modifierCode: item.modifiers.includes('PERSONAL') ? null : item.modifiers,
-                description: item.description,
+                modifierCode: item?.modifiers?.includes('PERSONAL') ? null : item.modifiers,
+                serviceDescription: item.description,
                 serviceName: matchingService ? matchingService?.name : item.description,
                 startDate: formatDateString(item.startDate),
                 endDate: formatDateString(item.endDate),
@@ -520,6 +520,7 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
         billable: billableStates[index],
         placeOfService: item.placeOfService || 'home',
         serviceName: item?.serviceName,
+        serviceDescription: item?.serviceDescription,
         fileKey: fileKey || null // Use the uploaded file key if available
       }))
 
@@ -973,8 +974,8 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
                       <Grid size={{ xs: 12, sm: 3 }}>
                         <TextField
                           label='Service Description'
-                          value={row.description}
-                          onChange={e => handleInputChange(index, 'description', e.target.value)}
+                          value={row.serviceDescription}
+                          onChange={e => handleInputChange(index, 'serviceDescription', e.target.value)}
                           fullWidth
                           size='small'
                           disabled={isLoading}
