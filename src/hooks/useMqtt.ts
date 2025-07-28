@@ -41,14 +41,14 @@ export const useMqttClient = (config: MqttConfig) => {
         })
 
         clientRef.current.on('connect', () => {
-          console.log('Layyah Successfully connected to AWS IoT MQTT broker')
+          console.log('Successfully connected to AWS IoT MQTT broker')
           setIsConnected(true)
 
           // Subscribe to wildcard topic: carekey/chat/#
           const wildcardTopic = 'carekey/chat/#'
           if (!messageHandlers.current.has(wildcardTopic)) {
             messageHandlers.current.set(wildcardTopic, (message: string) => {
-              console.log(`Layyah Received message on ${wildcardTopic}:`, message)
+              console.log(`Received message on ${wildcardTopic}:`, message)
               // Add logic to handle chat messages, e.g., dispatch to Redux
               // dispatch({ type: 'ADD_CHAT_MESSAGE', payload: JSON.parse(message) });
             })
@@ -59,7 +59,7 @@ export const useMqttClient = (config: MqttConfig) => {
             if (err) {
               console.error(`Error subscribing to ${wildcardTopic}:`, err)
             } else {
-              console.log(`Layyah Successfully subscribed to ${wildcardTopic}`)
+              console.log(`Successfully subscribed to ${wildcardTopic}`)
             }
           })
 
@@ -70,7 +70,7 @@ export const useMqttClient = (config: MqttConfig) => {
                 if (err) {
                   console.error(`Error subscribing to ${topic}:`, err)
                 } else {
-                  console.log(`Layyah Successfully subscribed to ${topic}`)
+                  console.log(`Successfully subscribed to ${topic}`)
                 }
               })
             }
@@ -78,7 +78,7 @@ export const useMqttClient = (config: MqttConfig) => {
         })
 
         clientRef.current.on('message', (topic, message) => {
-          console.log("Connect Message", topic, message)
+          console.log('Connect Message', topic, message)
           // Handle exact topic match
           const exactHandler = messageHandlers.current.get(topic)
           if (exactHandler) {

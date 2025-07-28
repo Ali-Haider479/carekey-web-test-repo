@@ -344,6 +344,7 @@ const InfoCard = (clientData: InfoCardProps) => {
         clientId={id}
         clientData={clientData}
         fetchAssigned={fetchAssignCaregivers}
+        assignedCaregiversOrQPs={assignedCaregiver}
       />
       <UnassignModalCG_QP
         openModal={openUnAssignQPDialog}
@@ -361,6 +362,7 @@ const InfoCard = (clientData: InfoCardProps) => {
         clientId={id}
         clientData={clientData}
         fetchAssigned={fetchAssignQps}
+        assignedCaregiversOrQPs={assignedQPs}
       />
     </>
   )

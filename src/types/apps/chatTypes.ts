@@ -33,6 +33,11 @@ export type UserChatType = {
   message: string
   time: string | Date
   senderId: number
+  attachmentFile: {
+    fileKey: string
+    fileName: string
+    mimeType: string
+  } | null
   msgStatus?: Record<'isSent' | 'isDelivered' | 'isSeen', boolean>
   chatRoomId?: number
 }
@@ -58,6 +63,11 @@ export interface ChatMessage {
   senderId: string
   receiverId: string
   message: string
+  attachmentFile: {
+    fileKey: string
+    fileName: string
+    mimeType: string
+  } | null
   chatRoomId?: any
   time: string
   msgStatus: {

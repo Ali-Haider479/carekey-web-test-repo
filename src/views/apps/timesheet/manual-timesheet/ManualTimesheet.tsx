@@ -832,8 +832,12 @@ const ManualTimesheet = ({ caregiverList, payPeriodList }: any) => {
                         key={item}
                         onDelete={() => handleDelete(item)}
                         label={service?.title}
-                        deleteIcon={<CloseIcon sx={{ fontSize: '14px', color: '#8592A3' }} />}
-                        className='mt-2 text-[#8592A3] text-sm py-1'
+                        deleteIcon={<CloseIcon sx={theme => ({ fontSize: '14px', color: theme.palette.error.main })} />}
+                        sx={theme => ({
+                          backgroundColor:
+                            theme.palette.mode === 'dark' ? theme.palette.primary.dark : theme.palette.primary.main
+                        })}
+                        className='mt-2 text-[#fff] text-sm py-1'
                       />
                     )
                   })}

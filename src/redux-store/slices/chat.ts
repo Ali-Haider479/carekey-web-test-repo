@@ -49,6 +49,7 @@ export const fetchChatRooms = createAsyncThunk('chat/fetchChatRooms', async (use
       message: msg?.message,
       time: msg?.createdAt,
       senderId: msg?.sender?.id,
+      attachmentFile: msg.attachmentFile,
       msgStatus: {
         isSent: true,
         isDelivered: true,
@@ -168,13 +169,24 @@ export const chatSlice = createSlice({
       })
     },
 
-    sendMsg: (state, action: PayloadAction<{ msg: string }>) => {
-      const { msg } = action.payload
+    sendMsg: (
+      state,
+      action: PayloadAction<{
+        msg: string
+        attachmentFile: {
+          fileKey: string
+          fileName: string
+          mimeType: string
+        } | null
+      }>
+    ) => {
+      const { msg, attachmentFile } = action.payload
       const existingChat = state.chats.find(chat => chat.id === state.activeUser?.chatRoomId)
 
       if (existingChat) {
         const newMessage = {
           message: msg,
+          attachmentFile: attachmentFile,
           time: new Date().toISOString(),
           senderId: state.profileUser.id,
           msgStatus: {
@@ -189,6 +201,7 @@ export const chatSlice = createSlice({
           chatMsg =>
             chatMsg.message === newMessage.message &&
             chatMsg.senderId === newMessage.senderId &&
+            chatMsg?.attachmentFile?.fileKey === newMessage?.attachmentFile?.fileKey &&
             Math.abs(new Date(chatMsg.time).getTime() - new Date(newMessage.time).getTime()) < 1000 // Allow 1-second tolerance
         )
 

@@ -137,6 +137,12 @@ const CareplanTab = () => {
       })
       // Add new activity to serviceActivities
       const currentActivities = watchedServices[index]?.serviceActivities || []
+      if (currentActivities.length === 20) {
+        setErrorMessage('You can only add up to 20 activities per service.')
+        setValue(`services.${index}.customActivities`, false)
+        setCustomActivityButtonLoading(false)
+        return
+      }
       if (!currentActivities.includes(newActivity.id)) {
         setValue(`services.${index}.serviceActivities`, [...currentActivities, newActivity.id], {
           shouldValidate: true,
@@ -148,6 +154,8 @@ const CareplanTab = () => {
         shouldValidate: true,
         shouldDirty: true
       })
+      setValue(`services.${index}.customActivities`, false)
+      setCustomActivityButtonLoading(false)
       setErrorMessage(null)
     } catch (error: any) {
       console.error('Error creating custom activity:', error)
@@ -608,7 +616,7 @@ const CareplanTab = () => {
                                   </Box>
                                 </Box>
                                 {customActivitiesEnabled && (
-                                  <Box display='flex' alignItems='center' mb={2}>
+                                  <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 2 }}>
                                     <Controller
                                       name={`services.${index}.customActivitiesTextField`}
                                       control={control}
@@ -639,7 +647,7 @@ const CareplanTab = () => {
                                       disabled={customActivityButtonLoading || !customActivityField}
                                       onClick={() => handleAddCustomActivity(index, customActivityField)}
                                       variant='contained'
-                                      className='ml-2'
+                                      sx={{ mb: 2 }}
                                     >
                                       Add
                                     </Button>

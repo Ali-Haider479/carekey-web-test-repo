@@ -24,6 +24,7 @@ interface AssignCG_QPModalProps {
   clientId: any
   clientData: any
   fetchAssigned: () => void
+  assignedCaregiversOrQPs?: any[]
 }
 
 const AssignCG_QPModal: React.FC<AssignCG_QPModalProps> = ({
@@ -33,7 +34,8 @@ const AssignCG_QPModal: React.FC<AssignCG_QPModalProps> = ({
   dialogMode,
   clientId,
   clientData,
-  fetchAssigned
+  fetchAssigned,
+  assignedCaregiversOrQPs
 }) => {
   const [selectedCaregiverInfo, setSelectedCaregiverInfo] = useState<any>()
   const [assignButtonLoading, setAssignButtonLoading] = useState(false)
@@ -100,10 +102,11 @@ const AssignCG_QPModal: React.FC<AssignCG_QPModalProps> = ({
     }
 
     const title = 'New Client Assigned'
-    const body = `You have been assigned to ${clientData?.clientData?.firstName} ${clientData?.clientData?.lastName} starting ${data.assignmentDate
-      ? new Date(data.assignmentDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
-      : ''
-      } for ${data.scheduleHours} hours. Check your details.`
+    const body = `You have been assigned to ${clientData?.clientData?.firstName} ${clientData?.clientData?.lastName} starting ${
+      data.assignmentDate
+        ? new Date(data.assignmentDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+        : ''
+    } for ${data.scheduleHours} hours. Check your details.`
 
     await api.post(`/user/createClientUser`, assignClientBody)
     await api.post(`/account-history/log`, accountHistoryPayLoad)
@@ -114,6 +117,8 @@ const AssignCG_QPModal: React.FC<AssignCG_QPModalProps> = ({
     handleCloseModal()
     setAssignButtonLoading(false)
   }
+
+  console.log(assignedCaregiversOrQPs, 'assignedCaregiversOrQPs')
 
   return (
     <Dialog
@@ -135,13 +140,18 @@ const AssignCG_QPModal: React.FC<AssignCG_QPModalProps> = ({
                   <CustomDropDown
                     label={`Select ${dialogMode === 'QP' ? 'QP' : 'Caregiver'}`}
                     optionList={
-                      dropDownList?.map((item: any) => {
-                        return {
-                          key: `${item?.id}-${item.firstName}`,
-                          value: item.user.id,
-                          optionString: `${item.firstName} ${item.lastName}`
-                        }
-                      }) || []
+                      dropDownList
+                        ?.filter(
+                          (item: any) =>
+                            !assignedCaregiversOrQPs?.some(assigned => assigned.user.caregiver.id === item.id)
+                        )
+                        .map((item: any) => {
+                          return {
+                            key: `${item?.id}-${item.firstName}`,
+                            value: item.user.id,
+                            optionString: `${item.firstName} ${item.lastName}`
+                          }
+                        }) || []
                     }
                     name={'caregiverId'}
                     control={control}

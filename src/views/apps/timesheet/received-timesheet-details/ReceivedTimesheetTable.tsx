@@ -936,15 +936,15 @@ const ReceivedTimesheetTable = (
             placement='top'
           >
             <>
-              <Typography color='primary' sx={{ width: '180px' }}>
-                {user?.clientService?.service?.name?.slice(0, 20) ||
-                  user?.clientService?.serviceAuthService?.name?.slice(0, 20) ||
+              <Typography color='primary' sx={{ width: '200px', wordWrap: 'break-word' }}>
+                {user?.clientService?.service?.name?.slice(0, 16) ||
+                  user?.clientService?.serviceAuthService?.name?.slice(0, 16) ||
                   '---'}
-                {user?.clientService?.service?.name?.length > 20 ? '...' : ''}
-                {user?.clientService?.serviceAuthService?.name?.length > 20 ? '...' : ''}
+                {user?.clientService?.service?.name?.length > 16 ? '...' : ''}
+                {user?.clientService?.serviceAuthService?.name?.length > 16 ? '...' : ''}
               </Typography>
               <Typography>
-                {`PRO: ${user?.clientService?.service ? user?.clientService?.service?.procedureCode : user?.clientService?.serviceAuthService?.procedureCode} MOD: ${user?.clientService?.service && user?.clientService?.service?.modifierCode ? user?.clientService?.service?.modifierCode : user?.clientService?.serviceAuthService?.modifierCode ? user?.clientService?.serviceAuthService?.modifierCode : 'N/A'}`}
+                {`PRO: ${user?.clientService?.service ? (user?.clientService?.service?.procedureCode ?? 'N/A') : (user?.clientService?.serviceAuthService?.procedureCode ?? 'N/A')} MOD: ${user?.clientService?.service && user?.clientService?.service?.modifierCode ? user?.clientService?.service?.modifierCode : user?.clientService?.serviceAuthService?.modifierCode ? user?.clientService?.serviceAuthService?.modifierCode : 'N/A'}`}
               </Typography>
             </>
           </Tooltip>

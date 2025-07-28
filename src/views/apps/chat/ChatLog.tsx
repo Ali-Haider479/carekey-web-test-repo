@@ -1,5 +1,5 @@
 // React Imports
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, useState } from 'react'
 import type { MutableRefObject, ReactNode } from 'react'
 
 // MUI Imports
@@ -24,6 +24,13 @@ import { useAppDispatch } from '@/hooks/useDispatch'
 import { receiveMessage } from '@/redux-store/slices/chat'
 import axios from 'axios'
 import api from '@/utils/api'
+import { Box, CircularProgress, IconButton } from '@mui/material'
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf'
+import ImageIcon from '@mui/icons-material/Image'
+import { Download } from '@mui/icons-material'
+import SmartDisplayIcon from '@mui/icons-material/SmartDisplay'
+import ImageRenderWithPresignedUrl from '@/@core/components/mui/ImageRenderWithPresignedUrl'
+import { forceFileDownload } from '@/utils/helperFunctions'
 
 type MsgGroupType = {
   senderId: number
@@ -51,7 +58,8 @@ const formatedChatData = (chats: ChatType['chat'], profileUser: ProfileUserType)
       msgGroup.messages.push({
         time: chat.time,
         message: chat.message,
-        msgStatus: chat.msgStatus
+        msgStatus: chat.msgStatus,
+        attachmentFile: chat.attachmentFile
       })
     } else {
       chatMessageSenderId = chat.senderId
@@ -63,7 +71,8 @@ const formatedChatData = (chats: ChatType['chat'], profileUser: ProfileUserType)
           {
             time: chat.time,
             message: chat.message,
-            msgStatus: chat.msgStatus
+            msgStatus: chat.msgStatus,
+            attachmentFile: chat.attachmentFile
           }
         ]
       }
@@ -106,6 +115,7 @@ const ChatLog = ({ chatStore, isBelowLgScreen, isBelowMdScreen, isBelowSmScreen 
   const activeUserChat = chatStore.chats.find((chat: ChatType) => chat.id === chatStore.activeUser?.chatRoomId)
   const scrollRef = useRef(null)
   const processedMessages = useRef(new Set<string>())
+  const [loading, setLoading] = useState<string | null>(null)
 
   // Track the previous active chat room ID
   const previousChatRoomRef = useRef<number | null>(null)
@@ -223,6 +233,26 @@ const ChatLog = ({ chatStore, isBelowLgScreen, isBelowMdScreen, isBelowSmScreen 
     }
   }, [activeUser?.chatRoomId])
 
+  const handleFileClick = async (fileKey: string, fileName: string) => {
+    if (!fileKey) return
+
+    setLoading(fileKey)
+    try {
+      const response = await api.get(`/upload-document/get-signed-chat-file-get-url/${fileKey}`)
+
+      if (response?.status === 200 && response.data) {
+        await forceFileDownload(response.data, fileName)
+      } else {
+        throw new Error('Invalid response from server')
+      }
+    } catch (error) {
+      console.error('Error downloading file:', error)
+      // Consider adding user feedback here (toast notification, etc.)
+    } finally {
+      setLoading(null)
+    }
+  }
+
   return (
     <ScrollWrapper isBelowLgScreen={isBelowLgScreen} scrollRef={scrollRef}>
       <CardContent className='p-0'>
@@ -263,20 +293,176 @@ const ChatLog = ({ chatStore, isBelowLgScreen, isBelowMdScreen, isBelowSmScreen 
                   })}
                 >
                   {msgGroup.messages.map((msg, index) => (
-                    <Typography
-                      key={index}
-                      className={classnames('whitespace-pre-wrap pli-4 plb-2 shadow-xs', {
-                        'bg-backgroundPaper rounded-e rounded-b': !isSender,
-                        'text-[var(--mui-palette-primary-contrastText)] rounded-s rounded-b': isSender
-                      })}
-                      sx={theme => ({
-                        backgroundColor:
-                          theme.palette.mode === 'light' ? theme.palette.primary.main : theme.palette.primary.dark
-                      })}
-                      style={{ wordBreak: 'break-word' }}
-                    >
-                      {msg.message}
-                    </Typography>
+                    <Box key={index}>
+                      {msg.message === 'fileAttachment' && msg?.attachmentFile ? (
+                        <>
+                          {msg.attachmentFile.mimeType.startsWith('image/') ? (
+                            <Box
+                              className={classnames('whitespace-pre-wrap shadow-xs', {
+                                'bg-backgroundPaper rounded-e rounded-b': !isSender,
+                                'text-[var(--mui-palette-primary-contrastText)] rounded-s rounded-b': isSender
+                              })}
+                              sx={theme => ({
+                                backgroundColor:
+                                  theme.palette.mode === 'light'
+                                    ? theme.palette.primary.main
+                                    : theme.palette.primary.dark,
+                                cursor: 'pointer',
+                                width: '325px',
+                                maxHeight: '235px',
+                                gap: '4px',
+                                borderRadius: '4px',
+                                p: 1,
+                                py: 1.5,
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                              })}
+                            >
+                              <ImageRenderWithPresignedUrl
+                                fileKey={msg.attachmentFile.fileKey}
+                                fileName={msg.attachmentFile.fileName}
+                                handleClick={() =>
+                                  handleFileClick(msg.attachmentFile!.fileKey, msg.attachmentFile!.fileName)
+                                }
+                                downloading={loading === msg.attachmentFile.fileKey}
+                              />
+                              <Box sx={{ mt: 'auto', display: 'flex', width: '100%', px: 2 }}>
+                                <Typography
+                                  variant='caption'
+                                  sx={theme => ({
+                                    color: theme.palette.mode === 'light' ? '#bbb' : 'textSecondary'
+                                  })}
+                                >
+                                  {msg.attachmentFile!.fileName.split('.').pop()?.toUpperCase()}
+                                </Typography>
+                                <Typography
+                                  variant='caption'
+                                  sx={theme => ({
+                                    ml: 'auto',
+                                    color: theme.palette.mode === 'light' ? '#bbb' : 'textSecondary'
+                                  })}
+                                >
+                                  {new Date(msg.time).toLocaleString('en-US', {
+                                    hour: 'numeric',
+                                    minute: 'numeric',
+                                    hour12: true
+                                  })}
+                                </Typography>
+                              </Box>
+                            </Box>
+                          ) : (
+                            <Box
+                              className={classnames('whitespace-pre-wrap pli-4 plb-2 shadow-xs', {
+                                'bg-backgroundPaper rounded-e rounded-b': !isSender,
+                                'text-[var(--mui-palette-primary-contrastText)] rounded-s rounded-b': isSender
+                              })}
+                              sx={theme => ({
+                                backgroundColor:
+                                  theme.palette.mode === 'light'
+                                    ? theme.palette.primary.main
+                                    : theme.palette.primary.dark,
+                                cursor: 'pointer',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                width: '325px',
+                                maxHeight: '85px',
+                                gap: '4px',
+                                alignItems: 'center',
+                                boxShadow: 3,
+                                borderRadius: '4px'
+                              })}
+                            >
+                              <Box
+                                sx={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  width: '100%',
+                                  gap: '8px',
+                                  minHeight: '50px'
+                                }}
+                              >
+                                {msg.attachmentFile!.mimeType === 'application/pdf' ? (
+                                  <PictureAsPdfIcon color='error' />
+                                ) : msg.attachmentFile!.mimeType.includes('video') ? (
+                                  <SmartDisplayIcon color='inherit' />
+                                ) : (
+                                  <ImageIcon color='inherit' />
+                                )}
+                                <Typography
+                                  sx={theme => ({
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    wordBreak: 'break-word',
+                                    color: theme.palette.mode === 'light' ? '#bbb' : 'textSecondary'
+                                  })}
+                                >
+                                  {msg.attachmentFile!.fileName.length > 50
+                                    ? `${msg.attachmentFile!.fileName.substring(0, 45)}...`
+                                    : msg.attachmentFile!.fileName}
+                                </Typography>
+
+                                <IconButton
+                                  sx={theme => ({
+                                    ml: 'auto',
+                                    color: 'inherit'
+                                  })}
+                                  size='small'
+                                  disabled={loading === msg.attachmentFile!.fileKey}
+                                  onClick={() =>
+                                    handleFileClick(msg.attachmentFile!.fileKey, msg.attachmentFile!.fileName)
+                                  }
+                                >
+                                  {loading === msg.attachmentFile!.fileKey ? (
+                                    <CircularProgress size={24} color='inherit' />
+                                  ) : (
+                                    <Download />
+                                  )}
+                                </IconButton>
+                              </Box>
+                              <Box sx={{ mt: 'auto', display: 'flex', width: '100%' }}>
+                                <Typography
+                                  variant='caption'
+                                  sx={theme => ({
+                                    color: theme.palette.mode === 'light' ? '#bbb' : 'textSecondary'
+                                  })}
+                                >
+                                  {msg.attachmentFile!.fileName.split('.').pop()?.toUpperCase()}
+                                </Typography>
+                                <Typography
+                                  variant='caption'
+                                  sx={theme => ({
+                                    ml: 'auto',
+                                    color: theme.palette.mode === 'light' ? '#bbb' : 'textSecondary'
+                                  })}
+                                >
+                                  {new Date(msg.time).toLocaleString('en-US', {
+                                    hour: 'numeric',
+                                    minute: 'numeric',
+                                    hour12: true
+                                  })}
+                                </Typography>
+                              </Box>
+                            </Box>
+                          )}
+                        </>
+                      ) : (
+                        <Typography
+                          className={classnames('whitespace-pre-wrap pli-4 plb-2 shadow-xs', {
+                            'bg-backgroundPaper rounded-e rounded-b': !isSender,
+                            'text-[var(--mui-palette-primary-contrastText)] rounded-s rounded-b': isSender
+                          })}
+                          sx={theme => ({
+                            backgroundColor:
+                              theme.palette.mode === 'light' ? theme.palette.primary.main : theme.palette.primary.dark
+                          })}
+                          style={{ wordBreak: 'break-word' }}
+                        >
+                          {msg.message}
+                        </Typography>
+                      )}
+                    </Box>
                   ))}
                   {msgGroup.messages.map(
                     (msg, index) =>

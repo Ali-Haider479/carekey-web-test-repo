@@ -151,3 +151,56 @@ export const isEmpty = (value: any): boolean => {
   if (typeof value === 'object') return Object.keys(value).length === 0
   return false
 }
+
+export const forceFileDownload = async (fileUrl: string, fileName: string) => {
+  console.log(fileUrl)
+  try {
+    // Fetch the file first
+    const response = await fetch(fileUrl)
+    const blob = await response.blob()
+
+    // Create object URL from the blob
+    const url = window.URL.createObjectURL(blob)
+
+    // Create anchor element and trigger download
+    const a = document.createElement('a')
+    a.href = url
+    a.download = fileName // This forces download instead of opening
+    a.style.display = 'none'
+
+    document.body.appendChild(a)
+    a.click()
+
+    // Cleanup
+    window.URL.revokeObjectURL(url)
+    document.body.removeChild(a)
+  } catch (error) {
+    console.error('Error forcing download:', error)
+    throw error
+  }
+}
+
+export const openPdfInNewTab = (pdfUrl: string, itemName: string) => {
+  console.log('Opening pdf with url: ', pdfUrl)
+  if (/iPhone/i.test(navigator.userAgent) || !pdfUrl.includes('data')) {
+    const a = document.createElement('a')
+    a.href = pdfUrl
+    a.target = '_blank'
+    a.click()
+  } else {
+    fetch(pdfUrl)
+      .then(response => response.blob())
+      .then(blob => {
+        const objectUrl = URL.createObjectURL(blob)
+        const win = window.open(objectUrl, '_blank')
+        if (!win) {
+          console.error('Unable to open a new tab. Please check your browser settings.')
+        } else {
+          win.document.title = itemName
+        }
+      })
+      .catch(error => {
+        console.error('Error loading PDF:', error)
+      })
+  }
+}

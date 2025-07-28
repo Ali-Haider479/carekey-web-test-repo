@@ -73,6 +73,7 @@ interface TimeEntry {
   checkedActivity: any
   billing: any
   clientService: ClientService
+  loggedVia: string
 }
 
 interface GroupedTimeEntry {
@@ -193,7 +194,8 @@ export function transformTimesheetDataTwo(entries: TimeEntry[]): GroupedTimeEntr
             ? calculateHoursWorked(entry.editedClockIn, entry.editedClockOut)
             : calculateHoursWorked(entry.clockIn, entry.clockOut),
         activities: getActivities(entry),
-        billing: entry.billing
+        billing: entry.billing,
+        loggedVia: entry.loggedVia
       }
     }
 
@@ -216,6 +218,7 @@ export function transformTimesheetDataTwo(entries: TimeEntry[]): GroupedTimeEntr
     const dateRange = `${formatDate(startDate)} - ${formatDate(endDate)}`
     const hasAllSameStatus = sortedEntries.every(entry => entry.tsApprovalStatus === sortedEntries[0].tsApprovalStatus)
     const hasAllSameManual = sortedEntries.every(entry => entry.manualEntry === sortedEntries[0].manualEntry)
+    const hasSameLoggedVia = sortedEntries.every(entry => entry.loggedVia === sortedEntries[0].loggedVia)
     const hasAllSameSignatureStatus = sortedEntries.every(
       entry => entry.signature.signatureStatus === sortedEntries[0].signature.signatureStatus
     )
@@ -276,7 +279,8 @@ export function transformTimesheetDataTwo(entries: TimeEntry[]): GroupedTimeEntr
       startLocation: latestStartLocation,
       endLocation: latestEndLocation,
       billing: Object.keys(approvedBilling).length > 0 ? { dummyRow: true, ...approvedBilling } : approvedBilling,
-      clientService: formattedClientService // Always include clientService
+      clientService: formattedClientService, // Always include clientService
+      loggedVia: hasSameLoggedVia ? sortedEntries[0].loggedVia : 'mobile'
     }
   })
 }

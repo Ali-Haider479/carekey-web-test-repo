@@ -602,7 +602,7 @@ const AddEventModal = (props: AddEventSidebarType) => {
       try {
         const createSchedule = await api.post(`/schedule`, bulkEvents)
         console.log('Created schedule:', createSchedule.data)
-        handleAddEvent(createSchedule.data)
+        handleAddEvent(createSchedule.data.schedules)
         handleModalClose()
       } catch (error: any) {
         console.error('Error creating schedule:', error)
