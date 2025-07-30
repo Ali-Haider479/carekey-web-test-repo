@@ -184,6 +184,7 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                   control={control}
                   minLength={8}
                   maxLength={8}
+                  isPMI={true}
                 />
               </Grid>
 
@@ -324,6 +325,7 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                   control={control}
                   minLength={4}
                   maxLength={4}
+                  isClientCode={true}
                 />
               </Grid>
 
@@ -405,6 +407,7 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                   error={errors.primaryResidentialZipCode}
                   control={control}
                   maxLength={5}
+                  isZipCode={true}
                 />
               </Grid>
             </Grid>
@@ -475,6 +478,7 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                   control={control}
                   maxLength={5}
                   disabled={mailingAddressCheckboxEnabled}
+                  isZipCode={true}
                 />
               </Grid>
             </Grid>
@@ -549,6 +553,7 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                   isRequired={false}
                   maxLength={5}
                   disabled={secondaryAddressCheckboxEnabled}
+                  isZipCode={true}
                 />
               </Grid>
             </Grid>

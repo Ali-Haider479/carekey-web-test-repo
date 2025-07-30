@@ -27,6 +27,22 @@ type PdfField = {
   type: string
 }
 
+type DeepValueType<T, P extends string> = P extends `${infer Key}[${infer Index}].${infer Rest}`
+  ? Key extends keyof T
+    ? T[Key] extends (infer U)[]
+      ? DeepValueType<U, `${Rest}`>
+      : never
+    : never
+  : P extends `${infer Key}[${infer Index}]`
+    ? Key extends keyof T
+      ? T[Key] extends (infer U)[]
+        ? U
+        : never
+      : never
+    : P extends keyof T
+      ? T[P]
+      : never
+
 // Define form sections
 const formSections: { [key: string]: string } = {
   'date-of-referral': 'Referral Dates',
@@ -40,7 +56,11 @@ const formSections: { [key: string]: string } = {
   'direct-own-care': 'Direct Own Care/Responsible Party',
   diagnosis: 'Diagnosis and Living Arrangement',
   'living-arrangement': 'Diagnosis and Living Arrangement',
-  'other-comments': 'Diagnosis and Living Arrangement'
+  'other-comments': 'Diagnosis and Living Arrangement',
+  OtherPerson: 'Other Person Detail',
+  Responsible: 'Responsible Party Details',
+  PWD: 'Basic Details',
+  Signed: 'Signature Section'
 }
 
 // Define options for radio groups and dropdowns
@@ -174,7 +194,40 @@ const fieldLabels: { [key: string]: string } = {
   '67diagnosis3-onset-date 2': 'Diagnosis 3 Onset Date',
   '68diagnosis3-ICDcode 2': 'Diagnosis 3 ICD Code',
   '69living-arrangement 2': 'Living Arrangement',
-  '70other-comments 2': 'Other Comments'
+  '70other-comments 2': 'Other Comments',
+  'form1[0].#pageSet[0].Pages[0].PWDNameLast[0]': 'Page 0 Last Name',
+  'form1[0].#pageSet[0].Pages[0].PWDmhcpIDnumber[0]': 'Page 0 MHCP ID Number',
+  'form1[0].#pageSet[0].Pages[1].PWDNameLast[0]': 'Page 1 Last Name',
+  'form1[0].#pageSet[0].Pages[1].PWDmhcpIDnumber[0]': 'Page 1 MHCP ID Number',
+  'form1[0].#pageSet[0].Pages[2].PWDNameLast[0]': 'Page 2 Last Name',
+  'form1[0].#pageSet[0].Pages[2].PWDmhcpIDnumber[0]': 'Page 2 MHCP ID Number',
+  'form1[0].#pageSet[0].Pages[3].PWDNameLast[0]': 'Page 3 Last Name',
+  'form1[0].#pageSet[0].Pages[3].PWDmhcpIDnumber[0]': 'Page 3 MHCP ID Number',
+  'form1[0].P1[0].sfIntro[0].sfPWDs[0].sfInfo[0].PWDNameFirst[0]': 'Person First Name',
+  'form1[0].P1[0].sfIntro[0].sfPWDs[0].sfInfo[0].PWDNameMI[0]': 'Person MI',
+  'form1[0].P1[0].sfIntro[0].sfPWDs[0].sfInfo[0].PWDNameLast[0]': 'Person Last Name',
+  'form1[0].P1[0].sfIntro[0].sfPWDs[0].sfInfo[0].PWDmhcpIDnumber[0]': 'Person MHCP ID Number',
+  'form1[0].P1[0].sfIntro[0].sfPWDs[0].sfInfo[0].NameFirstResponsible[0]': 'First Name',
+  'form1[0].P1[0].sfIntro[0].sfPWDs[0].sfInfo[0].NameLastResponsible[0]': 'Last Name',
+  'form1[0].P1[0].sfIntro[0].sfPWDs[0].sfInfo[0].ProviderName[0]': 'Provider Name',
+  'form1[0].P1[0].sfIntro[0].sfPWDs[0].sfInfo[0].NPIUMPI[0]': 'Provider NPI or UMPI',
+  'form1[0].P1[0].sfIntro[0].sfPWDs[0].sfInfo[0].NameFirstRep[0]': 'Provider Rep First Name',
+  'form1[0].P1[0].sfIntro[0].sfPWDs[0].sfInfo[0].NameLastRep[0]': 'Provider Rep Last Name',
+  'form1[0].P1[0].sfIntro[0].sfPWDs[0].sfAgree[0].FirstOtherPerson[0].NameFirst[0]': ' First Name 0',
+  'form1[0].P1[0].sfIntro[0].sfPWDs[0].sfAgree[0].FirstOtherPerson[0].NameMI[0]': ' MI 0',
+  'form1[0].P1[0].sfIntro[0].sfPWDs[0].sfAgree[0].FirstOtherPerson[0].NameLast[0]': 'Last Name 0',
+  'form1[0].P1[0].sfIntro[0].sfPWDs[0].sfAgree[0].FirstOtherPerson[0].MHCPidNumber[0]': 'MHCP ID Number 0',
+  'form1[0].P1[0].sfIntro[0].sfPWDs[0].sfAgree[0].SecondtOtherPerson[0].NameFirst[0]': ' First Name 1',
+  'form1[0].P1[0].sfIntro[0].sfPWDs[0].sfAgree[0].SecondtOtherPerson[0].NameMI[0]': ' MI 1',
+  'form1[0].P1[0].sfIntro[0].sfPWDs[0].sfAgree[0].SecondtOtherPerson[0].NameLast[0]': 'Last Name 1',
+  'form1[0].P1[0].sfIntro[0].sfPWDs[0].sfAgree[0].SecondtOtherPerson[0].MHCPidNumber[0]':
+    'Other People MHCP ID Number 1',
+  'form1[0].P1[0].sfIntro[0].sfPWDs[0].sfAgree[0].sfSignatures[0].PWDSignatureField[0]': 'Person Signature',
+  'form1[0].P1[0].sfIntro[0].sfPWDs[0].sfAgree[0].sfSignatures[0].PWDDateSigned[0]': 'Person Date Signed',
+  'form1[0].P1[0].sfIntro[0].sfPWDs[0].sfAgree[0].sfSignatures[0].RepSignatureField[0]': 'Responsible Party Signature',
+  'form1[0].P1[0].sfIntro[0].sfPWDs[0].sfAgree[0].sfSignatures[0].RepDateSigned[0]': 'Responsible Party Date Signed',
+  'form1[0].P1[0].sfIntro[0].sfPWDs[0].sfAgree[0].sfSignatures[0].ProviderSignatureField[0]': 'Provider Signature',
+  'form1[0].P1[0].sfIntro[0].sfPWDs[0].sfAgree[0].sfSignatures[0].ProviderDateSigned[0]': 'Provider Signature Date'
 }
 
 const E_Document = () => {
@@ -195,6 +248,7 @@ const E_Document = () => {
   const [alertOpen, setAlertOpen] = useState(false)
   const [alertProps, setAlertProps] = useState<any>()
   const { id } = useParams()
+  const [docTitle, setDocTitle] = useState<string>()
 
   useEffect(() => {
     fetchData()
@@ -223,6 +277,7 @@ const E_Document = () => {
   const {
     control,
     handleSubmit,
+    reset,
     formState: { errors, isDirty }
   } = methods
 
@@ -254,8 +309,6 @@ const E_Document = () => {
     }
   }
 
-  console.log('Case Manager Email', caseManagerEmail)
-
   useEffect(() => {
     fetchInitialData()
     fetchClientsForm()
@@ -270,7 +323,10 @@ const E_Document = () => {
         responseType: 'arraybuffer'
       })
 
-      const pdfDoc = await PDFDocument.load(existingPdf)
+      const pdfDoc = await PDFDocument.load(existingPdf, { ignoreEncryption: true })
+      const docTitle = pdfDoc.getTitle()
+      setDocTitle(docTitle)
+
       const form = pdfDoc.getForm()
       const fields = form.getFields()
 
@@ -298,111 +354,138 @@ const E_Document = () => {
       setPdfFields(extractedFields)
 
       // Pre-populate fields with client data
-      const nameField = form.getTextField('4recip-info-name 2')
-      const pmiField = form.getTextField('7recip-info-PMI 2')
-      const genderField = form.getRadioGroup('5recip-info-gender')
-      const dobField = form.getTextField('6recip-info-DOB 2')
-      const phoneField = form.getTextField('8recip-info-phone 2')
-      const addressField = form.getTextField('9recip-info-address 2')
-      const cityField = form.getTextField('10recip-info-city 2')
-      const stateField = form.getTextField('12recip-info-state 2')
-      const zipField = form.getTextField('13recip-info-zip 2')
-      const primaryContactField = form.getTextField('14recip-info-primary-contact 2')
-      const primaryContactPhoneField = form.getTextField('15recip-info-primary-contact-phone 2')
-      const physicianNameField = form.getTextField('30physician-name 2')
-      const physicianClinicField = form.getTextField('31physician-clinic-name 2')
-      const physicianPhoneField = form.getTextField('32physician-phone-number 2')
-      const physicianAddressField = form.getTextField('33physician-street-address 2')
-      const physicianCityField = form.getTextField('34physician-city 2')
-      const physicianStateField = form.getTextField('35physician-state 2')
-      const physicianZipField = form.getTextField('36physician-zip 2')
+      if (docTitle?.includes('DHS-3244P')) {
+        const nameField = form.getTextField('4recip-info-name 2')
+        const pmiField = form.getTextField('7recip-info-PMI 2')
+        const genderField = form.getRadioGroup('5recip-info-gender')
+        const dobField = form.getTextField('6recip-info-DOB 2')
+        const phoneField = form.getTextField('8recip-info-phone 2')
+        const addressField = form.getTextField('9recip-info-address 2')
+        const cityField = form.getTextField('10recip-info-city 2')
+        const stateField = form.getTextField('12recip-info-state 2')
+        const zipField = form.getTextField('13recip-info-zip 2')
+        const primaryContactField = form.getTextField('14recip-info-primary-contact 2')
+        const primaryContactPhoneField = form.getTextField('15recip-info-primary-contact-phone 2')
+        const physicianNameField = form.getTextField('30physician-name 2')
+        const physicianClinicField = form.getTextField('31physician-clinic-name 2')
+        const physicianPhoneField = form.getTextField('32physician-phone-number 2')
+        const physicianAddressField = form.getTextField('33physician-street-address 2')
+        const physicianCityField = form.getTextField('34physician-city 2')
+        const physicianStateField = form.getTextField('35physician-state 2')
+        const physicianZipField = form.getTextField('36physician-zip 2')
 
-      // Set client name
-      nameField.setText(`${clientData?.firstName} ${clientData?.lastName}`)
-      nameField.setFontSize(8)
-      // nameField.setTextColor(rgb(0, 0, 0))
+        // Set client name
+        nameField.setText(`${clientData?.firstName} ${clientData?.lastName}`)
+        nameField.setFontSize(8)
+        // nameField.setTextColor(rgb(0, 0, 0))
 
-      // Set PMI number
-      pmiField.setText(clientData?.pmiNumber || 'PMI-3010')
-      pmiField.setFontSize(8)
-      // pmiField.setTextColor(rgb(0, 0, 0))
+        // Set PMI number
+        pmiField.setText(clientData?.pmiNumber || 'PMI-3010')
+        pmiField.setFontSize(8)
+        // pmiField.setTextColor(rgb(0, 0, 0))
 
-      // Set date of birth
-      dobField.setText(clientData?.dateOfBirth || '26 Feb,2025')
-      dobField.setFontSize(8)
-      // dobField.setTextColor(rgb(0, 0, 0))
+        // Set date of birth
+        dobField.setText(clientData?.dateOfBirth || '26 Feb,2025')
+        dobField.setFontSize(8)
+        // dobField.setTextColor(rgb(0, 0, 0))
 
-      // Set gender
-      const genderValue = clientData?.gender?.toLowerCase() === 'female' ? 'Female' : 'Male'
-      genderField.select(genderValue)
+        // Set gender
+        const genderValue = clientData?.gender?.toLowerCase() === 'female' ? 'Female' : 'Male'
+        genderField.select(genderValue)
 
-      // Set phone number
-      phoneField.setText(clientData?.primaryPhoneNumber || '')
-      phoneField.setFontSize(8)
-      // phoneField.setTextColor(rgb(0, 0, 0))
+        // Set phone number
+        phoneField.setText(clientData?.primaryPhoneNumber || '')
+        phoneField.setFontSize(8)
+        // phoneField.setTextColor(rgb(0, 0, 0))
 
-      // Set address (prefer Residential address)
-      const residentialAddress = clientData?.addresses?.find(
-        (addr: any) => addr.address.addressType === 'Residential'
-      )?.address
-      addressField.setText(residentialAddress?.address || clientData?.addresses?.[0]?.address?.address || '')
-      addressField.setFontSize(8)
-      // addressField.setTextColor(rgb(0, 0, 0))
+        // Set address (prefer Residential address)
+        const residentialAddress = clientData?.addresses?.find(
+          (addr: any) => addr.address.addressType === 'Residential'
+        )?.address
+        addressField.setText(residentialAddress?.address || clientData?.addresses?.[0]?.address?.address || '')
+        addressField.setFontSize(8)
+        // addressField.setTextColor(rgb(0, 0, 0))
 
-      cityField.setText(residentialAddress?.city || clientData?.addresses?.[0]?.address?.city || '')
-      cityField.setFontSize(8)
-      // cityField.setTextColor(rgb(0, 0, 0))
+        cityField.setText(residentialAddress?.city || clientData?.addresses?.[0]?.address?.city || '')
+        cityField.setFontSize(8)
+        // cityField.setTextColor(rgb(0, 0, 0))
 
-      stateField.setText(residentialAddress?.state || clientData?.addresses?.[0]?.address?.state || '')
-      stateField.setFontSize(8)
-      // stateField.setTextColor(rgb(0, 0, 0))
+        stateField.setText(residentialAddress?.state || clientData?.addresses?.[0]?.address?.state || '')
+        stateField.setFontSize(8)
+        // stateField.setTextColor(rgb(0, 0, 0))
 
-      zipField.setText(residentialAddress?.zipCode || clientData?.addresses?.[0]?.address?.zipCode || '')
-      zipField.setFontSize(8)
-      // zipField.setTextColor(rgb(0, 0, 0))
+        zipField.setText(residentialAddress?.zipCode || clientData?.addresses?.[0]?.address?.zipCode || '')
+        zipField.setFontSize(8)
+        // zipField.setTextColor(rgb(0, 0, 0))
 
-      // Set primary contact (emergency contact)
-      primaryContactField.setText(clientData?.emergencyContactName || '')
-      primaryContactField.setFontSize(8)
-      // primaryContactField.setTextColor(rgb(0, 0, 0))
+        // Set primary contact (emergency contact)
+        primaryContactField.setText(clientData?.emergencyContactName || '')
+        primaryContactField.setFontSize(8)
+        // primaryContactField.setTextColor(rgb(0, 0, 0))
 
-      primaryContactPhoneField.setText(clientData?.emergencyContactNumber || '')
-      primaryContactPhoneField.setFontSize(8)
-      // primaryContactPhoneField.setTextColor(rgb(0, 0, 0))
+        primaryContactPhoneField.setText(clientData?.emergencyContactNumber || '')
+        primaryContactPhoneField.setFontSize(8)
+        // primaryContactPhoneField.setTextColor(rgb(0, 0, 0))
 
-      // Set physician details
-      physicianNameField.setText(clientData?.clientPhysician?.name || '')
-      physicianNameField.setFontSize(8)
-      // physicianNameField.setTextColor(rgb(0, 0, 0))
+        // Set physician details
+        physicianNameField.setText(clientData?.clientPhysician?.name || '')
+        physicianNameField.setFontSize(8)
+        // physicianNameField.setTextColor(rgb(0, 0, 0))
 
-      physicianClinicField.setText(clientData?.clientPhysician?.clinicName || '')
-      physicianClinicField.setFontSize(8)
-      // physicianClinicField.setTextColor(rgb(0, 0, 0))
+        physicianClinicField.setText(clientData?.clientPhysician?.clinicName || '')
+        physicianClinicField.setFontSize(8)
+        // physicianClinicField.setTextColor(rgb(0, 0, 0))
 
-      physicianPhoneField.setText(
-        clientData?.clientPhysician?.phoneNumber || clientData?.clientPhysician?.primaryPhoneNumber || ''
-      )
-      physicianPhoneField.setFontSize(8)
-      // physicianPhoneField.setTextColor(rgb(0, 0, 0))
+        physicianPhoneField.setText(
+          clientData?.clientPhysician?.phoneNumber || clientData?.clientPhysician?.primaryPhoneNumber || ''
+        )
+        physicianPhoneField.setFontSize(8)
+        // physicianPhoneField.setTextColor(rgb(0, 0, 0))
 
-      physicianAddressField.setText(clientData?.clientPhysician?.address || '')
-      physicianAddressField.setFontSize(8)
-      // physicianAddressField.setTextColor(rgb(0, 0, 0))
+        physicianAddressField.setText(clientData?.clientPhysician?.address || '')
+        physicianAddressField.setFontSize(8)
+        // physicianAddressField.setTextColor(rgb(0, 0, 0))
 
-      physicianCityField.setText(clientData?.clientPhysician?.city || '')
-      physicianCityField.setFontSize(8)
-      // physicianCityField.setTextColor(rgb(0, 0, 0))
+        physicianCityField.setText(clientData?.clientPhysician?.city || '')
+        physicianCityField.setFontSize(8)
+        // physicianCityField.setTextColor(rgb(0, 0, 0))
 
-      physicianStateField.setText(clientData?.clientPhysician?.state || '')
-      physicianStateField.setFontSize(8)
-      // physicianStateField.setTextColor(rgb(0, 0, 0))
+        physicianStateField.setText(clientData?.clientPhysician?.state || '')
+        physicianStateField.setFontSize(8)
+        // physicianStateField.setTextColor(rgb(0, 0, 0))
 
-      physicianZipField.setText(clientData?.clientPhysician?.zipCode || '')
-      physicianZipField.setFontSize(8)
-      // physicianZipField.setTextColor(rgb(0, 0, 0))
+        physicianZipField.setText(clientData?.clientPhysician?.zipCode || '')
+        physicianZipField.setFontSize(8)
+        // physicianZipField.setTextColor(rgb(0, 0, 0))
+      } else if (docTitle?.includes('DHS-6893E')) {
+        const firstNameField = form.getTextField('form1[0].P1[0].sfIntro[0].sfPWDs[0].sfInfo[0].PWDNameFirst[0]')
+        const lastNameField = form.getTextField('form1[0].P1[0].sfIntro[0].sfPWDs[0].sfInfo[0].PWDNameLast[0]')
+        const npiUmpiNumber = form.getTextField('form1[0].P1[0].sfIntro[0].sfPWDs[0].sfInfo[0].NPIUMPI[0]')
+        const resPartyFirstName = form.getTextField(
+          'form1[0].P1[0].sfIntro[0].sfPWDs[0].sfInfo[0].NameFirstResponsible[0]'
+        )
+        const resPartyLastName = form.getTextField(
+          'form1[0].P1[0].sfIntro[0].sfPWDs[0].sfInfo[0].NameLastResponsible[0]'
+        )
+
+        firstNameField.setText(clientData?.firstName || '')
+        firstNameField.setFontSize(8)
+
+        lastNameField.setText(clientData?.lastName || '')
+        lastNameField.setFontSize(8)
+
+        npiUmpiNumber.setText(clientData?.pmiNumber || '')
+        npiUmpiNumber.setFontSize(8)
+
+        resPartyFirstName.setText(clientData?.clientResponsibilityParty?.name?.split(' ')[0] || '')
+        resPartyFirstName.setFontSize(8)
+
+        resPartyLastName.setText(clientData?.clientResponsibilityParty?.name?.split(' ')[1] || '')
+        resPartyLastName.setFontSize(8)
+      }
 
       const pdfBytes = await pdfDoc.save()
-      const blob = new Blob([pdfBytes], { type: 'application/pdf' })
+      const blob = new Blob([new Uint8Array(pdfBytes)], { type: 'application/pdf' })
       setPdfObj(pdfBytes)
       const blobUrl = URL.createObjectURL(blob)
       setPdfBlob(blobUrl)
@@ -411,6 +494,23 @@ const E_Document = () => {
     } finally {
       setLoading(false)
     }
+  }
+
+  function getDeepValue<T extends Record<string, any>, P extends string>(
+    obj: T | null | undefined,
+    path: P
+  ): DeepValueType<T, P> | undefined {
+    return path.split('.').reduce((o: any, p: string) => {
+      if (o === null || o === undefined) return undefined
+
+      const arrayMatch = p.match(/(\w+)\[(\d+)\]/)
+      if (arrayMatch) {
+        const prop = arrayMatch[1]
+        const index = parseInt(arrayMatch[2], 10)
+        return o[prop]?.[index]
+      }
+      return o[p]
+    }, obj)
   }
 
   // Handle form save (for preview)
@@ -424,9 +524,9 @@ const E_Document = () => {
       // Update PDF fields based on form data
       pdfFields.forEach(field => {
         try {
-          if (field.type === 'PDFTextField' && data[field.name]) {
+          if ((field.type === 'PDFTextField' && data[field.name]) || getDeepValue(data, field.name)) {
             const textField = form.getTextField(field.name)
-            textField.setText(data[field.name])
+            textField.setText(data[field.name] || getDeepValue(data, field.name))
             textField.setFontSize(8)
             // textField.setTextColor(rgb(0, 0, 0))
           } else if (field.type === 'PDFRadioGroup' && data[field.name]) {
@@ -440,7 +540,7 @@ const E_Document = () => {
       })
 
       const pdfBytes = await pdfDoc.save()
-      const blob = new Blob([pdfBytes], { type: 'application/pdf' })
+      const blob = new Blob([new Uint8Array(pdfBytes)], { type: 'application/pdf' })
       const blobUrl = URL.createObjectURL(blob)
       setPdfBlob(blobUrl)
       setPdfObj(pdfBytes)
@@ -496,9 +596,10 @@ const E_Document = () => {
     setSelectedForm('')
     setPdfBlob(null)
     setPdfFields([])
+    reset()
   }
 
-  const hanleFillReferenceButton = () => {
+  const handleFillReferenceButton = () => {
     if (!caseManagerEmail) {
       setAlertOpen(true)
       setAlertProps({
@@ -513,7 +614,7 @@ const E_Document = () => {
   // Group fields by section
   const groupedFields: { [key: string]: PdfField[] } = {}
   pdfFields.forEach(field => {
-    if (field.name === 'clear_button 2') return // Skip buttons
+    if (field.name === 'clear_button 2' || field.name.includes('Clear')) return // Skip buttons
     const sectionKey = Object.keys(formSections).find(key => field.name.includes(key))
     const section = sectionKey ? formSections[sectionKey] : 'Other'
     if (!groupedFields[section]) {
@@ -574,7 +675,7 @@ const E_Document = () => {
   // }
 
   const renderFormField = (field: PdfField) => {
-    console.log('FIELDS--------', field)
+    if (field.name.includes('Pages')) return
     const label = fieldLabels[field.name] || field.name
     const error = errors[field.name]
 
@@ -584,48 +685,66 @@ const E_Document = () => {
       (addr: any) => addr.address.addressType === 'Residential'
     )?.address
 
-    if (field.name === '4recip-info-name 2') {
-      defaultValue = `${clientData?.firstName || ''} ${clientData?.lastName || ''}`
-    } else if (field.name === '7recip-info-PMI 2') {
-      defaultValue = clientData?.pmiNumber || 'PMI-3010'
-    } else if (field.name === '6recip-info-DOB 2') {
-      defaultValue = clientData?.dateOfBirth || '26 Feb,2025'
-    } else if (field.name === '8recip-info-phone 2') {
-      defaultValue = clientData?.primaryPhoneNumber || ''
-    } else if (field.name === '9recip-info-address 2') {
-      defaultValue = residentialAddress?.address || clientData?.addresses?.[0]?.address?.address || ''
-    } else if (field.name === '10recip-info-city 2') {
-      defaultValue = residentialAddress?.city || clientData?.addresses?.[0]?.address?.city || ''
-    } else if (field.name === '12recip-info-state 2') {
-      defaultValue = residentialAddress?.state || clientData?.addresses?.[0]?.address?.state || ''
-    } else if (field.name === '13recip-info-zip 2') {
-      defaultValue = residentialAddress?.zipCode || clientData?.addresses?.[0]?.address?.zipCode || ''
-    } else if (field.name === '14recip-info-primary-contact 2') {
-      defaultValue = clientData?.emergencyContactName || ''
-    } else if (field.name === '15recip-info-primary-contact-phone 2') {
-      defaultValue = clientData?.emergencyContactNumber || ''
-    } else if (field.name === '30physician-name 2') {
-      defaultValue = clientData?.clientPhysician?.name || ''
-    } else if (field.name === '31physician-clinic-name 2') {
-      defaultValue = clientData?.clientPhysician?.clinicName || ''
-    } else if (field.name === '32physician-phone-number 2') {
-      defaultValue = clientData?.clientPhysician?.phoneNumber || clientData?.clientPhysician?.primaryPhoneNumber || ''
-    } else if (field.name === '33physician-street-address 2') {
-      defaultValue = clientData?.clientPhysician?.address || ''
-    } else if (field.name === '34physician-city 2') {
-      defaultValue = clientData?.clientPhysician?.city || ''
-    } else if (field.name === '35physician-state 2') {
-      defaultValue = clientData?.clientPhysician?.state || ''
-    } else if (field.name === '36physician-zip 2') {
-      defaultValue = clientData?.clientPhysician?.zipCode || ''
-    } else if (field.name === '5recip-info-gender') {
-      defaultValue = clientData?.gender?.toLowerCase() === 'female' ? 'Female' : 'Male'
+    if (docTitle?.includes('DHS-3244P')) {
+      if (field.name === '4recip-info-name 2') {
+        defaultValue = `${clientData?.firstName || ''} ${clientData?.lastName || ''}`
+      } else if (field.name === '7recip-info-PMI 2') {
+        defaultValue = clientData?.pmiNumber || 'PMI-3010'
+      } else if (field.name === '6recip-info-DOB 2') {
+        defaultValue = clientData?.dateOfBirth || '26 Feb,2025'
+      } else if (field.name === '8recip-info-phone 2') {
+        defaultValue = clientData?.primaryPhoneNumber || ''
+      } else if (field.name === '9recip-info-address 2') {
+        defaultValue = residentialAddress?.address || clientData?.addresses?.[0]?.address?.address || ''
+      } else if (field.name === '10recip-info-city 2') {
+        defaultValue = residentialAddress?.city || clientData?.addresses?.[0]?.address?.city || ''
+      } else if (field.name === '12recip-info-state 2') {
+        defaultValue = residentialAddress?.state || clientData?.addresses?.[0]?.address?.state || ''
+      } else if (field.name === '13recip-info-zip 2') {
+        defaultValue = residentialAddress?.zipCode || clientData?.addresses?.[0]?.address?.zipCode || ''
+      } else if (field.name === '14recip-info-primary-contact 2') {
+        defaultValue = clientData?.emergencyContactName || ''
+      } else if (field.name === '15recip-info-primary-contact-phone 2') {
+        defaultValue = clientData?.emergencyContactNumber || ''
+      } else if (field.name === '30physician-name 2') {
+        defaultValue = clientData?.clientPhysician?.name || ''
+      } else if (field.name === '31physician-clinic-name 2') {
+        defaultValue = clientData?.clientPhysician?.clinicName || ''
+      } else if (field.name === '32physician-phone-number 2') {
+        defaultValue = clientData?.clientPhysician?.phoneNumber || clientData?.clientPhysician?.primaryPhoneNumber || ''
+      } else if (field.name === '33physician-street-address 2') {
+        defaultValue = clientData?.clientPhysician?.address || ''
+      } else if (field.name === '34physician-city 2') {
+        defaultValue = clientData?.clientPhysician?.city || ''
+      } else if (field.name === '35physician-state 2') {
+        defaultValue = clientData?.clientPhysician?.state || ''
+      } else if (field.name === '36physician-zip 2') {
+        defaultValue = clientData?.clientPhysician?.zipCode || ''
+      } else if (field.name === '5recip-info-gender') {
+        defaultValue = clientData?.gender?.toLowerCase() === 'female' ? 'Female' : 'Male'
+      }
+    } else if (docTitle?.includes('DHS-6893E')) {
+      if (field.name === 'form1[0].P1[0].sfIntro[0].sfPWDs[0].sfInfo[0].PWDNameFirst[0]') {
+        defaultValue = `${clientData?.firstName || ''}`
+      } else if (field.name === 'form1[0].P1[0].sfIntro[0].sfPWDs[0].sfInfo[0].PWDNameLast[0]') {
+        defaultValue = `${clientData?.lastName || ''}`
+      } else if (field.name === 'form1[0].P1[0].sfIntro[0].sfPWDs[0].sfInfo[0].NPIUMPI[0]') {
+        defaultValue = clientData?.pmiNumber || 'PMI-3010'
+      } else if (field.name === 'form1[0].P1[0].sfIntro[0].sfPWDs[0].sfInfo[0].NameFirstResponsible[0]') {
+        defaultValue = clientData?.clientResponsibilityParty?.name?.split(' ')[0] || ''
+      } else if (field.name === 'form1[0].P1[0].sfIntro[0].sfPWDs[0].sfInfo[0].NameLastResponsible[0]') {
+        defaultValue = clientData?.clientResponsibilityParty?.name?.split(' ')[1] || ''
+      }
     }
 
     if (field.type === 'PDFTextField') {
       let maxLength: number | undefined
       if (field.name.includes('state') || field.name.includes('State')) {
         maxLength = 2
+      } else if (field.name.includes('MI')) {
+        maxLength = 1
+      } else if (field.name.includes('NPIUMPI')) {
+        maxLength = 10
       }
       return (
         <Grid
@@ -641,7 +760,7 @@ const E_Document = () => {
             maxLength={maxLength}
             error={error}
             control={control}
-            isRequired={true}
+            isRequired={false}
           />
         </Grid>
       )
@@ -731,7 +850,7 @@ const E_Document = () => {
             <Grid className='w-full h-full flex flex-row'>
               <Card className='w-[50%] h-[100%] overflow-y-auto'>
                 <Typography className='font-semibold text-2xl m-4'>
-                  Referral for Reassessment for PCA Services Form
+                  {docTitle || 'Referral for Reassessment for PCA Services Form'}
                 </Typography>
                 <CardContent>
                   <FormProvider {...methods}>
@@ -772,7 +891,7 @@ const E_Document = () => {
                     <h2 className='text-xl font-semibold'>Electronic Documentation</h2>
                     <Button
                       variant='contained'
-                      onClick={hanleFillReferenceButton}
+                      onClick={handleFillReferenceButton}
                       startIcon={loading ? <CircularProgress size={20} color='inherit' /> : null}
                       disabled={loading}
                     >

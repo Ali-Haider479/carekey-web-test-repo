@@ -24,10 +24,10 @@ import { useAppDispatch } from '@/hooks/useDispatch'
 import { receiveMessage } from '@/redux-store/slices/chat'
 import axios from 'axios'
 import api from '@/utils/api'
-import { Box, CircularProgress, IconButton } from '@mui/material'
+import { Box, CircularProgress, Divider, IconButton } from '@mui/material'
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf'
 import ImageIcon from '@mui/icons-material/Image'
-import { Download } from '@mui/icons-material'
+import { Description, Download, Feed, FolderZip, Slideshow, VideoFile } from '@mui/icons-material'
 import SmartDisplayIcon from '@mui/icons-material/SmartDisplay'
 import ImageRenderWithPresignedUrl from '@/@core/components/mui/ImageRenderWithPresignedUrl'
 import { forceFileDownload } from '@/utils/helperFunctions'
@@ -126,6 +126,36 @@ const ChatLog = ({ chatStore, isBelowLgScreen, isBelowMdScreen, isBelowSmScreen 
   const mqttClient = useMqttClient({
     username: profileUser.fullName
   })
+
+  const fileTypeIcons: Record<string, React.ReactNode> = {
+    'image/jpeg': <ImageIcon color='inherit' />,
+    'image/png': <ImageIcon color='inherit' />,
+    'image/jpg': <ImageIcon color='inherit' />,
+    'application/pdf': <PictureAsPdfIcon color='error' />,
+    'video/mp4': <VideoFile color='inherit' />,
+    'video/mpeg': <VideoFile color='inherit' />,
+    'video/avi': <VideoFile color='inherit' />,
+    'video/mkv': <VideoFile color='inherit' />,
+    'video/webm': <VideoFile color='inherit' />,
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document': (
+      <Description className='text-[#40a5ee]' />
+    ),
+    'application/msword': <Description className='text-[#40a5ee]' />,
+    'text/plain': <Description className='text-[#40a5ee]' />,
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': <Feed className='text-[#35bc73]' />,
+    'application/vnd.ms-excel': <Feed className='text-[#35bc73]' />,
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation': (
+      <Slideshow className='text-[#e34220]' />
+    ),
+    'application/vnd.ms-powerpoint': <Slideshow className='text-[#e34220]' />,
+    'text/csv': <Feed className='text-[#35bc73]' />,
+    'application/zip': <FolderZip className='text-[#ffe694]' />
+  }
+
+  // Get the icon for the file type, default to DescriptionIcon for unknown types
+  const getFileIcon = (fileType: string) => {
+    return fileTypeIcons[fileType] || <Description color='primary' />
+  }
 
   // Function to update message read status
   const updateMessagesReadStatus = async (chatRoomId: number) => {
@@ -294,7 +324,7 @@ const ChatLog = ({ chatStore, isBelowLgScreen, isBelowMdScreen, isBelowSmScreen 
                 >
                   {msgGroup.messages.map((msg, index) => (
                     <Box key={index}>
-                      {msg.message === 'fileAttachment' && msg?.attachmentFile ? (
+                      {msg?.attachmentFile ? (
                         <>
                           {msg.attachmentFile.mimeType.startsWith('image/') ? (
                             <Box
@@ -309,14 +339,14 @@ const ChatLog = ({ chatStore, isBelowLgScreen, isBelowMdScreen, isBelowSmScreen 
                                     : theme.palette.primary.dark,
                                 cursor: 'pointer',
                                 width: '325px',
-                                maxHeight: '235px',
-                                gap: '4px',
+                                maxHeight: 'auto',
+                                gap: '2px',
                                 borderRadius: '4px',
-                                p: 1,
+                                p: 1.25,
                                 py: 1.5,
                                 display: 'flex',
                                 flexDirection: 'column',
-                                alignItems: 'center',
+                                alignItems: 'flex-start',
                                 justifyContent: 'center'
                               })}
                             >
@@ -328,6 +358,23 @@ const ChatLog = ({ chatStore, isBelowLgScreen, isBelowMdScreen, isBelowSmScreen 
                                 }
                                 downloading={loading === msg.attachmentFile.fileKey}
                               />
+                              {msg.message !== 'fileAttachment' && (
+                                <Typography
+                                  className={classnames('whitespace-pre-wrap pli-2 plb-1', {
+                                    'bg-backgroundPaper rounded-e rounded-b': !isSender,
+                                    'text-[var(--mui-palette-primary-contrastText)]': isSender
+                                  })}
+                                  sx={theme => ({
+                                    backgroundColor:
+                                      theme.palette.mode === 'light'
+                                        ? theme.palette.primary.main
+                                        : theme.palette.primary.dark
+                                  })}
+                                  style={{ wordBreak: 'break-word' }}
+                                >
+                                  {msg.message}
+                                </Typography>
+                              )}
                               <Box sx={{ mt: 'auto', display: 'flex', width: '100%', px: 2 }}>
                                 <Typography
                                   variant='caption'
@@ -354,7 +401,7 @@ const ChatLog = ({ chatStore, isBelowLgScreen, isBelowMdScreen, isBelowSmScreen 
                             </Box>
                           ) : (
                             <Box
-                              className={classnames('whitespace-pre-wrap pli-4 plb-2 shadow-xs', {
+                              className={classnames('whitespace-pre-wrap pli-3 plb-2 shadow-xs', {
                                 'bg-backgroundPaper rounded-e rounded-b': !isSender,
                                 'text-[var(--mui-palette-primary-contrastText)] rounded-s rounded-b': isSender
                               })}
@@ -367,29 +414,23 @@ const ChatLog = ({ chatStore, isBelowLgScreen, isBelowMdScreen, isBelowSmScreen 
                                 display: 'flex',
                                 flexDirection: 'column',
                                 width: '325px',
-                                maxHeight: '85px',
+                                maxHeight: 'auto',
                                 gap: '4px',
-                                alignItems: 'center',
-                                boxShadow: 3,
-                                borderRadius: '4px'
+                                alignItems: 'flex-start',
+                                boxShadow: 3
                               })}
                             >
                               <Box
-                                sx={{
+                                sx={theme => ({
                                   display: 'flex',
                                   alignItems: 'center',
                                   width: '100%',
                                   gap: '8px',
-                                  minHeight: '50px'
-                                }}
+                                  minHeight: '50px',
+                                  borderRadius: '4px'
+                                })}
                               >
-                                {msg.attachmentFile!.mimeType === 'application/pdf' ? (
-                                  <PictureAsPdfIcon color='error' />
-                                ) : msg.attachmentFile!.mimeType.includes('video') ? (
-                                  <SmartDisplayIcon color='inherit' />
-                                ) : (
-                                  <ImageIcon color='inherit' />
-                                )}
+                                {getFileIcon(msg.attachmentFile!.mimeType)}
                                 <Typography
                                   sx={theme => ({
                                     overflow: 'hidden',
@@ -421,6 +462,28 @@ const ChatLog = ({ chatStore, isBelowLgScreen, isBelowMdScreen, isBelowSmScreen 
                                   )}
                                 </IconButton>
                               </Box>
+                              {msg.message !== 'fileAttachment' && (
+                                <>
+                                  {/* <div className='w-full flex items-center justify-center'>
+                                    <Divider className='w-full bg-[#bbb]' />
+                                  </div> */}
+                                  <Typography
+                                    className={classnames('whitespace-pre-wrap pli-0 plb-1', {
+                                      'bg-backgroundPaper rounded-e rounded-b': !isSender,
+                                      'text-[var(--mui-palette-primary-contrastText)]': isSender
+                                    })}
+                                    sx={theme => ({
+                                      backgroundColor:
+                                        theme.palette.mode === 'light'
+                                          ? theme.palette.primary.main
+                                          : theme.palette.primary.dark
+                                    })}
+                                    style={{ wordBreak: 'break-word' }}
+                                  >
+                                    {msg.message}
+                                  </Typography>
+                                </>
+                              )}
                               <Box sx={{ mt: 'auto', display: 'flex', width: '100%' }}>
                                 <Typography
                                   variant='caption'

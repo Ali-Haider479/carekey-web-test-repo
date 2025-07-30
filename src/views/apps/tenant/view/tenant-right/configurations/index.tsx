@@ -23,11 +23,14 @@ interface DayContentsProps {
 
 const TenantConfiguration = () => {
   const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
+  const tenantEvvConfig: any = JSON.parse(localStorage?.getItem('evvConfig') ?? '{}')
+
+  console.log("Auth User's Data --->> ", authUser)
   const [payPeriod, setPayPeriod] = useState<any[]>([])
   const [currentPayPeriod, setCurrentPayPeriod] = useState<any>()
   const [openAddPayPeriodModal, setOpenAddPayPeriodModal] = useState<boolean>(false)
   const [evvConfig, setEvvConfig] = useState<EvvConfig>(
-    authUser?.tenant.evvConfig || {
+    tenantEvvConfig || {
       enableEVV: false,
       evvEnforcement: 'none',
       locationService: false
@@ -68,7 +71,10 @@ const TenantConfiguration = () => {
     }
     api
       .patch(`/tenant/${authUser?.tenant?.id}`, payload)
-      .then(res => console.log('tenant configuration updated successfully', res))
+      .then(res => {
+        console.log('tenant configuration updated successfully', res)
+        localStorage.setItem('evvConfig', JSON.stringify(evvConfig))
+      })
       .catch(err => console.log('Error Updating tenant configuration', err))
   }, [evvConfig, allowManualEdits, allowOverlappingVisits, enableNotification])
 
@@ -113,12 +119,13 @@ const TenantConfiguration = () => {
   }
 
   const handleEvvEnforcementChange = (event: React.MouseEvent<HTMLElement>, newValue: EvvEnforcement) => {
+    console.log('Inside Evv Enforcement Change --> ', newValue)
     if (newValue !== null) {
-      if (newValue === 'relaxed' || newValue === 'none') {
-        setEvvConfig({ ...evvConfig, locationService: false, evvEnforcement: newValue })
-      } else {
-        setEvvConfig({ ...evvConfig, evvEnforcement: newValue })
-      }
+      // if (newValue === 'relaxed' || newValue === 'none') {
+      //   setEvvConfig({ ...evvConfig, locationService: false, evvEnforcement: newValue })
+      // } else {
+      setEvvConfig({ ...evvConfig, evvEnforcement: newValue })
+      // }
     }
   }
 
@@ -241,7 +248,7 @@ const TenantConfiguration = () => {
           EVV Configuration
         </Typography>
 
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+        {/* <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <Typography variant='h6'>Enable EVV</Typography>
           <CustomSwitch
             checked={evvConfig.enableEVV}
@@ -264,12 +271,13 @@ const TenantConfiguration = () => {
             }}
             sx={{ ml: 'auto' }}
           />
-        </Box>
+        </Box> */}
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Typography variant='h6'>EVV Enforcement</Typography>
 
           <ToggleButtonGroup
             value={evvConfig.evvEnforcement}
+            defaultValue={evvConfig.evvEnforcement}
             exclusive
             onChange={handleEvvEnforcementChange}
             aria-label='EVV toggle'
@@ -298,7 +306,7 @@ const TenantConfiguration = () => {
             </ToggleButton>
           </ToggleButtonGroup>
         </Box>
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+        {/* <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <Typography variant='h6'>Require Location Service</Typography>
           <CustomSwitch
             checked={evvConfig.locationService}
@@ -307,7 +315,7 @@ const TenantConfiguration = () => {
             }
             sx={{ ml: 'auto' }}
           />
-        </Box>
+        </Box> */}
 
         <Typography variant='h5' sx={{ mt: 3 }}>
           Other Configurations

@@ -51,7 +51,7 @@ function ClientAboutCard({ clientData }: any) {
 
   const validateEmail = (email: string) => {
     if (!email) return true
-    const pattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
+    const pattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,3}(\.[a-zA-Z]{2,3})?$/i
     return pattern.test(email)
   }
 
@@ -137,12 +137,10 @@ function ClientAboutCard({ clientData }: any) {
   }
 
   const handleFieldChange = (name: string, value: any) => {
-    // Update form data first
     setFormData((prev: any) => ({
       ...prev,
       [name]: value
     }))
-
     // Then validate
     let isValid = true
 
@@ -168,13 +166,12 @@ function ClientAboutCard({ clientData }: any) {
       name === 'primaryCellNumber' ||
       name === 'emergencyContactNumber'
     ) {
-      isValid = validatePhoneNumber(value)
+      const digits = value.replace(/\D/g, '').substring(0, 10)
+      isValid = validatePhoneNumber(digits)
       setFormErrors((prev: any) => ({
         ...prev,
         [name]: !isValid
       }))
-      const digits = value.replace(/\D/g, '')
-      if (digits.length > 10) return
       // Format phone number
       const formattedValue = formatPhoneNumber(value)
       setFormData((prev: any) => ({
@@ -185,10 +182,15 @@ function ClientAboutCard({ clientData }: any) {
 
     // Zip code validation
     else if (name === 'zipCode' || name === 'physician.zipCode') {
-      isValid = validateZipCode(value)
+      const digits = value.replace(/\D/g, '').substring(0, 5)
+      isValid = validateZipCode(digits)
       setFormErrors((prev: any) => ({
         ...prev,
         [name]: !isValid
+      }))
+      setFormData((prev: any) => ({
+        ...prev,
+        [name]: digits
       }))
     }
   }

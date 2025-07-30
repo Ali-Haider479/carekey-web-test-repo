@@ -1,15 +1,13 @@
 'use client'
 import React, { useEffect, useState } from 'react'
-import { Button, Card, Dialog, LinearProgress, MenuItem, styled, TextField, Typography } from '@mui/material'
+import { Button, Card, MenuItem, styled, TextField, Typography } from '@mui/material'
 import CircularProgress from '@mui/material/CircularProgress'
 import type { CircularProgressProps } from '@mui/material/CircularProgress'
 import { useParams } from 'next/navigation'
-import axios from 'axios'
-import { Add, AddOutlined, DeleteOutline, Edit, EditOutlined, SaveOutlined } from '@mui/icons-material'
+import { AddOutlined, EditOutlined, SaveOutlined } from '@mui/icons-material'
 import { EditableField } from '@/@core/components/custom-inputs/CustomEditableTextField'
 import CloseIcon from '@mui/icons-material/Close'
 import api from '@/utils/api'
-import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf'
 import { useTheme } from '@emotion/react'
 
 const CircularProgressDeterminate = styled(CircularProgress)<CircularProgressProps>({
@@ -154,9 +152,7 @@ function CaregiverAboutCard() {
 
     // Handle phone number formatting and validation for primary phone number
     if (name === 'primaryPhoneNumber') {
-      const digits = value.replace(/\D/g, '') // Strip non-digits
-      // Ignore input if digits exceed 10
-      if (digits.length > 10) return
+      const digits = value.replace(/\D/g, '').substring(0, 10) // Strip non-digits
       const formattedNumber = formatPhoneNumber(digits)
 
       // Set error only if the field is not empty and does not have 10 digits
@@ -171,9 +167,9 @@ function CaregiverAboutCard() {
 
     // Handle phone number formatting and validation for secondary phone number
     if (name === 'secondaryPhoneNumber') {
-      const digits = value.replace(/\D/g, '') // Strip non-digits
+      const digits = value.replace(/\D/g, '').substring(0, 10) // Strip non-digits
       // Ignore input if digits exceed 10
-      if (digits.length > 10) return
+      // if (digits.length > 10) return
       const formattedNumber = formatPhoneNumber(digits)
 
       // Set error only if the field is not empty and does not have 10 digits
@@ -199,8 +195,8 @@ function CaregiverAboutCard() {
 
     if (name === 'zipCode') {
       // Allow only numeric input for zip code
-      const numericValue = value.replace(/[^0-9]/g, '') // Strip non-numeric characters
-      if (numericValue.length > 5) return // Ignore input if length exceeds 5
+      const numericValue = value.replace(/[^0-9]/g, '').substring(0, 5) // Strip non-numeric characters
+      // if (numericValue.length > 5) return // Ignore input if length exceeds 5
       setZipCodeError(numericValue.length >= 0 && numericValue.length !== 5) // Set error if not exactly 5 digits
       setFormData((prev: any) => ({
         ...prev,
@@ -232,7 +228,7 @@ function CaregiverAboutCard() {
 
     // Handle emergency contact number formatting and validation
     if (name === 'emergencyContactNumber') {
-      const digits = value.replace(/\D/g, '') // Strip non-digits
+      const digits = value.replace(/\D/g, '').substring(0, 10) // Strip non-digits
       // Ignore input if digits exceed 10
       if (digits.length > 10) return
       const formattedNumber = formatPhoneNumber(digits)
@@ -464,6 +460,21 @@ function CaregiverAboutCard() {
               <Button variant='contained' startIcon={<AddOutlined />} className={`mt-[10px] text-white`}>
                 Add Pay Rate
               </Button>
+            </div>
+            <div className='mb-6 border-t mt-6 pt-6'>
+              <Typography className='text-lg font-semibold mb-4'>Notes</Typography>
+              <div className='grid grid-cols-2 gap-y-4 gap-x-8'>
+                {caregiverNotesFields.map(field => (
+                  <EditableField
+                    key={field.name}
+                    label={field.label}
+                    value={field.value}
+                    isEdit={isEdit}
+                    onChange={handleFieldChange}
+                    name={field.name}
+                  />
+                ))}
+              </div>
             </div>
           </Card>
 

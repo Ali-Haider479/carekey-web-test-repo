@@ -82,7 +82,7 @@ const ImageRenderWithPresignedUrl = ({
         <img
           src={imgUrl}
           alt={fileName.length > 30 ? `${fileName.substring(0, 30)}...` : fileName}
-          className='image-blur w-[315px] max-h-[190px] rounded-sm cursor-pointer transition-all duration-300'
+          className='image-blur w-[315px] h-auto rounded-sm cursor-pointer transition-all duration-300'
           onError={() => setError(true)}
         />
         <Box

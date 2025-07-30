@@ -159,7 +159,7 @@ const AllFilesTab = ({ clientDocuments, clientDocsLoading, onDocumentDeleted }: 
                   <ListItemAvatar>
                     <PictureAsPdfIcon fontSize='medium' />
                   </ListItemAvatar>
-                  <ListItemText primary={doc.fileName} />
+                  <ListItemText primary={doc.uploadedDocument.fileName} />
                 </ListItem>
               ))
             )}

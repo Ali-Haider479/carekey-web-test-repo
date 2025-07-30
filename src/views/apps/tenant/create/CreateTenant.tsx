@@ -371,6 +371,7 @@ const CreateTenant = (props: Props) => {
                     control={control}
                     maxLength={10}
                     minLength={10}
+                    isUMPI={true}
                   />
                 </Grid>
                 {/* Taxonomy */}
@@ -385,6 +386,7 @@ const CreateTenant = (props: Props) => {
                     type={'number'}
                     error={errors.taxonomyNumber}
                     control={control}
+                    isUMPI={true}
                   />
                 </Grid>
                 {/* EIN */}
@@ -399,6 +401,7 @@ const CreateTenant = (props: Props) => {
                     control={control}
                     maxLength={10}
                     minLength={10}
+                    isUMPI={true}
                   />
                 </Grid>
                 {/* Company Email */}

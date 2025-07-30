@@ -420,7 +420,8 @@ const ManualTimesheet = ({ caregiverList, payPeriodList }: any) => {
             usedUnits: newUnitsUsed
           }
 
-          await api.patch(`/client/service-auth/${correspondingServiceAuth?.id}`, modifiedServiceAuth)
+          correspondingServiceAuth?.id &&
+            (await api.patch(`/client/service-auth/${correspondingServiceAuth?.id}`, modifiedServiceAuth))
 
           // Fetch schedules and filter
           const schedules: any = await api.get('/schedule')
@@ -518,6 +519,34 @@ const ManualTimesheet = ({ caregiverList, payPeriodList }: any) => {
             }
             const updateSchedule = await api.patch(`/schedule/${scheduleOverlap?.id}`, scheduleDto)
             console.log('Schedule Updated: ', updateSchedule)
+          } else if (correspondingServiceAuth && !scheduleOverlap) {
+            console.log('Creating new schedule --->> ')
+            const clockIn = timelogResponse.data.clockIn
+            const clockOut = timelogResponse.data.clockOut
+            const usedHours = new Date(clockIn).getTime() - new Date(clockOut).getTime()
+            const assignedHours = new Date(usedHours).getHours()
+            const newScheduleDto = {
+              display: 'block',
+              title: 'Schedule Added from mobile clockout',
+              start: clockIn,
+              end: clockOut,
+              status: 'worked',
+              staffRatio: '1:1',
+              frequency: 'daily',
+              notes: '',
+              location: '',
+              caregiverId: timelogResponse.data.caregiver.id,
+              clientId: timelogResponse.data.client.id,
+              clientServiceId: timelogResponse.data.clientService.id,
+              tenantId: authUser?.tenant?.id,
+              payPeriod: timelogResponse.data.payPeriodHistory.id,
+              serviceAuthId: correspondingServiceAuth?.id,
+              timeLogId: timelogResponse.data.id,
+              assignedHours: Number(assignedHours)
+            }
+            console.log('New Schedule DTO --->> ', newScheduleDto)
+            const newScheduleRes = await api.post('/schedule', newScheduleDto)
+            console.log('New Schedule Created --->> ', newScheduleRes)
           }
         }
 

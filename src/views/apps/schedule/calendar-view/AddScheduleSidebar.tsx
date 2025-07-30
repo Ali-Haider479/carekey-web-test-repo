@@ -21,6 +21,9 @@ import axios from 'axios'
 import FormModal from '@/@core/components/mui/Modal'
 import { AddEventSidebarType, AddEventType } from '@/types/apps/calendarTypes'
 import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
   Alert,
   Checkbox,
   CircularProgress,
@@ -43,7 +46,8 @@ import {
   CalendarToday as Calendar,
   EditNote as Note,
   KeyboardArrowDown as ChevronDown,
-  ExpandLess as ChevronUp
+  ExpandLess as ChevronUp,
+  ExpandMore
 } from '@mui/icons-material'
 import { formatTimeTo12hr } from '@/utils/helperFunctions'
 import DialogCloseButton from '@/components/dialogs/DialogCloseButton'
@@ -192,6 +196,9 @@ const AddEventModal = (props: AddEventSidebarType) => {
   const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
   const [showPreview, setShowPreview] = useState(true)
   const theme = useTheme()
+  const [conflicts, setConflicts] = useState<any[]>([])
+  const [conflictModalOpen, setConflictModalOpen] = useState(false)
+  const [expanded, setExpanded] = useState<string | false>('panel0')
 
   console.log('calendarStore in Add Schedule Side Bar ---->', calendarStore)
 
@@ -607,6 +614,8 @@ const AddEventModal = (props: AddEventSidebarType) => {
       } catch (error: any) {
         console.error('Error creating schedule:', error)
         if (error.status === 409) {
+          setConflicts(error.response?.data.conflicts || [])
+          setConflictModalOpen(true)
           setAlertOpen(true)
           setAlertMessage({
             message: 'Caregiver already has a schedule within same date and time',
@@ -681,6 +690,8 @@ const AddEventModal = (props: AddEventSidebarType) => {
 
   const handleDeleteModalClose = () => setIsDeleteModalShow(false)
 
+  const handleConflictModalClose = () => setConflictModalOpen(false)
+
   const mergeDateWithTime = (date: Date, time: Date): Date => {
     const mergedDate = new Date(date)
     mergedDate.setHours(time.getHours(), time.getMinutes(), 0, 0)
@@ -714,6 +725,10 @@ const AddEventModal = (props: AddEventSidebarType) => {
       resetToEmptyValues()
     }
   }, [addEventSidebarOpen, resetToStoredValues, resetToEmptyValues, calendarStore.selectedEvent])
+
+  const handleChange = (panel: string) => (event: React.SyntheticEvent, newExpanded: boolean) => {
+    setExpanded(newExpanded ? panel : false)
+  }
 
   return (
     <>
@@ -1354,6 +1369,77 @@ const AddEventModal = (props: AddEventSidebarType) => {
             </div>
           </div>
         </form>
+      </Dialog>
+      <Dialog
+        open={conflictModalOpen}
+        onClose={handleConflictModalClose}
+        closeAfterTransition={false}
+        sx={{ '& .MuiDialog-paper': { overflow: 'visible' } }}
+        maxWidth='md'
+      >
+        <DialogCloseButton onClick={handleConflictModalClose} disableRipple>
+          <i className='bx-x' />
+        </DialogCloseButton>
+        <div className='flex items-center justify-center w-full px-5 flex-col'>
+          <div>
+            <h2 className='text-xl font-semibold mt-10 mb-3'>Conflicts Detected</h2>
+          </div>
+          <div className='w-full max-h-[500px] overflow-y-auto mb-4'>
+            {conflicts.length > 0 ? (
+              conflicts.map((conflict, index) => {
+                console.log('Conflict Details ---->> ', conflict)
+                const caregiver =
+                  props?.caregiverList?.find((c: any) => c.id === conflict.conflictingDto.caregiverId) || {}
+                const client = props?.clientList?.find((c: any) => c.id === conflict.conflictingDto.clientId) || {}
+
+                return (
+                  <Accordion
+                    key={index}
+                    expanded={expanded === `panel${index}`}
+                    onChange={handleChange(`panel${index}`)}
+                    sx={{
+                      marginBottom: '10px',
+                      backgroundColor:
+                        theme.palette.mode === 'light'
+                          ? theme.palette.error.lighterOpacity
+                          : theme.palette.error.lightOpacity,
+                      borderRadius: '8px',
+                      boxShadow:
+                        theme.palette.mode === 'light' ? '0 2px 4px rgba(0, 0, 0, 0.1)' : '0 2px 4px rgba(0, 0, 0, 0.2)'
+                    }}
+                  >
+                    <AccordionSummary expandIcon={<ExpandMore />} id={`panel${index}-header`}>
+                      <Typography className='font-semibold'>{`${conflict.conflictingDto.title} ${new Date(conflict.conflictingDto.start).toLocaleDateString()}`}</Typography>
+                    </AccordionSummary>
+                    <AccordionDetails>
+                      <Typography>
+                        {`Caregiver: ${caregiver.firstName} ${caregiver.lastName}`}
+                        <br />
+                        {`Client: ${client.firstName} ${client.lastName}`}
+                        <br />
+                        {`Service: ${selectedService.name} (${selectedService.procedureCode} - ${selectedService.modifierCode || 'N/A'})`}
+                        <br />
+                        {`Date: ${new Date(conflict.conflictingDto.start).toLocaleDateString()}`}
+                      </Typography>
+                      <Typography className='mt-2 font-semibold'>{`Conflicting Values`}</Typography>
+                      <Typography>
+                        {`Requested Start Date: ${new Date(conflict.conflictingDto.start).toLocaleString()}`}
+                        <br />
+                        {`Requested End Date: ${new Date(conflict.conflictingDto.end).toLocaleString()}`}
+                        <br />
+                        {`Conflicting Start Date: ${new Date(conflict.existingSchedule.start).toLocaleString()}`}
+                        <br />
+                        {`Conflicting End Date: ${new Date(conflict.existingSchedule.end).toLocaleString()}`}
+                      </Typography>
+                    </AccordionDetails>
+                  </Accordion>
+                )
+              })
+            ) : (
+              <Typography>No conflicts found.</Typography>
+            )}
+          </div>
+        </div>
       </Dialog>
     </>
   )

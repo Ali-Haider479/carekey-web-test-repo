@@ -90,6 +90,19 @@ const ReceivedTimesheetDetails = () => {
       for (const row of selectedRows) {
         const { user: currentUser, isDummyRow } = findUser(timeLogData, row.id)
 
+        console.log('Current User ----->> ', currentUser)
+
+        const activeClientService =
+          currentUser?.clientService?.service || currentUser?.clientService?.serviceAuthService
+        console.log('Active Client Service --->> ', activeClientService)
+        const correspondingServiceAuth = currentUser?.client?.serviceAuth?.find(
+          (item: any) =>
+            item.procedureCode === activeClientService?.procedureCode &&
+            (item.modifierCode === activeClientService?.modifierCode ||
+              (item.modifierCode === null && activeClientService?.modifierCode === null))
+        )
+        console.log('Corresponding Service-Auth ---->> ', correspondingServiceAuth)
+
         if (!currentUser) {
           setAlertOpen(true)
           setAlertProps({
@@ -111,13 +124,29 @@ const ReceivedTimesheetDetails = () => {
           return
         }
 
-        if (
-          currentUser?.client?.serviceAuth?.length > 0 &&
-          new Date(currentUser.client.serviceAuth[0].endDate) < new Date()
-        ) {
+        if (currentUser?.clientService?.serviceAuthService !== null) {
+          if (!correspondingServiceAuth) {
+            setAlertOpen(true)
+            setAlertProps({
+              message: 'No corresponding service-auth found for this service',
+              severity: 'error'
+            })
+            return
+          }
+          if (new Date(correspondingServiceAuth.endDate) < new Date()) {
+            setAlertOpen(true)
+            setAlertProps({
+              message: 'The service authorization has expired. Please update the end date before editing.',
+              severity: 'error'
+            })
+            return
+          }
+        }
+
+        if (currentUser?.clientService?.service !== null) {
           setAlertOpen(true)
           setAlertProps({
-            message: 'The service authorization has expired. Please update the end date before editing.',
+            message: 'Cannot update the status of a demo service',
             severity: 'error'
           })
           return

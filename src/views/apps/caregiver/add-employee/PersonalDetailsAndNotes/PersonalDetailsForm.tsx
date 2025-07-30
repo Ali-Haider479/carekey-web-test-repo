@@ -135,6 +135,7 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                     minLength={10}
                     maxLength={10}
                     isRequired={false}
+                    isUMPI={true}
                   />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 4 }}>
@@ -210,6 +211,7 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                     error={errors.zipCode}
                     control={control}
                     maxLength={5}
+                    isZipCode={true}
                   />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 4 }}>

@@ -395,7 +395,8 @@ const EmployeeStepper = () => {
                                 ? theme.palette.mode === 'dark'
                                   ? `${theme.palette.primary.dark} !important`
                                   : `${theme.palette.primary.main} !important`
-                                : ''
+                                : '',
+                            fontWeight: 'bold !important'
                           }}
                         >
                           {label.title}
@@ -408,7 +409,8 @@ const EmployeeStepper = () => {
                                 ? theme.palette.mode === 'dark'
                                   ? `${theme.palette.primary.dark} !important`
                                   : `${theme.palette.primary.main} !important`
-                                : ''
+                                : '',
+                            fontWeight: 'bold !important'
                           }}
                         >
                           {label.subtitle}

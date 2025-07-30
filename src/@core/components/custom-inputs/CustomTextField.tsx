@@ -20,6 +20,10 @@ type Props = {
   onBlur?: any
   isPhoneNumber?: boolean
   isSocialSecurityNumber?: boolean
+  isUMPI?: boolean
+  isPMI?: boolean
+  isClientCode?: boolean
+  isZipCode?: boolean
 }
 
 const CustomTextField = (props: Props) => {
@@ -184,6 +188,22 @@ const CustomTextField = (props: Props) => {
                 const digits = value.replace(/\D/g, '').substring(0, 9)
                 field.onChange(digits)
                 setValue(props.name, formatSSN(digits))
+              } else if (props.isZipCode) {
+                const digits = value.replace(/\D/g, '').substring(0, 5)
+                field.onChange(digits)
+                setValue(props.name, digits)
+              } else if (props.isUMPI) {
+                const digits = value.replace(/\D/g, '').substring(0, 10)
+                field.onChange(digits)
+                setValue(props.name, digits)
+              } else if (props.isPMI) {
+                const digits = value.replace(/\D/g, '').substring(0, 8)
+                field.onChange(digits)
+                setValue(props.name, digits)
+              } else if (props.isClientCode) {
+                const digits = value.replace(/\D/g, '').substring(0, 4)
+                field.onChange(digits)
+                setValue(props.name, digits)
               } else {
                 field.onChange(value)
               }

@@ -6,7 +6,7 @@ import CustomTextField from '@/@core/components/custom-inputs/CustomTextField'
 import ProfileAvatar from '@/@core/components/mui/ProfileAvatar'
 import DialogCloseButton from '@/components/dialogs/DialogCloseButton'
 import api from '@/utils/api'
-import { Add, Remove } from '@mui/icons-material'
+import { Add, Remove, Visibility } from '@mui/icons-material'
 import {
   Avatar,
   Button,
@@ -20,7 +20,10 @@ import {
   IconButton,
   Typography,
   Grid2 as Grid,
-  CircularProgress
+  CircularProgress,
+  List,
+  ListItem,
+  Box
 } from '@mui/material'
 import axios from 'axios'
 import { useParams } from 'next/navigation'
@@ -28,6 +31,7 @@ import React, { useEffect, useState } from 'react'
 import { FormProvider, useForm } from 'react-hook-form'
 import UnassignModalCG_QP from './UnassignCG_QPModal'
 import AssignCG_QPModal from './AssignCG_QPModal'
+import CaregiverQPViewDetailsModal from './CaregiverQPDetailsModal'
 
 type FormItems = {
   caregiverId?: number
@@ -52,6 +56,11 @@ const InfoCard = (clientData: InfoCardProps) => {
 
   const [showCGAssignModal, setShowCGAssignModal] = useState(false)
   const [showQPAssignModal, setShowQPAssignModal] = useState(false)
+
+  const [openViewDetailsModal, setOpenViewDetailsModal] = useState(false)
+  const [viewDetailsModalData, setViewDetailsModalData] = useState<any>(null)
+  const [openViewQPDetailsModal, setOpenViewQPDetailsModal] = useState(false)
+  const [viewDetailsQPModalData, setViewDetailsQPModalData] = useState<any>(null)
 
   const { id } = useParams()
 
@@ -172,6 +181,16 @@ const InfoCard = (clientData: InfoCardProps) => {
     }
     setSelectedUserId(null)
   }
+
+  const handleCloseViewDetailsModal = () => {
+    setOpenViewDetailsModal(false)
+    setViewDetailsModalData(null)
+  }
+
+  const handleCloseQPViewDetailsModal = () => {
+    setOpenViewQPDetailsModal(false)
+    setViewDetailsQPModalData(null)
+  }
   return (
     <>
       <Card className='max-w-md mr-4 shadow-md rounded-lg'>
@@ -242,9 +261,9 @@ const InfoCard = (clientData: InfoCardProps) => {
                 <Add className='text-white' />
               </IconButton>
             </div>
-            <ul>
+            <List>
               {assignedCaregiver?.map((item: any, index: number) => (
-                <li key={index} className='flex justify-between mb-4 last:mb-0'>
+                <ListItem key={index} className='flex justify-between last:mb-0 cursor-pointer ml-1 pr-0'>
                   <div className='flex items-center space-x-3'>
                     <Avatar
                       alt={item?.user?.userName}
@@ -258,22 +277,33 @@ const InfoCard = (clientData: InfoCardProps) => {
                       <Typography className='text-sm text-[#71DD37]'>{item?.user?.emailAddress}</Typography>
                     </div>
                   </div>
-                  <IconButton
-                    className='h-6 w-6'
-                    sx={theme => ({
-                      backgroundColor:
-                        theme.palette.mode === 'dark' ? theme.palette.primary.dark : theme.palette.primary.main
-                    })}
-                    onClick={() => {
-                      setOpenDeleteDialog(true)
-                      setSelectedUserId(item?.id)
-                    }}
-                  >
-                    <Remove className='text-white' />
-                  </IconButton>
-                </li>
+                  <Box sx={{ display: 'flex', gap: 4 }}>
+                    <IconButton
+                      onClick={() => {
+                        setViewDetailsModalData(item)
+                        setOpenViewDetailsModal(true)
+                      }}
+                      className='h-6 w-6'
+                    >
+                      <Visibility />
+                    </IconButton>
+                    <IconButton
+                      className='h-6 w-6'
+                      sx={theme => ({
+                        backgroundColor:
+                          theme.palette.mode === 'dark' ? theme.palette.primary.dark : theme.palette.primary.main
+                      })}
+                      onClick={() => {
+                        setOpenDeleteDialog(true)
+                        setSelectedUserId(item?.id)
+                      }}
+                    >
+                      <Remove className='text-white' />
+                    </IconButton>
+                  </Box>
+                </ListItem>
               ))}
-            </ul>
+            </List>
           </>
           {/* QP Assignment */}
           <>
@@ -293,9 +323,9 @@ const InfoCard = (clientData: InfoCardProps) => {
                 <Add className='text-white' />
               </IconButton>
             </div>
-            <ul>
+            <List>
               {assignedQPs?.map((item: any, index: number) => (
-                <li key={index} className='flex justify-between mb-4 last:mb-0'>
+                <ListItem key={index} className='flex justify-between last:mb-0 cursor-pointer ml-1 pr-0'>
                   <div className='flex items-center space-x-3'>
                     <Avatar
                       alt={item?.user?.userName}
@@ -309,22 +339,33 @@ const InfoCard = (clientData: InfoCardProps) => {
                       <Typography className='text-sm text-[#71DD37]'>{item?.user?.emailAddress}</Typography>
                     </div>
                   </div>
-                  <IconButton
-                    className='h-6 w-6'
-                    sx={theme => ({
-                      backgroundColor:
-                        theme.palette.mode === 'dark' ? theme.palette.primary.dark : theme.palette.primary.main
-                    })}
-                    onClick={() => {
-                      setOpenUnAssignQPDialog(true)
-                      setSelectedUserId(item?.id)
-                    }}
-                  >
-                    <Remove className='text-white' />
-                  </IconButton>
-                </li>
+                  <Box sx={{ display: 'flex', gap: 4 }}>
+                    <IconButton
+                      onClick={() => {
+                        setViewDetailsQPModalData(item)
+                        setOpenViewQPDetailsModal(true)
+                      }}
+                      className='h-6 w-6'
+                    >
+                      <Visibility />
+                    </IconButton>
+                    <IconButton
+                      className='h-6 w-6'
+                      sx={theme => ({
+                        backgroundColor:
+                          theme.palette.mode === 'dark' ? theme.palette.primary.dark : theme.palette.primary.main
+                      })}
+                      onClick={() => {
+                        setOpenUnAssignQPDialog(true)
+                        setSelectedUserId(item?.id)
+                      }}
+                    >
+                      <Remove className='text-white' />
+                    </IconButton>
+                  </Box>
+                </ListItem>
               ))}
-            </ul>
+            </List>
           </>
         </CardContent>
       </Card>
@@ -363,6 +404,18 @@ const InfoCard = (clientData: InfoCardProps) => {
         clientData={clientData}
         fetchAssigned={fetchAssignQps}
         assignedCaregiversOrQPs={assignedQPs}
+      />
+      <CaregiverQPViewDetailsModal
+        openViewModal={openViewDetailsModal}
+        handleCancel={handleCloseViewDetailsModal}
+        data={viewDetailsModalData}
+        componentMode={'CG'}
+      />
+      <CaregiverQPViewDetailsModal
+        openViewModal={openViewQPDetailsModal}
+        handleCancel={handleCloseQPViewDetailsModal}
+        data={viewDetailsQPModalData}
+        componentMode={'QP'}
       />
     </>
   )

@@ -249,7 +249,7 @@ const LoginInfoComponent = forwardRef<{ handleSubmit: any }, Props>(
                       { key: 1, value: 'Active', optionString: 'Active' },
                       { key: 2, value: 'Inactive', optionString: 'Inactive' }
                     ]}
-                    defaultValue={''}
+                    defaultValue={'Active'}
                   />
                 </Grid>
               </Grid>

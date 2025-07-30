@@ -192,7 +192,7 @@ const CaregiverFilters = ({
               fullWidth
               size='small'
               id='caregiver-Umpi'
-              placeholder='Caregiver Umpi'
+              placeholder='Caregiver UMPI'
               value={filters.caregiverUmpi}
               onChange={e => setFilters({ ...filters, caregiverUmpi: e.target.value })}
               slotProps={{

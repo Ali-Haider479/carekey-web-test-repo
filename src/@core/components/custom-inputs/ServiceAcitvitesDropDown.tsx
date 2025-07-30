@@ -62,11 +62,11 @@ const ServiceAndActivities = ({ control, errors, serviceTypes, activities, isUpd
   const [openSelect, setOpenSelect] = useState<{ [key: string]: boolean }>({})
 
   // Initialize with one section on mount
-  useEffect(() => {
-    if (fields.length === 0) {
-      append({ service: '', serviceNotes: '', serviceActivities: [] })
-    }
-  }, [append])
+  // useEffect(() => {
+  //   if (fields.length === 0) {
+  //     append({ service: '', serviceNotes: '', serviceActivities: [] })
+  //   }
+  // }, [append])
 
   // Get currently selected service IDs
   const selectedServiceIds = fields
@@ -136,7 +136,7 @@ const ServiceAndActivities = ({ control, errors, serviceTypes, activities, isUpd
                               // Disable if selected in another section
                               disabled={item.id !== field.value && selectedServiceIds.includes(item.id)}
                             >
-                              {item.name} {item?.procedureCode} - {item?.modifierCode}
+                              {item.name} {item?.procedureCode} {item?.modifierCode ? '-' : ''} {item?.modifierCode}
                             </MenuItem>
                           ))}
                         </Select>

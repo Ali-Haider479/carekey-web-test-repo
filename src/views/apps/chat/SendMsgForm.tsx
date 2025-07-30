@@ -187,7 +187,7 @@ const SendMsgForm = ({ dispatch, activeUser, isBelowSmScreen, messageInputRef, c
                     hidden
                     type='file'
                     id='upload-img'
-                    accept='image/*,.pdf,.doc,.docx,video/*'
+                    accept='image/*,.pdf,.doc,.docx,video/*,.txt,.xlsx,.xls,.pptx,.ppt,.csv,.zip'
                     onChange={e => handleFileChange(e)}
                   />
                 </label>
@@ -234,7 +234,7 @@ const SendMsgForm = ({ dispatch, activeUser, isBelowSmScreen, messageInputRef, c
                 hidden
                 type='file'
                 id='upload-img'
-                accept='image/*,.pdf,.doc,.docx,video/*'
+                accept='image/*,.pdf,.doc,.docx,video/*,.txt,.xlsx,.xls,.pptx,.ppt,.csv,.zip'
                 onChange={e => handleFileChange(e)}
               />
             </IconButton>
@@ -265,7 +265,7 @@ const SendMsgForm = ({ dispatch, activeUser, isBelowSmScreen, messageInputRef, c
     }
 
     const file = e.target.files[0]
-    const MAX_SIZE = 5 * 1024 * 1024
+    const MAX_SIZE = 12 * 1024 * 1024 // 12 mb max file size
     const allowedTypes = [
       'image/jpeg',
       'image/png',
@@ -275,7 +275,16 @@ const SendMsgForm = ({ dispatch, activeUser, isBelowSmScreen, messageInputRef, c
       'video/mpeg',
       'video/avi',
       'video/mkv',
-      'video/webm'
+      'video/webm',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/msword',
+      'text/plain',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      'application/vnd.ms-powerpoint',
+      'text/csv',
+      'application/zip'
     ]
 
     if (file.size > MAX_SIZE) {
@@ -323,7 +332,7 @@ const SendMsgForm = ({ dispatch, activeUser, isBelowSmScreen, messageInputRef, c
     return new Blob(byteArrays, { type: contentType })
   }
 
-  const handleUpload = async (event: FormEvent) => {
+  const handleUpload = async (event: FormEvent, msg: string) => {
     event.preventDefault()
     setUploadStatus('uploading')
     try {
@@ -358,7 +367,7 @@ const SendMsgForm = ({ dispatch, activeUser, isBelowSmScreen, messageInputRef, c
           senderId: profileUser.id,
           receiverId: activeUser.id,
           chatRoomId: contactDetails?.chatRoomId,
-          message: 'fileAttachment',
+          message: msg || 'fileAttachment',
           attachmentFile: { fileKey: preSignedUrl.data[0].key, fileName: file?.name, mimeType: file?.type },
           time: new Date().toISOString(),
           msgStatus: { isSent: true, isDelivered: false, isSeen: false }
@@ -371,7 +380,7 @@ const SendMsgForm = ({ dispatch, activeUser, isBelowSmScreen, messageInputRef, c
           console.log('chatTopic--->', chatTopic, messageData)
           dispatch(
             sendMsg({
-              msg: 'fileAttachment',
+              msg: msg || 'fileAttachment',
               attachmentFile: {
                 fileKey: preSignedUrl.data[0].key,
                 fileName: file?.name as string,
@@ -410,7 +419,7 @@ const SendMsgForm = ({ dispatch, activeUser, isBelowSmScreen, messageInputRef, c
         openAlert={fileError ? true : false}
         setOpenAlert={() => setFileError(null)}
       />
-      <form autoComplete='off' onSubmit={event => (!file ? handleSendMsg(event, msg) : handleUpload(event))}>
+      <form autoComplete='off' onSubmit={event => (!file ? handleSendMsg(event, msg) : handleUpload(event, msg))}>
         {file && (
           <Box sx={{ px: 6, display: 'flex', gap: 3, alignItems: 'center' }}>
             <FileProgress file={file} onRemove={() => setFile(null)} progress={progress} uploadStatus={uploadStatus} />

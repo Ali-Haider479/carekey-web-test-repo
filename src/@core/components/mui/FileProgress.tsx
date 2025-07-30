@@ -4,6 +4,7 @@ import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf'
 import ImageIcon from '@mui/icons-material/Image'
 import UploadIcon from '@mui/icons-material/Upload'
 import CloseIcon from '@mui/icons-material/Close'
+import { Description, Feed, FolderZip, Slideshow, TextSnippet, VideoFile, VideoLibrary } from '@mui/icons-material'
 
 interface FileProgressProps {
   file: File
@@ -20,6 +21,32 @@ const FileProgress: React.FC<FileProgressProps> = ({
   progress = 100,
   uploadStatus = 'ready'
 }) => {
+  const fileTypeIcons: Record<string, React.ReactNode> = {
+    'image/jpeg': <ImageIcon color='primary' />,
+    'image/png': <ImageIcon color='primary' />,
+    'image/jpg': <ImageIcon color='primary' />,
+    'application/pdf': <PictureAsPdfIcon color='error' />,
+    'video/mp4': <VideoFile color='primary' />,
+    'video/mpeg': <VideoFile color='primary' />,
+    'video/avi': <VideoFile color='primary' />,
+    'video/mkv': <VideoFile color='primary' />,
+    'video/webm': <VideoFile color='primary' />,
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document': <Description color='primary' />,
+    'application/msword': <Description color='primary' />,
+    'text/plain': <Description color='primary' />,
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': <Feed color='primary' />,
+    'application/vnd.ms-excel': <Feed color='primary' />,
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation': <Slideshow color='primary' />,
+    'application/vnd.ms-powerpoint': <Slideshow color='primary' />,
+    'text/csv': <Feed color='primary' />,
+    'application/zip': <FolderZip color='primary' />
+  }
+
+  // Get the icon for the file type, default to DescriptionIcon for unknown types
+  const getFileIcon = (fileType: string) => {
+    return fileTypeIcons[fileType] || <Description color='primary' />
+  }
+
   const getStatusColor = () => {
     switch (uploadStatus) {
       case 'uploading':
@@ -57,7 +84,7 @@ const FileProgress: React.FC<FileProgressProps> = ({
         <div className='flex justify-between items-center mb-2'>
           <div className='flex items-center gap-4'>
             <div className='flex items-center gap-2 min-w-0'>
-              {file.type.includes('pdf') ? <PictureAsPdfIcon color='error' /> : <ImageIcon color='primary' />}
+              {getFileIcon(file.type)}
               <Typography
                 variant='body2'
                 className='font-semibold truncate'

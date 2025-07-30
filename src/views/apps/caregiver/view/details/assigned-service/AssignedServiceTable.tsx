@@ -30,6 +30,9 @@ const AssignedServiceTable = () => {
   const [clientServices, setClientServices] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
+  const tenantEvvConfig: any = JSON.parse(localStorage?.getItem('evvConfig') ?? '{}')
+
+  console.log('AUTH USER DATA --->> ', authUser)
 
   const theme = useTheme()
   const lightTheme = theme.palette.mode === 'light'
@@ -204,6 +207,7 @@ const AssignedServiceTable = () => {
               checked={item?.service?.evv === true}
               onChange={() => updateEVV(item?.service)}
               color='primary'
+              disabled={tenantEvvConfig?.evvEnforcement === 'full' || tenantEvvConfig?.evvEnforcement === 'relaxed'}
             />
           </div>
         </div>

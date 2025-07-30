@@ -24,6 +24,7 @@ import CloseIcon from '@mui/icons-material/Close'
 import { useParams } from 'next/navigation'
 import React, { useEffect, useState, useRef } from 'react'
 import { useForm, FormProvider, Controller, useFieldArray, useWatch } from 'react-hook-form'
+import { Delete } from '@mui/icons-material'
 
 type ServiceType = {
   id: string
@@ -68,6 +69,7 @@ const CareplanTab = () => {
   const prevSelectedServiceIdsRef = useRef<string[]>([])
 
   const [isDataLoading, setIsDataLoading] = useState(false)
+  const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
 
   const methods = useForm<FormValues>({
     defaultValues: {
@@ -120,6 +122,13 @@ const CareplanTab = () => {
         modifierCode: selectedService?.modifierCode || null,
         serviceId: isDummyService ? Number(selectedServiceId) || null : null
       })
+      const accountHistoryPayLoad = {
+        actionType: 'Custom Activity Added',
+        details: `Custom Activity is added for Client (ID: ${id}) under (Activity ID: ${response.data.id.toString()})  by User (ID: ${authUser?.id})`,
+        userId: authUser?.id,
+        clientId: id
+      }
+      await api.post(`/account-history/log`, accountHistoryPayLoad)
       const newActivity: ActivityType = {
         id: response.data.id.toString(),
         title: response.data.title,
@@ -454,7 +463,17 @@ const CareplanTab = () => {
           .filter(num => !isNaN(num))
       }
       console.log('UPDATING ACTIVITIES', payload)
-      await api.put(`/client/update-activities/${clientId}`, payload)
+      const response = await api.put(`/client/update-activities/${clientId}`, payload)
+
+      if (response.status === 200) {
+        const accountHistoryPayLoad = {
+          actionType: 'Client Services are Updated',
+          details: `Client Service Updated for Client (ID: ${id}) by User (ID: ${authUser?.id})`,
+          userId: authUser?.id,
+          clientId: id
+        }
+        await api.post(`/account-history/log`, accountHistoryPayLoad)
+      }
 
       // Refresh data after submission
       fetchClient()
@@ -550,6 +569,15 @@ const CareplanTab = () => {
                           <Box mb={4} p={2} borderRadius={2}>
                             <Box display='flex' justifyContent='space-between' alignItems='center' mb={2}>
                               <Typography className='text-xl font-semibold'>Service Name</Typography>
+                              {fields.length > 1 && field.service === '' && (
+                                <IconButton
+                                  color='secondary'
+                                  onClick={() => remove(index)}
+                                  aria-label={`Remove service ${index + 1}`}
+                                >
+                                  <Delete />
+                                </IconButton>
+                              )}
                             </Box>
 
                             <Grid container spacing={5}>
@@ -606,7 +634,9 @@ const CareplanTab = () => {
                                 <Box display='flex' justifyContent='space-between' alignItems='center' mb={2}>
                                   <Typography className='text-xl font-semibold'>Service Activities</Typography>
                                   <Box display='flex' alignItems='center'>
-                                    <FormLabel>Custom Activities</FormLabel>
+                                    <FormLabel disabled={!watch(`services.${index}.service`)}>
+                                      Custom Activities
+                                    </FormLabel>
                                     <Checkbox
                                       {...register(`services.${index}.customActivities`)}
                                       checked={customActivitiesEnabled}

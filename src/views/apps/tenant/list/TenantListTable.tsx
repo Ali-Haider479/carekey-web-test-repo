@@ -361,7 +361,7 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
 
   return (
     <>
-      {isLoading ? (
+      {tenantStore.loading ? (
         <Card>
           <div className='flex items-center justify-center p-10'>
             <CircularProgress />
@@ -420,7 +420,7 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
                 </Button>
               </div>
             </div>
-            {isLoading ? (
+            {tenantStore.loading ? (
               <div className='flex items-center justify-center p-10'>
                 <CircularProgress />
               </div>

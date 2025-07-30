@@ -12,11 +12,15 @@ import {
   DialogTitle,
   Grid2 as Grid,
   IconButton,
-  Typography
+  List,
+  ListItem,
+  Typography,
+  TextField,
+  Box
 } from '@mui/material'
 import axios from 'axios'
 import { useParams } from 'next/navigation'
-import { Add, Remove } from '@mui/icons-material'
+import { Add, Remove, Visibility } from '@mui/icons-material'
 import CustomDropDown from '@/@core/components/custom-inputs/CustomDropDown'
 import ControlledDatePicker from '@/@core/components/custom-inputs/ControledDatePicker'
 import ControlledTextArea from '@/@core/components/custom-inputs/ControlledTextArea'
@@ -44,6 +48,8 @@ const InfoCard = () => {
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null)
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false)
   const [assignButtonLoading, setAssignButtonLoading] = useState(false)
+  const [openAssignedClientViewModal, setOpenAssignedClientViewModal] = useState(false)
+  const [selectedClientData, setSelectedClientData] = useState<any>(null)
 
   const theme: any = useTheme()
   const lightTheme = theme.palette.mode === 'light'
@@ -219,6 +225,11 @@ const InfoCard = () => {
     setSelectedUserId(null)
   }
 
+  const handleCancelViewAssignedClients = () => {
+    setOpenAssignedClientViewModal(false)
+    setSelectedClientData(null)
+  }
+
   console.log('Data from caregiver info card', data?.data)
 
   return (
@@ -257,9 +268,9 @@ const InfoCard = () => {
               </IconButton>
             </div>
 
-            <ul className=''>
+            <List className='max-h-60 overflow-y-auto'>
               {assignedClients?.map((data: any, index: number) => (
-                <li key={index} className='flex items-center justify-between mb-4 last:mb-0'>
+                <ListItem key={index} className='flex items-center justify-between last:mb-0 cursor-pointer px-0'>
                   <div className='flex items-center space-x-3'>
                     <Avatar
                       alt={`${data?.client?.firstName} ${data?.client?.lastName}`}
@@ -273,27 +284,37 @@ const InfoCard = () => {
                       </Typography>
                     </div>
                   </div>
-                  <IconButton
-                    className={`h-6 w-6`}
-                    sx={{
-                      backgroundColor: lightTheme ? theme.palette.primary.main : theme.palette.primary.dark
-                    }}
-                    onClick={() => {
-                      setOpenDeleteDialog(true)
-                      setSelectedUserId(data?.id)
-                    }}
-                  >
-                    <Remove className='text-white' />
-                  </IconButton>
-
+                  <Box sx={{ display: 'flex', gap: 4 }}>
+                    <IconButton
+                      onClick={() => {
+                        setSelectedClientData(data)
+                        setOpenAssignedClientViewModal(true)
+                      }}
+                      className='h-6 w-6'
+                    >
+                      <Visibility />
+                    </IconButton>
+                    <IconButton
+                      className={`h-6 w-6`}
+                      sx={{
+                        backgroundColor: lightTheme ? theme.palette.primary.main : theme.palette.primary.dark
+                      }}
+                      onClick={() => {
+                        setOpenDeleteDialog(true)
+                        setSelectedUserId(data?.id)
+                      }}
+                    >
+                      <Remove className='text-white' />
+                    </IconButton>
+                  </Box>
                   {/* <img
                   className='bg-[#666CFF] bg-opacity-20 h-7 border-4 border-transparent rounded-full mt-1'
                   src='/assets/svg-icons/openLink.svg'
                   alt=''
                 /> */}
-                </li>
+                </ListItem>
               ))}
-            </ul>
+            </List>
             <Dialog
               open={isModalShow}
               onClose={handleModalClose}
@@ -418,6 +439,57 @@ const InfoCard = () => {
             Unassign
           </Button>
         </DialogActions>
+      </Dialog>
+      <Dialog
+        open={openAssignedClientViewModal}
+        onClose={handleCancelViewAssignedClients}
+        aria-labelledby='view-dialog-title'
+        aria-describedby='view-dialog-description'
+        sx={{ '& .MuiDialog-paper': { width: '100%', overflow: 'hidden', maxWidth: '500px' } }}
+      >
+        <DialogTitle>Assigned Client Detail</DialogTitle>
+        <DialogCloseButton onClick={handleCancelViewAssignedClients} disableRipple sx={{ right: '8px', top: '8px' }}>
+          <i className='bx-x' />
+        </DialogCloseButton>
+        <DialogContent sx={{ pt: '4px' }}>
+          <div className='flex items-center space-x-3 mb-4'>
+            <Avatar
+              alt={`${selectedClientData?.client?.firstName} ${selectedClientData?.client?.lastName}`}
+              src={selectedClientData?.client?.profileImgUrl || selectedClientData?.client?.firstName}
+              className='w-10 h-10'
+            />
+            <div>
+              <Typography className='text-sm font-medium'>
+                {`${selectedClientData?.client?.firstName} ${selectedClientData?.client?.lastName}`}
+              </Typography>
+              <Typography className='text-sm text-green-600'>
+                {selectedClientData?.client?.emailId ? selectedClientData.client.emailId : ''}
+              </Typography>
+            </div>
+          </div>
+          <div className='mb-2'>
+            <Typography variant='body2'>
+              Assignment Date: {new Date(selectedClientData?.assignmentDate).toLocaleDateString()}
+            </Typography>
+          </div>
+          <div className='mb-2'>
+            <Typography variant='body2'>
+              Unassignment Date:{' '}
+              {selectedClientData?.unassignmentDate
+                ? new Date(selectedClientData.unassignmentDate).toLocaleDateString()
+                : 'Not Assigned'}
+            </Typography>
+          </div>
+          <div className='mb-2'>
+            <Typography variant='body2'>Scheduled Hours: {selectedClientData?.scheduleHours || 'N/A'}</Typography>
+          </div>
+          <div className='mb-2'>
+            <Typography variant='body2' className='mb-1'>
+              Notes:
+            </Typography>
+            <TextField fullWidth multiline minRows={3} disabled size='small' value={selectedClientData?.notes || ''} />
+          </div>
+        </DialogContent>
       </Dialog>
     </>
   )

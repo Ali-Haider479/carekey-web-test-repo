@@ -319,7 +319,7 @@ const TimeSheets = () => {
       align: 'center',
       render: (params: any) => (
         <>
-          {params.locApproved ? (
+          {params.clientService.evvEnforce ? (
             <CheckOutlined className='text-[#71DD37]' />
           ) : (
             <CloseOutlined className='text-[#FF3E1D]' />

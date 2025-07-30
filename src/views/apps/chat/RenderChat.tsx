@@ -37,7 +37,7 @@ export const renderChat = (props: RenderChatType) => {
 
   return sortedChats.map(chat => {
     const contact = chatStore.contacts.find(contact => contact.chatRoomId === chat.id)
-    console.log('CONNTACT', contact)
+    console.log('SORTED CHAT --> ', chat.chat[chat.chat.length - 1])
     if (!contact) return null
     const isChatActive = chatStore.activeUser?.chatRoomId === contact.chatRoomId
 
@@ -86,7 +86,9 @@ export const renderChat = (props: RenderChatType) => {
           </div>
           {chat.chat.length ? (
             <Typography variant='body2' color={isChatActive ? 'inherit' : 'text.secondary'} className='truncate'>
-              {chat.chat[chat.chat.length - 1].message}
+              {chat.chat[chat.chat.length - 1].message === 'fileAttachment'
+                ? chat.chat[chat.chat.length - 1].attachmentFile?.fileName
+                : chat.chat[chat.chat.length - 1].message}
             </Typography>
           ) : (
             <Typography variant='body2' color={isChatActive ? 'inherit' : 'text.secondary'} className='truncate'>
