@@ -182,6 +182,7 @@ const CreateTenant = (props: Props) => {
         taxonomyNumber: data.taxonomynumber,
         einNumber: data.einNumber,
         faxNumber: data.faxNumber,
+        evvConfig: { evvEnforcement: 'evvRelaxed' },
         roleId: 2
       }
       const response = await api.post(`/tenant`, tenantPayload)

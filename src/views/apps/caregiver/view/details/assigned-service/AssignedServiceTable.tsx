@@ -207,7 +207,7 @@ const AssignedServiceTable = () => {
               checked={item?.service?.evv === true}
               onChange={() => updateEVV(item?.service)}
               color='primary'
-              disabled={tenantEvvConfig?.evvEnforcement === 'full' || tenantEvvConfig?.evvEnforcement === 'relaxed'}
+              disabled={tenantEvvConfig?.evvEnforcement === 'evvDisabled'}
             />
           </div>
         </div>

@@ -139,6 +139,10 @@ function CaregiverAboutCard() {
   }
 
   const handleFieldChange = (name: string, value: any) => {
+    setFormData((prev: any) => ({
+      ...prev,
+      [name]: value
+    }))
     // Handle email validation
     const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
     if (name === 'emailAddress' && !emailPattern.test(value)) {
@@ -243,11 +247,15 @@ function CaregiverAboutCard() {
       return
     }
 
-    // Handle all other fields normally
-    setFormData((prev: any) => ({
-      ...prev,
-      [name]: value
-    }))
+    if (name === 'caregiverUMPI') {
+      const digits = value.replace(/\D/g, '').substring(0, 10) // Strip non-digits
+      // Ignore input if digits exceed 10
+      if (digits.length > 10) return
+      setFormData((prev: any) => ({
+        ...prev,
+        [name]: digits
+      }))
+    }
   }
 
   const handleSave = async () => {

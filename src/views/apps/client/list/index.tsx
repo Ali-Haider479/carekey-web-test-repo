@@ -436,7 +436,7 @@ const ClientListApps = () => {
                     select: { displayEmpty: true }
                   }}
                 >
-                  <MenuItem value=''>All</MenuItem>
+                  <MenuItem value='all'>All</MenuItem>
                   <MenuItem value='active'>Active</MenuItem>
                   <MenuItem value='inactive'>Inactive</MenuItem>
                 </CustomTextField>

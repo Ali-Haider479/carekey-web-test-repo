@@ -187,7 +187,7 @@ const InfoCard = () => {
       data.assignmentDate
     ).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })} for ${
       data.scheduleHours
-    } hours. Check your details.`
+    } hours. ${data.assignmentNotes !== '' && `Assignment Notes: ${data.assignmentNotes}.`}`
 
     await api.post(`/user/createClientUser`, assignClientBody)
     await api.post(`/account-history/log`, accountHistoryPayLoad)

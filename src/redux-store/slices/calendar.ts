@@ -49,11 +49,21 @@ export const calendarSlice = createSlice({
       state.filteredEvents = state.events
     },
     addEvent: (state, action) => {
-      const newEvent = {
-        ...action.payload,
-        id: `${parseInt(state.events[state.events.length - 1]?.id ?? '') + 1}`
-      }
-      state.events.push(newEvent)
+      const currentDate = new Date()
+      const newEvents = action.payload.map((event: any) => {
+        const startDate = new Date(event.start)
+        const endDate = event.end ? new Date(event.end) : startDate // Handle cases where end date is not provided
+
+        // Check if both start and end dates are before the current date
+        if (startDate < currentDate && endDate < currentDate && event.status === 'scheduled') {
+          return { ...event, status: 'missed' }
+        }
+        if (event.timelog !== null && event.status === 'worked' && event.timelog.tsApprovalStatus === 'Approved') {
+          return { ...event, status: 'approved' }
+        }
+        return event
+      })
+      state.events.push(...newEvents)
     },
     updateEvent: (state, action: PayloadAction<EventInput>) => {
       state.events = state.events.map(event => {

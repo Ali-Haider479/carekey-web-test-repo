@@ -367,7 +367,7 @@ const SendMsgForm = ({ dispatch, activeUser, isBelowSmScreen, messageInputRef, c
           senderId: profileUser.id,
           receiverId: activeUser.id,
           chatRoomId: contactDetails?.chatRoomId,
-          message: msg || 'fileAttachment',
+          message: msg || file?.name,
           attachmentFile: { fileKey: preSignedUrl.data[0].key, fileName: file?.name, mimeType: file?.type },
           time: new Date().toISOString(),
           msgStatus: { isSent: true, isDelivered: false, isSeen: false }
@@ -380,7 +380,7 @@ const SendMsgForm = ({ dispatch, activeUser, isBelowSmScreen, messageInputRef, c
           console.log('chatTopic--->', chatTopic, messageData)
           dispatch(
             sendMsg({
-              msg: msg || 'fileAttachment',
+              msg: msg || (file?.name as string),
               attachmentFile: {
                 fileKey: preSignedUrl.data[0].key,
                 fileName: file?.name as string,

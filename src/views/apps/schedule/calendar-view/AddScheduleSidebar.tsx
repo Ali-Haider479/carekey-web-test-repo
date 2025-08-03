@@ -200,8 +200,6 @@ const AddEventModal = (props: AddEventSidebarType) => {
   const [conflictModalOpen, setConflictModalOpen] = useState(false)
   const [expanded, setExpanded] = useState<string | false>('panel0')
 
-  console.log('calendarStore in Add Schedule Side Bar ---->', calendarStore)
-
   const dispatch = useAppDispatch()
 
   const handleBulkDeleteChange = () => {
@@ -224,7 +222,6 @@ const AddEventModal = (props: AddEventSidebarType) => {
     try {
       if (values.client) {
         const res = await api.get(`/client/${values.client}/service-auth`)
-        console.log('Client Service Auth Data: ', res.data)
         setClientServiceAuth(res.data)
       }
     } catch (error) {
@@ -244,7 +241,7 @@ const AddEventModal = (props: AddEventSidebarType) => {
       values.caregiver !== '' &&
       values.client !== '' &&
       values.service !== '' &&
-      values.notes !== '' &&
+      values.notes.trim() !== '' &&
       values.startDate instanceof Date &&
       !isNaN(values.startDate.getTime()) &&
       values.startTime instanceof Date &&
@@ -252,7 +249,12 @@ const AddEventModal = (props: AddEventSidebarType) => {
       values.endDate instanceof Date &&
       !isNaN(values.endDate.getTime()) &&
       typeof values.assignedHours === 'number' &&
-      values.assignedHours > 0
+      values.assignedHours > 0 &&
+      values.location.trim() !== '' &&
+      values.serviceAuth !== '' &&
+      values.frequency?.trim() !== '' &&
+      values.status.trim() !== '' &&
+      values.staffRatio !== ''
     )
   }
 
@@ -301,9 +303,7 @@ const AddEventModal = (props: AddEventSidebarType) => {
 
   useEffect(() => {
     if (values.service) {
-      console.log('Service Type ---->> ', serviceType, values.service)
       const filteredServiceType = serviceType.find(item => item.clientServiceId === values.service)
-      console.log('Filtered ServiceType ----->> ', filteredServiceType)
       setSelectedService(filteredServiceType)
       const corrospondingServiceAuth = clientServiceAuth?.filter(
         (item: any) =>
@@ -315,7 +315,6 @@ const AddEventModal = (props: AddEventSidebarType) => {
       const activeCorrospondingServiceAuth = corrospondingServiceAuth?.filter(
         (item: any) => new Date(item.endDate) > new Date()
       )
-      console.log('Active Service Auths: ', activeCorrospondingServiceAuth)
       setActiveClientServiceAuth(activeCorrospondingServiceAuth)
     }
   }, [values.service, calendarStore.selectedEvent])
@@ -323,10 +322,8 @@ const AddEventModal = (props: AddEventSidebarType) => {
   useEffect(() => {
     if (values.serviceAuth && clientServiceAuth?.length > 0) {
       const selectedServiceAuth = clientServiceAuth.find((item: any) => item.id === values.serviceAuth)
-      console.log('Selected Service Auth: ', selectedServiceAuth)
       setSelectedServiceAuth(selectedServiceAuth)
       const remainingUnits = selectedServiceAuth?.units - selectedServiceAuth?.usedUnits
-      console.log('Remaining Units in Service Auth: ', remainingUnits)
       setServiceAuthUnitsRemaining(remainingUnits)
     }
   }, [values.serviceAuth, calendarStore.selectedEvent])
@@ -357,7 +354,6 @@ const AddEventModal = (props: AddEventSidebarType) => {
   const resetToStoredValues = useCallback(() => {
     if (calendarStore.selectedEvent !== null) {
       const event = calendarStore.selectedEvent
-      console.log('Resetting to stored values for event:', event)
       setValue('title', event.title || '')
       setValues({
         title: event.title || '',
@@ -382,7 +378,6 @@ const AddEventModal = (props: AddEventSidebarType) => {
 
   const resetToEmptyValues = useCallback(() => {
     setValue('title', '')
-    console.log('Value of selected Date in resetToEmptyValues --->>', calendarStore)
     setValues({
       ...defaultState,
       startDate: calendarStore?.selectedDate
@@ -401,6 +396,7 @@ const AddEventModal = (props: AddEventSidebarType) => {
     dispatch(setSelectedDate(null))
     handleAddEventSidebarToggle()
     setAlertOpen(false)
+    setShowPreview(true)
   }
 
   const calculateTotalDays = (startDate: Date, endDate: Date) => {
@@ -435,7 +431,6 @@ const AddEventModal = (props: AddEventSidebarType) => {
       setIsAddEventLoading(false)
       return
     }
-    console.log('In onSubmit--------------->')
     const startDate = values.startDate
     const assignedHours = values.assignedHours
     const endDate =
@@ -504,9 +499,6 @@ const AddEventModal = (props: AddEventSidebarType) => {
 
     // Make a single API call with bulk data
     if (isEdited && calendarStore?.selectedEvent && calendarStore?.selectedEvent?.title !== '') {
-      console.log('Editing Existing Event!!!!', calendarStore.selectedEvent.id)
-      console.log('bulkEvents>>>>>', bulkEvents)
-      console.log(startDate.getHours(), assignedHours)
       if (
         startDate.getHours() + startDate.getMinutes() / 60 + (typeof assignedHours === 'number' ? assignedHours : 0) >
         24
@@ -580,9 +572,7 @@ const AddEventModal = (props: AddEventSidebarType) => {
               updatedEndTime.getMinutes(),
               updatedEndTime.getSeconds()
             )
-            console.log('CALENDER STORE', calendarStore)
             const eventId = calendarStore?.selectedEvent?.id
-            console.log('EVENT ID', eventId)
             const patchBody = {
               ...bulkEvents[0],
               end: finalEndDate
@@ -608,7 +598,6 @@ const AddEventModal = (props: AddEventSidebarType) => {
     } else {
       try {
         const createSchedule = await api.post(`/schedule`, bulkEvents)
-        console.log('Created schedule:', createSchedule.data)
         handleAddEvent(createSchedule.data.schedules)
         handleModalClose()
       } catch (error: any) {
@@ -629,15 +618,11 @@ const AddEventModal = (props: AddEventSidebarType) => {
     setIsAddEventLoading(false)
   }
 
-  console.log('Bulk Delete checkbox state ---->> ', bulkDeleteChecked)
-
   const handleDeleteSchedule = async () => {
-    console.log('Inside handle Delete function.......')
     setDeleteButtonLoading(true)
     try {
       if (!bulkDeleteChecked) {
         const delScheduleRes = await api.delete(`/schedule/${calendarStore?.selectedEvent?.id}`)
-        console.log('Delete Schedule Response ---->> ', delScheduleRes)
       } else {
         const matchingEvents = calendarStore?.events?.filter((event: any) => {
           const eventStart = event?.start?.split('T')[1]
@@ -647,11 +632,10 @@ const AddEventModal = (props: AddEventSidebarType) => {
           return (
             eventStart === selectedEventStart &&
             eventEnd === selectedEventEnd &&
-            event.caregiver.id === calendarStore.selectedEvent.caregiver.id &&
-            event.client.id === calendarStore.selectedEvent.client.id
+            event.caregiver?.id === calendarStore.selectedEvent.caregiver?.id &&
+            event.client?.id === calendarStore.selectedEvent.client?.id
           )
         })
-        console.log('Found Matching Events ---->> ', matchingEvents)
         if (matchingEvents.length === 0) {
           setTimeout(() => {
             setAlertOpen(true)
@@ -661,13 +645,10 @@ const AddEventModal = (props: AddEventSidebarType) => {
             })
           }, 5000)
           const delScheduleRes = await api.delete(`/schedule/${calendarStore?.selectedEvent?.id}`)
-          console.log('Delete Schedule Response ---->> ', delScheduleRes)
         } else {
           for (const event of matchingEvents) {
-            console.log('EVENT IN FOR LOOP --->> ', event)
             try {
               const delScheduleRes = await api.delete(`/schedule/${event.id}`)
-              console.log('Delete Schedule Response ---->> ', delScheduleRes)
             } catch (error) {
               console.error('Error Deleting Schedule: ', error)
             }
@@ -694,7 +675,7 @@ const AddEventModal = (props: AddEventSidebarType) => {
 
   const mergeDateWithTime = (date: Date, time: Date): Date => {
     const mergedDate = new Date(date)
-    mergedDate.setHours(time.getHours(), time.getMinutes(), 0, 0)
+    mergedDate.setHours(time?.getHours(), time?.getMinutes(), 0, 0)
     return mergedDate
   }
 
@@ -1387,7 +1368,6 @@ const AddEventModal = (props: AddEventSidebarType) => {
           <div className='w-full max-h-[500px] overflow-y-auto mb-4'>
             {conflicts.length > 0 ? (
               conflicts.map((conflict, index) => {
-                console.log('Conflict Details ---->> ', conflict)
                 const caregiver =
                   props?.caregiverList?.find((c: any) => c.id === conflict.conflictingDto.caregiverId) || {}
                 const client = props?.clientList?.find((c: any) => c.id === conflict.conflictingDto.clientId) || {}

@@ -1,6 +1,6 @@
 import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
 import { USStates } from '@/utils/constants'
-import { MenuItem, TextField, Typography } from '@mui/material'
+import { Box, MenuItem, TextField, Typography } from '@mui/material'
 
 export const EditableField = ({
   label,
@@ -59,27 +59,29 @@ export const EditableField = ({
             ))}
           </TextField>
         ) : name === 'dateOfBirth' || name === 'dischargeDate' ? (
-          <AppReactDatepicker
-            selected={value ? new Date(value) : null}
-            onChange={(date: Date | null) => {
-              onChange(name, date ? date.toISOString().split('T')[0] : '')
-            }}
-            maxDate={name === 'dateOfBirth' ? new Date() : undefined}
-            dateFormat='MM/dd/yyyy'
-            className='w-1/2 outline-none'
-            showMonthDropdown
-            showYearDropdown
-            disabled={disabled}
-            customInput={
-              <TextField
-                variant='standard'
-                className='outline-none w-full'
-                value={value || ''}
-                onChange={handleChange}
-                disabled={disabled}
-              />
-            }
-          />
+          <Box className='w-1/2'>
+            <AppReactDatepicker
+              selected={value ? new Date(value) : null}
+              onChange={(date: Date | null) => {
+                onChange(name, date ? date.toISOString().split('T')[0] : '')
+              }}
+              maxDate={name === 'dateOfBirth' ? new Date() : undefined}
+              dateFormat='MM/dd/yyyy'
+              className='w-full outline-none'
+              showMonthDropdown
+              showYearDropdown
+              disabled={disabled}
+              customInput={
+                <TextField
+                  variant='standard'
+                  className='outline-none w-full'
+                  value={value || ''}
+                  onChange={handleChange}
+                  disabled={disabled}
+                />
+              }
+            />
+          </Box>
         ) : (
           <TextField
             value={
@@ -96,9 +98,9 @@ export const EditableField = ({
             inputProps={
               isPhoneField || name === 'payRate'
                 ? {
-                  inputMode: 'numeric',
-                  pattern: '[0-9]*'
-                }
+                    inputMode: 'numeric',
+                    pattern: '[0-9]*'
+                  }
                 : {}
             }
           />

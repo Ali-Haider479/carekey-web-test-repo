@@ -56,7 +56,6 @@ const Calendar = () => {
 
   useEffect(() => {
     const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
-    console.log('LOGGED USER', authUser)
     ;(async () => {
       try {
         const response = await Promise.all([
@@ -120,8 +119,8 @@ const Calendar = () => {
   // Filter events based on selected client, caregiver, and status
   const filteredEvents = useMemo(() => {
     return localEvents.filter(event => {
-      const clientMatch = selectedClientFilter === '' || event.client.id === selectedClientFilter
-      const caregiverMatch = selectedCaregiverFilter === '' || event.caregiver.id === selectedCaregiverFilter
+      const clientMatch = selectedClientFilter === '' || event.client?.id === selectedClientFilter
+      const caregiverMatch = selectedCaregiverFilter === '' || event.caregiver?.id === selectedCaregiverFilter
       const statusMatch = !statusFilter || event.status === statusFilter
       return clientMatch && caregiverMatch && statusMatch
     })
@@ -184,7 +183,6 @@ const Calendar = () => {
   }
 
   const expandAllDays = () => {
-    console.log(Object.keys(eventsByDate))
     const daysWithMultipleEvents = Object.keys(eventsByDate).filter(dateStr => {
       const dayEvents = eventsByDate[dateStr] || []
       return dayEvents.length >= 2 // Only expand days with more than 2 events
@@ -444,7 +442,6 @@ const Calendar = () => {
               const dateStr = format(day.toISOString(), 'M-dd-yyyy')
               const dayEvents = eventsByDate[dateStr] || []
               const isExpanded = expandedDays.has(dateStr)
-              console.log(expandedDays.has(dateStr), expandedDays, dateStr)
 
               // Consistent height for better uniformity
               const getHeightClass = () => {

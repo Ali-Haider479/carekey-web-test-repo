@@ -8,13 +8,15 @@ interface ImageRenderWithPresignedUrlProps {
   fileName: string
   handleClick?: () => void
   downloading: boolean
+  onLoad?: () => void
 }
 
 const ImageRenderWithPresignedUrl = ({
   fileKey,
   fileName,
   handleClick,
-  downloading
+  downloading,
+  onLoad
 }: ImageRenderWithPresignedUrlProps) => {
   const [imgUrl, setImgUrl] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -84,6 +86,7 @@ const ImageRenderWithPresignedUrl = ({
           alt={fileName.length > 30 ? `${fileName.substring(0, 30)}...` : fileName}
           className='image-blur w-[315px] h-auto rounded-sm cursor-pointer transition-all duration-300'
           onError={() => setError(true)}
+          onLoad={onLoad}
         />
         <Box
           className='image-overlay'

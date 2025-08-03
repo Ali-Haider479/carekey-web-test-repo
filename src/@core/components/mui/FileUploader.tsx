@@ -22,7 +22,7 @@ const FileUploaderRestrictions: React.FC<FileUploaderProps> = ({
   onFilesSelected,
   title = 'Choose File',
   fileCount = 2,
-  fileSize = 50 * 1024 * 1024, // 50MB
+  fileSize = 25 * 1024 * 1024,
   mimeType = 'image/*'
 }) => {
   const [files, setFiles] = useState<File[]>([])

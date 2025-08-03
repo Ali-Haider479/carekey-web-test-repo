@@ -395,6 +395,22 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
     return `${year}-${month}-${day}`
   }
 
+  const parsedDate = (dateStr: string | undefined): string | undefined => {
+    if (!dateStr) return undefined
+
+    // If already properly formatted
+    if (dateStr.includes('T00:00:00Z')) return dateStr
+
+    // If it's a date-only string (YYYY-MM-DD)
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+      return `${dateStr}T00:00:00Z`
+    }
+
+    // Try to parse as Date object
+    const date = new Date(dateStr)
+    return isNaN(date.getTime()) ? undefined : date.toISOString()
+  }
+
   // Updated common fields calculation based on the extracted data
   const getCommonFields = () => {
     if (!enableOcrDataFill || formData.length === 0) {
@@ -506,8 +522,8 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
         serviceAuthNumber: item.agreementNumber ? Number(item.agreementNumber) : 0,
         procedureCode: item.procedureCode || '',
         modifierCode: item.modifierCode || null,
-        startDate: item.startDate ? new Date(`${item.startDate}T00:00:00Z`) : undefined,
-        endDate: item.endDate ? new Date(`${item.endDate}T00:00:00Z`) : undefined,
+        startDate: parsedDate(item.startDate),
+        endDate: parsedDate(item.endDate),
         serviceRate: item.serviceRate ? Number(item.serviceRate.replace(/[$,]/g, '')) : 0,
         units: item.quantity ? Number(item.quantity.replace(/,/g, '')) : 0,
         usedUnits: 0,

@@ -2,14 +2,35 @@
 import api from '@/utils/api'
 import React, { useEffect, useState } from 'react'
 import EditPayPeriodModal from './EditPayPeriodModal'
-import { Box, Button, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material'
+import {
+  Box,
+  Button,
+  Card,
+  CardContent,
+  Dialog,
+  MenuItem,
+  Switch,
+  TextField,
+  ToggleButton,
+  ToggleButtonGroup,
+  Typography,
+  useTheme
+} from '@mui/material'
 import CustomSwitch from '@/@core/components/mui/CustomSwitch'
 import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
 import { addDays } from 'date-fns'
 import './calender.css'
 import './payperiod-calendar.css'
+import DialogCloseButton from '@/components/dialogs/DialogCloseButton'
+import ReactTable from '@/@core/components/mui/ReactTable'
 
-type EvvEnforcement = 'relaxed' | 'full' | 'none'
+type EvvEnforcement = 'evvRelaxed' | 'evvEnabled' | 'evvDisabled'
+interface Column {
+  id: string
+  label: string
+  minWidth: number
+  render: (item: any) => JSX.Element
+}
 interface EvvConfig {
   enableEVV: boolean
   evvEnforcement: EvvEnforcement
@@ -21,6 +42,43 @@ interface DayContentsProps {
   label: string
 }
 
+interface CardProps {
+  evvSelected: string;
+}
+
+
+const GenericCard: React.FC<CardProps> = ({ evvSelected }) => {
+  const theme = useTheme();
+  let headerText = '';
+  let bodyText = '';
+  let icon = null;
+  if (evvSelected === 'evvDisabled') {
+    icon = <span role="img" aria-label="red block">🔴</span>;
+    headerText = 'EVV is turned off';
+    bodyText = 'Clock-ins, geofencing, and EVV tracking are disabled for this tenant, NO data is collected. Service-level EVV settings are ignored.'
+  } else if (evvSelected === 'evvEnforced') {
+    icon = <span role="img" aria-label="checkmark">✅</span>
+    headerText = 'EVV is strictly enforced';
+    bodyText = 'Caregivers must clock in within 500ft of the client`s location. Service-Level EVV settings apply. This is the default and most secure mode.'
+  } else if (evvSelected === 'evvRelaxed') {
+    icon = <span role="img" aria-label="yellow triangle">⚠️</span>;
+    headerText = 'EVV is relaxed';
+    bodyText = 'EVV is active, but geofencing is not enforced. Caregivers can clock-in from any location. Client & Caregiver`s Service-level toggles apply.'
+  }
+  return (
+    <Card sx={{ maxWidth: 345, mt: 2, borderRadius: 2, boxShadow: 3, borderLeft: '4px solid #1976d2' }}>
+      <CardContent sx={{ backgroundColor: theme.palette.mode === 'light' ? '#F0F4FF' : '#4c4c59', }}>
+        <Typography variant="h6" color="primary" gutterBottom>
+          {icon} <strong>{headerText}</strong>
+        </Typography>
+        <Typography variant="body2">
+          {bodyText}
+        </Typography>
+      </CardContent>
+    </Card>
+  );
+};
+
 const TenantConfiguration = () => {
   const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
   const tenantEvvConfig: any = JSON.parse(localStorage?.getItem('evvConfig') ?? '{}')
@@ -29,18 +87,36 @@ const TenantConfiguration = () => {
   const [payPeriod, setPayPeriod] = useState<any[]>([])
   const [currentPayPeriod, setCurrentPayPeriod] = useState<any>()
   const [openAddPayPeriodModal, setOpenAddPayPeriodModal] = useState<boolean>(false)
+  const [allServicesList, setAllServicesList] = useState<any>()
   const [evvConfig, setEvvConfig] = useState<EvvConfig>(
     tenantEvvConfig || {
       enableEVV: false,
-      evvEnforcement: 'none',
+      evvEnforcement: 'evvRelaxed',
       locationService: false
     }
   )
-  const [allowManualEdits, setAllowManualEdits] = useState<boolean>(authUser?.tenant.allowManualEdits || false)
+  const [evvEnforcementValue, setEvvEnforcementValue] = useState<EvvEnforcement>(tenantEvvConfig.evvEnforcement)
+  const [allowManualEdits, setAllowManualEdits] = useState<boolean>(authUser?.tenant?.allowManualEdits || false)
   const [allowOverlappingVisits, setAllowOverlappingVisits] = useState<boolean>(
-    authUser?.tenant.allowOverLappingVisits || false
+    authUser?.tenant?.allowOverLappingVisits || false
   )
-  const [enableNotification, setEnableNotification] = useState<boolean>(authUser?.tenant.enableNotification || false)
+  const [enableNotification, setEnableNotification] = useState<boolean>(authUser?.tenant?.enableNotification || false)
+  const [isModalShow, setIsModalShow] = useState<boolean>(false)
+
+  const label = { inputProps: { 'aria-label': 'Switch demo' } }
+
+  const theme = useTheme()
+  const lightTheme = theme.palette.mode === 'light'
+
+  const handleModalOpen = (value: EvvEnforcement) => {
+    console.log('EVV Value --> ', value)
+    setEvvEnforcementValue(value)
+    setIsModalShow(true)
+  }
+
+  const handleModalClose = () => {
+    setIsModalShow(false)
+  }
 
   const fetchInitialData = async () => {
     const payPeriodRes = await api.get(`/pay-period/history/tenant/${authUser?.tenant?.id}`)
@@ -118,15 +194,10 @@ const TenantConfiguration = () => {
     }
   }
 
-  const handleEvvEnforcementChange = (event: React.MouseEvent<HTMLElement>, newValue: EvvEnforcement) => {
-    console.log('Inside Evv Enforcement Change --> ', newValue)
-    if (newValue !== null) {
-      // if (newValue === 'relaxed' || newValue === 'none') {
-      //   setEvvConfig({ ...evvConfig, locationService: false, evvEnforcement: newValue })
-      // } else {
-      setEvvConfig({ ...evvConfig, evvEnforcement: newValue })
-      // }
-    }
+  const handleEvvEnforcementChange = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    setEvvConfig({ ...evvConfig, evvEnforcement: evvEnforcementValue })
+    setIsModalShow(false)
   }
 
   const today = new Date()
@@ -194,6 +265,82 @@ const TenantConfiguration = () => {
     return <div className={className}>{label}</div>
   }
 
+  // const getAllServices = async () => {
+  //   const servicesRes = await api.get('/service')
+  //   console.log('SERVICES RES ----->> ', servicesRes.data)
+  //   setAllServicesList(servicesRes.data)
+  // }
+
+  // useEffect(() => {
+  //   getAllServices()
+  // }, [])
+
+  // const updateEVV = async (item: any) => {
+  //   let newEVV = item.evv
+  //   if (item.evv === true) {
+  //     newEVV = false
+  //   }
+  //   if (item.evv === false) {
+  //     newEVV = true
+  //   }
+  //   const updateServiceEvv = await api.patch(`/service/${item.id}`, { evv: newEVV })
+  //   console.log('UPDATED SERVICE RESPONSE ---->> ', updateServiceEvv)
+  //   getAllServices()
+  // }
+
+  // const newColumns: Column[] = [
+  //   {
+  //     id: 'id',
+  //     label: '#',
+  //     minWidth: 170,
+  //     render: item => <Typography className='font-normal text-base my-0'>{item.id}</Typography>
+  //   },
+  //   {
+  //     id: 'services',
+  //     label: 'SERVICES',
+  //     minWidth: 170,
+  //     render: item => (
+  //       <div className='flex flex-row gap-2 mt-0'>
+  //         <div
+  //           className={`p-1 border ${lightTheme ? 'border-[#4B0082]' : 'border-gray-200'} border-opacity-[50%] px-2 rounded-sm`}
+  //         >
+  //           <Typography className={`${lightTheme ? 'text-[#4B0082]' : null}`}>{item?.name}</Typography>
+  //         </div>
+  //       </div>
+  //     )
+  //   },
+  //   {
+  //     id: 'procedureCode',
+  //     label: 'PROCEDURE CODE',
+  //     minWidth: 170,
+  //     render: item => <Typography className='mt-0'> {item?.procedureCode}</Typography>
+  //   },
+  //   {
+  //     id: 'modifierCode',
+  //     label: 'MODIFIER CODE',
+  //     minWidth: 170,
+  //     render: item => <Typography className='mt-0'>{item?.modifierCode ? item?.modifierCode : '....'}</Typography>
+  //   },
+  //   {
+  //     id: 'evvEnforce',
+  //     label: 'EVV',
+  //     minWidth: 170,
+  //     render: item => (
+  //       <div>
+  //         <div className='p-0 flex rounded-sm'>
+  //           <Switch
+  //             {...label}
+  //             checked={item?.evv === true}
+  //             onChange={() => updateEVV(item)}
+  //             color='primary'
+  //             disabled={authUser?.userRoles?.title !== 'Super Admin'}
+  //           />
+  //         </div>
+  //       </div>
+  //     )
+  //   }
+  // ]
+
   return (
     <>
       <Box
@@ -244,6 +391,21 @@ const TenantConfiguration = () => {
           </div>
         </div>
 
+        {/* <Typography variant='h5' sx={{ mt: 3 }}>
+          Service EVV
+        </Typography>
+
+        <ReactTable
+          data={allServicesList ? allServicesList : []}
+          columns={newColumns}
+          keyExtractor={user => user?.id?.toString()}
+          enablePagination
+          pageSize={25}
+          stickyHeader
+          maxHeight={600}
+          containerStyle={{ borderRadius: 2 }}
+        /> */}
+
         <Typography variant='h5' sx={{ mt: 3 }}>
           EVV Configuration
         </Typography>
@@ -275,7 +437,26 @@ const TenantConfiguration = () => {
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Typography variant='h6'>EVV Enforcement</Typography>
 
-          <ToggleButtonGroup
+          <TextField
+            select
+            size='small'
+            // fullWidth
+            placeholder='EVV Enforcement'
+            id='select-evv-enforcement'
+            value={evvConfig.evvEnforcement}
+            defaultValue={evvConfig.evvEnforcement}
+            onChange={e => handleModalOpen(e.target.value as EvvEnforcement)}
+            slotProps={{
+              select: { displayEmpty: true }
+            }}
+            className='w-1/4'
+          >
+            <MenuItem value={'evvRelaxed'}>EVV Relaxed</MenuItem>
+            <MenuItem value={'evvEnforced'}>EVV Enforced</MenuItem>
+            <MenuItem value={'evvDisabled'}>EVV Disabled</MenuItem>
+          </TextField>
+
+          {/* <ToggleButtonGroup
             value={evvConfig.evvEnforcement}
             defaultValue={evvConfig.evvEnforcement}
             exclusive
@@ -295,16 +476,16 @@ const TenantConfiguration = () => {
               }
             }}
           >
-            <ToggleButton value='relaxed' aria-label='Relaxed'>
-              Relaxed
+            <ToggleButton value='evvRelaxed' aria-label='evvRelaxed'>
+              EVV Relaxed
             </ToggleButton>
-            <ToggleButton value='full' aria-label='Full'>
-              Full
+            <ToggleButton value='evvEnforced' aria-label='evvEnforced'>
+              EVV Enforced
             </ToggleButton>
-            <ToggleButton value='none' aria-label='None'>
-              None
+            <ToggleButton value='evvDisabled' aria-label='evvDisabled'>
+              EVV Disabled
             </ToggleButton>
-          </ToggleButtonGroup>
+          </ToggleButtonGroup> */}
         </Box>
         {/* <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <Typography variant='h6'>Require Location Service</Typography>
@@ -316,6 +497,9 @@ const TenantConfiguration = () => {
             sx={{ ml: 'auto' }}
           />
         </Box> */}
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }}>
+          <GenericCard evvSelected={evvConfig.evvEnforcement} />
+        </Box>
 
         <Typography variant='h5' sx={{ mt: 3 }}>
           Other Configurations
@@ -353,6 +537,38 @@ const TenantConfiguration = () => {
         setIsModalOpen={setOpenAddPayPeriodModal}
         onSubmit={handlePayPeriodSetup}
       />
+
+      <Dialog
+        open={isModalShow}
+        onClose={handleModalClose}
+        closeAfterTransition={false}
+        sx={{ '& .MuiDialog-paper': { overflow: 'visible' } }}
+        maxWidth='sm'
+      >
+        <DialogCloseButton onClick={handleModalClose} disableRipple>
+          <i className='bx-x' />
+        </DialogCloseButton>
+        <div className='flex items-center justify-center w-full px-5 flex-col'>
+          <form onSubmit={handleEvvEnforcementChange}>
+            <div>
+              <h2 className='text-xl font-semibold mt-5 mb-4'>EVV Mode Change Warning</h2>
+            </div>
+            <div>
+              <Typography className='mb-7'>
+                Are you sure you want to change the EVV mode?
+              </Typography>
+            </div>
+            <div className='flex gap-4 justify-end mt-4 mb-4 w-full'>
+              <Button variant='outlined' color='secondary' onClick={handleModalClose}>
+                No
+              </Button>
+              <Button type='submit' variant='contained'>
+                Yes
+              </Button>
+            </div>
+          </form>
+        </div>
+      </Dialog>
     </>
   )
 }

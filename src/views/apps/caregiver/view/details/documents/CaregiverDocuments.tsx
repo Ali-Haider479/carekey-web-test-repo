@@ -32,8 +32,12 @@ type Props = {
 
 const CaregiverDocuments = forwardRef<{ handleSubmit: any }, Props>(({ onFinish, defaultValues }, ref) => {
   // Certificates States
-  const [caregiverDocuments, setCaregiverDocuments] = useState<any>()
+  const [caregiverDocuments, setCaregiverDocuments] = useState<any[]>([])
   const [caregiverDocumentsLoading, setCaregiverDocumentsLoading] = useState<boolean>(true)
+  const [trainingCertificateDocuments, setTrainingCertificateDocuments] = useState<any[]>([])
+  const [drivingLicenseDocument, setDrivingLicenseDocument] = useState<any[]>([])
+  const [umpiDocument, setUmpiDocument] = useState<any[]>([])
+  const [otherDocuments, setOtherDocuments] = useState<any[]>([])
   const [trainingCertificates, setTrainingCertificates] = useState<any>([])
   const [deleteButtonLoading, setDeleteButtonLoading] = useState<boolean>(false)
   const [drivingCertificates, setDrivingCertificates] = useState<any>([])
@@ -211,29 +215,6 @@ const CaregiverDocuments = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
     newDrivingLicenseState
   )
 
-  const trainingCertificateDocuments = caregiverDocuments?.filter(
-    (doc: any) => doc?.uploadedDocument?.documentType === 'trainingCertificate'
-  )
-
-  const drivingLicenseDocument = caregiverDocuments?.filter(
-    (doc: any) => doc?.uploadedDocument?.documentType === 'drivingLicense'
-  )
-
-  const umpiDocument = caregiverDocuments?.filter((doc: any) => doc?.uploadedDocument?.documentType === 'umpiDocument')
-
-  console.log('Driving License Document: ', drivingLicenseDocument)
-
-  const otherDocuments = caregiverDocuments?.filter(
-    (doc: any) =>
-      doc?.uploadedDocument?.documentType !== 'drivingLicense' &&
-      doc?.uploadedDocument?.documentType !== 'trainingCertificate' &&
-      doc?.uploadedDocument?.documentType !== 'umpiDocument'
-  )
-
-  console.log('Other documents =====>> ', otherDocuments)
-
-  console.log('New Training Certificate Name ---->> ', newTrainingCertificateExpiryDate?.toISOString().split('T')[0])
-
   const fetchCaregiverDocuments = async () => {
     try {
       setCaregiverDocumentsLoading(true)
@@ -250,6 +231,41 @@ const CaregiverDocuments = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
   useEffect(() => {
     fetchCaregiverDocuments()
   }, [])
+
+  useEffect(() => {
+    if (caregiverDocuments?.length === 0) {
+      setTrainingCertificateDocuments([])
+      setDrivingLicenseDocument([])
+      setUmpiDocument([])
+      setOtherDocuments([])
+    } else {
+      const trainingCertificateDocuments = caregiverDocuments?.filter(
+        (doc: any) => doc?.uploadedDocument?.documentType === 'trainingCertificate'
+      )
+
+      const drivingLicenseDocument = caregiverDocuments?.filter(
+        (doc: any) => doc?.uploadedDocument?.documentType === 'drivingLicense'
+      )
+
+      const umpiDocument = caregiverDocuments?.filter(
+        (doc: any) => doc?.uploadedDocument?.documentType === 'umpiDocument'
+      )
+
+      console.log('Driving License Document: ', drivingLicenseDocument)
+
+      const otherDocuments = caregiverDocuments?.filter(
+        (doc: any) =>
+          doc?.uploadedDocument?.documentType !== 'drivingLicense' &&
+          doc?.uploadedDocument?.documentType !== 'trainingCertificate' &&
+          doc?.uploadedDocument?.documentType !== 'umpiDocument'
+      )
+
+      setTrainingCertificateDocuments(trainingCertificateDocuments)
+      setDrivingLicenseDocument(drivingLicenseDocument)
+      setUmpiDocument(umpiDocument)
+      setOtherDocuments(otherDocuments)
+    }
+  }, [caregiverDocuments])
 
   const getPdf = async (key: string, fileName: string) => {
     console.log('Getting pdf with key: ', key)
@@ -379,7 +395,7 @@ const CaregiverDocuments = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
 
       // Calculate expiry days if a new expiry date is provided
       if (data.trainingCertificateExpiryDate) {
-        formData.append('expiryDate', trainingCertificateExpiryDate.toISOString().split('T')[0])
+        formData.append('expiryDate', new Date(trainingCertificateExpiryDate).toISOString().split('T')[0])
       }
 
       // Append document type
@@ -393,7 +409,7 @@ const CaregiverDocuments = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
       }
 
       // Make the PATCH API call
-      const response = await api.patch(`/upload-document/${trainingDocumentToEdit.id}`, formData, {
+      const response = await api.patch(`/upload-document/${trainingDocumentToEdit.uploadedDocument.id}`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
@@ -490,7 +506,7 @@ const CaregiverDocuments = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
       }
 
       // Make the PATCH API call
-      const response = await api.patch(`/upload-document/${documentToEdit.id}`, formData, {
+      const response = await api.patch(`/upload-document/${documentToEdit.uploadedDocument.id}`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
@@ -533,8 +549,9 @@ const CaregiverDocuments = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
       formData.append('metaData', JSON.stringify(metaData))
 
       // Calculate expiry days if a new expiry date is provided
-      if (data.drivingLicenseExpiryDate) {
-        formData.append('expiryDate', drivingLicenseExpiryDate.toISOString().split('T')[0])
+      if (data?.drivingLicenseExpiryDate) {
+        console.log('drivingLicenseExpiryDate', drivingLicenseExpiryDate)
+        formData.append('expiryDate', new Date(drivingLicenseExpiryDate)?.toISOString().split('T')[0])
       }
 
       // Append document type
@@ -548,7 +565,7 @@ const CaregiverDocuments = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
       }
 
       // Make the PATCH API call
-      const response = await api.patch(`/upload-document/${drivingLicenseToEdit.id}`, formData, {
+      const response = await api.patch(`/upload-document/${drivingLicenseToEdit.uploadedDocument.id}`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
@@ -678,7 +695,13 @@ const CaregiverDocuments = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
         activationDate: newActivationDate?.toISOString().split('T')[0]
       }
       const documentUploads = [
-        uploadDocuments(umpiFile, 'umpiDocument', String(id), newExpiryDate?.toISOString().split('T')[0], metaData)
+        uploadDocuments(
+          umpiFile,
+          'umpiDocument',
+          String(id),
+          new Date(newExpiryDate)?.toISOString().split('T')[0],
+          metaData
+        )
       ]
       const uploadResponses = await Promise.all(documentUploads)
       const successfulUploads = uploadResponses.filter(response => response !== null)
@@ -726,7 +749,7 @@ const CaregiverDocuments = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
       }
 
       // Make the PATCH API call
-      const response = await api.patch(`/upload-document/${umpiDocToEdit.id}`, formData, {
+      const response = await api.patch(`/upload-document/${umpiDocToEdit.uploadedDocument.id}`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
@@ -755,21 +778,52 @@ const CaregiverDocuments = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
   const handleDelete = async () => {
     try {
       setDeleteButtonLoading(true)
-      const docToDelete = documentToEdit
-        ? documentToEdit?.id
-        : drivingLicenseToEdit
-          ? drivingLicenseToEdit?.id
-          : umpiDocToEdit
-            ? umpiDocToEdit?.id
-            : trainingDocumentToEdit?.id
+
+      console.log('Documents to check:', {
+        trainingDocumentToEdit,
+        documentToEdit,
+        drivingLicenseToEdit,
+        umpiDocToEdit
+      })
+
+      const docToDelete =
+        documentToEdit?.id || drivingLicenseToEdit?.id || umpiDocToEdit?.id || trainingDocumentToEdit?.id
+
+      if (!docToDelete) {
+        throw new Error('No document selected for deletion')
+      }
+
       const deleteResponse = await api.delete(`/caregivers/document/${docToDelete}`)
-      console.log('DELETE RESPONSE ---->> ', deleteResponse)
-      fetchCaregiverDocuments()
-      setTrainingCertificateDeleteModalShow(false)
+      console.log('Delete response:', deleteResponse)
+
+      await fetchCaregiverDocuments()
+
+      // Clear all relevant states
+      const clearFileStates = () => {
+        if (documentToEdit?.uploadedDocument?.documentType) {
+          switch (documentToEdit.uploadedDocument.documentType) {
+            case 'ssnDocument':
+              setSsnFile([])
+              break
+            case 'adultMandatedDocument':
+              setAdultFile([])
+              break
+            default:
+              setClearanceFile([])
+          }
+        }
+      }
+
+      clearFileStates()
+      setDocumentToEdit(null)
+      setDrivingLicenseToEdit(null)
+      setUmpiDocToEdit(null)
+      setTrainingDocumentToEdit(null)
     } catch (error) {
-      console.error('Error in deleting document: ', error)
+      console.error('Deletion error:', error)
     } finally {
       setDeleteButtonLoading(false)
+      setTrainingCertificateDeleteModalShow(false)
     }
   }
 
@@ -957,6 +1011,7 @@ const CaregiverDocuments = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
     <>
       <FormProvider {...methods}>
         <form onSubmit={handleSubmit(onSubmit)} className='w-full'>
+          {/* Training Certificates Card */}
           <Card className='mt-5 px-0'>
             <CardContent className='px-0'>
               <div className='flex flex-row justify-between'>
@@ -964,7 +1019,7 @@ const CaregiverDocuments = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
                 <Button
                   variant='contained'
                   onClick={() => setNewTrainingCertificateModalShow(true)}
-                  className={`mr-6 mb-4 cursor-pointer `}
+                  className='mr-6 mb-4 cursor-pointer'
                   startIcon={<Add />}
                 >
                   Add
@@ -972,7 +1027,7 @@ const CaregiverDocuments = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
               </div>
               <div>
                 {caregiverDocumentsLoading ? (
-                  <div className='flex justify-center itmes-center'>
+                  <div className='flex justify-center items-center'>
                     <CircularProgress />
                   </div>
                 ) : caregiverDocuments?.length ? (
@@ -980,7 +1035,6 @@ const CaregiverDocuments = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
                     data={trainingCertificateDocuments}
                     columns={trainingCertificateColumns}
                     keyExtractor={user => user.id.toString()}
-                    // enablePagination
                     pageSize={20}
                     stickyHeader
                     maxHeight={600}
@@ -995,6 +1049,7 @@ const CaregiverDocuments = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
             </CardContent>
           </Card>
 
+          {/* Driving License Card */}
           <Card className='mt-5'>
             <CardContent>
               <div className='flex flex-row justify-between'>
@@ -1008,41 +1063,33 @@ const CaregiverDocuments = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
                       startIcon={<DeleteOutline />}
                       onClick={() => {
                         setTrainingCertificateDeleteModalShow(true)
-                        setDrivingLicenseToEdit(drivingLicenseDocument?.[0])
+                        setDrivingLicenseToEdit(drivingLicenseDocument[0])
                       }}
                     >
                       Delete
                     </Button>
                     <Button
                       variant='contained'
-                      onClick={() => {
-                        drivingLicenseDocument?.length
-                          ? handleDrivingLicenseEditModalOpen(drivingLicenseDocument?.[0])
-                          : setNewDrivingLicenseModalShow(true)
-                      }}
-                      className={` mr-0 mb-4 cursor-pointer`}
-                      startIcon={drivingLicenseDocument?.length ? <Edit /> : <Add />}
+                      onClick={() => handleDrivingLicenseEditModalOpen(drivingLicenseDocument[0])}
+                      className='mr-0 mb-4 cursor-pointer'
+                      startIcon={<Edit />}
                     >
-                      {drivingLicenseDocument?.length ? 'Update' : 'Add'}
+                      Update
                     </Button>
                   </div>
                 ) : (
                   <Button
                     variant='contained'
-                    onClick={() => {
-                      drivingLicenseDocument?.length
-                        ? handleDrivingLicenseEditModalOpen(drivingLicenseDocument?.[0])
-                        : setNewDrivingLicenseModalShow(true)
-                    }}
-                    className={` mb-4 cursor-pointer`}
-                    startIcon={drivingLicenseDocument?.length ? <Edit /> : <Add />}
+                    onClick={() => setNewDrivingLicenseModalShow(true)}
+                    className='mb-4 cursor-pointer'
+                    startIcon={<Add />}
                   >
-                    {drivingLicenseDocument?.length ? 'Update' : 'Add'}
+                    Add
                   </Button>
                 )}
               </div>
               {caregiverDocumentsLoading ? (
-                <div className='flex justify-center itmes-center'>
+                <div className='flex justify-center items-center'>
                   <CircularProgress />
                 </div>
               ) : (
@@ -1050,26 +1097,18 @@ const CaregiverDocuments = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
                   <div className='flex flex-row gap-2 mb-2'>
                     <Typography className='font-semibold'>Driving License Number: </Typography>
                     <Typography>
-                      {drivingLicenseDocument?.[0]?.uploadedDocument?.metaData?.drivingLicenseNumber
-                        ? drivingLicenseDocument?.[0]?.uploadedDocument?.metaData?.drivingLicenseNumber
-                        : 'N/A'}
+                      {drivingLicenseDocument?.[0]?.uploadedDocument?.metaData?.drivingLicenseNumber || 'N/A'}
                     </Typography>
                   </div>
                   <div className='flex flex-row gap-2 mb-2'>
                     <Typography className='font-semibold'>Driving License State: </Typography>
                     <Typography>
-                      {drivingLicenseDocument?.[0]?.uploadedDocument?.metaData?.drivingLicenseState
-                        ? drivingLicenseDocument?.[0]?.uploadedDocument?.metaData?.drivingLicenseState
-                        : 'N/A'}
+                      {drivingLicenseDocument?.[0]?.uploadedDocument?.metaData?.drivingLicenseState || 'N/A'}
                     </Typography>
                   </div>
                   <div className='flex flex-row gap-2 mb-2'>
                     <Typography className='font-semibold'>Expiry Date: </Typography>
-                    <Typography>
-                      {drivingLicenseDocument?.[0]?.uploadedDocument?.expiryDate
-                        ? drivingLicenseDocument?.[0]?.uploadedDocument?.expiryDate
-                        : 'N/A'}
-                    </Typography>
+                    <Typography>{drivingLicenseDocument?.[0]?.uploadedDocument?.expiryDate || 'N/A'}</Typography>
                   </div>
                   <div className='flex flex-row items-center gap-2 mb-2'>
                     <Typography className='font-semibold'>Uploaded File: </Typography>
@@ -1077,12 +1116,12 @@ const CaregiverDocuments = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
                       <div
                         onClick={() =>
                           getPdf(
-                            drivingLicenseDocument?.[0]?.uploadedDocument?.fileKey,
-                            drivingLicenseDocument?.[0]?.uploadedDocument?.fileName
+                            drivingLicenseDocument[0]?.uploadedDocument?.fileKey,
+                            drivingLicenseDocument[0]?.uploadedDocument?.fileName
                           )
                         }
                       >
-                        {renderUploadedDocuments(drivingLicenseDocument?.[0])}
+                        {renderUploadedDocuments(drivingLicenseDocument[0])}
                       </div>
                     ) : (
                       <Typography>N/A</Typography>
@@ -1093,103 +1132,86 @@ const CaregiverDocuments = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
             </CardContent>
           </Card>
 
-          <Card className='mt-5 w-full ml-0 shadow-md rounded-lg p-6'>
-            <div className='flex flex-row justify-between'>
-              <Typography className='text-xl font-semibold mb-4'>PCA-UMPI INFO</Typography>
-              {umpiDocument?.length ? (
-                <div className='flex flex-row'>
+          {/* PCA-UMPI INFO Card */}
+          <Card className='mt-5 w-full shadow-md rounded-lg'>
+            <CardContent className='p-6'>
+              <div className='flex flex-row justify-between'>
+                <Typography className='text-xl font-semibold mb-4'>PCA-UMPI INFO</Typography>
+                {umpiDocument?.length ? (
+                  <div className='flex flex-row'>
+                    <Button
+                      variant='contained'
+                      className='mr-5 mb-4 cursor-pointer'
+                      color='error'
+                      startIcon={<DeleteOutline />}
+                      onClick={() => {
+                        setTrainingCertificateDeleteModalShow(true)
+                        setUmpiDocToEdit(umpiDocument[0])
+                      }}
+                    >
+                      Delete
+                    </Button>
+                    <Button
+                      variant='contained'
+                      onClick={() => handleUmpiDocumentEditModalOpen(umpiDocument[0])}
+                      className='mr-0 mb-4 cursor-pointer'
+                      startIcon={<Edit />}
+                    >
+                      Update
+                    </Button>
+                  </div>
+                ) : (
                   <Button
                     variant='contained'
-                    className='mr-5 mb-4 cursor-pointer'
-                    color='error'
-                    startIcon={<DeleteOutline />}
-                    onClick={() => {
-                      setTrainingCertificateDeleteModalShow(true)
-                      setUmpiDocToEdit(umpiDocument?.[0])
-                    }}
+                    onClick={() => setNewUmpiDocModalShow(true)}
+                    className='mb-4 cursor-pointer'
+                    startIcon={<Add />}
                   >
-                    Delete
+                    Add
                   </Button>
-                  <Button
-                    variant='contained'
-                    onClick={() => {
-                      umpiDocument?.length
-                        ? handleUmpiDocumentEditModalOpen(umpiDocument?.[0])
-                        : setNewUmpiDocModalShow(true)
-                    }}
-                    className={` mr-0 mb-4 cursor-pointer`}
-                    startIcon={umpiDocument?.length ? <Edit /> : <Add />}
-                  >
-                    {umpiDocument?.length ? 'Update' : 'Add'}
-                  </Button>
+                )}
+              </div>
+              {caregiverDocumentsLoading ? (
+                <div className='flex justify-center items-center'>
+                  <CircularProgress />
                 </div>
               ) : (
-                <Button
-                  variant='contained'
-                  onClick={() => {
-                    umpiDocument?.length
-                      ? handleUmpiDocumentEditModalOpen(umpiDocument?.[0])
-                      : setNewUmpiDocModalShow(true)
-                  }}
-                  className={` mr-0 mb-4 cursor-pointer`}
-                  startIcon={umpiDocument?.length ? <Edit /> : <Add />}
-                >
-                  {umpiDocument?.length ? 'Update' : 'Add'}
-                </Button>
+                <div>
+                  <div className='flex flex-row gap-2 mb-2'>
+                    <Typography className='font-semibold'>Payor: </Typography>
+                    <Typography>{umpiDocument?.[0]?.uploadedDocument?.metaData?.payer || 'N/A'}</Typography>
+                  </div>
+                  <div className='flex flex-row gap-2 mb-2'>
+                    <Typography className='font-semibold'>Affiliation Date: </Typography>
+                    <Typography>{umpiDocument?.[0]?.uploadedDocument?.metaData?.activationDate || 'N/A'}</Typography>
+                  </div>
+                  <div className='flex flex-row gap-2 mb-2'>
+                    <Typography className='font-semibold'>Expiry Date: </Typography>
+                    <Typography>{umpiDocument?.[0]?.uploadedDocument?.expiryDate || 'N/A'}</Typography>
+                  </div>
+                  <div className='flex flex-row items-center gap-2 mb-2'>
+                    <Typography className='font-semibold'>Uploaded File: </Typography>
+                    {umpiDocument?.length ? (
+                      <div
+                        onClick={() =>
+                          getPdf(
+                            umpiDocument[0]?.uploadedDocument?.fileKey,
+                            umpiDocument[0]?.uploadedDocument?.fileName
+                          )
+                        }
+                      >
+                        {renderUploadedDocuments(umpiDocument[0])}
+                      </div>
+                    ) : (
+                      <Typography>N/A</Typography>
+                    )}
+                  </div>
+                </div>
               )}
-            </div>
-
-            {caregiverDocumentsLoading ? (
-              <div className='flex justify-center itmes-center'>
-                <CircularProgress />
-              </div>
-            ) : (
-              <div>
-                <div className='flex flex-row gap-2 mb-2'>
-                  <Typography className='font-semibold'>Payor: </Typography>
-                  <Typography>
-                    {umpiDocument?.[0]?.uploadedDocument?.metaData?.payer
-                      ? umpiDocument?.[0]?.uploadedDocument?.metaData?.payer
-                      : 'N/A'}
-                  </Typography>
-                </div>
-                <div className='flex flex-row gap-2 mb-2'>
-                  <Typography className='font-semibold'>Affiliation Date: </Typography>
-                  <Typography>
-                    {umpiDocument?.[0]?.uploadedDocument?.metaData?.activationDate
-                      ? umpiDocument?.[0]?.uploadedDocument?.metaData?.activationDate
-                      : 'N/A'}
-                  </Typography>
-                </div>
-                <div className='flex flex-row gap-2 mb-2'>
-                  <Typography className='font-semibold'>Expiry Date: </Typography>
-                  <Typography>
-                    {umpiDocument?.[0]?.uploadedDocument?.expiryDate
-                      ? umpiDocument?.[0]?.uploadedDocument?.expiryDate
-                      : 'N/A'}
-                  </Typography>
-                </div>
-                <div className='flex flex-row items-center gap-2 mb-2'>
-                  <Typography className='font-semibold'>Uploaded File: </Typography>
-                  {umpiDocument?.length ? (
-                    <div
-                      onClick={() =>
-                        getPdf(
-                          umpiDocument?.[0]?.uploadedDocument?.fileKey,
-                          umpiDocument?.[0]?.uploadedDocument?.fileName
-                        )
-                      }
-                    >
-                      {renderUploadedDocuments(umpiDocument?.[0])}
-                    </div>
-                  ) : (
-                    <Typography>N/A</Typography>
-                  )}
-                </div>
-              </div>
-            )}
+            </CardContent>
           </Card>
 
+          {/* Documents Card */}
           <Card className='mt-5 px-0'>
             <CardContent className='px-0'>
               <div className='flex flex-row justify-between'>
@@ -1197,7 +1219,7 @@ const CaregiverDocuments = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
                 <Button
                   variant='contained'
                   onClick={() => setNewDocumentsModalShow(true)}
-                  className={` mr-5 mb-4 cursor-pointer`}
+                  className='mr-5 mb-4 cursor-pointer'
                   startIcon={<Add />}
                   disabled={otherDocuments?.length === 3}
                 >
@@ -1206,15 +1228,15 @@ const CaregiverDocuments = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
               </div>
               <div>
                 {caregiverDocumentsLoading ? (
-                  <div className='flex justify-center itmes-center'>
+                  <div className='flex justify-center items-center'>
                     <CircularProgress />
                   </div>
                 ) : otherDocuments?.length ? (
                   <ReactTable
+                    key={otherDocuments.length}
                     data={otherDocuments}
                     columns={otherDocColumns}
                     keyExtractor={user => user.id.toString()}
-                    // enablePagination
                     pageSize={20}
                     stickyHeader
                     maxHeight={600}
@@ -1645,7 +1667,6 @@ const CaregiverDocuments = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
                       }}
                       mimeType={['application/pdf']}
                       fileCount={1}
-                      fileSize={25 * 1024 * 1024}
                     />
                   </div>
                   <div className='col-span-2'>
@@ -1731,7 +1752,6 @@ const CaregiverDocuments = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
                       }}
                       mimeType={['application/pdf']}
                       fileCount={1}
-                      fileSize={25 * 1024 * 1024}
                     />
                   </div>
                   <div className='col-span-2'>
@@ -1813,7 +1833,6 @@ const CaregiverDocuments = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
                       }}
                       mimeType={['application/pdf']}
                       fileCount={1}
-                      fileSize={25 * 1024 * 1024}
                     />
                   </div>
                   <div className='col-span-2'>
@@ -1895,7 +1914,6 @@ const CaregiverDocuments = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
                       }}
                       mimeType={['application/pdf']}
                       fileCount={1}
-                      fileSize={25 * 1024 * 1024}
                     />
                   </div>
                   <div className='col-span-2'>
@@ -1977,7 +1995,6 @@ const CaregiverDocuments = forwardRef<{ handleSubmit: any }, Props>(({ onFinish,
                       }}
                       mimeType={['application/pdf']}
                       fileCount={1}
-                      fileSize={25 * 1024 * 1024}
                     />
                   </div>
                   <div className='col-span-2'>

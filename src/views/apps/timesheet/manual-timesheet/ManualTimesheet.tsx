@@ -194,12 +194,9 @@ const ManualTimesheet = ({ caregiverList, payPeriodList }: any) => {
   }, [values.caregiver])
 
   const fetchClientServiceAuth = async () => {
-    console.log('Fetching client service auth...')
     try {
       if (!values.client) return
-      console.log('Fetching client service auth for client:', values.client)
       const response = await api.get(`/client/${values.client}/service-auth`)
-      console.log('Client Service Auth Response ---->> ', response.data)
       setClientServiceAuth(response.data)
     } catch (error) {
       console.error('Error fetching client service auth:', error)
@@ -223,8 +220,6 @@ const ManualTimesheet = ({ caregiverList, payPeriodList }: any) => {
     }
   }
 
-  console.log('Service Type List ---->> ', serviceType)
-
   const clientServiceActivities = async () => {
     try {
       // Find the selected client from clientUsers array
@@ -235,9 +230,7 @@ const ManualTimesheet = ({ caregiverList, payPeriodList }: any) => {
       if (!values.client || !activityIds || !values.clientServiceId) return
 
       const response: any = await api.get(`/activity/activities/${activityIds}`)
-      console.log('Service Acivities ---->> ', response)
       const selectedService = serviceType?.find((item: any) => item?.clientServiceId === values.clientServiceId)
-      console.log('Selected Service Object --->> ', selectedService)
       setSelectedService(selectedService)
       setServiceActivities(
         response.data.filter(
@@ -309,10 +302,6 @@ const ManualTimesheet = ({ caregiverList, payPeriodList }: any) => {
       activities: false
     })
   }
-
-  console.log('Pay Period Value', values.payperiod)
-  console.log('Selected clientServiceId', values.clientServiceId)
-  console.log('Week Range = ', weekRange)
 
   const onSubmit = async () => {
     if (!validateForm()) {
@@ -425,11 +414,9 @@ const ManualTimesheet = ({ caregiverList, payPeriodList }: any) => {
 
           // Fetch schedules and filter
           const schedules: any = await api.get('/schedule')
-          console.log('Schedules --->> ', schedules?.data)
           const filteredSchedule = schedules?.data?.filter(
-            (item: any) => item.caregiver.id === values.caregiver && item.client.id === values.client
+            (item: any) => item.caregiver?.id === values.caregiver && item.client?.id === values.client
           )
-          console.log('Filtered Schedules ---->> ', filteredSchedule)
 
           // Check for schedule overlap in local timezone
           const timezoneOffset = new Date().getTimezoneOffset() * 60 * 1000
@@ -545,7 +532,7 @@ const ManualTimesheet = ({ caregiverList, payPeriodList }: any) => {
               assignedHours: Number(assignedHours)
             }
             console.log('New Schedule DTO --->> ', newScheduleDto)
-            const newScheduleRes = await api.post('/schedule', newScheduleDto)
+            const newScheduleRes = await api.post('/schedule', [newScheduleDto])
             console.log('New Schedule Created --->> ', newScheduleRes)
           }
         }
@@ -587,9 +574,8 @@ const ManualTimesheet = ({ caregiverList, payPeriodList }: any) => {
   }
 
   const handlePayperiodChange = (payperiodId: any) => {
-    const temp = payperiodWeeks.find((item: any) => item.id === payperiodId)
-    console.log('temp', temp)
-    setWeekRange(temp || {})
+    const weekRange = payperiodWeeks.find((item: any) => item.id === payperiodId)
+    setWeekRange(weekRange || {})
   }
 
   return (
