@@ -1,7 +1,7 @@
 'use client'
 
 // React Imports
-import { useEffect, useState, forwardRef } from 'react'
+import { useEffect, useState, forwardRef, useMemo } from 'react'
 
 // MUI Imports
 import Card from '@mui/material/Card'
@@ -67,7 +67,7 @@ const PickersComponent = forwardRef(({ ...props }: PickerProps, ref) => {
 const AccountHistoryTable = () => {
   const [search, setSearch] = useState('')
   const [values, setValues] = useState(defaultState)
-  const [userActions, setUserActions] = useState<any>([])
+  const [userActions, setUserActions] = useState<any[]>([])
   const [originalUserActions, setOriginalUserActions] = useState([]) // Store original data for reset
   const [loading, setLoading] = useState(true)
   const { id } = useParams()
@@ -176,6 +176,10 @@ const AccountHistoryTable = () => {
 
   console.log('USER ACTIONS', userActions)
 
+  const sortedData = useMemo(() => {
+    return userActions?.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+  }, [userActions])
+
   return (
     <>
       <form onSubmit={onSubmit} autoComplete='off'>
@@ -271,7 +275,7 @@ const AccountHistoryTable = () => {
             </div>
           ) : (
             <ReactTable
-              data={userActions}
+              data={sortedData}
               columns={newColumns}
               keyExtractor={user => user.id.toString()}
               enablePagination
@@ -279,6 +283,7 @@ const AccountHistoryTable = () => {
               stickyHeader
               maxHeight={600}
               containerStyle={{ borderRadius: 2 }}
+              sorted //as we are sending sorted data
             />
           )}
         </div>

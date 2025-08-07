@@ -23,6 +23,8 @@ export type CalendarType = {
   selectedEvent: null | any
   selectedCalendars: CalendarFiltersType[]
   selectedDate: null | string
+  loading: boolean
+  error: any
 }
 
 export type AddEventType = Omit<EventInput, 'id'>

@@ -27,7 +27,7 @@ import ControlledDatePicker from '@/@core/components/custom-inputs/ControledDate
 import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
 import { setHours, setMinutes, setSeconds } from 'date-fns'
 import api from '@/utils/api'
-import { Computer, TabletAndroid } from '@mui/icons-material'
+import { Computer, PhoneIphone } from '@mui/icons-material'
 // Updated interfaces to match your data structure
 interface Caregiver {
   id: number
@@ -174,12 +174,6 @@ const ReceivedTimesheetTable = (
       console.error('Error fetching client service type:', error)
     }
   }
-
-  console.log('Timesheet Data ----->> ', data)
-
-  console.log('Modal Data ---->> ', modalData)
-
-  console.log('WEEK RANGE ----->> ', weekRange)
 
   useEffect(() => {
     // Skip validation on initial render or when not editing
@@ -1055,38 +1049,53 @@ const ReceivedTimesheetTable = (
     },
     {
       id: 'manualStatus',
-      label: 'Manual',
+      label: 'MANUAL',
       minWidth: 170,
       align: 'center' as const,
       editable: true,
       sortable: true,
-      render: (user: any) => (
-        <Tooltip title={user?.manualEntry === 'Mixed' ? 'Mixed' : user?.manualEntry === true ? 'Yes' : 'No'}>
-          <Typography
-            className='font-normal text-base my-3'
-            sx={theme => ({
-              color:
-                user?.manualEntry === true
-                  ? theme.palette.mode === 'light'
-                    ? theme.palette.success.main
-                    : theme.palette.success.dark
-                  : theme.palette.mode === 'light'
-                    ? theme.palette.warning.main
-                    : theme.palette.warning.dark
-            })}
-          >
-            {user?.manualEntry === 'Mixed' ? (
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <Computer /> | <TabletAndroid />
-              </Box>
-            ) : user?.manualEntry === true && user.loggedVia === 'desktop' ? (
-              <Computer />
-            ) : (
-              <TabletAndroid />
-            )}
-          </Typography>
-        </Tooltip>
-      )
+      render: (user: any) => {
+        console.log('LOGGED VIA --->> ', user.loggedVia)
+        return (
+          <Tooltip title={user?.manualEntry === 'Mixed' ? 'Mixed' : user?.manualEntry === true ? 'Yes' : 'No'}>
+            <Box
+              className='font-normal text-base my-3'
+              sx={theme => ({
+                color:
+                  user?.manualEntry === true
+                    ? theme.palette.mode === 'light'
+                      ? theme.palette.success.main
+                      : theme.palette.success.dark
+                    : theme.palette.mode === 'light'
+                      ? theme.palette.warning.main
+                      : theme.palette.warning.dark
+              })}
+            >
+              {user?.manualEntry === 'Mixed' ? (
+                <>
+                  {user.loggedVia === 'mobile' ? (
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <PhoneIphone />
+                    </Box>
+                  ) : user.loggedVia === 'desktop' ? (
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Computer />
+                    </Box>
+                  ) : (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'center' }}>
+                      <Computer /> | <PhoneIphone />
+                    </Box>
+                  )}
+                </>
+              ) : user?.manualEntry === true && user.loggedVia === 'desktop' ? (
+                <Computer />
+              ) : (
+                <PhoneIphone />
+              )}
+            </Box>
+          </Tooltip>
+        )
+      }
     },
     {
       id: 'updatedBy',

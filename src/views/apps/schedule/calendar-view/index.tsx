@@ -5,7 +5,7 @@ import { CalendarType } from '@/types/apps/calendarTypes'
 import api from '@/utils/api'
 import { serviceStatuses } from '@/utils/constants'
 import { Add, ChevronLeft, ChevronRight } from '@mui/icons-material'
-import { Box, Button, Theme, Typography, useMediaQuery, useTheme } from '@mui/material'
+import { Box, Button, CircularProgress, Theme, Typography, useMediaQuery, useTheme } from '@mui/material'
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday, getDay } from 'date-fns'
 import { useEffect, useMemo, useState } from 'react'
 import { useSelector } from 'react-redux'
@@ -61,7 +61,7 @@ const Calendar = () => {
         const response = await Promise.all([
           api.get(`/caregivers`),
           api.get(`/client`),
-          api.get(`/service`),
+          api.get(`/service/tenant/${authUser?.tenant?.id}`),
           api.get(`/pay-period/tenant/${authUser?.tenant?.id}`)
         ])
         setCaregiverList(response[0].data)
@@ -264,6 +264,40 @@ const Calendar = () => {
     const status = serviceStatuses.find(s => s.id === statusFilter)
     return status ? status.name : null
   }
+
+  if (calendarStore.loading) {
+    return (
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '100vh',
+          bgcolor: theme.palette.background.default
+        }}
+      >
+        <CircularProgress color='primary' />
+      </Box>
+    )
+  }
+
+  if (calendarStore.error) {
+    return (
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '100vh',
+          bgcolor: theme.palette.background.default,
+          color: theme.palette.error.main
+        }}
+      >
+        <Typography variant='h6'>Error loading calendar events</Typography>
+      </Box>
+    )
+  }
+
   return (
     <>
       <Box

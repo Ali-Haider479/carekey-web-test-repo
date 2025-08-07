@@ -504,7 +504,7 @@ const CaregiverTable = ({ data, isLoading, isUserDeleted, setIsUserDeleted, tota
             data={filteredData}
             keyExtractor={user => user.id.toString()}
             enablePagination
-            pageSize={10}
+            pageSize={25}
             stickyHeader
             maxHeight={600}
             containerStyle={{ borderRadius: 2 }}

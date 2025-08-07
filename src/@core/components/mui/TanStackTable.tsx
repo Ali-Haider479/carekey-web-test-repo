@@ -88,7 +88,7 @@ function TanStackTable<T extends { subRows?: T[] }>({
   onSort,
   editingId = null,
   onEditChange,
-  page: externalPage = 0, // Default to 0
+  page: externalPage = 0,
   onPageChange,
   caregiverTable = false
 }: ReactTableProps<T>) {
@@ -96,6 +96,11 @@ function TanStackTable<T extends { subRows?: T[] }>({
   const [expanded, setExpanded] = useState<string[]>([])
   const [pageIndex, setPageIndex] = useState(externalPage)
   const [rowsPerPage, setRowsPerPage] = useState(pageSize)
+  const [pagination, setPagination] = useState({
+    pageIndex: externalPage,
+    pageSize: pageSize
+  })
+
   const [sortConfig, setSortConfig] = useState<{ columnId: string; direction: 'asc' | 'desc' } | null>({
     columnId: caregiverTable ? 'caregiverName' : 'clientName',
     direction: 'asc'
@@ -111,10 +116,8 @@ function TanStackTable<T extends { subRows?: T[] }>({
 
   const globalFilterFn: FilterFn<any> = (row, columnId, filterValue) => {
     if (!filterValue) return true
-
     const searchValue = filterValue.toLowerCase()
     const rowData = row.original
-
     const searchableFields = [
       rowData.name,
       rowData.umpi,
@@ -128,11 +131,10 @@ function TanStackTable<T extends { subRows?: T[] }>({
       new Date(rowData.hiringDate).toLocaleDateString('en-US'),
       Math.floor((Date.now() - new Date(rowData.dateOfBirth).getTime()) / (365.25 * 24 * 60 * 60 * 1000)).toString()
     ]
-
     return searchableFields.some(field => field?.toString().toLowerCase().includes(searchValue))
   }
 
-  const columnDefs = mapColumnsToColumnDefs(columns)
+  const columnDefs: ColumnDef<T>[] = mapColumnsToColumnDefs(columns)
 
   const table = useReactTable({
     data,
@@ -141,10 +143,7 @@ function TanStackTable<T extends { subRows?: T[] }>({
       globalFilter,
       sorting,
       columnVisibility,
-      pagination: {
-        pageIndex,
-        pageSize: 10 // Hardcode to 10 rows per page
-      }
+      pagination
     },
     columnResizeMode: 'onChange',
     enableColumnResizing: true,
@@ -153,27 +152,17 @@ function TanStackTable<T extends { subRows?: T[] }>({
       minSize: 50,
       maxSize: 300
     },
-    onGlobalFilterChange: setGlobalFilter,
-    onSortingChange: setSorting,
-    onColumnVisibilityChange: setColumnVisibility,
+    onPaginationChange: setPagination,
+    getPaginationRowModel: getPaginationRowModel(),
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    onGlobalFilterChange: setGlobalFilter,
+    onSortingChange: setSorting,
+    onColumnVisibilityChange: setColumnVisibility,
     globalFilterFn,
     filterFns: {
       fuzzy: globalFilterFn
-    },
-    onPaginationChange: updater => {
-      if (typeof updater === 'function') {
-        const newState = updater({ pageIndex, pageSize: rowsPerPage })
-        setPageIndex(newState.pageIndex)
-        setRowsPerPage(newState.pageSize)
-        onPageChange?.(newState.pageIndex)
-      } else {
-        setPageIndex(updater.pageIndex)
-        setRowsPerPage(updater.pageSize)
-        onPageChange?.(updater.pageIndex)
-      }
     }
   })
 
@@ -184,8 +173,16 @@ function TanStackTable<T extends { subRows?: T[] }>({
   }, [editingId])
 
   useEffect(() => {
-    setPageIndex(externalPage)
+    if (externalPage !== pagination.pageIndex) {
+      table.setPageIndex(externalPage)
+    }
   }, [externalPage])
+
+  useEffect(() => {
+    if (onPageChange && pagination.pageIndex !== externalPage) {
+      onPageChange(pagination.pageIndex)
+    }
+  }, [pagination.pageIndex])
 
   // Initialize default sorting by id in ascending order
   useEffect(() => {

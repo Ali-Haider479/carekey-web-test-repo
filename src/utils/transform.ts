@@ -280,7 +280,7 @@ export function transformTimesheetDataTwo(entries: TimeEntry[]): GroupedTimeEntr
       endLocation: latestEndLocation,
       billing: Object.keys(approvedBilling).length > 0 ? { dummyRow: true, ...approvedBilling } : approvedBilling,
       clientService: formattedClientService, // Always include clientService
-      loggedVia: hasSameLoggedVia ? sortedEntries[0].loggedVia : 'mobile'
+      loggedVia: hasSameLoggedVia ? sortedEntries[0].loggedVia : 'mixed'
     }
   })
 }

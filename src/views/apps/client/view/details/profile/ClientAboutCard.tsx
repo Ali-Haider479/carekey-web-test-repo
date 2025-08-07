@@ -1,6 +1,6 @@
 'use client'
 import React, { useEffect, useState } from 'react'
-import { Button, Card, CardContent, Typography } from '@mui/material'
+import { Button, Card, CardContent, CircularProgress, Typography } from '@mui/material'
 import { useParams } from 'next/navigation'
 import { EditOutlined, SaveOutlined } from '@mui/icons-material'
 import { EditableField } from '@/@core/components/custom-inputs/CustomEditableTextField'
@@ -11,6 +11,8 @@ const initialErrorState = {
   emailId: false,
   primaryPhoneNumber: false,
   primaryCellNumber: false,
+  pmiNumber: false,
+  clientCode: false,
   zipCode: false,
   emergencyEmailId: false,
   emergencyContactNumber: false,
@@ -29,6 +31,7 @@ function ClientAboutCard({ clientData }: any) {
   const { id } = useParams()
   const [data, setData] = useState<any>(clientData)
   const [isLoading, setIsLoading] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
   const [isEdit, setIsEdit] = useState(true)
   const [formData, setFormData] = useState<any>({})
   const [originalFormData, setOriginalFormData] = useState<any>({})
@@ -192,6 +195,28 @@ function ClientAboutCard({ clientData }: any) {
         ...prev,
         [name]: digits
       }))
+    } else if (name === 'clientCode') {
+      const digits = value.replace(/\D/g, '').substring(0, 4)
+      isValid = digits.length === 4
+      setFormErrors((prev: any) => ({
+        ...prev,
+        [name]: !isValid
+      }))
+      setFormData((prev: any) => ({
+        ...prev,
+        [name]: digits
+      }))
+    } else if (name === 'pmiNumber') {
+      const digits = value.replace(/\D/g, '').substring(0, 10)
+      isValid = digits.length === 10
+      setFormErrors((prev: any) => ({
+        ...prev,
+        [name]: !isValid
+      }))
+      setFormData((prev: any) => ({
+        ...prev,
+        [name]: digits
+      }))
     }
   }
 
@@ -206,7 +231,7 @@ function ClientAboutCard({ clientData }: any) {
     }
 
     try {
-      setIsLoading(true)
+      setIsSaving(true)
       await api.put(`/client/${id}`, formData)
       const accountHistoryPayLoad = {
         actionType: 'ClientProfileInfoUpdate',
@@ -220,7 +245,7 @@ function ClientAboutCard({ clientData }: any) {
     } catch (error) {
       console.error('Error updating data', error)
     } finally {
-      setIsLoading(false)
+      setIsSaving(false)
     }
   }
 
@@ -229,8 +254,8 @@ function ClientAboutCard({ clientData }: any) {
     { label: 'First Name', name: 'firstName', value: formData.firstName },
     { label: 'Middle Name', name: 'middleName', value: formData.middleName },
     { label: 'Last Name', name: 'lastName', value: formData.lastName },
-    { label: 'PMI Number', name: 'pmiNumber', value: formData.pmiNumber },
-    { label: 'Client Code', name: 'clientCode', value: formData.clientCode },
+    { label: 'PMI Number', name: 'pmiNumber', value: formData.pmiNumber, error: formErrors.pmiNumber },
+    { label: 'Client Code', name: 'clientCode', value: formData.clientCode, error: formErrors.clientCode },
     {
       label: 'Phone Number',
       name: 'primaryPhoneNumber',
@@ -350,182 +375,196 @@ function ClientAboutCard({ clientData }: any) {
   ]
 
   return (
-    <Card className='w-full shadow-md rounded-lg p-6'>
-      <CardContent className='flex justify-between items-center mb-6'>
-        <Typography className='text-2xl font-semibold'>About</Typography>
-        <div className='flex items-center justify-center gap-2'>
-          {!isEdit && (
-            <Button
-              variant='contained'
-              startIcon={<CloseIcon />}
-              className='text-white hover:bg-indigo-800'
-              onClick={handleCancel}
-            >
-              Cancel
-            </Button>
-          )}
-          <Button
-            variant='contained'
-            startIcon={isEdit ? <EditOutlined /> : <SaveOutlined />}
-            onClick={isEdit ? () => setIsEdit(false) : handleSave}
-            disabled={!isEdit && hasErrors()}
-          >
-            {isEdit ? 'Edit' : 'Update'}
-          </Button>
+    <>
+      {isLoading ? (
+        // <CircularProgressDeterminate variant='determinate' size={50} thickness={5} value={100} />
+        <div className='flex items-center justify-center p-10'>
+          <CircularProgress />
         </div>
-      </CardContent>
-
-      {/* Personal Details Section */}
-      <CardContent className='mb-6'>
-        <Typography className='text-lg font-semibold mb-4'>Personal Details</Typography>
-        <div className='grid grid-cols-2 gap-y-4 gap-x-8'>
-          {personalFields.map(field => (
-            <div key={field.name}>
-              <EditableField
-                label={field.label}
-                value={field.value}
-                isEdit={isEdit}
-                onChange={handleFieldChange}
-                name={field.name}
-                disabled={field.name === 'gender'}
-              />
-              {field.error && (
-                <Typography className='text-error mt-1' sx={{ fontSize: '0.75rem' }}>
-                  {field.name.includes('emailId')
-                    ? 'Please enter a valid email address'
-                    : field.name.includes('primaryPhoneNumber') || field.name.includes('primaryCellNumber')
-                      ? 'Please enter a valid 10 digit number'
-                      : 'Invalid format'}
-                </Typography>
+      ) : (
+        <Card className='w-full shadow-md rounded-lg p-6'>
+          <CardContent className='flex justify-between items-center mb-6'>
+            <Typography className='text-2xl font-semibold'>About</Typography>
+            <div className='flex items-center justify-center gap-2'>
+              {!isEdit && (
+                <Button
+                  variant='contained'
+                  startIcon={<CloseIcon />}
+                  className='text-white hover:bg-indigo-800'
+                  disabled={isSaving}
+                  onClick={handleCancel}
+                >
+                  Cancel
+                </Button>
               )}
+              <Button
+                variant='contained'
+                startIcon={isEdit ? <EditOutlined /> : <SaveOutlined />}
+                onClick={isEdit ? () => setIsEdit(false) : handleSave}
+                disabled={(!isEdit && hasErrors()) || isSaving}
+              >
+                {isSaving ? <CircularProgress color='inherit' size={24} /> : isEdit ? 'Edit' : 'Update'}
+              </Button>
             </div>
-          ))}
-        </div>
-      </CardContent>
+          </CardContent>
 
-      {/* Emergency Contact Section */}
-      <CardContent className='mb-6 border-t pt-6'>
-        <Typography className='text-lg font-semibold mb-4'>Emergency Contact</Typography>
-        <div className='grid grid-cols-2 gap-y-4 gap-x-8'>
-          {emergencyFields.map(field => (
-            <div key={field.name}>
-              <EditableField
-                label={field.label}
-                value={field.value}
-                isEdit={isEdit}
-                onChange={handleFieldChange}
-                name={field.name}
-              />
-              {field.error && (
-                <Typography className='text-error mt-1' sx={{ fontSize: '0.75rem' }}>
-                  {field.name.includes('emergencyEmailId')
-                    ? 'Please enter a valid email address'
-                    : 'Please enter a valid 10 digit number'}
-                </Typography>
-              )}
+          {/* Personal Details Section */}
+          <CardContent className='mb-6'>
+            <Typography className='text-lg font-semibold mb-4'>Personal Details</Typography>
+            <div className='grid grid-cols-2 gap-y-4 gap-x-8'>
+              {personalFields.map(field => (
+                <div key={field.name}>
+                  <EditableField
+                    label={field.label}
+                    value={field.value}
+                    isEdit={isEdit}
+                    onChange={handleFieldChange}
+                    name={field.name}
+                    disabled={field.name === 'gender'}
+                  />
+                  {field.error && (
+                    <Typography className='text-error mt-1' sx={{ fontSize: '0.75rem' }}>
+                      {field.name.includes('emailId')
+                        ? 'Please enter a valid email address'
+                        : field.name.includes('primaryPhoneNumber') ||
+                            field.name.includes('primaryCellNumber') ||
+                            field.name === 'pmiNumber'
+                          ? 'Please enter a valid 10 digit number'
+                          : field.name === 'clientCode'
+                            ? 'Please enter a valid 4 digit pin '
+                            : 'Invalid format'}
+                    </Typography>
+                  )}
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-      </CardContent>
+          </CardContent>
 
-      {/* Address Section */}
-      <CardContent className='mb-6 border-t pt-6'>
-        <Typography className='text-lg font-semibold mb-4'>Address</Typography>
-        <div className='grid grid-cols-2 gap-y-4 gap-x-8'>
-          {addressFields.map(field => (
-            <div key={field.name}>
-              <EditableField
-                label={field.label}
-                value={field.value}
-                isEdit={isEdit}
-                onChange={handleFieldChange}
-                name={field.name}
-              />
-              {field.error && (
-                <Typography className='text-error mt-1' sx={{ fontSize: '0.75rem' }}>
-                  Invalid zip code format (e.g., 12345)
-                </Typography>
-              )}
+          {/* Emergency Contact Section */}
+          <CardContent className='mb-6 border-t pt-6'>
+            <Typography className='text-lg font-semibold mb-4'>Emergency Contact</Typography>
+            <div className='grid grid-cols-2 gap-y-4 gap-x-8'>
+              {emergencyFields.map(field => (
+                <div key={field.name}>
+                  <EditableField
+                    label={field.label}
+                    value={field.value}
+                    isEdit={isEdit}
+                    onChange={handleFieldChange}
+                    name={field.name}
+                  />
+                  {field.error && (
+                    <Typography className='text-error mt-1' sx={{ fontSize: '0.75rem' }}>
+                      {field.name.includes('emergencyEmailId')
+                        ? 'Please enter a valid email address'
+                        : 'Please enter a valid 10 digit number'}
+                    </Typography>
+                  )}
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-      </CardContent>
+          </CardContent>
 
-      {/* Physician Section */}
-      <CardContent className='mb-6 border-t pt-6'>
-        <Typography className='text-lg font-semibold mb-4'>Physician Information</Typography>
-        <div className='grid grid-cols-2 gap-y-4 gap-x-8'>
-          {physicianFields.map(field => (
-            <div key={field.name}>
-              <EditableField
-                label={field.label}
-                value={field.value}
-                isEdit={isEdit}
-                onChange={handleFieldChange}
-                name={field.name}
-              />
-              {field.error && (
-                <Typography className='text-error mt-1' sx={{ fontSize: '0.75rem' }}>
-                  {field.name.includes('physician.zipCode')
-                    ? 'Invalid zip code format'
-                    : 'Please enter a valid 10 digit number'}
-                </Typography>
-              )}
+          {/* Address Section */}
+          <CardContent className='mb-6 border-t pt-6'>
+            <Typography className='text-lg font-semibold mb-4'>Address</Typography>
+            <div className='grid grid-cols-2 gap-y-4 gap-x-8'>
+              {addressFields.map(field => (
+                <div key={field.name}>
+                  <EditableField
+                    label={field.label}
+                    value={field.value}
+                    isEdit={isEdit}
+                    onChange={handleFieldChange}
+                    name={field.name}
+                  />
+                  {field.error && (
+                    <Typography className='text-error mt-1' sx={{ fontSize: '0.75rem' }}>
+                      Invalid zip code format (e.g., 12345)
+                    </Typography>
+                  )}
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-      </CardContent>
+          </CardContent>
 
-      {/* Case Manager Section */}
-      <CardContent className='mb-6 border-t pt-6'>
-        <Typography className='text-lg font-semibold mb-4'>Case Manager</Typography>
-        <div className='grid grid-cols-2 gap-y-4 gap-x-8'>
-          {caseManagerFields.map(field => (
-            <div key={field.name}>
-              <EditableField
-                label={field.label}
-                value={field.value}
-                isEdit={isEdit}
-                onChange={handleFieldChange}
-                name={field.name}
-              />
-              {field.error && (
-                <Typography className='text-error mt-1' sx={{ fontSize: '0.75rem' }}>
-                  {field.name.includes('caseManager.email')
-                    ? 'Please enter a valid email address'
-                    : 'Please enter a valid 10 digit number'}
-                </Typography>
-              )}
+          {/* Physician Section */}
+          <CardContent className='mb-6 border-t pt-6'>
+            <Typography className='text-lg font-semibold mb-4'>Physician Information</Typography>
+            <div className='grid grid-cols-2 gap-y-4 gap-x-8'>
+              {physicianFields.map(field => (
+                <div key={field.name}>
+                  <EditableField
+                    label={field.label}
+                    value={field.value}
+                    isEdit={isEdit}
+                    onChange={handleFieldChange}
+                    name={field.name}
+                  />
+                  {field.error && (
+                    <Typography className='text-error mt-1' sx={{ fontSize: '0.75rem' }}>
+                      {field.name.includes('physician.zipCode')
+                        ? 'Invalid zip code format'
+                        : 'Please enter a valid 10 digit number'}
+                    </Typography>
+                  )}
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-      </CardContent>
+          </CardContent>
 
-      {/* Responsible Party Section */}
-      <CardContent className='mb-6 border-t pt-6'>
-        <Typography className='text-lg font-semibold mb-4'>Responsible Party</Typography>
-        <div className='grid grid-cols-2 gap-y-4 gap-x-8'>
-          {responsiblePartyFields.map(field => (
-            <div key={field.name}>
-              <EditableField
-                label={field.label}
-                value={field.value}
-                isEdit={isEdit}
-                onChange={handleFieldChange}
-                name={field.name}
-              />
-              {field.error && (
-                <Typography className='text-error mt-1' sx={{ fontSize: '0.75rem' }}>
-                  {field.name.includes('responsibleParty.emailAddress')
-                    ? 'Please enter a valid email address'
-                    : 'Please enter a valid 10 digit number'}
-                </Typography>
-              )}
+          {/* Case Manager Section */}
+          <CardContent className='mb-6 border-t pt-6'>
+            <Typography className='text-lg font-semibold mb-4'>Case Manager</Typography>
+            <div className='grid grid-cols-2 gap-y-4 gap-x-8'>
+              {caseManagerFields.map(field => (
+                <div key={field.name}>
+                  <EditableField
+                    label={field.label}
+                    value={field.value}
+                    isEdit={isEdit}
+                    onChange={handleFieldChange}
+                    name={field.name}
+                  />
+                  {field.error && (
+                    <Typography className='text-error mt-1' sx={{ fontSize: '0.75rem' }}>
+                      {field.name.includes('caseManager.email')
+                        ? 'Please enter a valid email address'
+                        : 'Please enter a valid 10 digit number'}
+                    </Typography>
+                  )}
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
+          </CardContent>
+
+          {/* Responsible Party Section */}
+          <CardContent className='mb-6 border-t pt-6'>
+            <Typography className='text-lg font-semibold mb-4'>Responsible Party</Typography>
+            <div className='grid grid-cols-2 gap-y-4 gap-x-8'>
+              {responsiblePartyFields.map(field => (
+                <div key={field.name}>
+                  <EditableField
+                    label={field.label}
+                    value={field.value}
+                    isEdit={isEdit}
+                    onChange={handleFieldChange}
+                    name={field.name}
+                  />
+                  {field.error && (
+                    <Typography className='text-error mt-1' sx={{ fontSize: '0.75rem' }}>
+                      {field.name.includes('responsibleParty.emailAddress')
+                        ? 'Please enter a valid email address'
+                        : 'Please enter a valid 10 digit number'}
+                    </Typography>
+                  )}
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </>
   )
 }
 

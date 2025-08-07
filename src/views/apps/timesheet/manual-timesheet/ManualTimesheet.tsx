@@ -514,7 +514,7 @@ const ManualTimesheet = ({ caregiverList, payPeriodList }: any) => {
             const assignedHours = new Date(usedHours).getHours()
             const newScheduleDto = {
               display: 'block',
-              title: 'Schedule Added from mobile clockout',
+              title: 'Schedule Added from web manual timesheet',
               start: clockIn,
               end: clockOut,
               status: 'worked',
@@ -529,7 +529,8 @@ const ManualTimesheet = ({ caregiverList, payPeriodList }: any) => {
               payPeriod: timelogResponse.data.payPeriodHistory.id,
               serviceAuthId: correspondingServiceAuth?.id,
               timeLogId: timelogResponse.data.id,
-              assignedHours: Number(assignedHours)
+              assignedHours: 0,
+              timelogCreatedSchedule: true
             }
             console.log('New Schedule DTO --->> ', newScheduleDto)
             const newScheduleRes = await api.post('/schedule', [newScheduleDto])

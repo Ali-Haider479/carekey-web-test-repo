@@ -93,7 +93,7 @@ const defaultState: DefaultStateType = {
   notes: '',
   location: '',
   payPeriod: '',
-  staffRatio: '',
+  staffRatio: '1:1',
   status: 'scheduled',
   serviceAuth: '',
   frequency: ''
@@ -246,7 +246,7 @@ const AddEventModal = (props: AddEventSidebarType) => {
 
   const isFormValid = () => {
     return (
-      values.title.trim() !== '' &&
+      // values.title.trim() !== '' && //making title optional
       values.caregiver !== '' &&
       values.client !== '' &&
       values.service !== '' &&
@@ -484,9 +484,26 @@ const AddEventModal = (props: AddEventSidebarType) => {
           ? new Date(finalStartDate.getTime() + assignedHours * 60 * 60 * 1000)
           : new Date(finalStartDate.getTime())
 
+      const client = props?.clientList?.find((ele: any) => ele.id === values.client)
+      const service = serviceType?.find((ele: any) => ele.clientServiceId === values.service)
+
       bulkEvents.push({
         display: 'block',
-        title: values.title,
+        title:
+          values?.title?.trim() !== ''
+            ? values?.title
+            : `${service.name} for ${client.firstName} ${client.lastName} ${finalStartDate.toLocaleDateString()} ${finalStartDate.toLocaleTimeString(
+                'en-US',
+                {
+                  hour: 'numeric',
+                  minute: '2-digit',
+                  hour12: true
+                }
+              )} - ${finalEndDate.toLocaleTimeString('en-US', {
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true
+              })}`,
         start: finalStartDate,
         end: finalEndDate,
         status: 'scheduled',
@@ -1206,6 +1223,7 @@ const AddEventModal = (props: AddEventSidebarType) => {
                   className='mbe-3'
                   label='Staff Ratio'
                   value={values?.staffRatio}
+                  defaultValue={values?.staffRatio}
                   id='staff-ratio-schedule'
                   onChange={e => setValues({ ...values, staffRatio: e.target.value })}
                 >

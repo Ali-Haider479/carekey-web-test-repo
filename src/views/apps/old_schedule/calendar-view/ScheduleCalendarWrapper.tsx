@@ -122,7 +122,7 @@ const AppCalendar = () => {
         const response = await Promise.all([
           api.get(`/caregivers`),
           api.get(`/client`),
-          api.get(`/service`),
+          api.get(`/service/tenant/${authUser?.tenant?.id}`),
           api.get(`/pay-period/tenant/${authUser?.tenant?.id}`)
         ])
         setCaregiverList(response[0].data)

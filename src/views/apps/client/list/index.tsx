@@ -52,6 +52,9 @@ const ClientListApps = () => {
   const [serviceTypes, setServiceTypes] = useState<any>()
   const [totalClients, setTotalClients] = useState(0)
   const [isLoading, setIsLoading] = useState(false)
+  const [page, setPage] = useState(0)
+
+  const authUser: any = JSON.parse(localStorage.getItem('AuthUser') || '{}')
 
   const theme: any = useTheme()
   const lightTheme = theme.palette.mode === 'light'
@@ -138,7 +141,7 @@ const ClientListApps = () => {
 
   const getServiceTypes = async () => {
     try {
-      const serviceTypesResponse = await api.get(`/service`)
+      const serviceTypesResponse = await api.get(`/service/tenant/${authUser?.tenant?.id}`)
       console.log('Service Types --> ', serviceTypesResponse)
       setServiceTypes(serviceTypesResponse.data)
     } catch (error) {
@@ -171,8 +174,8 @@ const ClientListApps = () => {
       if (filterParams.state) queryParams.append('state', filterParams.state)
       if (filterParams.dob.trim() !== '') queryParams.append('dob', filterParams.dob)
       if (filterParams.serviceTypes) queryParams.append('serviceType', filterParams.serviceTypes)
-      queryParams.append('page', '1')
-      queryParams.append('limit', '10')
+      // queryParams.append('page', '1')
+      // queryParams.append('limit', '10')
 
       // If no filters are applied, fetch all data
       if (queryParams.toString() === 'page=1&limit=10') {
@@ -396,115 +399,116 @@ const ClientListApps = () => {
   ]
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
-      <Grid container spacing={6}>
-        <Grid size={{ xs: 12 }}>
-          <Card sx={{ borderRadius: 1, boxShadow: 3, padding: 6 }}>
-            <Grid size={{ xs: 12, sm: 4 }}>
-              <span className='text-[20px]'>
-                <strong>Filters</strong>
-              </span>
-            </Grid>
-            <Grid container spacing={6} marginTop={4} sx={{ rowGap: 3 }}>
-              <Grid size={{ xs: 12, sm: 3 }}>
-                <Typography variant='h6' className='mb-2'>
-                  Client Name
-                </Typography>
-                <CustomTextField
-                  fullWidth
-                  id='client Name'
-                  placeholder='Client Name'
-                  value={filterParams.clientName}
-                  onChange={e => setFilterParams({ ...filterParams, clientName: e.target.value })}
-                  slotProps={{
-                    select: { displayEmpty: true }
-                  }}
-                />
+    <>
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <Grid container spacing={6}>
+          <Grid size={{ xs: 12 }}>
+            <Card sx={{ borderRadius: 1, boxShadow: 3, padding: 6 }}>
+              <Grid size={{ xs: 12, sm: 4 }}>
+                <span className='text-[20px]'>
+                  <strong>Filters</strong>
+                </span>
               </Grid>
-              <Grid size={{ xs: 12, sm: 3 }}>
-                <Typography variant='h6' className='mb-2'>
-                  Status
-                </Typography>
-                <CustomTextField
-                  select
-                  fullWidth
-                  id='select-status'
-                  placeholder='Client Status'
-                  value={filterParams.status}
-                  onChange={e => setFilterParams({ ...filterParams, status: e.target.value })}
-                  slotProps={{
-                    select: { displayEmpty: true }
-                  }}
-                >
-                  <MenuItem value='all'>All</MenuItem>
-                  <MenuItem value='active'>Active</MenuItem>
-                  <MenuItem value='inactive'>Inactive</MenuItem>
-                </CustomTextField>
-              </Grid>
-              <Grid size={{ xs: 12, sm: 3 }}>
-                <Typography variant='h6' className='mb-2'>
-                  PMI Number
-                </Typography>
-                <CustomTextField
-                  fullWidth
-                  id='pmi-number'
-                  placeholder='PMI Number'
-                  value={filterParams.pmiNumber}
-                  onChange={e => setFilterParams({ ...filterParams, pmiNumber: e.target.value })}
-                  slotProps={{
-                    select: { displayEmpty: true }
-                  }}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, sm: 3 }}>
-                <Typography variant='h6' className='mb-2'>
-                  Date of Birth
-                </Typography>
-                <AppReactDatepicker
-                  selected={filterParams.dob ? new Date(filterParams.dob) : null}
-                  maxDate={new Date()}
-                  dateFormat='MM/dd/yyyy'
-                  placeholderText='Select Date of Birth'
-                  showMonthDropdown
-                  showYearDropdown
-                  customInput={<CustomTextField fullWidth />}
-                  sx={{ width: '100%' }}
-                  onChange={(date: Date | null) => {
-                    const formatLocalDate = (d: Date) => {
-                      const year = d.getFullYear()
-                      const month = String(d.getMonth() + 1).padStart(2, '0')
-                      const day = String(d.getDate()).padStart(2, '0')
-                      return `${year}-${month}-${day}`
-                    }
-                    setFilterParams({ ...filterParams, dob: date ? formatLocalDate(date) : '' })
-                  }}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, sm: 3 }}>
-                <Typography variant='h6' className='mb-2'>
-                  Service types
-                </Typography>
-                <CustomTextField
-                  select
-                  fullWidth
-                  id='caregiver-state'
-                  placeholder='Caregiver State'
-                  value={filterParams.serviceTypes}
-                  onChange={e => setFilterParams({ ...filterParams, serviceTypes: e.target.value })}
-                  slotProps={{
-                    select: { displayEmpty: true }
-                  }}
-                >
-                  <MenuItem value=''>All</MenuItem>
-                  {serviceTypes?.map((item: any, index: number) => (
-                    <MenuItem key={index} value={item.name}>
-                      {item.name}
-                    </MenuItem>
-                  ))}
-                </CustomTextField>
-              </Grid>
+              <Grid container spacing={6} marginTop={4} sx={{ rowGap: 3 }}>
+                <Grid size={{ xs: 12, sm: 3 }}>
+                  <Typography variant='h6' className='mb-2'>
+                    Client Name
+                  </Typography>
+                  <CustomTextField
+                    fullWidth
+                    id='client Name'
+                    placeholder='Client Name'
+                    value={filterParams.clientName}
+                    onChange={e => setFilterParams({ ...filterParams, clientName: e.target.value })}
+                    slotProps={{
+                      select: { displayEmpty: true }
+                    }}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 3 }}>
+                  <Typography variant='h6' className='mb-2'>
+                    Status
+                  </Typography>
+                  <CustomTextField
+                    select
+                    fullWidth
+                    id='select-status'
+                    placeholder='Client Status'
+                    value={filterParams.status}
+                    onChange={e => setFilterParams({ ...filterParams, status: e.target.value })}
+                    slotProps={{
+                      select: { displayEmpty: true }
+                    }}
+                  >
+                    <MenuItem value='all'>All</MenuItem>
+                    <MenuItem value='active'>Active</MenuItem>
+                    <MenuItem value='inactive'>Inactive</MenuItem>
+                  </CustomTextField>
+                </Grid>
+                <Grid size={{ xs: 12, sm: 3 }}>
+                  <Typography variant='h6' className='mb-2'>
+                    PMI Number
+                  </Typography>
+                  <CustomTextField
+                    fullWidth
+                    id='pmi-number'
+                    placeholder='PMI Number'
+                    value={filterParams.pmiNumber}
+                    onChange={e => setFilterParams({ ...filterParams, pmiNumber: e.target.value })}
+                    slotProps={{
+                      select: { displayEmpty: true }
+                    }}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 3 }}>
+                  <Typography variant='h6' className='mb-2'>
+                    Date of Birth
+                  </Typography>
+                  <AppReactDatepicker
+                    selected={filterParams.dob ? new Date(filterParams.dob) : null}
+                    maxDate={new Date()}
+                    dateFormat='MM/dd/yyyy'
+                    placeholderText='Select Date of Birth'
+                    showMonthDropdown
+                    showYearDropdown
+                    customInput={<CustomTextField fullWidth />}
+                    sx={{ width: '100%' }}
+                    onChange={(date: Date | null) => {
+                      const formatLocalDate = (d: Date) => {
+                        const year = d.getFullYear()
+                        const month = String(d.getMonth() + 1).padStart(2, '0')
+                        const day = String(d.getDate()).padStart(2, '0')
+                        return `${year}-${month}-${day}`
+                      }
+                      setFilterParams({ ...filterParams, dob: date ? formatLocalDate(date) : '' })
+                    }}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 3 }}>
+                  <Typography variant='h6' className='mb-2'>
+                    Service types
+                  </Typography>
+                  <CustomTextField
+                    select
+                    fullWidth
+                    id='caregiver-state'
+                    placeholder='Caregiver State'
+                    value={filterParams.serviceTypes}
+                    onChange={e => setFilterParams({ ...filterParams, serviceTypes: e.target.value })}
+                    slotProps={{
+                      select: { displayEmpty: true }
+                    }}
+                  >
+                    <MenuItem value=''>All</MenuItem>
+                    {serviceTypes?.map((item: any, index: number) => (
+                      <MenuItem key={index} value={item.name}>
+                        {item.name}
+                      </MenuItem>
+                    ))}
+                  </CustomTextField>
+                </Grid>
 
-              {/* <Grid size={{ xs: 12, sm: 3 }}>
+                {/* <Grid size={{ xs: 12, sm: 3 }}>
               <Typography variant='h6' className='mb-2'>
                 Client Phone Number
               </Typography>
@@ -519,85 +523,84 @@ const ClientListApps = () => {
                 }}
               />
               </Grid> */}
-            </Grid>
-            <Grid container spacing={2} marginTop={3} justifyContent='flex-start'>
-              <Grid>
-                <Button type='submit' variant='contained' sx={{ px: 4 }}>
-                  Apply
-                </Button>
               </Grid>
-              <Grid>
-                <Button onClick={handleReset} variant='contained' color='error' sx={{ px: 4 }}>
-                  Reset
-                </Button>
-              </Grid>
-            </Grid>
-          </Card>
-        </Grid>
-        <Grid size={{ xs: 12 }}>
-          {/* <ClientTable isLoading={isLoading} data={data} /> */}
-          <Card sx={{ borderRadius: 1, boxShadow: 3, p: 0 }}>
-            <Grid
-              container
-              spacing={2}
-              sx={{ mb: 2, pt: 4, pb: 2, px: 5, display: 'flex', justifyContent: 'flex-end' }}
-            >
-              <Grid size={{ xs: 12, sm: 6, md: 6 }} sx={{ display: 'flex', justifyContent: 'flex-end', gap: 5 }}>
-                <span
-                  className={`inline-flex border-[1px] items-center px-3 py-1 rounded-full text-sm font-medium ${theme.palette.mode === 'light' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' : 'bg-indigo-900/30 text-indigo-300 border-indigo-700'}`}
-                >
-                  <PeopleOutline className='w-4 h-4 mr-1' />
-                  {totalClients} {totalClients === 1 ? 'Client' : 'Clients'}
-                </span>
-                <Button
-                  onClick={() => router.push('/en/apps/client/add-client')}
-                  variant='contained'
-                  sx={{ fontWeight: 'bold' }}
-                >
-                  Add Client
-                </Button>
-              </Grid>
-            </Grid>
-            {isLoading ? (
-              <div className='flex items-center justify-center p-10'>
-                <CircularProgress />
-              </div>
-            ) : filteredData.length === 0 ? (
-              <Card>
-                <div className='flex flex-col items-center justify-center p-10 gap-2'>
-                  <Icon className='bx-folder-open text-6xl text-textSecondary' />
-                  <Typography variant='h6'>No Data Available</Typography>
-                  <Typography variant='body2' className='text-textSecondary'>
-                    No records found. Click 'Add New Client' to create one.
-                  </Typography>
-                  <Button
-                    variant='contained'
-                    startIcon={<i className='bx-plus' />}
-                    onClick={() => {
-                      router.push('/en/apps/client/add-client')
-                    }}
-                    className='mt-4'
-                  >
-                    Add New Client
+              <Grid container spacing={2} marginTop={3} justifyContent='flex-start'>
+                <Grid>
+                  <Button type='submit' variant='contained' sx={{ px: 4 }}>
+                    Apply
                   </Button>
-                </div>
-              </Card>
-            ) : (
-              <TanStackTable
-                columns={newColumns}
-                data={filteredData}
-                keyExtractor={item => item.id.toString()}
-                enablePagination
-                pageSize={25}
-                stickyHeader
-                maxHeight={600}
-                containerStyle={{ borderRadius: 2 }}
-              />
-            )}
-          </Card>
+                </Grid>
+                <Grid>
+                  <Button onClick={handleReset} variant='contained' color='error' sx={{ px: 4 }}>
+                    Reset
+                  </Button>
+                </Grid>
+              </Grid>
+            </Card>
+          </Grid>
         </Grid>
+      </form>
+      <Grid size={{ xs: 12 }} sx={{ mt: 3 }}>
+        {/* <ClientTable isLoading={isLoading} data={data} /> */}
+        <Card sx={{ borderRadius: 1, boxShadow: 3, p: 0 }}>
+          <Grid container spacing={2} sx={{ mb: 2, pt: 4, pb: 2, px: 5, display: 'flex', justifyContent: 'flex-end' }}>
+            <Grid size={{ xs: 12, sm: 6, md: 6 }} sx={{ display: 'flex', justifyContent: 'flex-end', gap: 5 }}>
+              <span
+                className={`inline-flex border-[1px] items-center px-3 py-1 rounded-full text-sm font-medium ${theme.palette.mode === 'light' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' : 'bg-indigo-900/30 text-indigo-300 border-indigo-700'}`}
+              >
+                <PeopleOutline className='w-4 h-4 mr-1' />
+                {totalClients} {totalClients === 1 ? 'Client' : 'Clients'}
+              </span>
+              <Button
+                onClick={() => router.push('/en/apps/client/add-client')}
+                variant='contained'
+                sx={{ fontWeight: 'bold' }}
+              >
+                Add Client
+              </Button>
+            </Grid>
+          </Grid>
+          {isLoading ? (
+            <div className='flex items-center justify-center p-10'>
+              <CircularProgress />
+            </div>
+          ) : filteredData.length === 0 ? (
+            <Card>
+              <div className='flex flex-col items-center justify-center p-10 gap-2'>
+                <Icon className='bx-folder-open text-6xl text-textSecondary' />
+                <Typography variant='h6'>No Data Available</Typography>
+                <Typography variant='body2' className='text-textSecondary'>
+                  No records found. Click 'Add New Client' to create one.
+                </Typography>
+                <Button
+                  variant='contained'
+                  startIcon={<i className='bx-plus' />}
+                  onClick={() => {
+                    router.push('/en/apps/client/add-client')
+                  }}
+                  className='mt-4'
+                >
+                  Add New Client
+                </Button>
+              </div>
+            </Card>
+          ) : (
+            <TanStackTable
+              columns={newColumns}
+              data={filteredData}
+              keyExtractor={item => item.id.toString()}
+              enablePagination
+              pageSize={25}
+              page={page}
+              onPageChange={setPage}
+              stickyHeader
+              maxHeight={600}
+              containerStyle={{ borderRadius: 2 }}
+            />
+          )}
+        </Card>
       </Grid>
-    </form>
+    </>
   )
 }
 

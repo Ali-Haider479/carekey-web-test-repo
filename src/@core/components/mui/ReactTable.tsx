@@ -67,6 +67,7 @@ interface ReactTableProps<T extends { subRows?: T[] }> {
   onEditChange?: any
   page?: number
   onPageChange?: (page: number) => void
+  sorted?: boolean
 }
 
 function ReactTable<T extends { subRows?: T[] }>({
@@ -93,7 +94,8 @@ function ReactTable<T extends { subRows?: T[] }>({
   editingId = null,
   onEditChange,
   page: externalPage = 0, // Default to 0
-  onPageChange
+  onPageChange,
+  sorted = false
 }: ReactTableProps<T>) {
   const [selected, setSelected] = useState<string[]>([])
   const [expanded, setExpanded] = useState<string[]>([])
@@ -119,7 +121,7 @@ function ReactTable<T extends { subRows?: T[] }>({
 
   // Initialize default sorting by id in ascending order
   useEffect(() => {
-    if (data.length > 0 && sortConfig?.columnId === 'id' && sortConfig?.direction === 'asc') {
+    if (!sorted && data.length > 0 && sortConfig?.columnId === 'id' && sortConfig?.direction === 'asc') {
       onSort?.('id', 'asc')
     }
   }, [data, onSort, sortConfig])
@@ -407,7 +409,7 @@ function ReactTable<T extends { subRows?: T[] }>({
   }
 
   // Apply sorting to data
-  const sortedData = getSortedData(data)
+  const sortedData = sorted ? data : getSortedData(data)
   const paginatedData = enablePagination
     ? sortedData.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
     : sortedData

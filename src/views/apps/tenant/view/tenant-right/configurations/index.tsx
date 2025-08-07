@@ -23,6 +23,7 @@ import './calender.css'
 import './payperiod-calendar.css'
 import DialogCloseButton from '@/components/dialogs/DialogCloseButton'
 import ReactTable from '@/@core/components/mui/ReactTable'
+import { useParams } from 'next/navigation'
 
 type EvvEnforcement = 'evvRelaxed' | 'evvEnabled' | 'evvDisabled'
 interface Column {
@@ -43,41 +44,53 @@ interface DayContentsProps {
 }
 
 interface CardProps {
-  evvSelected: string;
+  evvSelected: string
 }
 
-
 const GenericCard: React.FC<CardProps> = ({ evvSelected }) => {
-  const theme = useTheme();
-  let headerText = '';
-  let bodyText = '';
-  let icon = null;
+  const theme = useTheme()
+  let headerText = ''
+  let bodyText = ''
+  let icon = null
   if (evvSelected === 'evvDisabled') {
-    icon = <span role="img" aria-label="red block">🔴</span>;
-    headerText = 'EVV is turned off';
-    bodyText = 'Clock-ins, geofencing, and EVV tracking are disabled for this tenant, NO data is collected. Service-level EVV settings are ignored.'
+    icon = (
+      <span role='img' aria-label='red block'>
+        🔴
+      </span>
+    )
+    headerText = 'EVV is turned off'
+    bodyText =
+      'Clock-ins, geofencing, and EVV tracking are disabled for this tenant, NO data is collected. Service-level EVV settings are ignored.'
   } else if (evvSelected === 'evvEnforced') {
-    icon = <span role="img" aria-label="checkmark">✅</span>
-    headerText = 'EVV is strictly enforced';
-    bodyText = 'Caregivers must clock in within 500ft of the client`s location. Service-Level EVV settings apply. This is the default and most secure mode.'
+    icon = (
+      <span role='img' aria-label='checkmark'>
+        ✅
+      </span>
+    )
+    headerText = 'EVV is strictly enforced'
+    bodyText =
+      'Caregivers must clock in within 500ft of the client`s location. Service-Level EVV settings apply. This is the default and most secure mode.'
   } else if (evvSelected === 'evvRelaxed') {
-    icon = <span role="img" aria-label="yellow triangle">⚠️</span>;
-    headerText = 'EVV is relaxed';
-    bodyText = 'EVV is active, but geofencing is not enforced. Caregivers can clock-in from any location. Client & Caregiver`s Service-level toggles apply.'
+    icon = (
+      <span role='img' aria-label='yellow triangle'>
+        ⚠️
+      </span>
+    )
+    headerText = 'EVV is relaxed'
+    bodyText =
+      'EVV is active, but geofencing is not enforced. Caregivers can clock-in from any location. Client & Caregiver`s Service-level toggles apply.'
   }
   return (
     <Card sx={{ maxWidth: 345, mt: 2, borderRadius: 2, boxShadow: 3, borderLeft: '4px solid #1976d2' }}>
-      <CardContent sx={{ backgroundColor: theme.palette.mode === 'light' ? '#F0F4FF' : '#4c4c59', }}>
-        <Typography variant="h6" color="primary" gutterBottom>
+      <CardContent sx={{ backgroundColor: theme.palette.mode === 'light' ? '#F0F4FF' : '#4c4c59' }}>
+        <Typography variant='h6' color='primary' gutterBottom>
           {icon} <strong>{headerText}</strong>
         </Typography>
-        <Typography variant="body2">
-          {bodyText}
-        </Typography>
+        <Typography variant='body2'>{bodyText}</Typography>
       </CardContent>
     </Card>
-  );
-};
+  )
+}
 
 const TenantConfiguration = () => {
   const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
@@ -88,6 +101,8 @@ const TenantConfiguration = () => {
   const [currentPayPeriod, setCurrentPayPeriod] = useState<any>()
   const [openAddPayPeriodModal, setOpenAddPayPeriodModal] = useState<boolean>(false)
   const [allServicesList, setAllServicesList] = useState<any>()
+  const [isServiceEvvModalSHow, setIsServiceEvvModalShow] = useState<boolean>(false)
+  const [serviceToChange, setServiceToChange] = useState<any>()
   const [evvConfig, setEvvConfig] = useState<EvvConfig>(
     tenantEvvConfig || {
       enableEVV: false,
@@ -103,6 +118,8 @@ const TenantConfiguration = () => {
   const [enableNotification, setEnableNotification] = useState<boolean>(authUser?.tenant?.enableNotification || false)
   const [isModalShow, setIsModalShow] = useState<boolean>(false)
 
+  const { id } = useParams()
+
   const label = { inputProps: { 'aria-label': 'Switch demo' } }
 
   const theme = useTheme()
@@ -114,12 +131,21 @@ const TenantConfiguration = () => {
     setIsModalShow(true)
   }
 
+  const handleServiceEvvModalShow = (item: any) => {
+    setIsServiceEvvModalShow(true)
+    setServiceToChange(item)
+  }
+
   const handleModalClose = () => {
     setIsModalShow(false)
   }
 
+  const handleServiceEvvModalClose = () => {
+    setIsServiceEvvModalShow(false)
+  }
+
   const fetchInitialData = async () => {
-    const payPeriodRes = await api.get(`/pay-period/history/tenant/${authUser?.tenant?.id}`)
+    const payPeriodRes = await api.get(`/pay-period/history/tenant/${id}`)
     if (payPeriodRes.data) {
       setPayPeriod(payPeriodRes.data)
     } else {
@@ -146,7 +172,7 @@ const TenantConfiguration = () => {
       enableNotification
     }
     api
-      .patch(`/tenant/${authUser?.tenant?.id}`, payload)
+      .patch(`/tenant/${id}`, payload)
       .then(res => {
         console.log('tenant configuration updated successfully', res)
         localStorage.setItem('evvConfig', JSON.stringify(evvConfig))
@@ -160,7 +186,7 @@ const TenantConfiguration = () => {
         throw new Error('Invalid input data')
       }
 
-      if (!currentPayPeriod?.id || !authUser?.tenant?.id) {
+      if (!currentPayPeriod?.id || !id) {
         throw new Error('Missing required context data')
       }
 
@@ -170,7 +196,7 @@ const TenantConfiguration = () => {
         ...currentPayPeriod,
         endDate: startDateRaw.toISOString().split('T')[0],
         endTime: startDateRaw.toISOString().split('T')[1].split('.')[0],
-        tenantId: authUser?.tenant?.id
+        tenantId: id
       }
 
       const startDate = startDateRaw.toISOString().split('T')[0]
@@ -180,7 +206,7 @@ const TenantConfiguration = () => {
         startTime: startTime,
         endDate: null,
         endTime: null,
-        tenantId: authUser?.tenant?.id,
+        tenantId: id,
         numberOfWeeks: data.weeks
       }
       const newPayPeriod = await api.post(`/pay-period`, payload)
@@ -265,81 +291,83 @@ const TenantConfiguration = () => {
     return <div className={className}>{label}</div>
   }
 
-  // const getAllServices = async () => {
-  //   const servicesRes = await api.get('/service')
-  //   console.log('SERVICES RES ----->> ', servicesRes.data)
-  //   setAllServicesList(servicesRes.data)
-  // }
+  const getAllServices = async () => {
+    const servicesRes = await api.get(`/service/tenant/${id}`)
+    console.log('SERVICES RES ----->> ', servicesRes.data)
+    setAllServicesList(servicesRes.data)
+  }
 
-  // useEffect(() => {
-  //   getAllServices()
-  // }, [])
+  useEffect(() => {
+    getAllServices()
+  }, [])
 
-  // const updateEVV = async (item: any) => {
-  //   let newEVV = item.evv
-  //   if (item.evv === true) {
-  //     newEVV = false
-  //   }
-  //   if (item.evv === false) {
-  //     newEVV = true
-  //   }
-  //   const updateServiceEvv = await api.patch(`/service/${item.id}`, { evv: newEVV })
-  //   console.log('UPDATED SERVICE RESPONSE ---->> ', updateServiceEvv)
-  //   getAllServices()
-  // }
+  const updateEVV = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    let newEVV = serviceToChange.evv
+    if (serviceToChange.evv === true) {
+      newEVV = false
+    }
+    if (serviceToChange.evv === false) {
+      newEVV = true
+    }
+    const updateServiceEvv = await api.patch(`/service/${serviceToChange.id}`, { evv: newEVV })
+    console.log('UPDATED SERVICE RESPONSE ---->> ', updateServiceEvv)
+    getAllServices()
+    setIsServiceEvvModalShow(false)
+  }
 
-  // const newColumns: Column[] = [
-  //   {
-  //     id: 'id',
-  //     label: '#',
-  //     minWidth: 170,
-  //     render: item => <Typography className='font-normal text-base my-0'>{item.id}</Typography>
-  //   },
-  //   {
-  //     id: 'services',
-  //     label: 'SERVICES',
-  //     minWidth: 170,
-  //     render: item => (
-  //       <div className='flex flex-row gap-2 mt-0'>
-  //         <div
-  //           className={`p-1 border ${lightTheme ? 'border-[#4B0082]' : 'border-gray-200'} border-opacity-[50%] px-2 rounded-sm`}
-  //         >
-  //           <Typography className={`${lightTheme ? 'text-[#4B0082]' : null}`}>{item?.name}</Typography>
-  //         </div>
-  //       </div>
-  //     )
-  //   },
-  //   {
-  //     id: 'procedureCode',
-  //     label: 'PROCEDURE CODE',
-  //     minWidth: 170,
-  //     render: item => <Typography className='mt-0'> {item?.procedureCode}</Typography>
-  //   },
-  //   {
-  //     id: 'modifierCode',
-  //     label: 'MODIFIER CODE',
-  //     minWidth: 170,
-  //     render: item => <Typography className='mt-0'>{item?.modifierCode ? item?.modifierCode : '....'}</Typography>
-  //   },
-  //   {
-  //     id: 'evvEnforce',
-  //     label: 'EVV',
-  //     minWidth: 170,
-  //     render: item => (
-  //       <div>
-  //         <div className='p-0 flex rounded-sm'>
-  //           <Switch
-  //             {...label}
-  //             checked={item?.evv === true}
-  //             onChange={() => updateEVV(item)}
-  //             color='primary'
-  //             disabled={authUser?.userRoles?.title !== 'Super Admin'}
-  //           />
-  //         </div>
-  //       </div>
-  //     )
-  //   }
-  // ]
+  const newColumns: Column[] = [
+    // {
+    //   id: 'id',
+    //   label: '#',
+    //   minWidth: 170,
+    //   render: item => <Typography className='font-normal text-base my-0'>{item.id}</Typography>
+    // },
+    {
+      id: 'services',
+      label: 'SERVICES',
+      minWidth: 170,
+      render: item => (
+        <div className='flex flex-row gap-2 mt-0'>
+          <div
+            className={`p-1 border ${lightTheme ? 'border-[#4B0082]' : 'border-gray-200'} border-opacity-[50%] px-2 rounded-sm`}
+          >
+            <Typography className={`${lightTheme ? 'text-[#4B0082]' : null}`}>{item?.name}</Typography>
+          </div>
+        </div>
+      )
+    },
+    {
+      id: 'procedureCode',
+      label: 'PROCEDURE CODE',
+      minWidth: 170,
+      render: item => <Typography className='mt-0'> {item?.procedureCode}</Typography>
+    },
+    {
+      id: 'modifierCode',
+      label: 'MODIFIER CODE',
+      minWidth: 170,
+      render: item => <Typography className='mt-0'>{item?.modifierCode ? item?.modifierCode : '....'}</Typography>
+    },
+    {
+      id: 'evvEnforce',
+      label: 'EVV',
+      minWidth: 170,
+      render: item => (
+        <div>
+          <div className='p-0 flex rounded-sm'>
+            <Switch
+              {...label}
+              checked={item?.evv === true}
+              onChange={() => handleServiceEvvModalShow(item)}
+              color='primary'
+              disabled={authUser?.userRoles?.title !== 'Super Admin' && authUser?.userRoles?.title !== 'Tenant Admin'}
+            />
+          </div>
+        </div>
+      )
+    }
+  ]
 
   return (
     <>
@@ -391,49 +419,9 @@ const TenantConfiguration = () => {
           </div>
         </div>
 
-        {/* <Typography variant='h5' sx={{ mt: 3 }}>
-          Service EVV
-        </Typography>
-
-        <ReactTable
-          data={allServicesList ? allServicesList : []}
-          columns={newColumns}
-          keyExtractor={user => user?.id?.toString()}
-          enablePagination
-          pageSize={25}
-          stickyHeader
-          maxHeight={600}
-          containerStyle={{ borderRadius: 2 }}
-        /> */}
-
         <Typography variant='h5' sx={{ mt: 3 }}>
           EVV Configuration
         </Typography>
-
-        {/* <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <Typography variant='h6'>Enable EVV</Typography>
-          <CustomSwitch
-            checked={evvConfig.enableEVV}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-              if (e.target.checked === false) {
-                setEvvConfig({
-                  ...evvConfig,
-                  enableEVV: e.target.checked,
-                  locationService: false,
-                  evvEnforcement: 'none'
-                })
-              } else {
-                setEvvConfig({
-                  ...evvConfig,
-                  enableEVV: e.target.checked,
-                  locationService: true,
-                  evvEnforcement: 'full'
-                })
-              }
-            }}
-            sx={{ ml: 'auto' }}
-          />
-        </Box> */}
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Typography variant='h6'>EVV Enforcement</Typography>
 
@@ -455,51 +443,25 @@ const TenantConfiguration = () => {
             <MenuItem value={'evvEnforced'}>EVV Enforced</MenuItem>
             <MenuItem value={'evvDisabled'}>EVV Disabled</MenuItem>
           </TextField>
-
-          {/* <ToggleButtonGroup
-            value={evvConfig.evvEnforcement}
-            defaultValue={evvConfig.evvEnforcement}
-            exclusive
-            onChange={handleEvvEnforcementChange}
-            aria-label='EVV toggle'
-            sx={{
-              '& .MuiToggleButton-root': {
-                px: 3,
-                py: 1,
-                '&.Mui-selected': {
-                  backgroundColor: 'primary.main',
-                  color: 'white',
-                  '&:hover': {
-                    backgroundColor: 'primary.dark'
-                  }
-                }
-              }
-            }}
-          >
-            <ToggleButton value='evvRelaxed' aria-label='evvRelaxed'>
-              EVV Relaxed
-            </ToggleButton>
-            <ToggleButton value='evvEnforced' aria-label='evvEnforced'>
-              EVV Enforced
-            </ToggleButton>
-            <ToggleButton value='evvDisabled' aria-label='evvDisabled'>
-              EVV Disabled
-            </ToggleButton>
-          </ToggleButtonGroup> */}
         </Box>
-        {/* <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <Typography variant='h6'>Require Location Service</Typography>
-          <CustomSwitch
-            checked={evvConfig.locationService}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              setEvvConfig({ ...evvConfig, locationService: e.target.checked })
-            }
-            sx={{ ml: 'auto' }}
-          />
-        </Box> */}
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }}>
           <GenericCard evvSelected={evvConfig.evvEnforcement} />
         </Box>
+
+        <Typography variant='h5' sx={{ mt: 3 }}>
+          Service EVV
+        </Typography>
+
+        <ReactTable
+          data={allServicesList ? allServicesList : []}
+          columns={newColumns}
+          keyExtractor={user => user?.id?.toString()}
+          enablePagination
+          pageSize={10}
+          stickyHeader
+          maxHeight={600}
+          containerStyle={{ borderRadius: 2 }}
+        />
 
         <Typography variant='h5' sx={{ mt: 3 }}>
           Other Configurations
@@ -554,9 +516,7 @@ const TenantConfiguration = () => {
               <h2 className='text-xl font-semibold mt-5 mb-4'>EVV Mode Change Warning</h2>
             </div>
             <div>
-              <Typography className='mb-7'>
-                Are you sure you want to change the EVV mode?
-              </Typography>
+              <Typography className='mb-7'>Are you sure you want to change the EVV mode?</Typography>
             </div>
             <div className='flex gap-4 justify-end mt-4 mb-4 w-full'>
               <Button variant='outlined' color='secondary' onClick={handleModalClose}>
@@ -564,6 +524,40 @@ const TenantConfiguration = () => {
               </Button>
               <Button type='submit' variant='contained'>
                 Yes
+              </Button>
+            </div>
+          </form>
+        </div>
+      </Dialog>
+      <Dialog
+        open={isServiceEvvModalSHow}
+        onClose={handleServiceEvvModalClose}
+        closeAfterTransition={false}
+        sx={{ '& .MuiDialog-paper': { overflow: 'visible' } }}
+        maxWidth='sm'
+      >
+        <DialogCloseButton onClick={handleServiceEvvModalClose} disableRipple>
+          <i className='bx-x' />
+        </DialogCloseButton>
+        <div className='flex items-center justify-center w-full px-5 flex-col'>
+          <form onSubmit={updateEVV}>
+            <div>
+              <h2 className='text-xl font-semibold mt-5 mb-4'>Potential Non-Compliance Warning</h2>
+            </div>
+            <div>
+              <Typography className='mb-7'>
+                You are disabling EVV for a service that may be subject to electronic visit verification (EVV)
+                requirements under state or federal guidelines, including those of the Minnesota Department of Human
+                Services (DHS). Disabling EVV may result in non-compliance with those requirements. Proceed only if you
+                understand and accept responsibility for this configuration
+              </Typography>
+            </div>
+            <div className='flex gap-4 justify-end mt-4 mb-4 w-full'>
+              <Button variant='outlined' color='secondary' onClick={handleServiceEvvModalClose}>
+                Cancel
+              </Button>
+              <Button type='submit' variant='contained'>
+                Yes, I Understand and Accept Responsibility
               </Button>
             </div>
           </form>

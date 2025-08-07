@@ -130,7 +130,7 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
 
   const fetchAllServices = async () => {
     try {
-      const response = await api.get('/service')
+      const response = await api.get(`/service/tenant/${authUser?.tenant?.id}`)
       setAllServices(response.data)
     } catch (error) {
       console.error('Error fetching services: ', error)

@@ -5,7 +5,7 @@ import type { CalendarFiltersType, CalendarType } from '@/types/apps/calendarTyp
 import api from '@/utils/api'
 
 // Define initial state
-const initialState: CalendarType & { loading: boolean; error: string | null } = {
+const initialState: CalendarType = {
   events: [],
   caregiverEvents: [],
   clientEvents: [],

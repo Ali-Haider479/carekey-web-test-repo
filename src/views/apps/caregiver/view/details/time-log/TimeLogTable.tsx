@@ -30,7 +30,7 @@ interface Column {
 const TimeLogTable = () => {
   const { id } = useParams()
   // State
-  const [data, setData] = useState([])
+  const [data, setData] = useState<any[]>([])
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(false)
   const theme: any = useTheme()
@@ -186,7 +186,7 @@ const TimeLogTable = () => {
       ) : (
         <div style={{ overflowX: 'auto' }}>
           <ReactTable
-            data={data}
+            data={data.sort((a: any, b: any) => b.id - a.id)}
             columns={newColumns}
             keyExtractor={user => user.id.toString()}
             enablePagination
@@ -194,6 +194,7 @@ const TimeLogTable = () => {
             stickyHeader
             maxHeight={600}
             containerStyle={{ borderRadius: 2 }}
+            sorted
           />
         </div>
       )}

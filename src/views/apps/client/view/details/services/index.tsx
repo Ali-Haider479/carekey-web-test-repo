@@ -181,7 +181,7 @@ const CareplanTab = () => {
         await Promise.all([
           api.get(`/client/client-services-activities/${id}`),
           api.get(`/activity`),
-          api.get(`/service`),
+          api.get(`/service/tenant/${authUser?.tenant?.id}`),
           api.get(`/service/service-auth/services`)
         ])
       console.log('Services response ---->> ', servicesResponse)

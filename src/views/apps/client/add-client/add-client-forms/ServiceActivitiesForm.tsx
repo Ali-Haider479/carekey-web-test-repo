@@ -35,6 +35,8 @@ const ServiceActivitiesForm = forwardRef<{ handleSubmit: any }, Props>(({ onFini
     defaultValues: defaultValues || []
   })
 
+  const authUser: any = JSON.parse(localStorage.getItem('AuthUser') || '{}')
+
   // Expose handleSubmit to parent via ref
   useImperativeHandle(ref, () => ({
     handleSubmit: (onValid: (data: clientServiceFormDataType) => void) => handleSubmit(onValid)
@@ -113,7 +115,7 @@ const ServiceActivitiesForm = forwardRef<{ handleSubmit: any }, Props>(({ onFini
 
   const getServiceTypes = async () => {
     try {
-      const serviceTypesResponse = await api.get(`/service`)
+      const serviceTypesResponse = await api.get(`/service/tenant/${authUser?.tenant?.id}`)
       console.log('Service Types --> ', serviceTypesResponse)
       setServiceTypes(serviceTypesResponse.data)
     } catch (error) {

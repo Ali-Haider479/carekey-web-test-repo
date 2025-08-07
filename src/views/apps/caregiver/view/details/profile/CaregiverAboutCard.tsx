@@ -18,6 +18,7 @@ function CaregiverAboutCard() {
   const { id } = useParams()
   const [data, setData] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
   const [isEdit, setIsEdit] = useState(true)
   const [accountStatus, setAccountStatus] = useState<string>('')
   const [formData, setFormData] = useState<any>({})
@@ -260,7 +261,7 @@ function CaregiverAboutCard() {
 
   const handleSave = async () => {
     try {
-      setIsLoading(true)
+      setIsSaving(true)
       await api.put(`/caregivers/${id}`, formData)
       const accountStatusPayload = {
         accountStatus: accountStatus
@@ -279,7 +280,7 @@ function CaregiverAboutCard() {
     } catch (error) {
       console.error('Error updating data', error)
     } finally {
-      setIsLoading(false)
+      setIsSaving(false)
     }
   }
 
@@ -383,7 +384,7 @@ function CaregiverAboutCard() {
                   </TextField>
                 )}
                 {!isEdit && (
-                  <Button variant='contained' startIcon={<CloseIcon />} onClick={handleCancel}>
+                  <Button variant='contained' startIcon={<CloseIcon />} disabled={isSaving} onClick={handleCancel}>
                     Cancel
                   </Button>
                 )}
@@ -400,10 +401,11 @@ function CaregiverAboutCard() {
                     addressError ||
                     cityError ||
                     stateError ||
-                    zipCodeError
+                    zipCodeError ||
+                    isSaving
                   }
                 >
-                  {isEdit ? 'Edit' : 'Update'}
+                  {isSaving ? <CircularProgress color='inherit' size={24} /> : isEdit ? 'Edit' : 'Update'}
                 </Button>
               </div>
             </div>

@@ -22,7 +22,7 @@ import Grid from '@mui/material/Grid2'
 import { GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
 import axios from 'axios'
 import { useParams } from 'next/navigation'
-import React, { useState, forwardRef, useEffect } from 'react'
+import React, { useState, forwardRef, useEffect, useMemo } from 'react'
 
 interface DefaultStateType {
   actionType: string
@@ -164,6 +164,11 @@ const AccountHistory = () => {
   }
 
   console.log('USER ACTIONS', userActions)
+
+  const sortedData = useMemo(() => {
+    return userActions?.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+  }, [userActions])
+
   return (
     <>
       <form onSubmit={onSubmit} autoComplete='off'>
@@ -266,7 +271,7 @@ const AccountHistory = () => {
             </Box>
           ) : (
             <ReactTable
-              data={userActions}
+              data={sortedData}
               columns={newColumns}
               keyExtractor={user => user.id.toString()}
               enablePagination
@@ -274,6 +279,7 @@ const AccountHistory = () => {
               stickyHeader
               maxHeight={600}
               containerStyle={{ borderRadius: 2 }}
+              sorted //as we are sending sorted date
             />
           )}
         </div>
