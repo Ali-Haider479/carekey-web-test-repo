@@ -36,8 +36,8 @@ interface ActivityNote {
 interface ServiceType {
   id: number
   name: string
-  service?: { id: number; name: string; procedureCode: string }
-  serviceAuthService?: { name: string; procedureCode: string }
+  service?: { id: number; name: string; procedureCode: string; modifierCode: string }
+  serviceAuthService?: { name: string; procedureCode: string; modifierCode: string }
 }
 
 interface Activity {
@@ -105,6 +105,8 @@ const CarePlan = () => {
   const [loading, setLoading] = useState<boolean>(false)
   const [submitting, setSubmitting] = useState<boolean>(false)
   const [serviceAuthList, setServiceAuthList] = useState<any[]>([])
+  const [filteredActivities, setFilteredActivities] = useState<Activity[]>([])
+  const [filteredServiceAuth, setFilteredServiceAuth] = useState<any[]>([])
   // const [formInitialUpdateState, setFormInitialUpdateState] = useState<CarePlanFormType>()
   const [componentMode, setComponentMode] = useState<'edit' | 'preview'>('edit')
 
@@ -143,10 +145,24 @@ const CarePlan = () => {
   useEffect(() => {
     if (selectedServiceTypeId !== '') {
       const foundItem = serviceTypes.find(item => item.id === Number(selectedServiceTypeId))
+      const filteredServiceAuth = selectedServiceTypeId
+        ? serviceAuthList.filter(
+            (item: any) =>
+              item.procedureCode === foundItem?.serviceAuthService?.procedureCode &&
+              (item.modifierCode === foundItem?.serviceAuthService?.modifierCode ||
+                (item.modifierCode === null && foundItem?.serviceAuthService?.modifierCode === null))
+          )
+        : serviceAuthList
+      setFilteredServiceAuth(filteredServiceAuth)
       const filteredActivities = selectedServiceTypeId
-        ? activities.filter(activity => activity?.title.includes(foundItem?.service?.name ?? ''))
+        ? activities.filter(
+            (item: any) =>
+              item.procedureCode === foundItem?.serviceAuthService?.procedureCode &&
+              (item.modifierCode === foundItem?.serviceAuthService?.modifierCode ||
+                (item.modifierCode === null && foundItem?.serviceAuthService?.modifierCode === null))
+          )
         : activities
-      setActivities(filteredActivities)
+      setFilteredActivities(filteredActivities)
     }
   }, [selectedServiceTypeId])
 
@@ -158,7 +174,7 @@ const CarePlan = () => {
         api.get('/activity'),
         api.get(`/client/${id}/service-auth`)
       ])
-      setServiceTypes(serviceTypesResponse.data[0].clientServices)
+      setServiceTypes(serviceTypesResponse.data[0].clientServices.filter((item: any) => item.service === null))
       setQPsList(qpsListData.data)
       const filteredActivities = activitiesResponse?.data?.filter((item: any) =>
         serviceTypesResponse.data[0].serviceActivityIds.includes(item.id)
@@ -296,9 +312,7 @@ const CarePlan = () => {
                 return {
                   key: `${item?.id}`,
                   value: item?.id,
-                  optionString: item?.service
-                    ? `${item?.service?.name}-${item?.service?.procedureCode}`
-                    : `${item.serviceAuthService.name}-${item.serviceAuthService.procedureCode}`
+                  optionString: `${item.serviceAuthService.name} (${item.serviceAuthService.procedureCode}-${item.serviceAuthService.modifierCode || 'N/A'})`
                 }
               }) || []
             }
@@ -326,7 +340,7 @@ const CarePlan = () => {
             label={'Service Auth'}
             error={errors.serviceAuth}
             optionList={
-              serviceAuthList.map(item => {
+              filteredServiceAuth.map(item => {
                 return {
                   key: `${item?.id}`,
                   value: item?.id,
@@ -334,7 +348,7 @@ const CarePlan = () => {
                 }
               }) || []
             }
-          // loading={loading}
+            // loading={loading}
           />
           <ControlledDatePicker
             control={control}
@@ -394,7 +408,12 @@ const CarePlan = () => {
             InputLabelProps={{ shrink: true }}
           />
         </Box>
-        <DropdownWithChips label='Services' control={control} name={'serviceActivities'} activities={activities} />
+        <DropdownWithChips
+          label='Services'
+          control={control}
+          name={'serviceActivities'}
+          activities={filteredActivities}
+        />
 
         {selectedActivities.length > 0 && (
           <Box mt={3}>

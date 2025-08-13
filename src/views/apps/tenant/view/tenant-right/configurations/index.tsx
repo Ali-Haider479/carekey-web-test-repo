@@ -101,6 +101,7 @@ const TenantConfiguration = () => {
   const [currentPayPeriod, setCurrentPayPeriod] = useState<any>()
   const [openAddPayPeriodModal, setOpenAddPayPeriodModal] = useState<boolean>(false)
   const [allServicesList, setAllServicesList] = useState<any>()
+  const [filteredServicesList, setFilteredServicesList] = useState<any>()
   const [isServiceEvvModalSHow, setIsServiceEvvModalShow] = useState<boolean>(false)
   const [serviceToChange, setServiceToChange] = useState<any>()
   const [evvConfig, setEvvConfig] = useState<EvvConfig>(
@@ -117,6 +118,7 @@ const TenantConfiguration = () => {
   )
   const [enableNotification, setEnableNotification] = useState<boolean>(authUser?.tenant?.enableNotification || false)
   const [isModalShow, setIsModalShow] = useState<boolean>(false)
+  const [serviceSearchValue, setServiceSearchValue] = useState<string>('')
 
   const { id } = useParams()
 
@@ -226,6 +228,22 @@ const TenantConfiguration = () => {
     setIsModalShow(false)
   }
 
+  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const searchValue = event.target.value.toLowerCase()
+    setServiceSearchValue(searchValue)
+
+    if (!allServicesList) return
+
+    if (searchValue.trim() === '') {
+      setFilteredServicesList(allServicesList)
+    } else {
+      const filtered = allServicesList.filter((item: any) =>
+        Object.values(item).some((value: any) => value && value.toString().toLowerCase().includes(searchValue))
+      )
+      setFilteredServicesList(filtered)
+    }
+  }
+
   const today = new Date()
 
   // Define your pay periods
@@ -295,6 +313,7 @@ const TenantConfiguration = () => {
     const servicesRes = await api.get(`/service/tenant/${id}`)
     console.log('SERVICES RES ----->> ', servicesRes.data)
     setAllServicesList(servicesRes.data)
+    setFilteredServicesList(servicesRes.data)
   }
 
   useEffect(() => {
@@ -317,12 +336,6 @@ const TenantConfiguration = () => {
   }
 
   const newColumns: Column[] = [
-    // {
-    //   id: 'id',
-    //   label: '#',
-    //   minWidth: 170,
-    //   render: item => <Typography className='font-normal text-base my-0'>{item.id}</Typography>
-    // },
     {
       id: 'services',
       label: 'SERVICES',
@@ -399,7 +412,6 @@ const TenantConfiguration = () => {
         </Box>
 
         <AppReactDatepicker
-          // selected={new Date()}
           inline
           className='clean-calendar-override'
           calendarClassName='clean-calendar custom-calendar'
@@ -428,7 +440,6 @@ const TenantConfiguration = () => {
           <TextField
             select
             size='small'
-            // fullWidth
             placeholder='EVV Enforcement'
             id='select-evv-enforcement'
             value={evvConfig.evvEnforcement}
@@ -448,12 +459,29 @@ const TenantConfiguration = () => {
           <GenericCard evvSelected={evvConfig.evvEnforcement} />
         </Box>
 
-        <Typography variant='h5' sx={{ mt: 3 }}>
-          Service EVV
-        </Typography>
+        <Box
+          sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', mt: 3 }}
+        >
+          <Typography variant='h5' sx={{ mt: 0 }}>
+            Service EVV
+          </Typography>
+          <TextField
+            size='small'
+            placeholder='Search Service'
+            id='service-search'
+            value={serviceSearchValue}
+            onChange={handleSearchChange}
+            className='w-2/4'
+            slotProps={{
+              input: {
+                startAdornment: <i className='bx bx-search-alt-2 text-gray-500' style={{ fontSize: '1.2rem' }} />
+              }
+            }}
+          />
+        </Box>
 
         <ReactTable
-          data={allServicesList ? allServicesList : []}
+          data={filteredServicesList ? filteredServicesList : []}
           columns={newColumns}
           keyExtractor={user => user?.id?.toString()}
           enablePagination

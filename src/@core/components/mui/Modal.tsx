@@ -25,11 +25,12 @@ interface FormModalProps {
 // Updated styled components to match the design
 const StyledDialog = styled(Dialog)(({ theme }) => ({
   '& .MuiDialog-paper': {
-    width: '500px',
+    width: '55%',
+    maxWidth: '100%',
     borderRadius: '8px',
     overflow: 'hidden',
     [theme.breakpoints.up('md')]: {
-      width: '570px'
+      width: '55%'
     }
   }
 }))
@@ -125,7 +126,7 @@ const FormModal: React.FC<FormModalProps> = ({
   })
 
   return (
-    <StyledDialog open={isModalOpen} onClose={handleCancel || closeModalHandler} maxWidth={false}>
+    <StyledDialog open={isModalOpen} onClose={handleCancel || closeModalHandler} fullWidth>
       <StyledDialogTitle>
         <Typography className='font-bold'>{title}</Typography>
         <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>

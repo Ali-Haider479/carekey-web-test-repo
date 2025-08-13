@@ -169,8 +169,8 @@ export const serviceStatuses = [
 ]
 
 export const staffRatio = [
-  { id: 1, name: '1:1', description: '(1 employee : 1 client)' },
-  { id: 2, name: '1:2', description: '(1 employee : 2 clients)' },
-  { id: 3, name: '1:3', description: '(1 employee : 3 clients)' },
-  { id: 4, name: '1:4', description: '(1 employee : 4 clients)' }
+  { id: 1, name: '1:1', description: '(1 client : 1 employee)' },
+  { id: 2, name: '1:2', description: '(1 client : 2 employees)' },
+  { id: 3, name: '1:3', description: '(1 client : 3 employees)' },
+  { id: 4, name: '1:4', description: '(1 client : 4 employees)' }
 ]

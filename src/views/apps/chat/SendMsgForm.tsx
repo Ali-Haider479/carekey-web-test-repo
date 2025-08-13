@@ -442,7 +442,7 @@ const SendMsgForm = ({ dispatch, activeUser, isBelowSmScreen, messageInputRef, c
           }}
           onKeyDown={(e: KeyboardEvent<HTMLDivElement>) => {
             if (e.key === 'Enter' && !e.shiftKey) {
-              handleSendMsg(e, msg)
+              !file ? handleSendMsg(e, msg) : handleUpload(e, msg)
             }
           }}
           size='small'

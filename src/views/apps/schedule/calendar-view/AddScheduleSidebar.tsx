@@ -32,6 +32,7 @@ import {
   Grid2 as Grid,
   patch,
   Snackbar,
+  Tooltip,
   useTheme
 } from '@mui/material'
 import CustomAlert from '@/@core/components/mui/Alter'
@@ -52,6 +53,8 @@ import {
 import { formatTimeTo12hr } from '@/utils/helperFunctions'
 import DialogCloseButton from '@/components/dialogs/DialogCloseButton'
 import { useAppDispatch } from '@/hooks/useDispatch'
+import { value } from 'valibot'
+import { set } from 'date-fns'
 
 interface PickerProps {
   label?: string
@@ -97,6 +100,84 @@ const defaultState: DefaultStateType = {
   status: 'scheduled',
   serviceAuth: '',
   frequency: ''
+}
+
+interface QuantityPerFrequencyInput {
+  startDate?: string | Date
+  endDate?: string | Date
+  quantity?: string | number
+  frequency?: string
+}
+
+// List of supported frequencies
+type Frequency = 'daily' | 'weekly' | 'monthly'
+
+const calculateQuantityPerFrequency = ({
+  startDate,
+  endDate,
+  quantity,
+  frequency
+}: QuantityPerFrequencyInput): number => {
+  // Helper function to parse quantity (string or number) into a number
+  const parseQuantity = (qty: string | number | undefined): number => {
+    if (qty === undefined || qty === null) return NaN
+    if (typeof qty === 'number') return isNaN(qty) ? NaN : qty
+    // Remove commas and convert string to number
+    const cleaned = qty.replace(/,/g, '')
+    const parsed = parseFloat(cleaned)
+    return isNaN(parsed) ? NaN : parsed
+  }
+
+  // Parse quantity
+  const parsedQuantity = parseQuantity(quantity)
+
+  // Validate inputs
+  if (!startDate || !endDate || isNaN(parsedQuantity) || !frequency) {
+    return NaN
+  }
+
+  // Convert dates to Date objects
+  const start = new Date(startDate)
+  const end = new Date(endDate)
+
+  // Check if dates are valid
+  if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+    return NaN
+  }
+
+  // Check if endDate is after startDate
+  if (end <= start) {
+    return NaN
+  }
+
+  // Calculate time difference in milliseconds
+  const timeDiffMs = end.getTime() - start.getTime()
+
+  // Calculate quantity per frequency
+  let frequencyUnits: number
+  switch (frequency.toLowerCase() as Frequency) {
+    case 'daily':
+      // Convert time difference to days
+      frequencyUnits = timeDiffMs / (1000 * 60 * 60 * 24)
+      break
+    case 'weekly':
+      // Convert time difference to weeks
+      frequencyUnits = timeDiffMs / (1000 * 60 * 60 * 24 * 7)
+      break
+    case 'monthly':
+      // Calculate months (approximate using average days per month: 30.42)
+      frequencyUnits = timeDiffMs / (1000 * 60 * 60 * 24 * 30.42)
+      break
+    default:
+      return NaN // Unsupported frequency
+  }
+
+  // Calculate quantity per frequency
+  if (frequencyUnits <= 0) {
+    return NaN
+  }
+
+  return parsedQuantity / frequencyUnits
 }
 
 /**
@@ -187,6 +268,12 @@ const AddEventModal = (props: AddEventSidebarType) => {
   const [clientServiceAuth, setClientServiceAuth] = useState<any>()
   const [selectedService, setSelectedService] = useState<any>()
   const [selectedServiceAuth, setSelectedServiceAuth] = useState<any>()
+  const [serviceAuthHours, setServiceAuthHours] = useState<any>({
+    totalHours: 0,
+    usedHours: 0,
+    remainingHours: 0,
+    hoursPerFrequency: 0
+  })
   const [activeClientServiceAuth, setActiveClientServiceAuth] = useState<any>()
   const [serviceAuthUnitsRemaining, setServiceAuthUnitsRemaining] = useState<any>(0)
   const [isDeleteModalShow, setIsDeleteModalShow] = useState<boolean>(false)
@@ -195,6 +282,7 @@ const AddEventModal = (props: AddEventSidebarType) => {
   const [bulkEditChecked, setBulkEditChecked] = useState<boolean>(false)
   const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
   const [showPreview, setShowPreview] = useState(true)
+  const [staffRatioDisabled, setStaffRatioDisabled] = useState<boolean>(false)
   const theme = useTheme()
   const [conflicts, setConflicts] = useState<any[]>([])
   const [conflictModalOpen, setConflictModalOpen] = useState(false)
@@ -325,8 +413,50 @@ const AddEventModal = (props: AddEventSidebarType) => {
       setSelectedServiceAuth(selectedServiceAuth)
       const remainingUnits = selectedServiceAuth?.units - selectedServiceAuth?.usedUnits
       setServiceAuthUnitsRemaining(remainingUnits)
+      const totalHours = (Number(selectedServiceAuth?.units) / 4).toFixed(2) // Assuming 1 unit = 15 minutes
+      const usedHours = (Number(selectedServiceAuth?.usedUnits) / 4).toFixed(2) // Assuming 1 unit = 15 minutes
+      const remainingHours = (Number(remainingUnits) / 4).toFixed(2) // Assuming 1 unit = 15 minutes
+      const qtyPerFrequency = calculateQuantityPerFrequency({
+        startDate: selectedServiceAuth.startDate,
+        endDate: selectedServiceAuth.endDate,
+        quantity: selectedServiceAuth?.units,
+        frequency: selectedServiceAuth.frequency
+      })
+      setServiceAuthHours({
+        totalHours: Number(totalHours),
+        usedHours: Number(usedHours),
+        remainingHours: Number(remainingHours),
+        hoursPerFrequency: Number(qtyPerFrequency).toFixed(2)
+      })
     }
   }, [values.serviceAuth, calendarStore.selectedEvent])
+
+  useEffect(() => {
+    if (isEdited && calendarStore.selectedEvent) {
+      const startDate = new Date(values.startDate).toISOString()
+      const endDate = values.endDate
+      const filteredEvents = calendarStore?.events?.filter(
+        (event: any) =>
+          event.staffRatio === values.staffRatio &&
+          startDate === new Date(event.start).toISOString() &&
+          endDate === event.end &&
+          event.client.id === values.client
+      )
+      console.log('Filtered Events With matching staff ratio: ', filteredEvents)
+      if (filteredEvents.length > 1) setStaffRatioDisabled(true)
+      else setStaffRatioDisabled(false)
+    }
+  }, [
+    values.staffRatio,
+    values.startDate,
+    values.endDate,
+    values.startTime,
+    values.endTime,
+    values.client,
+    values.assignedHours,
+    calendarStore.events,
+    calendarStore.selectedEvent
+  ])
 
   const PickersComponent = forwardRef(({ ...props }: PickerProps, ref) => {
     return (
@@ -397,6 +527,7 @@ const AddEventModal = (props: AddEventSidebarType) => {
     handleAddEventSidebarToggle()
     setAlertOpen(false)
     setShowPreview(true)
+    setStaffRatioDisabled(false)
   }
 
   const calculateTotalDays = (startDate: Date, endDate: Date) => {
@@ -604,7 +735,7 @@ const AddEventModal = (props: AddEventSidebarType) => {
         if (error.status === 409) {
           setAlertOpen(true)
           setAlertMessage({
-            message: 'Caregiver already has a schedule within same date and time',
+            message: 'Schedule has encoutered a conflict',
             severity: 'error'
           })
         }
@@ -624,7 +755,7 @@ const AddEventModal = (props: AddEventSidebarType) => {
           setConflictModalOpen(true)
           setAlertOpen(true)
           setAlertMessage({
-            message: 'Caregiver already has a schedule within same date and time',
+            message: 'Schedule has encoutered a conflict',
             severity: 'error'
           })
         }
@@ -937,92 +1068,179 @@ const AddEventModal = (props: AddEventSidebarType) => {
               onChange={e => setValues({ ...values, title: e.target.value })}
             />
 
-            <CustomTextField
-              select
-              fullWidth
-              className='mbe-3'
-              label='Caregiver'
-              disabled={isEdited && calendarStore?.selectedEvent?.title?.length}
-              value={values?.caregiver}
-              id='caregiver-schedule'
-              onChange={e => setValues({ ...values, caregiver: e.target.value })}
-            >
-              {props?.caregiverList?.length > 0 ? (
-                props?.caregiverList.map((caregiver: any) => (
-                  <MenuItem key={caregiver.id} value={caregiver.id}>
-                    {`${caregiver.firstName} ${caregiver.lastName}`}
-                  </MenuItem>
-                ))
-              ) : (
-                <MenuItem disabled>No options available</MenuItem>
-              )}
-            </CustomTextField>
+            <Grid container spacing={3} className='mb-3'>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <CustomTextField
+                  select
+                  fullWidth
+                  // className='mbe-3'
+                  label='Caregiver'
+                  disabled={isEdited && calendarStore?.selectedEvent?.title?.length}
+                  value={values?.caregiver}
+                  id='caregiver-schedule'
+                  onChange={e => setValues({ ...values, caregiver: e.target.value })}
+                >
+                  {props?.caregiverList?.length > 0 ? (
+                    props?.caregiverList.map((caregiver: any) => (
+                      <MenuItem key={caregiver.id} value={caregiver.id}>
+                        {`${caregiver.firstName} ${caregiver.lastName}`}
+                      </MenuItem>
+                    ))
+                  ) : (
+                    <MenuItem disabled>No options available</MenuItem>
+                  )}
+                </CustomTextField>
+              </Grid>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <CustomTextField
+                  select
+                  fullWidth
+                  // className='mbe-3'
+                  label='Client'
+                  value={values?.client}
+                  disabled={isEdited && calendarStore?.selectedEvent?.title?.length}
+                  id='client-schedule'
+                  onChange={e => setValues({ ...values, client: e.target.value })}
+                >
+                  {clientUsers?.length > 0 ? (
+                    clientUsers.map((client: any) => (
+                      <MenuItem key={client.client.id} value={client.client.id}>
+                        {`${client.client.firstName} ${client.client.lastName}`}
+                      </MenuItem>
+                    ))
+                  ) : (
+                    <MenuItem disabled>No options available</MenuItem>
+                  )}
+                </CustomTextField>
+              </Grid>
+            </Grid>
 
-            <CustomTextField
-              select
-              fullWidth
-              className='mbe-3'
-              label='Client'
-              value={values?.client}
-              disabled={isEdited && calendarStore?.selectedEvent?.title?.length}
-              id='client-schedule'
-              onChange={e => setValues({ ...values, client: e.target.value })}
-            >
-              {clientUsers?.length > 0 ? (
-                clientUsers.map((client: any) => (
-                  <MenuItem key={client.client.id} value={client.client.id}>
-                    {`${client.client.firstName} ${client.client.lastName}`}
-                  </MenuItem>
-                ))
-              ) : (
-                <MenuItem disabled>No options available</MenuItem>
-              )}
-            </CustomTextField>
+            <Grid container spacing={3} className='mb-3'>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <CustomTextField
+                  select
+                  fullWidth
+                  // className='mbe-3'
+                  label='Service type'
+                  value={values?.service}
+                  id='service-schedule'
+                  onChange={e => setValues({ ...values, service: e.target.value })}
+                >
+                  {serviceType?.length > 0 ? (
+                    serviceType
+                      ?.filter(item => item.dummyService === false)
+                      .map((service: any) => (
+                        <MenuItem key={service.id} value={service.clientServiceId}>
+                          {service.name} {`(${service?.procedureCode} - ${service?.modifierCode || 'N/A'})`}{' '}
+                          {service?.dummyService ? '(Demo Service)' : '(S.A Service)'}
+                        </MenuItem>
+                      ))
+                  ) : (
+                    <MenuItem disabled>No options available</MenuItem>
+                  )}
+                </CustomTextField>
+              </Grid>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <CustomTextField
+                  select
+                  fullWidth
+                  // className='mbe-3'
+                  label='Service Auth'
+                  value={values?.serviceAuth}
+                  id='service-auth'
+                  onChange={e => setValues({ ...values, serviceAuth: e.target.value })}
+                >
+                  {activeClientServiceAuth?.length > 0 ? (
+                    activeClientServiceAuth.map((serviceAuth: any) => (
+                      <MenuItem key={serviceAuth.id} value={serviceAuth.id}>
+                        {serviceAuth.serviceName}{' '}
+                        {`(${serviceAuth?.startDate?.split('T')[0]} - ${serviceAuth?.endDate?.split('T')[0]})`}
+                      </MenuItem>
+                    ))
+                  ) : (
+                    <MenuItem disabled>No options available</MenuItem>
+                  )}
+                </CustomTextField>
+              </Grid>
+            </Grid>
 
-            <CustomTextField
-              select
-              fullWidth
-              className='mbe-3'
-              label='Service type'
-              value={values?.service}
-              id='service-schedule'
-              onChange={e => setValues({ ...values, service: e.target.value })}
-            >
-              {serviceType?.length > 0 ? (
-                serviceType
-                  ?.filter(item => item.dummyService === false)
-                  .map((service: any) => (
-                    <MenuItem key={service.id} value={service.clientServiceId}>
-                      {service.name} {`(${service?.procedureCode} - ${service?.modifierCode || 'N/A'})`}{' '}
-                      {service?.dummyService ? '(Demo Service)' : '(S.A Service)'}
-                    </MenuItem>
-                  ))
-              ) : (
-                <MenuItem disabled>No options available</MenuItem>
-              )}
-            </CustomTextField>
+            {values.serviceAuth && (
+              <div
+                className={`grid grid-cols-2 md:grid-cols-5 gap-4 mb-4 p-4 rounded-lg border-[1px] ${theme.palette.mode === 'light' ? 'border-gray-200' : 'text-gray-700'}`}
+              >
+                <div className={`${theme.palette.mode === 'light' ? 'bg-blue-50' : 'bg-blue-900/20'} rounded-lg p-3`}>
+                  <div
+                    className={`text-xs font-medium ${theme.palette.mode === 'light' ? 'text-blue-600' : 'text-blue-400'} uppercase tracking-wide`}
+                  >
+                    Authorized
+                  </div>
+                  <div
+                    className={`text-lg font-bold ${theme.palette.mode === 'light' ? 'text-blue-900' : 'text-blue-100'}`}
+                  >
+                    {serviceAuthHours.totalHours} hrs
+                  </div>
+                </div>
 
-            <CustomTextField
-              select
-              fullWidth
-              className='mbe-3'
-              label='Service Auth'
-              value={values?.serviceAuth}
-              id='service-auth'
-              onChange={e => setValues({ ...values, serviceAuth: e.target.value })}
-            >
-              {activeClientServiceAuth?.length > 0 ? (
-                activeClientServiceAuth.map((serviceAuth: any) => (
-                  <MenuItem key={serviceAuth.id} value={serviceAuth.id}>
-                    {serviceAuth.serviceName}{' '}
-                    {`(${serviceAuth?.startDate?.split('T')[0]} - ${serviceAuth?.endDate?.split('T')[0]})`}
-                  </MenuItem>
-                ))
-              ) : (
-                <MenuItem disabled>No options available</MenuItem>
-              )}
-            </CustomTextField>
-            <Grid container spacing={3}>
+                <div
+                  className={`${theme.palette.mode === 'light' ? 'bg-orange-50' : 'bg-orange-900/20'} rounded-lg p-3`}
+                >
+                  <div
+                    className={`text-xs font-medium ${theme.palette.mode === 'light' ? 'text-orange-600' : 'text-orange-400'} text-orange-600 dark:text-orange-400 uppercase tracking-wide`}
+                  >
+                    Used
+                  </div>
+                  <div
+                    className={`text-lg font-bold ${theme.palette.mode === 'light' ? 'text-orange-900' : 'text-orange-100'}`}
+                  >
+                    {serviceAuthHours.usedHours} hrs
+                  </div>
+                </div>
+
+                <div className={`${theme.palette.mode === 'light' ? 'bg-green-50' : 'bg-green-900/20'} rounded-lg p-3`}>
+                  <div
+                    className={`text-xs font-medium ${theme.palette.mode === 'light' ? 'text-green-600' : 'text-green-400'} uppercase tracking-wide`}
+                  >
+                    Remaining
+                  </div>
+                  <div
+                    className={`text-lg font-bold ${theme.palette.mode === 'light' ? 'text-green-900' : 'text-green-100'}`}
+                  >
+                    {serviceAuthHours.remainingHours} hrs
+                  </div>
+                </div>
+
+                <div
+                  className={`${theme.palette.mode === 'light' ? 'bg-purple-50' : 'bg-purple-900/20'} rounded-lg p-3`}
+                >
+                  <div
+                    className={`text-xs font-medium ${theme.palette.mode === 'light' ? 'text-purple-600' : 'text-purple-400'} uppercase tracking-wide`}
+                  >
+                    PER DAY
+                  </div>
+                  <div
+                    className={`text-lg font-bold ${theme.palette.mode === 'light' ? 'text-purple-900' : 'text-purple-100'}`}
+                  >
+                    {selectedServiceAuth?.frequency === 'daily' ? serviceAuthHours?.hoursPerFrequency : 'N/A'} hrs
+                  </div>
+                </div>
+
+                <div
+                  className={`${theme.palette.mode === 'light' ? 'bg-indigo-50' : 'bg-indigo-900/20'} rounded-lg p-3`}
+                >
+                  <div
+                    className={`text-xs font-medium ${theme.palette.mode === 'light' ? 'text-indigo-600' : 'text-indigo-400'} uppercase tracking-wide`}
+                  >
+                    PER WEEK
+                  </div>
+                  <div
+                    className={`text-lg font-bold ${theme.palette.mode === 'light' ? 'text-indigo-900' : 'text-indigo-100'}`}
+                  >
+                    {selectedServiceAuth?.frequency === 'weekly' ? serviceAuthHours?.hoursPerFrequency : 'N/A'} hrs
+                  </div>
+                </div>
+              </div>
+            )}
+            <Grid container spacing={3} className='mb-0'>
               <Grid size={{ xs: 12, md: 6 }}>
                 <AppReactDatepicker
                   selectsStart
@@ -1037,7 +1255,7 @@ const AddEventModal = (props: AddEventSidebarType) => {
                     <PickersComponent
                       label='Start Date'
                       registername='startDate'
-                      className='mbe-3'
+                      // className='mbe-3'
                       id='event-start-date'
                     />
                   }
@@ -1077,7 +1295,7 @@ const AddEventModal = (props: AddEventSidebarType) => {
                     <PickersComponent
                       label='Start Time'
                       registername='startTime'
-                      className='mbe-3'
+                      // className='mbe-3'
                       id='event-start-time'
                     />
                   }
@@ -1093,9 +1311,7 @@ const AddEventModal = (props: AddEventSidebarType) => {
                   startDate={values.startDate}
                   showTimeSelect={!values.endDate}
                   dateFormat={!values.endDate ? 'yyyy-MM-dd hh:mm' : 'yyyy-MM-dd'}
-                  customInput={
-                    <PickersComponent label='End Date' registername='endDate' className='mbe-3' id='event-end-date' />
-                  }
+                  customInput={<PickersComponent label='End Date' registername='endDate' id='event-end-date' />}
                   disabled={isEdited && calendarStore?.selectedEvent?.title?.length}
                   onChange={(date: Date | null) => {
                     if (date !== null) {
@@ -1110,137 +1326,130 @@ const AddEventModal = (props: AddEventSidebarType) => {
               </Grid>
 
               <Grid size={{ xs: 12, md: 6 }}>
-                {/* <AppReactDatepicker
-                showTimeSelect
-                selected={values.endTime}
-                timeIntervals={1}
-                minDate={values.startTime}
-                startDate={values.startTime}
-                showTimeSelectOnly
-                dateFormat='hh:mm aa'
-                id='time-only-picker'
-                onChange={(date: Date | null) => {
-                  if (date !== null) {
-                    // Combine the selected end date with the selected end time
-                    setValues({
-                      ...values,
-                      endTime: date,
-                      endDate: mergeDateWithTime(values.endDate, date)
-                    })
-                  }
-                }}
-                customInput={
-                  <PickersComponent label='End Time' registername='endTime' className='mbe-3' id='event-end-time' />
-                }
-              /> */}
-                <CustomTextField
-                  fullWidth
-                  className='mbe-3'
-                  label='Assigned Hours (Per Day)'
-                  value={values.assignedHours}
-                  id='event-assignedHours'
-                  type='number'
-                  slotProps={{
-                    htmlInput: {
-                      min: 0,
-                      max: 24,
-                      step: 0.25
-                    }
-                  }}
-                  // onChange={e => setValues({ ...values, assignedHours: Number(e.target.value) })}
-                  onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
-                    // Allow digits, decimal point, backspace, delete, tab, enter, and arrow keys
-                    const allowedKeys = [
-                      '0',
-                      '1',
-                      '2',
-                      '3',
-                      '4',
-                      '5',
-                      '6',
-                      '7',
-                      '8',
-                      '9',
-                      '.',
-                      'Backspace',
-                      'Delete',
-                      'Tab',
-                      'Enter',
-                      'ArrowLeft',
-                      'ArrowRight'
-                    ]
-                    // Allow Ctrl/Cmd + A, C, V, X for select, copy, paste, cut
-                    if (e.ctrlKey || e.metaKey) {
-                      allowedKeys.push('a', 'c', 'v', 'x')
-                    }
-                    if (!allowedKeys.includes(e.key)) {
-                      e.preventDefault()
-                    }
-                    // Prevent multiple decimal points
-                    if (e.key === '.' && (e.target as HTMLInputElement).value.includes('.')) {
-                      e.preventDefault()
-                    }
-                  }}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                    const value = e.target.value
-                    // Allow empty string or valid number (e.g., "123", "12.34")
-                    if (value === '' || /^[0-9]*\.?[0-9]*$/.test(value)) {
-                      let newValue: number | string = value === '' ? '' : parseFloat(value)
-                      if (typeof newValue === 'number') {
-                        if (isNaN(newValue)) {
-                          newValue = '' // Handle invalid number
-                        } else {
-                          if (newValue > 24) {
-                            newValue = 24 // Cap at 24
-                          }
-                          if (newValue < 0) {
-                            newValue = 0 // Prevent negative values
-                          }
-                        }
-                      }
-                      setValues({ ...values, assignedHours: newValue })
-                    }
-                  }}
-                  error={
-                    typeof values.assignedHours === 'number' &&
-                    (values.assignedHours > 24 || isNaN(values.assignedHours))
-                  }
-                  helperText={
-                    typeof values.assignedHours === 'number' && values.assignedHours > 24
-                      ? 'Assigned hours cannot exceed 24.'
-                      : typeof values.assignedHours === 'number' && isNaN(values.assignedHours)
-                        ? 'Please enter a valid number.'
-                        : ''
-                  }
-                />
-              </Grid>
-              <Grid size={{ xs: 12, md: 12 }}>
-                <CustomTextField
-                  select
-                  fullWidth
-                  className='mbe-3'
-                  label='Staff Ratio'
-                  value={values?.staffRatio}
-                  defaultValue={values?.staffRatio}
-                  id='staff-ratio-schedule'
-                  onChange={e => setValues({ ...values, staffRatio: e.target.value })}
+                <Tooltip
+                  placement='bottom-start'
+                  title={staffRatioDisabled ? 'Assigned Hours are not editable for this schedule' : ''}
                 >
-                  {staffRatio?.length > 0 ? (
-                    staffRatio?.map((item: any) => (
-                      <MenuItem key={item.id} value={item.name}>
-                        {item.name} - {item.description}
-                      </MenuItem>
-                    ))
-                  ) : (
-                    <MenuItem disabled>No options available</MenuItem>
-                  )}
-                </CustomTextField>
+                  <div>
+                    <CustomTextField
+                      fullWidth
+                      // className='mbe-3'
+                      label='Assigned Hours (Per Day)'
+                      value={values.assignedHours}
+                      id='event-assignedHours'
+                      type='number'
+                      disabled={isEdited && staffRatioDisabled}
+                      slotProps={{
+                        htmlInput: {
+                          min: 0,
+                          max: 24,
+                          step: 0.25
+                        }
+                      }}
+                      // onChange={e => setValues({ ...values, assignedHours: Number(e.target.value) })}
+                      onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                        // Allow digits, decimal point, backspace, delete, tab, enter, and arrow keys
+                        const allowedKeys = [
+                          '0',
+                          '1',
+                          '2',
+                          '3',
+                          '4',
+                          '5',
+                          '6',
+                          '7',
+                          '8',
+                          '9',
+                          '.',
+                          'Backspace',
+                          'Delete',
+                          'Tab',
+                          'Enter',
+                          'ArrowLeft',
+                          'ArrowRight'
+                        ]
+                        // Allow Ctrl/Cmd + A, C, V, X for select, copy, paste, cut
+                        if (e.ctrlKey || e.metaKey) {
+                          allowedKeys.push('a', 'c', 'v', 'x')
+                        }
+                        if (!allowedKeys.includes(e.key)) {
+                          e.preventDefault()
+                        }
+                        // Prevent multiple decimal points
+                        if (e.key === '.' && (e.target as HTMLInputElement).value.includes('.')) {
+                          e.preventDefault()
+                        }
+                      }}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                        const value = e.target.value
+                        // Allow empty string or valid number (e.g., "123", "12.34")
+                        if (value === '' || /^[0-9]*\.?[0-9]*$/.test(value)) {
+                          let newValue: number | string = value === '' ? '' : parseFloat(value)
+                          if (typeof newValue === 'number') {
+                            if (isNaN(newValue)) {
+                              newValue = '' // Handle invalid number
+                            } else {
+                              if (newValue > 24) {
+                                newValue = 24 // Cap at 24
+                              }
+                              if (newValue < 0) {
+                                newValue = 0 // Prevent negative values
+                              }
+                            }
+                          }
+                          setValues({ ...values, assignedHours: newValue })
+                        }
+                      }}
+                      error={
+                        typeof values.assignedHours === 'number' &&
+                        (values.assignedHours > 24 || isNaN(values.assignedHours))
+                      }
+                      helperText={
+                        typeof values.assignedHours === 'number' && values.assignedHours > 24
+                          ? 'Assigned hours cannot exceed 24.'
+                          : typeof values.assignedHours === 'number' && isNaN(values.assignedHours)
+                            ? 'Please enter a valid number.'
+                            : ''
+                      }
+                    />
+                  </div>
+                </Tooltip>
               </Grid>
-              <Grid size={{ xs: 12, md: 12 }}>
+              <Grid size={{ xs: 12, md: 6 }} className='mb-3'>
+                <Tooltip
+                  placement='bottom-start'
+                  title={staffRatioDisabled ? 'Staff Ratio is not editable for this schedule' : ''}
+                >
+                  <div>
+                    <CustomTextField
+                      select
+                      fullWidth
+                      // className='mbe-3'
+                      label='Staff Ratio'
+                      value={values?.staffRatio}
+                      defaultValue={values?.staffRatio}
+                      id='staff-ratio-schedule'
+                      onChange={e => setValues({ ...values, staffRatio: e.target.value })}
+                      disabled={isEdited && staffRatioDisabled} //calendarStore?.selectedEvent?.title?.length
+                    >
+                      {staffRatio?.length > 0 ? (
+                        staffRatio?.map((item: any) => (
+                          <MenuItem key={item.id} value={item.name}>
+                            {item.name} - {item.description}
+                          </MenuItem>
+                        ))
+                      ) : (
+                        <MenuItem disabled>No options available</MenuItem>
+                      )}
+                    </CustomTextField>
+                  </div>
+                </Tooltip>
+              </Grid>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <CustomTextField
                   select
                   fullWidth
-                  className='mbe-3'
+                  // className='mbe-3'
                   label='Frequency'
                   value={values?.frequency}
                   id='frequency-schedule'
@@ -1271,23 +1480,29 @@ const AddEventModal = (props: AddEventSidebarType) => {
             <MenuItem value='waiting'>Waiting</MenuItem>
           </CustomTextField> */}
 
-            <CustomTextField
-              fullWidth
-              className='mbe-3'
-              label='Location'
-              value={values.location}
-              id='event-location'
-              onChange={e => setValues({ ...values, location: String(e.target.value) })}
-            />
-            <CustomTextField
-              label='Notes or instructions'
-              multiline={true}
-              value={values.notes}
-              onChange={e => setValues({ ...values, notes: e.target.value })}
-              fullWidth
-              className='mbe-3'
-              id='event-notes'
-            />
+            <Grid container spacing={3} className='mb-5'>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <CustomTextField
+                  fullWidth
+                  // className='mbe-3'
+                  label='Location'
+                  value={values.location}
+                  id='event-location'
+                  onChange={e => setValues({ ...values, location: String(e.target.value) })}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <CustomTextField
+                  label='Notes or instructions'
+                  multiline={true}
+                  value={values.notes}
+                  onChange={e => setValues({ ...values, notes: e.target.value })}
+                  fullWidth
+                  // className='mbe-3'
+                  id='event-notes'
+                />
+              </Grid>
+            </Grid>
             {calendarStore.selectedEvent && (
               <div>
                 <Checkbox checked={bulkEditChecked} onChange={handleBulkEditChange} />
@@ -1389,6 +1604,7 @@ const AddEventModal = (props: AddEventSidebarType) => {
                 const caregiver =
                   props?.caregiverList?.find((c: any) => c.id === conflict.conflictingDto.caregiverId) || {}
                 const client = props?.clientList?.find((c: any) => c.id === conflict.conflictingDto.clientId) || {}
+                const conflictType = conflict.conflictType
 
                 return (
                   <Accordion
@@ -1417,18 +1633,51 @@ const AddEventModal = (props: AddEventSidebarType) => {
                         <br />
                         {`Service: ${selectedService.name} (${selectedService.procedureCode} - ${selectedService.modifierCode || 'N/A'})`}
                         <br />
+                        {`Staff Ratio: ${conflict.conflictingDto.staffRatio}`}
+                        <br />
                         {`Date: ${new Date(conflict.conflictingDto.start).toLocaleDateString()}`}
                       </Typography>
-                      <Typography className='mt-2 font-semibold'>{`Conflicting Values`}</Typography>
-                      <Typography>
-                        {`Requested Start Date: ${new Date(conflict.conflictingDto.start).toLocaleString()}`}
-                        <br />
-                        {`Requested End Date: ${new Date(conflict.conflictingDto.end).toLocaleString()}`}
-                        <br />
-                        {`Conflicting Start Date: ${new Date(conflict.existingSchedule.start).toLocaleString()}`}
-                        <br />
-                        {`Conflicting End Date: ${new Date(conflict.existingSchedule.end).toLocaleString()}`}
-                      </Typography>
+                      {conflictType === 'caregiverTimeOverlap' ? (
+                        <>
+                          <Typography className='mt-2 font-semibold'>{`Caregiver Conflict`}</Typography>
+                          <Typography>
+                            {`Requested Start Date: ${new Date(conflict.conflictingDto.start).toLocaleString()}`}
+                            <br />
+                            {`Requested End Date: ${new Date(conflict.conflictingDto.end).toLocaleString()}`}
+                            <br />
+                            {`Conflicting Start Date: ${new Date(conflict.existingSchedule.start).toLocaleString()}`}
+                            <br />
+                            {`Conflicting End Date: ${new Date(conflict.existingSchedule.end).toLocaleString()}`}
+                          </Typography>
+                        </>
+                      ) : conflictType === 'clientTimeOverlap' ? (
+                        <>
+                          <Typography className='mt-2 font-semibold'>{`Client Conflict`}</Typography>
+                          <Typography>
+                            {`Requested Start Date: ${new Date(conflict.conflictingDto.start).toLocaleString()}`}
+                            <br />
+                            {`Requested End Date: ${new Date(conflict.conflictingDto.end).toLocaleString()}`}
+                            <br />
+                            {`Conflicting Start Date: ${new Date(conflict.existingSchedule.start).toLocaleString()}`}
+                            <br />
+                            {`Conflicting End Date: ${new Date(conflict.existingSchedule.end).toLocaleString()}`}
+                          </Typography>
+                        </>
+                      ) : conflictType === 'staffRatioLength' ? (
+                        <>
+                          <Typography className='mt-2 font-semibold'>{`Staff Ratio Error`}</Typography>
+                          <Typography>{`Client's Schedules already fulfill the required caregivers`}</Typography>
+                        </>
+                      ) : (
+                        <>
+                          <Typography className='mt-2 font-semibold'>{`Staff Ratio Error`}</Typography>
+                          <Typography>
+                            {`Requested Staff Ratio: ${conflict.conflictingDto.staffRatio}`}
+                            <br />
+                            {`Conflicting Staff Ratio: ${conflict.existingSchedule.staffRatio}`}
+                          </Typography>
+                        </>
+                      )}
                     </AccordionDetails>
                   </Accordion>
                 )
