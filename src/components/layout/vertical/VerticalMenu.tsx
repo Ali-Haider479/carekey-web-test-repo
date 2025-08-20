@@ -31,6 +31,7 @@ import api from '@/utils/api'
 import { useDispatch, useSelector } from 'react-redux'
 import { RootState } from '@/redux-store'
 import { setChatUnReadMessageStatus } from '@/redux-store/slices/notification'
+import { Box, Typography } from '@mui/material'
 
 // Menu Data Imports
 // import menuData from '@/data/navigation/verticalMenuData'
@@ -87,184 +88,252 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
   }, [dispatch])
 
   return (
-    <ScrollWrapper
-      {...(isBreakpointReached
-        ? {
-            className: 'bs-full overflow-y-auto overflow-x-hidden',
-            onScroll: container => scrollMenu(container, false)
-          }
-        : {
-            options: { wheelPropagation: false, suppressScrollX: true },
-            onScrollY: container => scrollMenu(container, true)
-          })}
-    >
-      <Menu
-        popoutMenuOffset={{ mainAxis: 27 }}
-        menuItemStyles={menuItemStyles(verticalNavOptions, theme)}
-        renderExpandIcon={({ open }) => <RenderExpandIcon open={open} transitionDuration={transitionDuration} />}
-        renderExpandedMenuItemIcon={{ icon: <i className='bx-bxs-circle' /> }}
-        menuSectionStyles={menuSectionStyles(verticalNavOptions, theme)}
+    <>
+      <ScrollWrapper
+        {...(isBreakpointReached
+          ? {
+              className: 'bs-full overflow-y-auto overflow-x-hidden',
+              onScroll: container => scrollMenu(container, false)
+            }
+          : {
+              options: { wheelPropagation: false, suppressScrollX: true },
+              onScrollY: container => scrollMenu(container, true)
+            })}
       >
-        {/* Dashboard - requires Dashboard permission */}
-        {hasPermission('Dashboard') && (
-          <MenuItem
-            href={`/${locale}/apps/dashboard`}
-            icon={<i className='bx-home-smile' />}
-            exactMatch={false}
-            activeUrl='/apps/dashboard'
-          >
-            {dictionary['navigation'].dashboard}
-          </MenuItem>
-        )}
-
-        {/* RCM - no specific permission in the provided list, consider adding one */}
-        <MenuItem
-          href={`/${locale}/apps/rcm`}
-          icon={<i className='bx-money' />}
-          exactMatch={false}
-          activeUrl='/apps/rcm'
+        <Menu
+          popoutMenuOffset={{ mainAxis: 27 }}
+          menuItemStyles={menuItemStyles(verticalNavOptions, theme)}
+          renderExpandIcon={({ open }) => <RenderExpandIcon open={open} transitionDuration={transitionDuration} />}
+          renderExpandedMenuItemIcon={{ icon: <i className='bx-bxs-circle' /> }}
+          menuSectionStyles={menuSectionStyles(verticalNavOptions, theme)}
         >
-          {dictionary['navigation'].rcm}
-        </MenuItem>
+          {/* Dashboard - requires Dashboard permission */}
+          {hasPermission('Dashboard') && (
+            <MenuItem
+              href={`/${locale}/apps/dashboard`}
+              icon={<i className='bx-home-smile' />}
+              exactMatch={false}
+              activeUrl='/apps/dashboard'
+            >
+              {dictionary['navigation'].dashboard}
+            </MenuItem>
+          )}
 
-        {/* Billing - requires Billing permission */}
-        {hasPermission('Billing') && (
-          <MenuItem
-            href={`/${locale}/apps/billing`}
-            icon={<i className='bx-dollar' />}
-            exactMatch={false}
-            activeUrl='/apps/billing'
+          {/* RCM - no specific permission in the provided list, consider adding one */}
+          {hasPermission('RCM') && (
+            <MenuItem
+              href={`/${locale}/apps/rcm`}
+              icon={<i className='bx-money' />}
+              exactMatch={false}
+              activeUrl='/apps/rcm'
+            >
+              {dictionary['navigation'].rcm}
+            </MenuItem>
+          )}
+
+          {/* Billing - requires Billing permission */}
+          {hasPermission('Billing') && authUser.tenant && (
+            <MenuItem
+              href={`/${locale}/apps/billing`}
+              icon={<i className='bx-dollar' />}
+              exactMatch={false}
+              activeUrl='/apps/billing'
+            >
+              {dictionary['navigation'].billing}
+            </MenuItem>
+          )}
+
+          {/* Caregivers - requires Caregivers_Access permission */}
+          {hasPermission('Caregivers') && authUser.tenant && (
+            <MenuItem
+              // href={`/${locale}/apps/caregiver/list`}
+              href={
+                authUser?.userRoles?.title === 'Caregiver'
+                  ? `/${locale}/apps/caregiver/${authUser?.caregiver?.id}/detail`
+                  : `/${locale}/apps/caregiver/list`
+              }
+              icon={<i className='bx-bxs-heart-circle' />}
+              exactMatch={false}
+              activeUrl='/apps/caregiver'
+            >
+              {dictionary['navigation'].caregivers}
+            </MenuItem>
+          )}
+
+          {/* Clients - requires Client_Access permission */}
+          {hasPermission('Client') && authUser.tenant && (
+            <MenuItem
+              href={`/${locale}/apps/client/list`}
+              icon={<i className='bx-user' />}
+              exactMatch={false}
+              activeUrl='/apps/client'
+            >
+              {dictionary['navigation'].clients}
+            </MenuItem>
+          )}
+
+          {/* Accounts - requires Accounts permission */}
+          {hasPermission('Accounts') && (
+            <MenuItem
+              href={
+                authUser?.userRoles?.title === 'Tenant Admin'
+                  ? `/${locale}/apps/accounts/${authUser?.tenant?.id}/detail`
+                  : `/${locale}/apps/accounts/tenant-list`
+              }
+              icon={<i className='bx-user-circle' />}
+              exactMatch={false}
+              activeUrl='/apps/accounts'
+            >
+              {authUser?.userRoles?.title === 'Tenant Admin' ? 'Account' : dictionary['navigation'].accounts}
+            </MenuItem>
+          )}
+
+          {/* Schedules - requires Calendar permission */}
+          {hasPermission('Calendar') && authUser.tenant && (
+            <MenuItem
+              href={`/${locale}/apps/schedules/calendar-view`}
+              icon={<i className='bx-calendar-alt' />}
+              exactMatch={false}
+              activeUrl='/apps/schedules'
+            >
+              {dictionary['navigation'].schedules}
+            </MenuItem>
+          )}
+
+          {/* EVV Tracking - requires EVV permission */}
+          {hasPermission('EVV') && authUser.tenant && (
+            <MenuItem
+              href={`/${locale}/apps/evv-tracking`}
+              icon={<i className='bx-mobile-alt' />}
+              exactMatch={false}
+              activeUrl='/apps/evv-tracking'
+            >
+              {dictionary['navigation'].evv}
+            </MenuItem>
+          )}
+
+          {/* Timesheets - requires TimeSheets permission */}
+          {hasPermission('Timesheets') && authUser.tenant && (
+            <MenuItem
+              href={`/${locale}/apps/timesheets`}
+              icon={<i className='bx-spreadsheet' />}
+              exactMatch={false}
+              activeUrl='/apps/timesheets'
+            >
+              {dictionary['navigation'].timesheets}
+            </MenuItem>
+          )}
+
+          {/* Chat - requires Chat permission */}
+          {hasPermission('Chat') && ( //&& authUser.tenant
+            <MenuItem
+              href={`/${locale}/apps/chat`}
+              icon={<i className='bx-chat' />}
+              exactMatch={false}
+              activeUrl='/apps/chat'
+              suffix={
+                chatUnReadMessageStatus ? (
+                  <span className='relative inline-block'>
+                    <span className='absolute top-[-5] right-0 w-3 h-3 bg-red-500 rounded-full' />
+                  </span>
+                ) : (
+                  ''
+                )
+              }
+              onActiveChange={() => dispatch(setChatUnReadMessageStatus(false))}
+            >
+              {dictionary['navigation'].chat}
+            </MenuItem>
+          )}
+
+          {/* Reports - requires Reports permission */}
+          {hasPermission('Reports') && authUser.tenant && (
+            <MenuItem
+              href={`/${locale}/apps/reports`}
+              icon={<i className='bx-alarm-exclamation' />}
+              exactMatch={false}
+              activeUrl='/apps/reports'
+            >
+              {dictionary['navigation'].reports}
+            </MenuItem>
+          )}
+
+          {/* Advance - no specific permission in the provided list, consider adding one */}
+          {hasPermission('Advance') && (
+            <MenuItem
+              href={`/${locale}/apps/advance`}
+              icon={<i className='bx-bug-alt' />}
+              exactMatch={false}
+              activeUrl='/apps/advance'
+            >
+              {dictionary['navigation'].advance}
+            </MenuItem>
+          )}
+        </Menu>
+      </ScrollWrapper>
+      {authUser.tenant && (
+        <>
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 1,
+              px: 3,
+              py: 2,
+              borderTop: '1px solid',
+              borderColor: 'divider',
+              backgroundColor: 'background.paper'
+            }}
           >
-            {dictionary['navigation'].billing}
-          </MenuItem>
-        )}
-
-        {/* Caregivers - requires Caregivers_Access permission */}
-        {hasPermission('Caregivers') && (
-          <MenuItem
-            // href={`/${locale}/apps/caregiver/list`}
-            href={
-              authUser?.userRoles?.title === 'Caregiver'
-                ? `/${locale}/apps/caregiver/${authUser?.caregiver?.id}/detail`
-                : `/${locale}/apps/caregiver/list`
-            }
-            icon={<i className='bx-bxs-heart-circle' />}
-            exactMatch={false}
-            activeUrl='/apps/caregiver'
-          >
-            {dictionary['navigation'].caregivers}
-          </MenuItem>
-        )}
-
-        {/* Clients - requires Client_Access permission */}
-        {hasPermission('Client') && (
-          <MenuItem
-            href={`/${locale}/apps/client/list`}
-            icon={<i className='bx-user' />}
-            exactMatch={false}
-            activeUrl='/apps/client'
-          >
-            {dictionary['navigation'].clients}
-          </MenuItem>
-        )}
-
-        {/* Accounts - requires Accounts permission */}
-        {hasPermission('Accounts') && (
-          <MenuItem
-            href={
-              authUser?.userRoles?.title === 'Tenant Admin'
-                ? `/${locale}/apps/accounts/${authUser?.tenant?.id}/detail`
-                : `/${locale}/apps/accounts/tenant-list`
-            }
-            icon={<i className='bx-user-circle' />}
-            exactMatch={false}
-            activeUrl='/apps/accounts'
-          >
-            {authUser?.userRoles?.title === 'Tenant Admin' ? 'Account' : dictionary['navigation'].accounts}
-          </MenuItem>
-        )}
-
-        {/* Schedules - requires Calendar permission */}
-        {hasPermission('Calendar') && (
-          <MenuItem
-            href={`/${locale}/apps/schedules/calendar-view`}
-            icon={<i className='bx-calendar-alt' />}
-            exactMatch={false}
-            activeUrl='/apps/schedules'
-          >
-            {dictionary['navigation'].schedules}
-          </MenuItem>
-        )}
-
-        {/* EVV Tracking - requires EVV permission */}
-        {hasPermission('EVV') && (
-          <MenuItem
-            href={`/${locale}/apps/evv-tracking`}
-            icon={<i className='bx-mobile-alt' />}
-            exactMatch={false}
-            activeUrl='/apps/evv-tracking'
-          >
-            {dictionary['navigation'].evv}
-          </MenuItem>
-        )}
-
-        {/* Timesheets - requires TimeSheets permission */}
-        {hasPermission('Timesheets') && (
-          <MenuItem
-            href={`/${locale}/apps/timesheets`}
-            icon={<i className='bx-spreadsheet' />}
-            exactMatch={false}
-            activeUrl='/apps/timesheets'
-          >
-            {dictionary['navigation'].timesheets}
-          </MenuItem>
-        )}
-
-        {/* Chat - requires Chat permission */}
-        {hasPermission('Chat') && (
-          <MenuItem
-            href={`/${locale}/apps/chat`}
-            icon={<i className='bx-chat' />}
-            exactMatch={false}
-            activeUrl='/apps/chat'
-            suffix={
-              chatUnReadMessageStatus ? (
-                <span className='relative inline-block'>
-                  <span className='absolute top-[-5] right-0 w-3 h-3 bg-red-500 rounded-full' />
-                </span>
-              ) : (
-                ''
-              )
-            }
-            onActiveChange={() => dispatch(setChatUnReadMessageStatus(false))}
-          >
-            {dictionary['navigation'].chat}
-          </MenuItem>
-        )}
-
-        {/* Reports - requires Reports permission */}
-        {hasPermission('Reports') && (
-          <MenuItem
-            href={`/${locale}/apps/reports`}
-            icon={<i className='bx-alarm-exclamation' />}
-            exactMatch={false}
-            activeUrl='/apps/reports'
-          >
-            {dictionary['navigation'].reports}
-          </MenuItem>
-        )}
-
-        {/* Advance - no specific permission in the provided list, consider adding one */}
-        <MenuItem
-          href={`/${locale}/apps/advance`}
-          icon={<i className='bx-bug-alt' />}
-          exactMatch={false}
-          activeUrl='/apps/advance'
-        >
-          {dictionary['navigation'].advance}
-        </MenuItem>
-      </Menu>
-    </ScrollWrapper>
+            <Typography
+              variant='h6'
+              sx={{
+                fontWeight: 'bold',
+                color: 'text.primary'
+              }}
+            >
+              Tenant Info
+            </Typography>
+            <Typography
+              variant='body2'
+              sx={{
+                fontWeight: 'medium',
+                color: 'text.secondary',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis'
+              }}
+            >
+              Name: {authUser.tenant.companyName}
+            </Typography>
+            <Typography
+              variant='body2'
+              sx={{
+                fontWeight: 'medium',
+                color: 'text.secondary',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis'
+              }}
+            >
+              Email: {authUser.tenant.billingEmail}
+            </Typography>
+            <Typography
+              variant='body2'
+              sx={{
+                fontWeight: 'medium',
+                color: 'text.secondary',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis'
+              }}
+            >
+              Phone: {authUser.tenant.contactNumber}
+            </Typography>
+          </Box>
+        </>
+      )}
+    </>
   )
 }
 

@@ -123,8 +123,9 @@ const UserManagementList = ({
   }, [])
 
   const fetchData = async () => {
+    const rolesUrl = tenantId ? `/role/${tenantId}` : `/role`
     try {
-      await Promise.all([api.get(`/role/${tenantId}`), api.get(`/permission`)]).then(([role, permission]) => {
+      await Promise.all([api.get(rolesUrl), api.get(`/permission`)]).then(([role, permission]) => {
         const roles = role.data.filter((role: any) => role.id !== 1)
         setRolesData(roles)
         setPermissionData(permission.data)
@@ -240,7 +241,8 @@ const UserManagementList = ({
           customRole,
           accountStatus: 'Active',
           joinDate: new Date().toISOString(),
-          emailAddress: formData.emailAddress.toLowerCase()
+          emailAddress: formData.emailAddress.toLowerCase(),
+          ...(!authUser.tenant ? { isSupport: true } : { isSupport: false })
         }
         console.log('IF SECTION PAYLOAD', payload)
       } else {
@@ -546,9 +548,11 @@ const UserManagementList = ({
     } else {
       return (
         <Grid size={{ xs: 12, sm: 12 }}>
-          <Typography variant='subtitle2' color='textSecondary' className='mb-2'>
-            Role Permissions
-          </Typography>
+          {selectedRolePermissions.length > 0 && (
+            <Typography variant='subtitle2' color='textSecondary' className='mb-2'>
+              Role Permissions
+            </Typography>
+          )}
           <div className='flex flex-wrap gap-2'>
             {selectedRolePermissions.map(permission => (
               <Chip key={permission.id} label={permission.name} className='bg-[#e3e4fb] text-[#4B0082]' />

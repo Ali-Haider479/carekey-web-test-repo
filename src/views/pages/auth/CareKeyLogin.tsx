@@ -1,7 +1,7 @@
 'use client'
 
 // React Imports
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 // Next Imports
 import Link from 'next/link'
@@ -36,10 +36,24 @@ import LoginPageSVG from '../../../../public/assets/icons/LoginPageSVG'
 import { dark } from '@mui/material/styles/createPalette'
 import CareKeyLogoDark from '@/@core/svg/LogoDark'
 import CareKeyLogoLight from '@/@core/svg/LogoLight'
-import { getSession, signIn } from 'next-auth/react'
-import { CircularProgress, Grid2 as Grid } from '@mui/material'
+import { getSession, signIn, useSession } from 'next-auth/react'
+import {
+  Box,
+  CircularProgress,
+  Dialog,
+  DialogTitle,
+  FormControl,
+  FormLabel,
+  Grid2 as Grid,
+  Radio,
+  RadioGroup,
+  TextField
+} from '@mui/material'
 import CustomAlert from '@/@core/components/mui/Alter'
 import Logo from '@/@core/svg/Logo'
+import axios from 'axios'
+import DialogCloseButton from '@/components/dialogs/DialogCloseButton'
+import api from '@/utils/api'
 
 const CareKeyLogin = () => {
   const router = useRouter()
@@ -51,9 +65,28 @@ const CareKeyLogin = () => {
   const [alertProps, setAlertProps] = useState<any>()
   const [isPasswordShown, setIsPasswordShown] = useState(false)
   const [loading, setLoading] = useState<boolean>(false)
+  const [tenantSelectionModalOpen, setTenantSelectionModalOpen] = useState(false)
+  const [tenants, setTenants] = useState<any[]>([])
+  const [selectedTenant, setSelectedTenant] = useState<any>()
+  const { data: session, update } = useSession()
+  const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
+  const [searchTerm, setSearchTerm] = useState<string>('')
+  const [filteredTenants, setFilteredTenants] = useState<any[]>([])
   // Hooks
   const { lang: locale } = useParams()
   const { settings } = useSettings()
+
+  useEffect(() => {
+    if (searchTerm.trim() === '') {
+      setFilteredTenants(tenants)
+      return
+    }
+
+    const searchTermLower = searchTerm.toLowerCase()
+    const filtered = tenants.filter(item => item?.companyName?.toLowerCase().includes(searchTermLower))
+
+    setFilteredTenants(filtered)
+  }, [searchTerm, tenants])
 
   const handleClickShowPassword = () => setIsPasswordShown(show => !show)
 
@@ -99,41 +132,52 @@ const CareKeyLogin = () => {
       console.log('Login Response:--------- ', res)
 
       if (res?.status === 200) {
-        // Success Case
-        // setAlertOpen(true)
-        // setAlertProps({
-        //   message: 'Login Successful!',
-        //   severity: 'success'
-        // })
+        setAlertOpen(true)
+        setAlertProps({
+          message: 'Login Successful!',
+          severity: 'success'
+        })
 
         const session = await getSession()
         console.log('Session Login', session)
         console.log('Tenant Id', session?.user?.tenant?.id)
         if (session?.user?.userRoles?.title === 'Super Admin') {
-          setAlertOpen(true)
-          setAlertProps({
-            message: 'Login Successful!',
-            severity: 'success'
+          console.log('SESSION ROLE', session?.user?.userRoles?.title)
+          const tenantsRes = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/tenant`, {
+            headers: { Authorization: `Bearer ${session.user.accessToken}` }
           })
-          const role = session?.user?.userRoles?.title
           localStorage.setItem('AuthUser', JSON.stringify(session?.user))
-          console.log('SESSION ROLEE', session?.user?.userRoles?.title)
-          role.includes('Super Admin') || role.includes('Tenant Admin') ? router.push('/') : router.push('/en/apps/rcm')
+          if (tenantsRes.status === 200 && tenantsRes.data.length > 0) {
+            setTenants(tenantsRes.data)
+            setTenantSelectionModalOpen(true)
+          } else {
+            const role = session?.user?.userRoles?.title
+            console.log('SESSION ROLE', session?.user?.userRoles?.title)
+            role.includes('Super Admin') || role.includes('Tenant Admin')
+              ? router.push('/')
+              : router.push('/en/apps/rcm')
+          }
+        } else if (session?.user?.userRoles?.title !== 'Super Admin' && !session?.user?.tenant) {
+          console.log('SESSION ROLE', session?.user?.userRoles?.title)
+          const tenantsRes = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/tenant`, {
+            headers: { Authorization: `Bearer ${session?.user?.accessToken}` }
+          })
+          localStorage.setItem('AuthUser', JSON.stringify(session?.user))
+          if (tenantsRes.status === 200 && tenantsRes.data.length > 0) {
+            setTenants(tenantsRes.data)
+            setTenantSelectionModalOpen(true)
+          } else {
+            console.log('SESSION ROLE', session?.user?.userRoles?.title)
+            router.push('/en/apps/caregiver/list')
+          }
         } else {
-          if (session?.user?.tenant?.status === 'Active') {
-            setAlertOpen(true)
-            setAlertProps({
-              message: 'Login Successful!',
-              severity: 'success'
-            })
-            if (session?.user) {
-              const role = session?.user?.userRoles?.title
-              localStorage.setItem('AuthUser', JSON.stringify(session?.user))
-              console.log('SESSION ROLEE', session?.user?.userRoles?.title)
-              role.includes('Super Admin') || role.includes('Tenant Admin')
-                ? router.push('/')
-                : router.push('/en/apps/rcm')
-            }
+          if (session?.user?.tenant?.status === 'Active' && session?.user) {
+            const role = session?.user?.userRoles?.title
+            localStorage.setItem('AuthUser', JSON.stringify(session?.user))
+            console.log('SESSION ROLE', session?.user?.userRoles?.title)
+            role.includes('Super Admin') || role.includes('Tenant Admin')
+              ? router.push('/')
+              : router.push('/en/apps/rcm')
           } else {
             setAlertOpen(true)
             setAlertProps({
@@ -162,6 +206,49 @@ const CareKeyLogin = () => {
       })
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleCancelTenantSelection = () => {
+    setSelectedTenant(null)
+    setTenantSelectionModalOpen(false)
+  }
+
+  const handleSelectedTenant = async () => {
+    try {
+      if (!authUser?.accessToken) {
+        throw new Error('No access token found')
+      }
+
+      const newTokenRes = await api.post(`/auth/super-admin/generate-tenant-token`, {
+        token: authUser.accessToken,
+        tenantId: selectedTenant.id
+      })
+
+      const expiresIn = newTokenRes.data.expiresIn
+      const expires =
+        typeof expiresIn === 'number'
+          ? new Date(Date.now() + expiresIn * 1000).toISOString()
+          : new Date(expiresIn).toISOString()
+      await update({
+        user: {
+          ...session?.user,
+          tenant: selectedTenant,
+          accessToken: newTokenRes.data.accessToken,
+          refreshToken: newTokenRes.data.refreshToken
+        },
+        expires
+      })
+      console.log('Session updated successfully')
+
+      localStorage.setItem(
+        'AuthUser',
+        JSON.stringify({ ...authUser, tenant: selectedTenant, accessToken: newTokenRes.data.accessToken })
+      )
+      router.push('/')
+      setTenantSelectionModalOpen(false)
+    } catch (error) {
+      console.error('Session update failed:', error)
     }
   }
 
@@ -243,6 +330,130 @@ const CareKeyLogin = () => {
           </Grid>
         </div>
       </div>
+      <Dialog
+        open={tenantSelectionModalOpen}
+        onClose={handleCancelTenantSelection}
+        aria-labelledby='tenant-selection-modal'
+        aria-describedby='tenant-selection-modal'
+        sx={{
+          '& .MuiDialog-paper': {
+            width: '500px', // Fixed width for the dialog
+            maxWidth: 'calc(100% - 32px)', // Prevents overflow on mobile
+            maxHeight: '90vh', // Ensures dialog doesn't exceed viewport height
+            overflow: 'hidden', // Hide overflow (handled internally)
+            px: 4, // Horizontal padding
+            py: 2, // Vertical padding
+            position: 'relative' // For absolute positioning of close button
+          }
+        }}
+      >
+        {/* Close Button (positioned absolutely) */}
+        <DialogCloseButton
+          onClick={handleCancelTenantSelection}
+          disableRipple
+          sx={{
+            position: 'absolute',
+            top: 12,
+            right: 12
+          }}
+        >
+          <i className='bx-x' />
+        </DialogCloseButton>
+
+        {/* Title */}
+        <DialogTitle sx={{ pt: 2, pb: 1, pl: 3 }}>Tenant Switching</DialogTitle>
+
+        <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, mt: 2, px: 2, alignItems: 'center' }}>
+          <Typography variant='h6'>Select Tenant</Typography>
+          <TextField
+            size='small'
+            placeholder='Search by tenant name.'
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position='start'>
+                  <i className='bx-search' />
+                </InputAdornment>
+              )
+            }}
+            onChange={e => setSearchTerm(e.target.value)}
+            sx={{ width: '50%', ml: 'auto' }}
+          />
+        </Box>
+
+        {/* Radio Group (with scroll if needed) */}
+        <FormControl
+          sx={{
+            width: '100%',
+            px: 2,
+            pb: 2,
+            overflowY: 'auto',
+            maxHeight: '40vh'
+          }}
+        >
+          {tenants.length === 0 ? (
+            <Typography variant='body2' sx={{ color: 'text.secondary', px: 2 }}>
+              No tenants available. Create a tenant first.
+            </Typography>
+          ) : (
+            <>
+              {filteredTenants.length === 0 ? (
+                <Typography variant='body2' sx={{ color: 'text.secondary', px: 2 }}>
+                  No tenants available with such name
+                </Typography>
+              ) : (
+                <RadioGroup
+                  value={selectedTenant?.id || authUser?.tenant?.id} // This controls which radio is selected
+                >
+                  {filteredTenants.map(item => (
+                    <FormControlLabel
+                      key={item.id}
+                      value={item.id} // This should be just the item.id
+                      control={<Radio />}
+                      label={item.companyName}
+                      onChange={() => setSelectedTenant(item)}
+                      sx={{
+                        mb: 1,
+                        '& .MuiTypography-root': {
+                          fontSize: '0.875rem'
+                        }
+                      }}
+                    />
+                  ))}
+                </RadioGroup>
+              )}
+            </>
+          )}
+        </FormControl>
+
+        {/* Buttons (aligned to the right) */}
+        <div className='flex mt-3 px-2 pb-2 w-full'>
+          {authUser.userRoles?.title === 'Super Admin' && (
+            <Button variant='contained' size='small' onClick={() => router.push('/')}>
+              Continue as Super Admin
+            </Button>
+          )}
+          <div className='flex gap-3 justify-end ml-auto'>
+            <Button
+              variant='outlined'
+              size='small'
+              color='secondary'
+              onClick={handleCancelTenantSelection}
+              sx={{ minWidth: 100 }}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant='contained'
+              size='small'
+              onClick={handleSelectedTenant}
+              disabled={!selectedTenant}
+              sx={{ minWidth: 100 }}
+            >
+              OK
+            </Button>
+          </div>
+        </div>
+      </Dialog>
     </div>
   )
 }

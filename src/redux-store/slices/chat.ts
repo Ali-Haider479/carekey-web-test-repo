@@ -37,7 +37,8 @@ export const fetchChatRooms = createAsyncThunk('chat/fetchChatRooms', async (use
     about: `Chatroom for ${room.chatName}`,
     avatar: `https://${process.env.NEXT_PUBLIC_AWS_S3_PROFILE_BUCKET}.s3.amazonaws.com/${room.otherUser.profileImageUrl}`,
     status: 'offline' as StatusType,
-    chatRoomId: room.id // Store chatRoomId for reference
+    chatRoomId: room.id, // Store chatRoomId for reference
+    context: room.context
   }))
   console.log('REDUX CHATS MIDDLE', contacts)
   // Transform messages - use otherUser.id as userId
@@ -70,8 +71,9 @@ export const createChatRoom = createAsyncThunk(
     payload: {
       chatRoomName: string
       userId: number
-      clientId: number
+      clientId: number | null
       otherUserId: number
+      context: string | null
     },
     { dispatch }
   ) => {

@@ -5,7 +5,7 @@ import { ChatDataType, StatusObjType } from '@/types/apps/chatTypes'
 import Chip from '@mui/material/Chip'
 import { formatDateToMonthShort } from './utils'
 import AvatarWithBadge from './AvatarWithBadge'
-import { Theme, Typography, useTheme } from '@mui/material'
+import { Theme, Tooltip, Typography, useTheme } from '@mui/material'
 import CustomChip from '@/@core/components/mui/Chip'
 
 export const statusObj: StatusObjType = {
@@ -77,12 +77,29 @@ export const renderChat = (props: RenderChatType) => {
             <Typography sx={{ color: isChatActive ? 'white' : '' }}>
               {contact.fullName.length > 8 ? `${contact.fullName.substring(0, 8)}...` : contact.fullName}
             </Typography>
-            <Chip
-              icon={<PersonIcon />}
-              label={contact.about.split('/')[1]}
-              variant='outlined'
-              sx={{ color: isChatActive ? 'white' : '', borderColor: isChatActive ? 'gray' : '' }}
-            />
+            {contact.about.split('/')[1] !== undefined ? (
+              <Chip
+                icon={<PersonIcon />}
+                label={contact.about.split('/')[1]}
+                variant='outlined'
+                sx={{ color: isChatActive ? 'white' : '', borderColor: isChatActive ? 'gray' : '' }}
+              />
+            ) : (
+              <Tooltip
+                children={
+                  <Chip
+                    label={
+                      contact?.context && contact.context.length > 9
+                        ? `${contact.context.substring(0, 8)}...`
+                        : (contact?.context ?? '')
+                    }
+                    variant='outlined'
+                    sx={{ color: isChatActive ? 'white' : '', borderColor: isChatActive ? 'gray' : '' }}
+                  />
+                }
+                title={contact.context}
+              />
+            )}
           </div>
           {chat.chat.length ? (
             <Typography variant='body2' color={isChatActive ? 'inherit' : 'text.secondary'} className='truncate'>
@@ -92,8 +109,8 @@ export const renderChat = (props: RenderChatType) => {
             </Typography>
           ) : (
             <Typography variant='body2' color={isChatActive ? 'inherit' : 'text.secondary'} className='truncate'>
-              {contact.role}
-            </Typography>
+              {'Start Coversation'}
+            </Typography> //contact.role
           )}
         </div>
         <div className='flex flex-col items-end justify-start'>

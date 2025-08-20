@@ -16,7 +16,8 @@ const UserManagementPage = () => {
   const fetchInitialData = async () => {
     setIsLoading(true)
     try {
-      const response = await api.get(`/user/tenant/${tenantId}`)
+      const url = tenantId ? `/user/tenant/${tenantId}` : `/user/super-admin`
+      const response = await api.get(url)
       setUsersData(Array.isArray(response.data) ? response.data : response.data.data || [])
     } catch (error) {
       console.error('Error fetching initial users data:', error)
@@ -27,7 +28,8 @@ const UserManagementPage = () => {
 
   const fetchRolesData = async () => {
     try {
-      const response = await api.get(`/role/${tenantId}`)
+      const url = tenantId ? `/role/${tenantId}` : `/role`
+      const response = await api.get(url)
       const filteredRoles = response.data.filter((role: any) => role.id !== 1)
       setRolesData(filteredRoles)
     } catch (error) {
@@ -54,7 +56,7 @@ const UserManagementPage = () => {
 
   return (
     <div>
-      <UserManagementFilters onFilterApplied={handleFilterApplied} rolesData={rolesData} />
+      {tenantId && <UserManagementFilters onFilterApplied={handleFilterApplied} rolesData={rolesData} />}
       <UserManagementList
         usersData={usersData}
         isLoading={isLoading}

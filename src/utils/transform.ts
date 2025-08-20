@@ -195,7 +195,8 @@ export function transformTimesheetDataTwo(entries: TimeEntry[]): GroupedTimeEntr
             : calculateHoursWorked(entry.clockIn, entry.clockOut),
         activities: getActivities(entry),
         billing: entry.billing,
-        loggedVia: entry.loggedVia
+        loggedVia: entry.loggedVia,
+        payPeriodHistory: entry.payPeriodHistory
       }
     }
 

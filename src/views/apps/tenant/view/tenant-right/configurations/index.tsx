@@ -95,6 +95,7 @@ const GenericCard: React.FC<CardProps> = ({ evvSelected }) => {
 const TenantConfiguration = () => {
   const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
   const tenantEvvConfig: any = JSON.parse(localStorage?.getItem('evvConfig') ?? '{}')
+  const { id } = useParams()
 
   console.log("Auth User's Data --->> ", authUser)
   const [payPeriod, setPayPeriod] = useState<any[]>([])
@@ -119,8 +120,6 @@ const TenantConfiguration = () => {
   const [enableNotification, setEnableNotification] = useState<boolean>(authUser?.tenant?.enableNotification || false)
   const [isModalShow, setIsModalShow] = useState<boolean>(false)
   const [serviceSearchValue, setServiceSearchValue] = useState<string>('')
-
-  const { id } = useParams()
 
   const label = { inputProps: { 'aria-label': 'Switch demo' } }
 
@@ -168,10 +167,10 @@ const TenantConfiguration = () => {
 
   useEffect(() => {
     const payload = {
-      evvConfig,
-      allowManualEdits,
-      allowOverlappingVisits,
-      enableNotification
+      evvConfig
+      // allowManualEdits,
+      // allowOverlappingVisits,
+      // enableNotification
     }
     api
       .patch(`/tenant/${id}`, payload)
@@ -180,7 +179,7 @@ const TenantConfiguration = () => {
         localStorage.setItem('evvConfig', JSON.stringify(evvConfig))
       })
       .catch(err => console.log('Error Updating tenant configuration', err))
-  }, [evvConfig, allowManualEdits, allowOverlappingVisits, enableNotification])
+  }, [evvConfig]) //allowManualEdits, allowOverlappingVisits, enableNotification
 
   const handlePayPeriodSetup = async (data: { startDate: Date; weeks: number }) => {
     try {

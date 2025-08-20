@@ -160,7 +160,6 @@ const ReceivedTimesheetTable = (
   const editedClockInDateString = watch('editedClockInDate') === '' ? undefined : new Date(watch('editedClockInDate'))
   const editedClockOutDateString =
     watch('editedClockOutDate') === '' ? undefined : new Date(watch('editedClockOutDate'))
-  console.log('Edited worked hours value ---->>> ', editedClockInDateString, editedClockOutDateString)
   const tsApprovalStatus = watch('tsApprovalStatus')
   const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
 
@@ -226,15 +225,19 @@ const ReceivedTimesheetTable = (
   }, [tsApprovalStatus, modalData, isEditing])
 
   useEffect(() => {
-    if (Object.keys(payPeriod).length > 0) {
-      const range = calculateStartAndEndDate(payPeriod)
+    if (payPeriod.endDate === null) {
+      if (Object.keys(payPeriod).length > 0) {
+        const range = calculateStartAndEndDate(payPeriod)
+        setWeekRange(range)
+      }
+    }
+    if (modalData !== null) {
+      const range = calculateStartAndEndDate(modalData?.payPeriodHistory)
       setWeekRange(range)
     }
-  }, [payPeriod])
+  }, [payPeriod, modalData])
 
   const currentDate = new Date().toISOString().split('T')[0]
-
-  console.log('CURRENT DATE == ', currentDate)
 
   const toggleEditing = () => {
     setIsEditing(!isEditing)
@@ -1450,7 +1453,7 @@ const ReceivedTimesheetTable = (
                         minDate={new Date(weekRange.startDate)}
                         maxDate={weekRange.endDate > currentDate ? new Date() : new Date(weekRange.endDate)}
                         rules={{
-                          required: 'Edited Clock In Date is required'
+                          required: false
                         }}
                       />
                     </Grid>
@@ -1459,7 +1462,7 @@ const ReceivedTimesheetTable = (
                         showTimeSelect
                         showTimeSelectOnly
                         timeIntervals={15}
-                        required
+                        required={false}
                         dateFormat='hh:mm aa'
                         id='clock-in-time-picker'
                         disabled={!isEditing}
@@ -1499,7 +1502,7 @@ const ReceivedTimesheetTable = (
                         minDate={editedClockInDateString || undefined}
                         maxDate={weekRange.endDate > currentDate ? new Date() : new Date(weekRange.endDate)}
                         rules={{
-                          required: 'Edited Clock Out Date is required',
+                          required: false,
                           validate: (value: any) => {
                             if (!editedClockInDateString || !value) return true // Skip if either is empty
                             return new Date(value) >= editedClockInDateString
@@ -1515,7 +1518,7 @@ const ReceivedTimesheetTable = (
                         showTimeSelectOnly
                         timeIntervals={15}
                         dateFormat='hh:mm aa'
-                        required
+                        required={false}
                         id='edited-clock-out-time-picker'
                         disabled={!isEditing}
                         selected={parseTimeStringToDate(watch('editedClockOutTime'))}

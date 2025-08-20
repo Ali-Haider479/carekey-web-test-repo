@@ -48,7 +48,7 @@ export const authOptions: NextAuthOptions = {
     maxAge: MAX_AGE
   },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       if (user) {
         // Initial sign-in
         token.id = user.id
@@ -61,6 +61,12 @@ export const authOptions: NextAuthOptions = {
         token.accessToken = user.accessToken
         token.refreshToken = user.refreshToken
         token.expiresIn = user.expiresIn
+      }
+
+      if (trigger == 'update') {
+        token.accessToken = session.user.accessToken
+        token.refreshToken = session.user.refreshToken
+        token.expiresIn = session.expiresIn
       }
 
       // Check if access token is expired
@@ -101,6 +107,7 @@ export const authOptions: NextAuthOptions = {
       session.user.profileImageUrl = token.profileImageUrl
       session.user.accessToken = token.accessToken
       session.user.expiresIn = token.expiresIn
+      session.user.refreshToken = token.refreshToken
       return session
     }
   },

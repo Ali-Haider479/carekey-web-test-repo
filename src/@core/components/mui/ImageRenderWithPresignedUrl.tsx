@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
-import { Box, CircularProgress, IconButton } from '@mui/material'
+import { Box, CircularProgress, Dialog, IconButton } from '@mui/material'
 import api from '@/utils/api'
-import { Download } from '@mui/icons-material'
+import { Download, Visibility } from '@mui/icons-material'
+import DialogCloseButton from '@/components/dialogs/DialogCloseButton'
 
 interface ImageRenderWithPresignedUrlProps {
   fileKey: string
@@ -21,6 +22,15 @@ const ImageRenderWithPresignedUrl = ({
   const [imgUrl, setImgUrl] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
+  const [imagePreviewModalVisible, setImagePreviewModalVisible] = useState<boolean>(false)
+
+  const handleImagePreviewModalOpen = () => {
+    setImagePreviewModalVisible(true)
+  }
+
+  const handleImagePreviewModalClose = () => {
+    setImagePreviewModalVisible(false)
+  }
 
   useEffect(() => {
     const fetchImageUrl = async () => {
@@ -97,6 +107,8 @@ const ImageRenderWithPresignedUrl = ({
             right: 0,
             bottom: 0,
             display: 'flex',
+            flexDirection: 'row',
+            gap: 4,
             alignItems: 'center',
             justifyContent: 'center',
             opacity: 0,
@@ -105,20 +117,55 @@ const ImageRenderWithPresignedUrl = ({
           }}
         >
           <IconButton
-            onClick={handleClick}
+            onClick={handleImagePreviewModalOpen}
             sx={{
-              backgroundColor: 'background.paper',
+              // backgroundColor: 'background.paper',
               '&:hover': {
-                backgroundColor: 'background.paper',
+                // backgroundColor: 'background.paper',
                 transform: 'scale(1.1)'
               },
               transition: 'transform 0.2s'
             }}
+            className='bg-white hover:bg-gray-300'
+          >
+            <Visibility />
+          </IconButton>
+          <IconButton
+            onClick={handleClick}
+            sx={{
+              // backgroundColor: 'background.paper',
+              '&:hover': {
+                // backgroundColor: 'background.paper',
+                transform: 'scale(1.1)'
+              },
+              transition: 'transform 0.2s'
+            }}
+            className='bg-white hover:bg-gray-300'
           >
             {downloading ? <CircularProgress size={24} /> : <Download />}
           </IconButton>
         </Box>
       </Box>
+      <Dialog
+        open={imagePreviewModalVisible}
+        onClose={handleImagePreviewModalClose}
+        closeAfterTransition={false}
+        sx={{ '& .MuiDialog-paper': { overflow: 'visible' } }}
+        maxWidth='md'
+      >
+        <DialogCloseButton onClick={handleImagePreviewModalClose} disableRipple>
+          <i className='bx-x' />
+        </DialogCloseButton>
+        <div className='flex items-center justify-center w-full p-1'>
+          <img
+            src={imgUrl}
+            alt={fileName.length > 30 ? `${fileName.substring(0, 30)}...` : fileName}
+            className='image-blur w-[315px] h-auto rounded-sm cursor-pointer transition-all duration-300'
+            onError={() => setError(true)}
+            onLoad={onLoad}
+          />
+        </div>
+      </Dialog>
     </Box>
   )
 }

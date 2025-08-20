@@ -32,10 +32,10 @@ import CustomTextField from '@core/components/mui/TextField'
 
 // Util Imports
 import { getInitials } from '@/utils/getInitials'
-import { Button, Chip, CircularProgress, Dialog, Grid2 as Grid } from '@mui/material'
+import { Button, Chip, CircularProgress, Dialog, Grid2 as Grid, MenuItem, TextField } from '@mui/material'
 import DialogCloseButton from '@/components/dialogs/DialogCloseButton'
 import CustomDropDown from '@/@core/components/custom-inputs/CustomDropDown'
-import { useForm } from 'react-hook-form'
+import { Controller, useForm } from 'react-hook-form'
 import axios from 'axios'
 import { useSession } from 'next-auth/react'
 import api from '@/utils/api'
@@ -100,6 +100,8 @@ const SidebarLeft = (props: Props) => {
   const [isModalShow, setIsModalShow] = useState(false)
   const [clients, setClients] = useState<any>([])
   const [caregivers, setCaregivers] = useState<any>([])
+  const [tenants, setTenants] = useState<any[]>([])
+  const [selectedTenant, setSelectedTenant] = useState<string>('')
   const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
   const [alertOpen, setAlertOpen] = useState(false)
   const [alertProps, setAlertProps] = useState<any>()
@@ -137,16 +139,19 @@ const SidebarLeft = (props: Props) => {
   useEffect(() => {
     const fetchClients = async () => {
       try {
-        const clientList: any = await api.get(`/client/tenant/${authUser?.tenant?.id}`)
+        if (authUser?.tenant?.id) {
+          const clientList: any = await api.get(`/client/tenant/${authUser?.tenant?.id || selectedTenant}`)
 
-        const formattedClients =
-          clientList?.data?.map((item: any) => ({
-            key: `${item.id}-${item.firstName}`,
-            value: item.id,
-            optionString: `${item.firstName} ${item.lastName}`
-          })) || []
+          const formattedClients =
+            clientList?.data?.map((item: any) => ({
+              key: `${item.id}-${item.firstName}`,
+              value: item.id,
+              optionString: `${item.firstName} ${item.lastName}`
+            })) || []
+          setClients(formattedClients)
+        }
 
-        const caregiverList: any = await api.get(`/user/tenant/${authUser?.tenant?.id}`)
+        const caregiverList: any = await api.get(`/user/tenant/${authUser?.tenant?.id || selectedTenant}`)
         const dataToFilter = Array.isArray(caregiverList) ? caregiverList : caregiverList?.data || []
         const formattedCaregivers = dataToFilter
           .filter(
@@ -162,13 +167,24 @@ const SidebarLeft = (props: Props) => {
           }))
 
         setCaregivers(formattedCaregivers)
-        setClients(formattedClients)
       } catch (err: any) {
         console.error('Error fetching clients:', err.message)
       }
     }
     fetchClients()
-  }, [authUser?.tenant?.id])
+  }, [authUser?.tenant?.id, selectedTenant])
+
+  useEffect(() => {
+    api
+      .get(`/tenant`)
+      .then(res => {
+        console.log('TEnant Res', res)
+        setTenants(res.data)
+      })
+      .catch(error => {
+        console.error('Error fetching Tenants:', error.message)
+      })
+  }, [!authUser?.tenant])
 
   const handleChange = (
     event: SyntheticEvent<Element, Event>,
@@ -194,7 +210,8 @@ const SidebarLeft = (props: Props) => {
   } = useForm({
     defaultValues: {
       clientId: null,
-      otherUser: null
+      otherUser: null,
+      context: ''
     }
   })
 
@@ -204,15 +221,48 @@ const SidebarLeft = (props: Props) => {
 
   const onSubmit = async (data: any) => {
     setIsCreateChatLoading(true)
-    const { otherUser, clientId } = data
-    const chatRoomName = `chatroom-${Math.min(authUser?.id, Number(otherUser))}-${Math.max(authUser?.id, Number(otherUser))}-${clientId}`
+    const { otherUser, clientId, context } = data
+    if (!otherUser) {
+      setAlertOpen(true)
+      setAlertProps({
+        message: 'Please select user to create chat with',
+        severity: 'error'
+      })
+      setIsCreateChatLoading(false)
+      return
+    }
+
+    if (authUser.userRoles.title === 'Super Admin' || authUser.userRoles.isSupport) {
+      if (context === '') {
+        setAlertOpen(true)
+        setAlertProps({
+          message: 'Please fill context',
+          severity: 'error'
+        })
+        setIsCreateChatLoading(false)
+        return
+      }
+    } else {
+      if (!clientId) {
+        setAlertOpen(true)
+        setAlertProps({
+          message: 'Please select client',
+          severity: 'error'
+        })
+        setIsCreateChatLoading(false)
+        return
+      }
+    }
+
+    const chatRoomName = `chatroom-${Math.min(authUser?.id, Number(otherUser))}-${Math.max(authUser?.id, Number(otherUser))}${clientId ? `-${clientId}` : `-${context.trim()}`}`
 
     const response: any = await dispatch(
       createChatRoom({
         chatRoomName,
         userId: authUser?.id,
-        clientId: Number(clientId),
-        otherUserId: Number(otherUser)
+        clientId: clientId !== null ? Number(clientId) : null,
+        otherUserId: Number(otherUser),
+        context: context.trim() !== '' ? context : null
       })
     )
 
@@ -233,7 +283,7 @@ const SidebarLeft = (props: Props) => {
 
   return (
     <>
-      <CustomAlert AlertProps={alertProps} openAlert={alertOpen} setOpenAlert={setAlertOpen} />
+      {alertOpen && <CustomAlert AlertProps={alertProps} openAlert={alertOpen} setOpenAlert={setAlertOpen} />}
 
       <Drawer
         open={sidebarOpen}
@@ -351,16 +401,62 @@ const SidebarLeft = (props: Props) => {
             <div>
               <h2 className='text-xl font-semibold mt-10 mb-6'>Create chat</h2>
               <Grid container spacing={4}>
-                <Grid size={{ xs: 12, sm: 12 }}>
-                  <CustomDropDown
-                    label='Select a client'
-                    optionList={clients}
-                    name={'clientId'}
-                    control={control}
-                    error={errors.clientId}
-                    defaultValue={''}
-                  />
-                </Grid>
+                {authUser.userRoles.title !== 'Super Admin' && !authUser.userRoles.isSupport && (
+                  <Grid size={{ xs: 12, sm: 12 }}>
+                    <CustomDropDown
+                      label='Select a client'
+                      optionList={clients}
+                      name={'clientId'}
+                      control={control}
+                      error={errors.clientId}
+                      defaultValue={''}
+                    />
+                  </Grid>
+                )}
+
+                {(authUser.userRoles.title === 'Super Admin' || authUser.userRoles.isSupport) && (
+                  <>
+                    <Grid size={{ xs: 12, sm: 12 }}>
+                      <Controller
+                        name='context'
+                        control={control}
+                        render={({ field }) => (
+                          <TextField
+                            {...field}
+                            fullWidth
+                            label='Context'
+                            size='small'
+                            error={!!errors.context}
+                            helperText={errors.context?.message}
+                          />
+                        )}
+                      />
+                    </Grid>
+                    {!authUser.tenant && (
+                      <Grid size={{ xs: 12, sm: 12 }}>
+                        <TextField
+                          select
+                          fullWidth
+                          label='Select Tenant'
+                          value={selectedTenant}
+                          onChange={e => setSelectedTenant(e.target.value)}
+                          size='small'
+                        >
+                          {tenants.length > 0 ? (
+                            tenants.map((tenant: any) => (
+                              <MenuItem key={tenant.id} value={tenant.id}>
+                                {`${tenant.companyName}`}
+                              </MenuItem>
+                            ))
+                          ) : (
+                            <MenuItem disabled>No options available</MenuItem>
+                          )}
+                        </TextField>
+                      </Grid>
+                    )}
+                  </>
+                )}
+
                 <Grid size={{ xs: 12, sm: 12 }}>
                   <CustomDropDown
                     label='Select User'

@@ -27,6 +27,7 @@ export type ContactType = {
   avatar?: string
   avatarColor?: ThemeColor
   status: StatusType
+  context?: string
 }
 
 export type UserChatType = {
