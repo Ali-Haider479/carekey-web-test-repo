@@ -165,7 +165,7 @@ const AddClientStepper = () => {
         clientCode: personalDetails.clientCode,
         medicalSpendDown: personalDetails.medicalSpendDown,
         sharedCare: personalDetails.sharedCare,
-        pcaChoice: personalDetails.pcaChoice,
+        pcaChoice: personalDetails?.pcaChoice ? personalDetails?.pcaChoice : null,
         isClient: true,
         isSignatureDraw: true,
         tenantId: authUser?.tenant?.id,

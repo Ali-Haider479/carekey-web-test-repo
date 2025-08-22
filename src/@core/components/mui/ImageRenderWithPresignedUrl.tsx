@@ -128,7 +128,11 @@ const ImageRenderWithPresignedUrl = ({
             }}
             className='bg-white hover:bg-gray-300'
           >
-            <Visibility />
+            <Visibility
+              sx={theme => ({
+                color: theme.palette.mode === 'dark' ? theme.palette.primary.dark : theme.palette.primary.main
+              })}
+            />
           </IconButton>
           <IconButton
             onClick={handleClick}
@@ -142,7 +146,15 @@ const ImageRenderWithPresignedUrl = ({
             }}
             className='bg-white hover:bg-gray-300'
           >
-            {downloading ? <CircularProgress size={24} /> : <Download />}
+            {downloading ? (
+              <CircularProgress size={24} />
+            ) : (
+              <Download
+                sx={theme => ({
+                  color: theme.palette.mode === 'dark' ? theme.palette.primary.dark : theme.palette.primary.main
+                })}
+              />
+            )}
           </IconButton>
         </Box>
       </Box>

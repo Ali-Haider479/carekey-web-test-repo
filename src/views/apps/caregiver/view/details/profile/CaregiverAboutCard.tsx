@@ -32,6 +32,7 @@ function CaregiverAboutCard() {
   const [cityError, setCityError] = useState<boolean>(false)
   const [stateError, setStateError] = useState<boolean>(false)
   const [zipCodeError, setZipCodeError] = useState<boolean>(false)
+  const [umpiError, setUmpiError] = useState<boolean>(false)
   const [caregiverDocuments, setCaregiverDocuments] = useState<any>()
   const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
 
@@ -249,9 +250,10 @@ function CaregiverAboutCard() {
     }
 
     if (name === 'caregiverUMPI') {
-      const digits = value.replace(/\D/g, '').substring(0, 10) // Strip non-digits
+      const digits = value.replace(/[^a-zA-Z0-9-]/g, '').substring(0, 16) // Strip non-digits
+      setUmpiError(digits.length < 8 || digits.length > 16)
       // Ignore input if digits exceed 10
-      if (digits.length > 10) return
+      if (digits.length > 16) return
       setFormData((prev: any) => ({
         ...prev,
         [name]: digits
@@ -402,6 +404,7 @@ function CaregiverAboutCard() {
                     cityError ||
                     stateError ||
                     zipCodeError ||
+                    umpiError ||
                     isSaving
                   }
                 >

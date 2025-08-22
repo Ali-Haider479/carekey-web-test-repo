@@ -132,8 +132,8 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                     type={'text'}
                     error={errors.caregiverUMPI}
                     control={control}
-                    minLength={10}
-                    maxLength={10}
+                    minLength={8}
+                    maxLength={16}
                     isRequired={false}
                     isUMPI={true}
                   />

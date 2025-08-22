@@ -27,10 +27,10 @@ import api from '@/utils/api'
 import { Box, CircularProgress, Divider, IconButton } from '@mui/material'
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf'
 import ImageIcon from '@mui/icons-material/Image'
-import { Description, Download, Feed, FolderZip, Slideshow, VideoFile } from '@mui/icons-material'
+import { Description, Download, Feed, FolderZip, Slideshow, VideoFile, Visibility } from '@mui/icons-material'
 import SmartDisplayIcon from '@mui/icons-material/SmartDisplay'
 import ImageRenderWithPresignedUrl from '@/@core/components/mui/ImageRenderWithPresignedUrl'
-import { forceFileDownload } from '@/utils/helperFunctions'
+import { forceFileDownload, openPdfInNewTab } from '@/utils/helperFunctions'
 
 type MsgGroupType = {
   senderId: number
@@ -116,6 +116,7 @@ const ChatLog = ({ chatStore, isBelowLgScreen, isBelowMdScreen, isBelowSmScreen 
   const scrollRef = useRef(null)
   const processedMessages = useRef(new Set<string>())
   const [loading, setLoading] = useState<string | null>(null)
+  const [previewLoading, setPreviewLoading] = useState<string | null>(null)
   const [loadedImagesCount, setLoadedImagesCount] = useState(0)
   const [totalImagesCount, setTotalImagesCount] = useState(0)
 
@@ -295,6 +296,26 @@ const ChatLog = ({ chatStore, isBelowLgScreen, isBelowMdScreen, isBelowSmScreen 
     }
   }
 
+  const handleFilePreview = async (fileKey: string, fileName: string) => {
+    if (!fileKey) return
+
+    setPreviewLoading(fileKey)
+    try {
+      const response = await api.get(`/upload-document/get-signed-chat-file-get-url/${fileKey}`)
+
+      if (response?.status === 200 && response.data) {
+        await openPdfInNewTab(response.data, fileName)
+      } else {
+        throw new Error('Invalid response from server')
+      }
+    } catch (error) {
+      console.error('Error downloading file:', error)
+      // Consider adding user feedback here (toast notification, etc.)
+    } finally {
+      setPreviewLoading(null)
+    }
+  }
+
   const handleImageLoad = () => {
     setLoadedImagesCount(prev => prev + 1)
   }
@@ -470,23 +491,44 @@ const ChatLog = ({ chatStore, isBelowLgScreen, isBelowMdScreen, isBelowSmScreen 
                                       : msg.attachmentFile!.fileName}
                                   </Typography>
 
-                                  <IconButton
-                                    sx={theme => ({
-                                      ml: 'auto',
-                                      color: 'inherit'
-                                    })}
-                                    size='small'
-                                    disabled={loading === msg.attachmentFile!.fileKey}
-                                    onClick={() =>
-                                      handleFileClick(msg.attachmentFile!.fileKey, msg.attachmentFile!.fileName)
-                                    }
-                                  >
-                                    {loading === msg.attachmentFile!.fileKey ? (
-                                      <CircularProgress size={24} color='inherit' />
-                                    ) : (
-                                      <Download />
+                                  <Box sx={{ display: 'flex', gap: '4px', ml: 'auto' }}>
+                                    {msg.attachmentFile!.mimeType === 'application/pdf' && (
+                                      <IconButton
+                                        sx={theme => ({
+                                          ml: 'auto',
+                                          color: 'inherit'
+                                        })}
+                                        size='small'
+                                        disabled={loading === msg.attachmentFile!.fileKey}
+                                        onClick={() =>
+                                          handleFilePreview(msg.attachmentFile!.fileKey, msg.attachmentFile!.fileName)
+                                        }
+                                      >
+                                        {previewLoading === msg.attachmentFile!.fileKey ? (
+                                          <CircularProgress size={24} color='inherit' />
+                                        ) : (
+                                          <Visibility />
+                                        )}
+                                      </IconButton>
                                     )}
-                                  </IconButton>
+                                    <IconButton
+                                      sx={theme => ({
+                                        ml: 'auto',
+                                        color: 'inherit'
+                                      })}
+                                      size='small'
+                                      disabled={loading === msg.attachmentFile!.fileKey}
+                                      onClick={() =>
+                                        handleFileClick(msg.attachmentFile!.fileKey, msg.attachmentFile!.fileName)
+                                      }
+                                    >
+                                      {loading === msg.attachmentFile!.fileKey ? (
+                                        <CircularProgress size={24} color='inherit' />
+                                      ) : (
+                                        <Download />
+                                      )}
+                                    </IconButton>
+                                  </Box>
                                 </Box>
                                 {msg.message !== 'fileAttachment' && (
                                   <>

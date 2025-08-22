@@ -207,8 +207,8 @@ function ClientAboutCard({ clientData }: any) {
         [name]: digits
       }))
     } else if (name === 'pmiNumber') {
-      const digits = value.replace(/\D/g, '').substring(0, 10)
-      isValid = digits.length === 10
+      const digits = value.replace(/[^a-zA-Z0-9-]/g, '').substring(0, 16)
+      isValid = digits.length >= 8 && digits.length <= 16
       setFormErrors((prev: any) => ({
         ...prev,
         [name]: !isValid
@@ -429,10 +429,33 @@ function ClientAboutCard({ clientData }: any) {
                         : field.name.includes('primaryPhoneNumber') ||
                             field.name.includes('primaryCellNumber') ||
                             field.name === 'pmiNumber'
-                          ? 'Please enter a valid 10 digit number'
+                          ? 'Please enter a valid pmi number'
                           : field.name === 'clientCode'
                             ? 'Please enter a valid 4 digit pin '
                             : 'Invalid format'}
+                    </Typography>
+                  )}
+                </div>
+              ))}
+            </div>
+          </CardContent>
+
+          {/* Address Section */}
+          <CardContent className='mb-6 border-t pt-6'>
+            <Typography className='text-lg font-semibold mb-4'>Address</Typography>
+            <div className='grid grid-cols-2 gap-y-4 gap-x-8'>
+              {addressFields.map(field => (
+                <div key={field.name}>
+                  <EditableField
+                    label={field.label}
+                    value={field.value}
+                    isEdit={isEdit}
+                    onChange={handleFieldChange}
+                    name={field.name}
+                  />
+                  {field.error && (
+                    <Typography className='text-error mt-1' sx={{ fontSize: '0.75rem' }}>
+                      Invalid zip code format (e.g., 12345)
                     </Typography>
                   )}
                 </div>
@@ -458,29 +481,6 @@ function ClientAboutCard({ clientData }: any) {
                       {field.name.includes('emergencyEmailId')
                         ? 'Please enter a valid email address'
                         : 'Please enter a valid 10 digit number'}
-                    </Typography>
-                  )}
-                </div>
-              ))}
-            </div>
-          </CardContent>
-
-          {/* Address Section */}
-          <CardContent className='mb-6 border-t pt-6'>
-            <Typography className='text-lg font-semibold mb-4'>Address</Typography>
-            <div className='grid grid-cols-2 gap-y-4 gap-x-8'>
-              {addressFields.map(field => (
-                <div key={field.name}>
-                  <EditableField
-                    label={field.label}
-                    value={field.value}
-                    isEdit={isEdit}
-                    onChange={handleFieldChange}
-                    name={field.name}
-                  />
-                  {field.error && (
-                    <Typography className='text-error mt-1' sx={{ fontSize: '0.75rem' }}>
-                      Invalid zip code format (e.g., 12345)
                     </Typography>
                   )}
                 </div>

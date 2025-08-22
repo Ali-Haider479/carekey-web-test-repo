@@ -126,6 +126,8 @@ const SendMsgForm = ({ dispatch, activeUser, isBelowSmScreen, messageInputRef, c
     setAnchorEl(null)
   }
 
+  console.log('File--->', file)
+
   const handleSendMsg = (event: FormEvent | KeyboardEvent, msg: string) => {
     event.preventDefault()
     if (msg.trim() !== '') {
@@ -228,12 +230,12 @@ const SendMsgForm = ({ dispatch, activeUser, isBelowSmScreen, messageInputRef, c
             <IconButton>
               <i className='bx-microphone text-textPrimary' />
             </IconButton> */}
-            <IconButton component='label' htmlFor='upload-img'>
+            <IconButton component='label' htmlFor='upload-img-desktop'>
               <i className='bx-paperclip text-textPrimary' />
               <input
                 hidden
                 type='file'
-                id='upload-img'
+                id='upload-img-desktop'
                 accept='image/*,.pdf,.doc,.docx,video/*,.txt,.xlsx,.xls,.pptx,.ppt,.csv,.zip'
                 onChange={e => handleFileChange(e)}
               />
@@ -422,7 +424,14 @@ const SendMsgForm = ({ dispatch, activeUser, isBelowSmScreen, messageInputRef, c
       <form autoComplete='off' onSubmit={event => (!file ? handleSendMsg(event, msg) : handleUpload(event, msg))}>
         {file && (
           <Box sx={{ px: 6, display: 'flex', gap: 3, alignItems: 'center' }}>
-            <FileProgress file={file} onRemove={() => setFile(null)} progress={progress} uploadStatus={uploadStatus} />
+            <FileProgress
+              file={file}
+              onRemove={() => {
+                setFile(null)
+              }}
+              progress={progress}
+              uploadStatus={uploadStatus}
+            />
           </Box>
         )}
         <TextField

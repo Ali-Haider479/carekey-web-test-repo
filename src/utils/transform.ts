@@ -60,6 +60,7 @@ interface TimeEntry {
   editedClockIn: string | null
   editedClockOut: string | null
   notes: string
+  reason: string
   tsApprovalStatus: string
   serviceName: string
   updatedAt: any
@@ -186,6 +187,8 @@ export function transformTimesheetDataTwo(entries: TimeEntry[]): GroupedTimeEntr
         editedClockIn: entry.editedClockIn,
         editedClockOut: entry.editedClockOut,
         startLocation: entry.startLocation,
+        notes: entry.notes,
+        reason: entry.reason,
         endLocation: entry.endLocation,
         clockOut: entry.clockOut,
         signature: entry.signature,

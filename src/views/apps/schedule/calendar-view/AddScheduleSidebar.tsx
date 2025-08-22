@@ -416,17 +416,19 @@ const AddEventModal = (props: AddEventSidebarType) => {
       const totalHours = (Number(selectedServiceAuth?.units) / 4).toFixed(2) // Assuming 1 unit = 15 minutes
       const usedHours = (Number(selectedServiceAuth?.usedUnits) / 4).toFixed(2) // Assuming 1 unit = 15 minutes
       const remainingHours = (Number(remainingUnits) / 4).toFixed(2) // Assuming 1 unit = 15 minutes
-      const qtyPerFrequency = calculateQuantityPerFrequency({
-        startDate: selectedServiceAuth.startDate,
-        endDate: selectedServiceAuth.endDate,
-        quantity: selectedServiceAuth?.units,
-        frequency: selectedServiceAuth.frequency
-      })
+      const qtyPerFrequency = (
+        calculateQuantityPerFrequency({
+          startDate: selectedServiceAuth.startDate,
+          endDate: selectedServiceAuth.endDate,
+          quantity: selectedServiceAuth?.units,
+          frequency: selectedServiceAuth.frequency
+        }) / 4
+      ).toFixed(2)
       setServiceAuthHours({
         totalHours: Number(totalHours),
         usedHours: Number(usedHours),
         remainingHours: Number(remainingHours),
-        hoursPerFrequency: Number(qtyPerFrequency).toFixed(2)
+        hoursPerFrequency: Number(qtyPerFrequency)
       })
     }
   }, [values.serviceAuth, calendarStore.selectedEvent])
@@ -517,6 +519,7 @@ const AddEventModal = (props: AddEventSidebarType) => {
         ? mergeDateWithTime(new Date(calendarStore?.selectedDate), values.endTime)
         : new Date()
     })
+    setSelectedServiceAuth(null)
   }, [setValue, calendarStore])
 
   const handleModalClose = () => {
@@ -528,6 +531,7 @@ const AddEventModal = (props: AddEventSidebarType) => {
     setAlertOpen(false)
     setShowPreview(true)
     setStaffRatioDisabled(false)
+    setSelectedServiceAuth(null)
   }
 
   const calculateTotalDays = (startDate: Date, endDate: Date) => {
@@ -1249,6 +1253,8 @@ const AddEventModal = (props: AddEventSidebarType) => {
                   selected={values.startDate}
                   startDate={values.startDate}
                   showTimeSelect={!values.startDate}
+                  minDate={selectedServiceAuth && new Date(selectedServiceAuth?.startDate)}
+                  maxDate={selectedServiceAuth && new Date(selectedServiceAuth?.endDate)}
                   dateFormat={!values.startDate ? 'yyyy-MM-dd hh:mm' : 'yyyy-MM-dd'}
                   disabled={isEdited && calendarStore?.selectedEvent?.title?.length}
                   customInput={
@@ -1310,6 +1316,8 @@ const AddEventModal = (props: AddEventSidebarType) => {
                   minDate={values.startDate}
                   startDate={values.startDate}
                   showTimeSelect={!values.endDate}
+                  // minDate={selectedServiceAuth && new Date(selectedServiceAuth?.startDate)}
+                  maxDate={selectedServiceAuth && new Date(selectedServiceAuth?.endDate)}
                   dateFormat={!values.endDate ? 'yyyy-MM-dd hh:mm' : 'yyyy-MM-dd'}
                   customInput={<PickersComponent label='End Date' registername='endDate' id='event-end-date' />}
                   disabled={isEdited && calendarStore?.selectedEvent?.title?.length}

@@ -21,18 +21,19 @@ type Props = {
   isPhoneNumber?: boolean
   isSocialSecurityNumber?: boolean
   isUMPI?: boolean
-  isPMI?: boolean
+  isEIN?: boolean
   isClientCode?: boolean
   isZipCode?: boolean
 }
 
 const CustomTextField = (props: Props) => {
-  const { isRequired = true, isPhoneNumber = false, isSocialSecurityNumber = false } = props
+  const { isRequired = true, isPhoneNumber = false, isSocialSecurityNumber = false, isEIN = false } = props
   const { trigger, watch, setValue } = useFormContext()
 
   const password = watch('password')
   const phoneNumber = isPhoneNumber ? watch(props.name) : undefined
   const ssn = isSocialSecurityNumber ? watch(props.name) : undefined
+  const einNumber = props.isEIN ? watch(props.name) : undefined
 
   // Set defaultValue in form context when component mounts
   useEffect(() => {
@@ -70,6 +71,18 @@ const CustomTextField = (props: Props) => {
       }
       if (digits.length > 5) {
         formatted += '-' + digits.substring(5, Math.min(digits.length))
+      }
+    }
+    return formatted
+  }
+
+  const formatEIN = (value: string) => {
+    const digits = value.replace(/\D/g, '')
+    let formatted = ''
+    if (digits.length > 0) {
+      formatted += digits.substring(0, Math.min(2, digits.length))
+      if (digits.length > 2) {
+        formatted += '-' + digits.substring(2, Math.min(10, digits.length))
       }
     }
     return formatted
@@ -174,9 +187,11 @@ const CustomTextField = (props: Props) => {
             value={
               isPhoneNumber && phoneNumber !== undefined
                 ? formatPhoneNumber(phoneNumber)
-                : isSocialSecurityNumber && ssn !== undefined
-                  ? formatSSN(ssn)
-                  : field.value || ''
+                : isEIN && einNumber !== undefined
+                  ? formatEIN(einNumber)
+                  : isSocialSecurityNumber && ssn !== undefined
+                    ? formatSSN(ssn)
+                    : field.value || ''
             }
             onChange={e => {
               let value = e.target.value.trimStart()
@@ -193,11 +208,11 @@ const CustomTextField = (props: Props) => {
                 field.onChange(digits)
                 setValue(props.name, digits)
               } else if (props.isUMPI) {
-                const digits = value.replace(/\D/g, '').substring(0, 10)
+                const digits = value.replace(/[^a-zA-Z0-9-]/g, '').substring(0, 16)
                 field.onChange(digits)
                 setValue(props.name, digits)
-              } else if (props.isPMI) {
-                const digits = value.replace(/\D/g, '').substring(0, 8)
+              } else if (props.isEIN) {
+                const digits = value.replace(/\D/g, '').substring(0, 11)
                 field.onChange(digits)
                 setValue(props.name, digits)
               } else if (props.isClientCode) {

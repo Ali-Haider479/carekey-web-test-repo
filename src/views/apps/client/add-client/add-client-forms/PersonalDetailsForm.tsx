@@ -179,12 +179,12 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                   placeHolder={'please enter PMI Number'}
                   name={'pmiNumber'}
                   defaultValue={''}
-                  type={'number'}
+                  type={'text'}
                   error={errors.pmiNumber}
                   control={control}
                   minLength={8}
-                  maxLength={8}
-                  isPMI={true}
+                  maxLength={16}
+                  isUMPI={true}
                 />
               </Grid>
 
@@ -342,7 +342,7 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                 />
               </Grid>
 
-              <Grid size={{ xs: 12, sm: 4 }}>
+              {/* <Grid size={{ xs: 12, sm: 4 }}>
                 <CustomDropDown
                   name={'pcaChoice'}
                   control={control}
@@ -353,7 +353,7 @@ const PersonalDetailsForm = forwardRef<{ handleSubmit: any }, Props>(({ onFinish
                     { key: 2, value: 'PCA Tradition', optionString: 'PCA Tradition' }
                   ]}
                 />
-              </Grid>
+              </Grid> */}
             </Grid>
           </CardContent>
         </Card>

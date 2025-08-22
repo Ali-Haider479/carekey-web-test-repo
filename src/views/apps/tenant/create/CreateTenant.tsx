@@ -4,7 +4,7 @@ import Grid from '@mui/material/Grid2'
 import Card from '@mui/material/Card'
 import CardHeader from '@mui/material/CardHeader'
 import CardContent from '@mui/material/CardContent'
-import { Button, InputAdornment, IconButton, CircularProgress } from '@mui/material'
+import { Button, InputAdornment, IconButton, CircularProgress, Typography } from '@mui/material'
 import { useRouter } from 'next/navigation'
 import { FormProvider, useForm } from 'react-hook-form'
 import CustomTextField from '@/@core/components/custom-inputs/CustomTextField'
@@ -175,13 +175,13 @@ const CreateTenant = (props: Props) => {
         emailAddress: data.emailAddress.toLowerCase(),
         password: data.password,
         companyName: data.companyName,
-        billingEmail: data.billingEmail.toLowerCase(),
+        billingEmail: data.billingEmail ? data.billingEmail.toLowerCase() : null,
         contactNumber: data.contactNumber,
         address: data.address,
         npiUmpiNumber: data.npiUmpiNumber,
-        taxonomyNumber: data.taxonomynumber,
+        taxonomyNumber: data.taxonomynumber ? data.taxonomynumber : null,
         einNumber: data.einNumber,
-        faxNumber: data.faxNumber,
+        faxNumber: data?.faxNumber ? data?.faxNumber : null,
         evvConfig: { evvEnforcement: 'evvRelaxed' },
         roleId: 2
       }
@@ -244,7 +244,8 @@ const CreateTenant = (props: Props) => {
           <CardHeader title='Tenant/Accounts' titleTypographyProps={{ sx: { fontSize: '24px' } }} />
           <CardContent>
             <div className='pb-24 p-0'>
-              <Grid container spacing={5}>
+              <Typography variant='h5'>Admin Info</Typography>
+              <Grid container spacing={5} sx={{ mt: 2 }}>
                 <Grid size={{ xs: 12, md: 4 }}>
                   <CustomTextField
                     label={' Admin First Name'}
@@ -337,6 +338,11 @@ const CreateTenant = (props: Props) => {
                     }}
                   />
                 </Grid>
+              </Grid>
+              <Typography variant='h5' sx={{ mt: 6 }}>
+                Company Info
+              </Typography>
+              <Grid container spacing={5} sx={{ mt: 2 }}>
                 {/* Company Name */}
                 <Grid size={{ xs: 12, md: 4 }}>
                   <CustomTextField
@@ -370,8 +376,8 @@ const CreateTenant = (props: Props) => {
                     type={'text'}
                     error={errors.npiUmpiNumber}
                     control={control}
-                    maxLength={10}
-                    minLength={10}
+                    maxLength={16}
+                    minLength={8}
                     isUMPI={true}
                   />
                 </Grid>
@@ -388,6 +394,7 @@ const CreateTenant = (props: Props) => {
                     error={errors.taxonomyNumber}
                     control={control}
                     isUMPI={true}
+                    isRequired={false}
                   />
                 </Grid>
                 {/* EIN */}
@@ -397,12 +404,12 @@ const CreateTenant = (props: Props) => {
                     placeHolder={'123456'}
                     name={'einNumber'}
                     defaultValue={''}
-                    type={'number'}
+                    type={'text'}
                     error={errors.einNumber}
                     control={control}
-                    maxLength={10}
+                    maxLength={11}
                     minLength={10}
-                    isUMPI={true}
+                    isEIN={true}
                   />
                 </Grid>
                 {/* Company Email */}
@@ -416,6 +423,7 @@ const CreateTenant = (props: Props) => {
                     error={errors.billingEmail}
                     control={control}
                     onBlur={validateBillingEmail}
+                    isRequired={false}
                   />
                 </Grid>
                 {/* Phone Number */}
@@ -446,6 +454,7 @@ const CreateTenant = (props: Props) => {
                     control={control}
                     minLength={10}
                     // maxLength={10}
+                    isRequired={false}
                   />
                 </Grid>
               </Grid>

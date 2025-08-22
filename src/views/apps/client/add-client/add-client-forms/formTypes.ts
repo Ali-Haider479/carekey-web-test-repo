@@ -20,7 +20,7 @@ export type PersonalDetailsFormDataType = {
   medicalSpendDown: string
   medicalSpendDown2: string
   amount: number
-  pcaChoice: string
+  pcaChoice?: string | null
   primaryResidentialAddress: string
   primaryResidentialCity: string
   primaryResidentialState: string

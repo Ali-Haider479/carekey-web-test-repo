@@ -385,6 +385,8 @@ const ReceivedTimesheetTable = (
     setIsDeleting(false)
     setRowsToDelete([])
 
+    console.log('User details in handleViewDetails:', user)
+
     // Helper function to convert UTC ISO string to local date and time parts
     const convertUTCToLocal = (utcString: string | null | undefined) => {
       if (!utcString || isNaN(new Date(utcString).getTime())) {
@@ -418,17 +420,17 @@ const ReceivedTimesheetTable = (
     setValue('clockInTime', clockInTime)
     setValue('clockOutDate', clockOutDate)
     setValue('clockOutTime', clockOutTime)
-    setValue('editedClockInDate', editedClockInDate)
+    setValue('editedClockInDate', editedClockInDate ? editedClockInDate : clockInDate)
     setValue('editedClockInTime', editedClockInTime)
-    setValue('editedClockOutDate', editedClockOutDate)
+    setValue('editedClockOutDate', editedClockOutDate ? editedClockOutDate : clockOutDate)
     setValue('editedClockOutTime', editedClockOutTime)
     setValue('hoursWorked', hoursWorked)
     setValue('dateOfService', user.dateOfService ? new Date(user.dateOfService).toISOString().split('T')[0] : '')
     setValue('serviceName', user?.clientService?.id || '')
     setValue('updatedBy', user.updatedBy?.userName || 'N/A')
     setValue('updatedAt', user.updatedAt ? new Date(user.updatedAt).toISOString().split('T')[0] : '')
-    setValue('notes', user.notes || '')
-    setValue('reason', user.reason || '')
+    setValue('notes', user?.notes || '')
+    setValue('reason', user?.reason || '')
 
     handleCloseMenu()
     setAnchorEl(null)
@@ -1201,7 +1203,7 @@ const ReceivedTimesheetTable = (
           open={isModalShow}
           onClose={handleModalClose}
           closeAfterTransition={false}
-          sx={{ '& .MuiDialog-paper': { overflow: 'hidden', p: 2 } }}
+          sx={{ '& .MuiDialog-paper': { p: 2, minWidth: 800, overflowX: 'hidden' } }}
         >
           <DialogCloseButton
             onClick={() => handleModalClose()}
@@ -1216,7 +1218,7 @@ const ReceivedTimesheetTable = (
               {isEditing ? 'Cancel' : 'Edit'}
             </Button>
           </div>
-          <div className='flex items-center justify-center pt-[120px] pb-[5px] w-full px-5 overflow-y-auto'>
+          <div className='flex items-center justify-center pt-[40px] pb-[5px] w-full px-5'>
             <form onSubmit={handleSubmit(onSubmit)} autoComplete='off'>
               <Grid container spacing={4}>
                 <Grid size={{ xs: 12, sm: 6 }}>
@@ -1445,13 +1447,14 @@ const ReceivedTimesheetTable = (
                         control={control}
                         label={'Clock In Date'}
                         defaultValue={''}
-                        isRequired={true}
+                        isRequired={false}
                         disabled={!isEditing}
                         selected={clockInDateString}
                         endDate={clockInDateString || undefined}
                         startDate={clockInDateString || undefined}
-                        minDate={new Date(weekRange.startDate)}
-                        maxDate={weekRange.endDate > currentDate ? new Date() : new Date(weekRange.endDate)}
+                        // minDate={new Date(weekRange.startDate)}
+                        // maxDate={weekRange.endDate > currentDate ? new Date() : new Date(weekRange.endDate)}
+                        maxDate={new Date()}
                         rules={{
                           required: false
                         }}
@@ -1496,11 +1499,12 @@ const ReceivedTimesheetTable = (
                         control={control}
                         label={'Clock Out Date'}
                         defaultValue={''}
-                        isRequired={true}
+                        isRequired={false}
                         disabled={!isEditing}
                         selected={editedClockOutDateString}
                         minDate={editedClockInDateString || undefined}
-                        maxDate={weekRange.endDate > currentDate ? new Date() : new Date(weekRange.endDate)}
+                        // maxDate={weekRange.endDate > currentDate ? new Date() : new Date(weekRange.endDate)}
+                        maxDate={new Date()}
                         rules={{
                           required: false,
                           validate: (value: any) => {
@@ -1655,9 +1659,10 @@ const ReceivedTimesheetTable = (
                     />
                   </Grid>
                   <Grid size={{ xs: 12 }}>
-                    <ControlledTextArea
+                    <CustomTextField
                       label='Notes'
                       name='notes'
+                      type='text'
                       control={control}
                       isRequired={false}
                       placeHolder={'Notes'}
@@ -1666,9 +1671,10 @@ const ReceivedTimesheetTable = (
                     />
                   </Grid>
                   <Grid size={{ xs: 12 }}>
-                    <ControlledTextArea
+                    <CustomTextField
                       label='Reason'
                       name='reason'
+                      type='text'
                       control={control}
                       isRequired={false}
                       placeHolder={'Reason'}
