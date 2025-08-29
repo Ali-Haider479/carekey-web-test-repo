@@ -25,11 +25,9 @@ import OcrCustomDropDown from '@/@core/components/custom-inputs/OcrCustomDropdow
 import api from '@/utils/api'
 import { extractStructuredTextFromPDF, parseServiceAgreement } from '@/utils/pdfDataExtract'
 import { useTheme } from '@emotion/react'
-import { set } from 'date-fns'
 import axios from 'axios'
-import { format } from 'path'
 import CustomAlert from '@/@core/components/mui/Alter'
-import { description } from 'valibot'
+import { parseISO, startOfDay } from 'date-fns'
 
 interface ServiceAuthListModalProps {
   open: boolean
@@ -217,7 +215,7 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
     totalAmount: '',
     serviceRate: '',
     quantity: '',
-    frequency: '',
+    frequency: 'daily',
     umpiNumber: '',
     taxonomy: '',
     reimbursement: 'per unit',
@@ -398,12 +396,20 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
   const parsedDate = (dateStr: string | undefined): string | undefined => {
     if (!dateStr) return undefined
 
-    // If already properly formatted
-    if (dateStr.includes('T00:00:00Z')) return dateStr
+    console.log('Parsing date string: ', dateStr)
+
+    // If already properly formatted ISO string, return it
+    if (/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z/.test(dateStr)) return dateStr
 
     // If it's a date-only string (YYYY-MM-DD)
     if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-      return `${dateStr}T00:00:00Z`
+      console.log("Date string found in format 'YYYY-MM-DD': ", dateStr)
+      const now = new Date()
+      const hours = String(now.getUTCHours()).padStart(2, '0')
+      const minutes = String(now.getUTCMinutes()).padStart(2, '0')
+      const seconds = String(now.getUTCSeconds()).padStart(2, '0')
+      const milliseconds = String(now.getUTCMilliseconds()).padStart(3, '0')
+      return `${dateStr}T${hours}:${minutes}:${seconds}.${milliseconds}Z`
     }
 
     // Try to parse as Date object
@@ -463,26 +469,14 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
     setBillableStates(updatedBillableStates)
   }
 
-  const formatToLocalISO = (date: Date | null): string | null => {
-    if (!date) return null
-    const pad = (num: number) => num.toString().padStart(2, '0')
-    const year = date.getFullYear()
-    const month = pad(date.getMonth() + 1)
-    const day = pad(date.getDate())
-    const hours = pad(date.getHours())
-    const minutes = pad(date.getMinutes())
-    const seconds = pad(date.getSeconds())
-    const milliseconds = date.getMilliseconds().toString().padStart(3, '0')
-    return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}.${milliseconds}`
-  }
-
   const handleDateRangeChange = (index: number, dates: [Date | null, Date | null]): void => {
     const [startDate, endDate] = dates
+
     const updatedFormData = [...formData]
     updatedFormData[index] = {
       ...updatedFormData[index],
-      startDate: formatToLocalISO(startDate),
-      endDate: formatToLocalISO(endDate)
+      startDate: parsedDate(startDate?.toLocaleDateString()),
+      endDate: parsedDate(endDate?.toLocaleDateString())
     }
     setFormData(updatedFormData)
   }
@@ -521,7 +515,7 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
         memberId: item.recipientId ? Number(item.recipientId) : 0,
         serviceAuthNumber: item.agreementNumber ? Number(item.agreementNumber) : 0,
         procedureCode: item.procedureCode || '',
-        modifierCode: item.modifierCode || null,
+        modifierCode: (item.modifierCode === '' ? null : item.modifierCode) || null,
         startDate: parsedDate(item.startDate),
         endDate: parsedDate(item.endDate),
         serviceRate: item.serviceRate ? Number(item.serviceRate.replace(/[$,]/g, '')) : 0,
@@ -535,7 +529,12 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
         clientId: clientId,
         billable: billableStates[index],
         placeOfService: item.placeOfService || 'home',
-        serviceName: item?.serviceName,
+        serviceName:
+          item.procedureCode === 'T1019' && item.modifierCode === 'U9'
+            ? 'PCA (CFSS)'
+            : item.procedureCode === 'S5116' && item.modifierCode === 'U9'
+              ? 'WORKER TRNG & DEV'
+              : item?.serviceName,
         serviceDescription: item?.serviceDescription,
         fileKey: fileKey || null // Use the uploaded file key if available
       }))
@@ -757,6 +756,21 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
 
     return parsedQuantity / frequencyUnits
   }
+  const isFormValid = formData.every(
+    (row: {
+      serviceName: string
+      procedureCode: string
+      startDate: string
+      endDate: string
+      serviceRate: string
+      quantity: string
+    }) =>
+      row.serviceName?.trim() !== '' &&
+      row.procedureCode?.trim() !== '' &&
+      row.startDate?.trim() !== '' &&
+      row.endDate?.trim() !== '' &&
+      row.quantity?.trim() !== ''
+  )
 
   return (
     <>
@@ -829,7 +843,11 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
                 <Button variant='contained' onClick={handleModalClose} disabled={isLoading}>
                   Cancel
                 </Button>
-                <Button variant='contained' onClick={handleSubmit} disabled={isLoading}>
+                <Button
+                  variant='contained'
+                  onClick={handleSubmit}
+                  disabled={isLoading || formData.length === 0 || !isFormValid}
+                >
                   Submit
                 </Button>
                 <Button variant='contained' component='label' disabled={isLoading}>
@@ -1020,8 +1038,8 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
                       <Grid size={{ xs: 12, sm: 3 }}>
                         <AppReactDatepicker
                           selectsRange
-                          startDate={row.startDate ? new Date(row.startDate) : null}
-                          endDate={row.endDate ? new Date(row.endDate) : null}
+                          startDate={row.startDate ? startOfDay(parseISO(row.startDate)) : null}
+                          endDate={row.endDate ? startOfDay(parseISO(row.endDate)) : null}
                           id={`dateRange_${index}`}
                           onChange={(dates: [Date | null, Date | null]) => handleDateRangeChange(index, dates)}
                           placeholderText='MM/DD/YYYY - MM/DD/YYYY'
@@ -1052,6 +1070,7 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
                           fullWidth
                           size='small'
                           disabled={isLoading}
+                          type='number'
                         />
                       </Grid>
                       <Grid size={{ xs: 12, sm: 3 }}>
@@ -1075,6 +1094,7 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
                           fullWidth
                           size='small'
                           disabled={isLoading}
+                          type='number'
                         />
                       </Grid>
                       <Grid size={{ xs: 12, sm: 3 }}>

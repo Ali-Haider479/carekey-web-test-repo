@@ -371,9 +371,9 @@ const ManualTimesheet = ({ caregiverList, payPeriodList }: any) => {
         } else {
           const correspondingServiceAuth = clientServiceAuth.find(
             (item: any) =>
-              item?.modifierCode === selectedService?.modifierCode &&
-              (item?.procedureCode === selectedService?.procedureCode ||
-                (item?.procedureCode === null && selectedService?.procedureCode === null))
+              item?.procedureCode === selectedService?.procedureCode &&
+              (item?.modifierCode === selectedService?.modifierCode ||
+                ((item?.modifierCode === null || item?.modifierCode === '') && selectedService?.modifierCode === null))
           )
 
           const allowedUnits = Math.ceil(correspondingServiceAuth?.units - correspondingServiceAuth?.usedUnits)

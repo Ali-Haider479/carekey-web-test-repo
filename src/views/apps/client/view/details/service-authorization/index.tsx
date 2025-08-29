@@ -461,6 +461,9 @@ const ServiceAuthorization = () => {
     setSelectedTab(newValue)
   }
 
+  console.log('Current Date and time: ', new Date())
+  console.log('Current Date and Time in UTC: ', new Date().toUTCString())
+
   const newColumns = [
     {
       id: 'payer',
@@ -531,6 +534,15 @@ const ServiceAuthorization = () => {
       render: (item: any) => {
         const remainingUnits = item?.units - item?.usedUnits
         return <Typography>{remainingUnits}</Typography>
+      }
+    },
+    {
+      id: 'usedHours',
+      label: 'USED HOURS',
+      minWidth: 170,
+      render: (item: any) => {
+        const usedHours = ((item?.usedUnits * 15) / 60).toFixed(2) || 0
+        return <Typography>{usedHours}</Typography>
       }
     },
     {

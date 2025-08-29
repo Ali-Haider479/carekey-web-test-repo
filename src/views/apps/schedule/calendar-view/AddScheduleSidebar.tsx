@@ -329,7 +329,6 @@ const AddEventModal = (props: AddEventSidebarType) => {
       values.caregiver !== '' &&
       values.client !== '' &&
       values.service !== '' &&
-      values.notes.trim() !== '' &&
       values.startDate instanceof Date &&
       !isNaN(values.startDate.getTime()) &&
       values.startTime instanceof Date &&
@@ -338,7 +337,6 @@ const AddEventModal = (props: AddEventSidebarType) => {
       !isNaN(values.endDate.getTime()) &&
       typeof values.assignedHours === 'number' &&
       values.assignedHours > 0 &&
-      values.location.trim() !== '' &&
       values.serviceAuth !== '' &&
       values.frequency?.trim() !== '' &&
       values.status.trim() !== '' &&
@@ -416,19 +414,28 @@ const AddEventModal = (props: AddEventSidebarType) => {
       const totalHours = (Number(selectedServiceAuth?.units) / 4).toFixed(2) // Assuming 1 unit = 15 minutes
       const usedHours = (Number(selectedServiceAuth?.usedUnits) / 4).toFixed(2) // Assuming 1 unit = 15 minutes
       const remainingHours = (Number(remainingUnits) / 4).toFixed(2) // Assuming 1 unit = 15 minutes
-      const qtyPerFrequency = (
+      const dailyFrequency = (
         calculateQuantityPerFrequency({
           startDate: selectedServiceAuth.startDate,
           endDate: selectedServiceAuth.endDate,
           quantity: selectedServiceAuth?.units,
-          frequency: selectedServiceAuth.frequency
+          frequency: 'daily'
+        }) / 4
+      ).toFixed(2)
+      const weeklyFrequency = (
+        calculateQuantityPerFrequency({
+          startDate: selectedServiceAuth.startDate,
+          endDate: selectedServiceAuth.endDate,
+          quantity: selectedServiceAuth?.units,
+          frequency: 'weekly'
         }) / 4
       ).toFixed(2)
       setServiceAuthHours({
         totalHours: Number(totalHours),
         usedHours: Number(usedHours),
         remainingHours: Number(remainingHours),
-        hoursPerFrequency: Number(qtyPerFrequency)
+        dailyHours: Number(dailyFrequency),
+        weeklyHours: Number(weeklyFrequency)
       })
     }
   }, [values.serviceAuth, calendarStore.selectedEvent])
@@ -1224,7 +1231,7 @@ const AddEventModal = (props: AddEventSidebarType) => {
                   <div
                     className={`text-lg font-bold ${theme.palette.mode === 'light' ? 'text-purple-900' : 'text-purple-100'}`}
                   >
-                    {selectedServiceAuth?.frequency === 'daily' ? serviceAuthHours?.hoursPerFrequency : 'N/A'} hrs
+                    {serviceAuthHours?.dailyHours} hrs
                   </div>
                 </div>
 
@@ -1239,7 +1246,7 @@ const AddEventModal = (props: AddEventSidebarType) => {
                   <div
                     className={`text-lg font-bold ${theme.palette.mode === 'light' ? 'text-indigo-900' : 'text-indigo-100'}`}
                   >
-                    {selectedServiceAuth?.frequency === 'weekly' ? serviceAuthHours?.hoursPerFrequency : 'N/A'} hrs
+                    {serviceAuthHours?.weeklyHours} hrs
                   </div>
                 </div>
               </div>
