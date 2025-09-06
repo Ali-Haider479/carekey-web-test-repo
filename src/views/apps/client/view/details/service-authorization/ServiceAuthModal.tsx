@@ -560,16 +560,18 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
       if (extractedData?.serviceItems?.length > 0) {
         for (const item of formData) {
           console.log('Item to create ---->> ', item)
-          const compareService = serviceAuthServices.find(
-            (service: any) =>
-              service.procedureCode === item.procedureCode &&
-              (service.modifierCode === item.modifierCode ||
-                (service.modifierCode === null && item.modifierCode === null))
-          )
-          console.log('Compare Service (If block) ---->> ', compareService)
+          const compareService =
+            serviceAuthServices.find(
+              (service: any) =>
+                service.procedureCode === item.procedureCode &&
+                (service.modifierCode === item.modifierCode ||
+                  (service.modifierCode === null && item.modifierCode === null))
+            ) || []
+          console.log('Comparing Service ---->> ', compareService)
           if (new Date(item.endDate) > new Date()) {
             if (item.status === 'APPROVED') {
-              if (!compareService) {
+              if (compareService.length === 0) {
+                console.log('Compare Service (If block) ---->> ', compareService)
                 const ServiceAuthServicesPayload = {
                   name: item?.serviceName,
                   description: item?.description,
@@ -609,12 +611,13 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
       } else {
         // Fallback to single payload if no extractedData (maintain existing behavior)
         if (new Date(serviceAuthResponses[0].data.endDate) > new Date()) {
-          const compareService = serviceAuthServices.find(
-            (service: any) =>
-              service.procedureCode === serviceAuthResponses[0].data.procedureCode &&
-              (service.modifierCode === serviceAuthResponses[0].data.modifierCode ||
-                (service.modifierCode === null && serviceAuthResponses[0].data.modifierCode === null))
-          )
+          const compareService =
+            serviceAuthServices.find(
+              (service: any) =>
+                service.procedureCode === serviceAuthResponses[0].data.procedureCode &&
+                (service.modifierCode === serviceAuthResponses[0].data.modifierCode ||
+                  (service.modifierCode === null && serviceAuthResponses[0].data.modifierCode === null))
+            ) || []
           console.log('Compare Service (Else block) ---->> ', compareService)
           const ServiceAuthServicesPayload = {
             name: serviceAuthResponses[0].data.serviceName,
@@ -625,7 +628,7 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
             evv: true
           }
 
-          if (!compareService) {
+          if (compareService.length === 0) {
             console.log('Service does not exist, creating new service.')
             createServicesResponse = await api.post(`/service/service-auth/services`, ServiceAuthServicesPayload)
             console.log('CREATING SERVICE AUTH SERVICES ---->> ', createServicesResponse)
@@ -764,12 +767,20 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
       endDate: string
       serviceRate: string
       quantity: string
+      providerId: string
+      agreementNumber: string
+      diagnosisCode: string
+      recipientId: string
     }) =>
       row.serviceName?.trim() !== '' &&
       row.procedureCode?.trim() !== '' &&
       row.startDate?.trim() !== '' &&
       row.endDate?.trim() !== '' &&
-      row.quantity?.trim() !== ''
+      row.quantity?.trim() !== '' &&
+      row.agreementNumber?.trim() !== '' &&
+      row.providerId?.trim() !== '' &&
+      row.diagnosisCode?.trim() !== '' &&
+      row.recipientId?.trim() !== ''
   )
 
   return (
@@ -881,6 +892,7 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
                       fullWidth
                       size='small'
                       disabled={isLoading}
+                      required={true}
                     />
                   </Grid>
                   <Grid size={{ xs: 12, sm: 4 }}>
