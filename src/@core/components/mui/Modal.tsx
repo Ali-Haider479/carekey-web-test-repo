@@ -20,6 +20,7 @@ interface FormModalProps {
   handleCancel?: () => void
   bodyStyle?: React.CSSProperties
   handleDelete?: () => void
+  isDeleteDisabled?: boolean
 }
 
 // Updated styled components to match the design
@@ -97,7 +98,8 @@ const FormModal: React.FC<FormModalProps> = ({
   title = '',
   handleCancel,
   handleDelete,
-  bodyStyle
+  bodyStyle,
+  isDeleteDisabled = false
 }) => {
   const closeModalHandler = () => {
     setIsModalOpen(false)
@@ -135,6 +137,7 @@ const FormModal: React.FC<FormModalProps> = ({
             className='rounded-full bg-[#32475C8A] hover:bg-red-400'
             onClick={handleDelete}
             sx={{ color: '#fff' }} // Ensure white color for consistency
+            disabled={isDeleteDisabled}
           >
             <DeleteOutline />
           </DeleteButton>

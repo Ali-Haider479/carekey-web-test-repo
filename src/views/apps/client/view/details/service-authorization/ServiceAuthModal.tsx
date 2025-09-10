@@ -398,21 +398,21 @@ export const ServiceAuthListModal: React.FC<ServiceAuthListModalProps> = ({
 
     console.log('Parsing date string: ', dateStr)
 
-    // If already properly formatted ISO string, return it
-    if (/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z/.test(dateStr)) return dateStr
-
-    // If it's a date-only string (YYYY-MM-DD)
-    if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-      console.log("Date string found in format 'YYYY-MM-DD': ", dateStr)
-      const now = new Date()
-      const hours = String(now.getUTCHours()).padStart(2, '0')
-      const minutes = String(now.getUTCMinutes()).padStart(2, '0')
-      const seconds = String(now.getUTCSeconds()).padStart(2, '0')
-      const milliseconds = String(now.getUTCMilliseconds()).padStart(3, '0')
-      return `${dateStr}T${hours}:${minutes}:${seconds}.${milliseconds}Z`
+    // If already a full ISO datetime string, return it as-is
+    if (/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z/.test(dateStr)) {
+      return dateStr
     }
 
-    // Try to parse as Date object
+    // Handle date-only string (YYYY-MM-DD) as local midnight
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+      console.log("Date string found in format 'YYYY-MM-DD': ", dateStr)
+      const [year, month, day] = dateStr.split('-').map(Number)
+      const localDate = new Date(year, month - 1, day) // Creates local midnight
+      if (isNaN(localDate.getTime())) return undefined
+      return localDate.toISOString() // Converts to UTC ISO, preserving local date intent
+    }
+
+    // For other formats, try parsing as local date and convert to ISO
     const date = new Date(dateStr)
     return isNaN(date.getTime()) ? undefined : date.toISOString()
   }

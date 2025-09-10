@@ -11,7 +11,6 @@ interface EventBubbleProps {
 const EventBubble: React.FC<EventBubbleProps> = ({ event, onClick, onDelete }) => {
   // Get related data
   const statusColors = getStatusColors(event.status)
-  console.log('EventBubble----->', event)
 
   const bubbleEvent = event || event[0]
 

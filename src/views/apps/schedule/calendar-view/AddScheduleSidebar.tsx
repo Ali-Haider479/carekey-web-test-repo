@@ -288,6 +288,8 @@ const AddEventModal = (props: AddEventSidebarType) => {
   const [conflictModalOpen, setConflictModalOpen] = useState(false)
   const [expanded, setExpanded] = useState<string | false>('panel0')
 
+  console.log('Calendar Store in AddEventModal: ', calendarStore) // --- IGNORE ---
+
   const dispatch = useAppDispatch()
 
   const handleBulkDeleteChange = () => {
@@ -416,16 +418,16 @@ const AddEventModal = (props: AddEventSidebarType) => {
       const remainingHours = (Number(remainingUnits) / 4).toFixed(2) // Assuming 1 unit = 15 minutes
       const dailyFrequency = (
         calculateQuantityPerFrequency({
-          startDate: selectedServiceAuth.startDate,
-          endDate: selectedServiceAuth.endDate,
+          startDate: selectedServiceAuth?.startDate,
+          endDate: selectedServiceAuth?.endDate,
           quantity: selectedServiceAuth?.units,
           frequency: 'daily'
         }) / 4
       ).toFixed(2)
       const weeklyFrequency = (
         calculateQuantityPerFrequency({
-          startDate: selectedServiceAuth.startDate,
-          endDate: selectedServiceAuth.endDate,
+          startDate: selectedServiceAuth?.startDate,
+          endDate: selectedServiceAuth?.endDate,
           quantity: selectedServiceAuth?.units,
           frequency: 'weekly'
         }) / 4
@@ -543,14 +545,16 @@ const AddEventModal = (props: AddEventSidebarType) => {
 
   const calculateTotalDays = (startDate: Date, endDate: Date) => {
     const start = new Date(startDate)
-
     const end = new Date(endDate)
-
-    // Calculate the difference in days
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      console.warn('Invalid dates in calculateTotalDays')
+      return 1 // Fallback
+    }
     const timeDifference = end.getTime() - start.getTime()
-    const totalDays = timeDifference / (24 * 60 * 60 * 1000) + 1
-
-    return Math.round(totalDays) // Use Math.round to handle any floating point inaccuracies
+    let totalDays = timeDifference / (24 * 60 * 60 * 1000) + 1
+    // Clamp to minimum 1 if negative (treat as same-day event)
+    totalDays = Math.max(1, totalDays)
+    return Math.ceil(totalDays) // Use ceil for spans; adjust if needed
   }
 
   const onSubmit = async () => {
@@ -564,7 +568,7 @@ const AddEventModal = (props: AddEventSidebarType) => {
       setIsAddEventLoading(false)
       return
     }
-    if (selectedServiceAuth && new Date(selectedServiceAuth.endDate) < new Date()) {
+    if (selectedServiceAuth && new Date(selectedServiceAuth?.endDate) < new Date()) {
       setAlertOpen(true)
       setAlertMessage({
         message: 'The service auth has expired. Please update the service auth before creating a schedule',
@@ -605,6 +609,8 @@ const AddEventModal = (props: AddEventSidebarType) => {
     }
 
     let currentDate = new Date(startDate)
+
+    console.log('Starting to run a for loop for days: ', totalDays)
 
     for (let i = 0; i < totalDays; i++) {
       const eventStartDate = new Date(currentDate)
@@ -741,9 +747,10 @@ const AddEventModal = (props: AddEventSidebarType) => {
             handleModalClose()
           }
         }
+        dispatch(filterEvents())
       } catch (error: any) {
         console.error('Error updating schedule:', error)
-        if (error.status === 409) {
+        if (error.response?.status === 409) {
           setAlertOpen(true)
           setAlertMessage({
             message: 'Schedule has encoutered a conflict',
@@ -756,12 +763,15 @@ const AddEventModal = (props: AddEventSidebarType) => {
       }
     } else {
       try {
+        console.log('Creating Bulk Events: ---->> ', bulkEvents)
         const createSchedule = await api.post(`/schedule`, bulkEvents)
         handleAddEvent(createSchedule.data.schedules)
+        dispatch(filterEvents())
         handleModalClose()
       } catch (error: any) {
         console.error('Error creating schedule:', error)
-        if (error.status === 409) {
+        setIsAddEventLoading(false)
+        if (error.response?.status === 409) {
           setConflicts(error.response?.data.conflicts || [])
           setConflictModalOpen(true)
           setAlertOpen(true)
@@ -769,11 +779,17 @@ const AddEventModal = (props: AddEventSidebarType) => {
             message: 'Schedule has encoutered a conflict',
             severity: 'error'
           })
+        } else {
+          // Optionally handle other errors
+          setAlertOpen(true)
+          setAlertMessage({
+            message: 'An error occurred while creating the schedule.',
+            severity: 'error'
+          })
         }
       }
     }
-
-    dispatch(filterEvents())
+    // dispatch(filterEvents())
     setIsAddEventLoading(false)
   }
 
@@ -792,7 +808,8 @@ const AddEventModal = (props: AddEventSidebarType) => {
             eventStart === selectedEventStart &&
             eventEnd === selectedEventEnd &&
             event.caregiver?.id === calendarStore.selectedEvent.caregiver?.id &&
-            event.client?.id === calendarStore.selectedEvent.client?.id
+            event.client?.id === calendarStore.selectedEvent.client?.id &&
+            event.status !== 'worked'
           )
         })
         if (matchingEvents.length === 0) {
@@ -881,6 +898,7 @@ const AddEventModal = (props: AddEventSidebarType) => {
         handleCancel={handleModalClose}
         bodyStyle={{ padding: 0 }}
         handleDelete={handleDelete}
+        isDeleteDisabled={calendarStore.selectedEvent && calendarStore.selectedEvent.status === 'worked' ? true : false}
       >
         {alertOpen === true && (
           <Alert onClose={() => setAlertOpen(false)} severity={alertMessage?.severity}>
