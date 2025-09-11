@@ -288,8 +288,6 @@ const AddEventModal = (props: AddEventSidebarType) => {
   const [conflictModalOpen, setConflictModalOpen] = useState(false)
   const [expanded, setExpanded] = useState<string | false>('panel0')
 
-  console.log('Calendar Store in AddEventModal: ', calendarStore) // --- IGNORE ---
-
   const dispatch = useAppDispatch()
 
   const handleBulkDeleteChange = () => {
@@ -391,7 +389,7 @@ const AddEventModal = (props: AddEventSidebarType) => {
 
   useEffect(() => {
     if (values.service) {
-      const filteredServiceType = serviceType.find(item => item.clientServiceId === values.service)
+      const filteredServiceType = serviceType?.find(item => item.clientServiceId === values.service)
       setSelectedService(filteredServiceType)
       const corrospondingServiceAuth = clientServiceAuth?.filter(
         (item: any) =>
@@ -554,7 +552,7 @@ const AddEventModal = (props: AddEventSidebarType) => {
     let totalDays = timeDifference / (24 * 60 * 60 * 1000) + 1
     // Clamp to minimum 1 if negative (treat as same-day event)
     totalDays = Math.max(1, totalDays)
-    return Math.ceil(totalDays) // Use ceil for spans; adjust if needed
+    return Math.round(totalDays) // Use ceil for spans; adjust if needed
   }
 
   const onSubmit = async () => {
@@ -630,7 +628,7 @@ const AddEventModal = (props: AddEventSidebarType) => {
         title:
           values?.title?.trim() !== ''
             ? values?.title
-            : `${service.name} for ${client.firstName} ${client.lastName} ${finalStartDate.toLocaleDateString()} ${finalStartDate.toLocaleTimeString(
+            : `${service?.name} for ${client.firstName} ${client.lastName} ${finalStartDate.toLocaleDateString()} ${finalStartDate.toLocaleTimeString(
                 'en-US',
                 {
                   hour: 'numeric',
@@ -661,6 +659,8 @@ const AddEventModal = (props: AddEventSidebarType) => {
       // Move to the next day without modifying endDate
       currentDate.setDate(currentDate.getDate() + 1)
     }
+
+    console.log('Final Bulk Events to be sent to backend: ---->> ', bulkEvents)
 
     // Make a single API call with bulk data
     if (isEdited && calendarStore?.selectedEvent && calendarStore?.selectedEvent?.title !== '') {
@@ -742,6 +742,7 @@ const AddEventModal = (props: AddEventSidebarType) => {
               ...bulkEvents[0],
               end: finalEndDate
             }
+            console.log('Patch Body for single event update: ---->> ', patchBody)
             const updatedSchedule = await api.patch(`/schedule/${eventId}`, patchBody)
             handleUpdateEvent(updatedSchedule.data)
             handleModalClose()
@@ -917,7 +918,7 @@ const AddEventModal = (props: AddEventSidebarType) => {
                     Client:
                   </span>
                   <span className={`text-sm ${theme.palette.mode === 'light' ? 'text-gray-900' : 'text-white'}`}>
-                    {calendarStore?.selectedEvent.client
+                    {calendarStore?.selectedEvent?.client
                       ? `${calendarStore.selectedEvent.client.firstName} ${calendarStore.selectedEvent.client.lastName}`
                       : 'Unknown Client'}
                   </span>
@@ -1160,7 +1161,7 @@ const AddEventModal = (props: AddEventSidebarType) => {
                       ?.filter(item => item.dummyService === false)
                       .map((service: any) => (
                         <MenuItem key={service.id} value={service.clientServiceId}>
-                          {service.name} {`(${service?.procedureCode} - ${service?.modifierCode || 'N/A'})`}{' '}
+                          {service?.name} {`(${service?.procedureCode} - ${service?.modifierCode || 'N/A'})`}{' '}
                           {service?.dummyService ? '(Demo Service)' : '(S.A Service)'}
                         </MenuItem>
                       ))
