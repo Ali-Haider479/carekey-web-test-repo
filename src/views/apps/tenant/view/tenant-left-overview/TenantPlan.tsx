@@ -9,58 +9,36 @@ import { loadStripe } from '@stripe/stripe-js'
 // Component Imports
 import { Dialog, Grid2 as Grid } from '@mui/material'
 import DialogCloseButton from '@/components/dialogs/DialogCloseButton'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { CheckCircle } from '@mui/icons-material'
 import { useParams } from 'next/navigation'
 import axios from 'axios'
+import api from '@/utils/api'
+import { planDetails } from '@/utils/constants'
+import { useSession } from 'next-auth/react'
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
 
 const TenantPlan = ({ tenantData }: any) => {
   const { id } = useParams()
+  const { data: session } = useSession()
   const [loadingStates, setLoadingStates] = useState<any>({})
+  const [planDetailsData, setPlanDetailsData] = useState<any>(null)
   const [isModalShow, setIsModalShow] = useState(false)
 
-  const planDetails = [
-    {
-      id: 1,
-      plan: 'Basic',
-      price: '10',
-      stripePriceId: 'price_1R7XaY4dbdyqD10L78WcFysc',
-      previledges: [
-        { id: 1, string: '10 Users' },
-        { id: 2, string: 'Up to 10 GB Storage' },
-        { id: 3, string: 'Basic Support' }
-      ]
-    },
-    {
-      id: 2,
-      plan: 'Pro',
-      price: '50',
-      stripePriceId: 'price_1R7XbA4dbdyqD10LinVDBpZI',
-      previledges: [
-        { id: 1, string: '50 Users' },
-        { id: 2, string: 'Up to 100 GB Storage' },
-        { id: 3, string: 'Pro Support' },
-        { id: 4, string: 'Team Collaboration Tools' },
-        { id: 5, string: 'Monthly Performance Reports' }
-      ]
-    },
-    {
-      id: 3,
-      plan: 'Premium',
-      price: '100',
-      stripePriceId: 'price_1R7XbL4dbdyqD10LiJjipT1h',
-      previledges: [
-        { id: 1, string: 'Unlimited Users' },
-        { id: 2, string: 'Unlimited Storage' },
-        { id: 3, string: 'Premium Support' },
-        { id: 4, string: 'Advanced Analytics' },
-        { id: 5, string: 'Custom Branding' },
-        { id: 6, string: '24/7 Priority Access' }
-      ]
+  const fetchPlanDetails = async () => {
+    try {
+      const response = await api.get(`/plan`)
+      const data = response.data
+      setPlanDetailsData(data)
+    } catch (error) {
+      console.error('Error fetching plan details:', error)
     }
-  ]
+  }
+
+  useEffect(() => {
+    fetchPlanDetails()
+  }, [])
 
   // Sort stripePayments by createdAt descending and get the last active plan
   const sortedPayments = tenantData?.stripePayments
@@ -68,27 +46,28 @@ const TenantPlan = ({ tenantData }: any) => {
     ?.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
 
   const lastSubscribedPlan =
-    sortedPayments?.length > 0 ? planDetails.find(plan => plan.stripePriceId === sortedPayments[0].planId) : null
+    sortedPayments?.length > 0 ? planDetails?.find(plan => plan.stripePriceId === sortedPayments[0].planId) : null
 
   // Get all active subscribed plan IDs
-  const subscribedPlanIds = sortedPayments?.map((payment: any) => payment.planId) || []
+  const subscribedPlanIds = [session?.user?.subscribedPlan?.planId]
 
   const handleModalClose = () => {
     setIsModalShow(false)
   }
 
-  const handleSubscribe = async (priceId: string, tenantId: any, planId: any) => {
+  const handleSubscribe = async (priceId: string, tenantId: any, planId: any, planType: string) => {
     setLoadingStates((prev: any) => ({ ...prev, [planId]: true }))
     try {
       // Get the current active subscription ID, if any
-      const currentSubscriptionId = sortedPayments?.length > 0 ? sortedPayments[0].stripeSubscriptionId : null
+      const currentSubscriptionId = sortedPayments?.length > 0 ? sortedPayments[0]?.stripeSubscriptionId : null
 
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/stripe/create-checkout-session`,
         {
           priceId,
           tenantId,
-          currentSubscriptionId // Send current subscription ID to cancel it
+          currentSubscriptionId, // Send current subscription ID to cancel it
+          planType
         },
         {
           headers: {
@@ -99,7 +78,8 @@ const TenantPlan = ({ tenantData }: any) => {
 
       const { sessionId } = response.data
       const stripe = await stripePromise
-      await stripe?.redirectToCheckout({ sessionId })
+      const res = await stripe?.redirectToCheckout({ sessionId })
+      console.log('Tenant Payment Res', res)
     } catch (error: any) {
       console.error('Frontend error:', error)
       if (error.response) {
@@ -116,16 +96,16 @@ const TenantPlan = ({ tenantData }: any) => {
     <>
       <Card className='border-2 border-[#4B0082] shadow-primarySm'>
         <CardContent className='flex flex-col gap-6'>
-          {lastSubscribedPlan ? (
+          {session?.user?.subscribedPlan?.id ? (
             <div className='flex flex-col'>
               <Typography variant='h4' className='font-bold text-center'>
                 Subscribed Plan
               </Typography>
               <Typography variant='h4' className='font-bold text-center'>
-                {lastSubscribedPlan.plan}
+                {lastSubscribedPlan?.plan}
               </Typography>
               <ul className='list-disc pl-5'>
-                {lastSubscribedPlan.previledges.map((privilege: any) => (
+                {lastSubscribedPlan?.previledges.map((privilege: any) => (
                   <li key={privilege.id} className='text-base'>
                     {privilege.string}
                   </li>
@@ -158,7 +138,17 @@ const TenantPlan = ({ tenantData }: any) => {
         open={isModalShow}
         onClose={handleModalClose}
         closeAfterTransition={false}
-        sx={{ '& .MuiDialog-paper': { overflow: 'visible' } }}
+        // sx={{ '& .MuiDialog-paper': { overflow: 'visible' } }}
+        sx={{
+          '& .MuiDialog-paper': {
+            overflow: 'visible', // Change to 'auto' for vertical scrolling if content exceeds height
+            minHeight: '700px', // Increase min-height to fit content (adjust based on your needs; e.g., 550px accommodates taller cards)
+            maxHeight: '90vh', // Optional: Limit to 90% of viewport height to prevent full-screen takeover, with scrolling
+            // width: 'auto', // Let width adjust based on content
+            maxWidth: '1100px', // Optional: Constrain width for the two cards (300px each + gap + padding)
+            minWidth: '750px' // Optional: Ensure a minimum width to prevent excessive shrinking
+          }
+        }}
         maxWidth={false}
       >
         <DialogCloseButton onClick={handleModalClose} disableRipple>
@@ -166,12 +156,12 @@ const TenantPlan = ({ tenantData }: any) => {
         </DialogCloseButton>
         <div className='flex items-center justify-center pt-[20px] pb-[20px] w-full px-[20px]'>
           <div className='flex flex-row gap-3'>
-            {planDetails.map((item: any) => {
-              const isSubscribed = subscribedPlanIds.includes(item.stripePriceId)
+            {planDetails?.map((item: any) => {
+              const isSubscribed = subscribedPlanIds?.includes(item.stripePriceId)
               return (
                 <div
                   key={item.id}
-                  className='border-2 border-[#4B0082] shadow-primarySm p-5 rounded-md h-[450px] w-[300px]'
+                  className='border-2 border-[#4B0082] shadow-primarySm p-5 rounded-md h-[700px] w-[350px]'
                 >
                   <div className='bg-[#e3d5ea] rounded-sm p-1 flex justify-center'>
                     <Typography variant='h6' className='text-[#4B0082] text-lg'>
@@ -193,11 +183,11 @@ const TenantPlan = ({ tenantData }: any) => {
                       ))}
                     </div>
                   </div>
-                  <div className='mt-2 flex justify-center'>
+                  <div className='mt-[250px] flex justify-center'>
                     <Button
                       variant='contained'
                       className='w-full'
-                      onClick={() => !isSubscribed && handleSubscribe(item.stripePriceId, id, item.id)}
+                      onClick={() => !isSubscribed && handleSubscribe(item.stripePriceId, id, item.id, item.plan)}
                       disabled={loadingStates[item.id] || isSubscribed}
                     >
                       {loadingStates[item.id] ? 'Processing...' : isSubscribed ? 'Current Plan' : 'Upgrade Plan'}

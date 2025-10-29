@@ -174,3 +174,45 @@ export const staffRatio = [
   { id: 3, name: '1:3', description: '(1 client : 3 employees)' },
   { id: 4, name: '1:4', description: '(1 client : 4 employees)' }
 ]
+
+export const planDetails = [
+  {
+    id: 1,
+    plan: 'Standard',
+    price: '50',
+    stripePriceId: 'price_1R7XbA4dbdyqD10LinVDBpZI',
+    previledges: [
+      { id: 1, string: 'Client & Caregiver Management' },
+      { id: 2, string: 'Timesheet and Shceudling (Basic)' },
+      { id: 3, string: 'Payroll/Basic Reports (Basic)' },
+      { id: 4, string: 'Service Types & Mapping (DHS List)' },
+      { id: 5, string: 'EVV Compliance (Required by DHS)' },
+      { id: 6, string: 'EVV Compliance Modes (Enforced/Relaxed)' },
+      { id: 7, string: 'Forms Library & Filing' },
+      { id: 8, string: 'Advanced Reports' },
+      { id: 9, string: 'Custom Pay Periods' }
+    ]
+  },
+  {
+    id: 2,
+    plan: 'Enterprise',
+    price: '100',
+    stripePriceId: 'price_1R7XbL4dbdyqD10LiJjipT1h',
+    previledges: [
+      { id: 1, string: 'Client & Caregiver Management' },
+      { id: 2, string: 'Timesheet and Shceudling (Basic)' },
+      { id: 3, string: 'Payroll/Basic Reports (Basic)' },
+      { id: 4, string: 'Service Types & Mapping (DHS List)' },
+      { id: 5, string: 'EVV Compliance (Required by DHS)' },
+      { id: 6, string: 'EVV Compliance Modes (Enforced/Relaxed)' },
+      { id: 7, string: 'Forms Library & Filing' },
+      { id: 8, string: 'Advanced Reports' },
+      { id: 9, string: 'Custom Pay Periods' },
+      { id: 10, string: 'Chats & Messaging' },
+      { id: 11, string: 'E-Docs & Forms' },
+      { id: 12, string: 'Expanded Service Features' },
+      { id: 13, string: 'Third-Party APIs Usage' },
+      { id: 14, string: 'Caregiver & Client History Logs' }
+    ]
+  }
+]

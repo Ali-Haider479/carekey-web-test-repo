@@ -1,7 +1,7 @@
 'use client'
 
 // React Imports
-import { useEffect, useState } from 'react'
+import { use, useEffect, useState } from 'react'
 import type { SyntheticEvent, ReactElement } from 'react'
 
 // MUI Imports
@@ -17,6 +17,7 @@ import { CircularProgress, Typography } from '@mui/material'
 import { useParams, useRouter } from 'next/navigation'
 import api from '@/utils/api'
 import CustomAlert from '@/@core/components/mui/Alter'
+import { useSession } from 'next-auth/react'
 
 interface BottomBodyProps {
   tabContentList: Record<string, (props: { data: any }) => ReactElement>
@@ -24,14 +25,31 @@ interface BottomBodyProps {
 
 const CaregiverDetails = ({ tabContentList }: BottomBodyProps) => {
   const { id } = useParams()
+  const { data: session } = useSession()
   const [alertOpen, setAlertOpen] = useState(false)
+  const [tenantData, setTenantData] = useState<any>()
   const [alertProps, setAlertProps] = useState({ message: '', severity: 'info' })
   const [isLoading, setIsLoading] = useState<boolean>(false)
+
+  const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
 
   // States
   const [activeTab, setActiveTab] = useState('profile')
   const [data, setData] = useState<any>()
   const router = useRouter()
+
+  const fetchTenantData = async () => {
+    try {
+      const response = await api.get(`/tenant/${authUser?.tenant?.id}`)
+      setTenantData(response.data)
+    } catch (error) {
+      console.error('Error getting Tenant Data: ', error)
+    }
+  }
+
+  useEffect(() => {
+    fetchTenantData()
+  }, [])
 
   // Fetch data from the backend API
   const fetchData = async () => {
@@ -88,8 +106,6 @@ const CaregiverDetails = ({ tabContentList }: BottomBodyProps) => {
 
   const fullName = [data?.firstName || '', data?.middleName || '', data?.lastName || ''].filter(Boolean).join(' ')
 
-  console.log('Caregiver Data ------------->> ', data)
-
   return (
     <>
       <CustomAlert
@@ -131,7 +147,10 @@ const CaregiverDetails = ({ tabContentList }: BottomBodyProps) => {
               <Grid size={{ xs: 12 }}>
                 <CustomTabList onChange={handleChange} variant='scrollable' pill='true'>
                   <Tab value='profile' label='PROFILE' />
-                  <Tab value='account-history' label='LOGS' />
+                  {session?.user?.userRoles?.title === 'Super Admin' ||
+                    (session?.user?.subscribedPlan?.features?.client_and_caregiver_history_logs && (
+                      <Tab value='account-history' label='LOGS' />
+                    ))}
                   <Tab value='assigned-service' label='ASSIGNED SERVICE' />
                   <Tab value='time-log' label='VIEW TIME LOG' />
                   <Tab value='schedule' label='VIEW SCHEDULE' />

@@ -39,6 +39,7 @@ import TenantActionButton from '@/@core/components/mui/TenantActionButton'
 import axios from 'axios'
 import { CarekeyTenantDarkLogo, CarekeyTenantLightLogo } from '@/@core/svg/CarekeyTenantLogo'
 import api from '@/utils/api'
+import { planDetails } from '@/utils/constants'
 
 type UserRoleType = {
   [key: string]: { icon: string; color: string }
@@ -47,47 +48,6 @@ type UserRoleType = {
 type UserStatusType = {
   [key: string]: ThemeColor
 }
-
-const planDetails = [
-  {
-    id: 1,
-    plan: 'Basic',
-    price: '10',
-    stripePriceId: 'price_1R7XaY4dbdyqD10L78WcFysc',
-    previledges: [
-      { id: 1, string: '10 Users' },
-      { id: 2, string: 'Up to 10 GB Storage' },
-      { id: 3, string: 'Basic Support' }
-    ]
-  },
-  {
-    id: 2,
-    plan: 'Pro',
-    price: '50',
-    stripePriceId: 'price_1R7XbA4dbdyqD10LinVDBpZI',
-    previledges: [
-      { id: 1, string: '50 Users' },
-      { id: 2, string: 'Up to 100 GB Storage' },
-      { id: 3, string: 'Pro Support' },
-      { id: 4, string: 'Team Collaboration Tools' },
-      { id: 5, string: 'Monthly Performance Reports' }
-    ]
-  },
-  {
-    id: 3,
-    plan: 'Premium',
-    price: '100',
-    stripePriceId: 'price_1R7XbL4dbdyqD10LiJjipT1h',
-    previledges: [
-      { id: 1, string: 'Unlimited Users' },
-      { id: 2, string: 'Unlimited Storage' },
-      { id: 3, string: 'Premium Support' },
-      { id: 4, string: 'Advanced Analytics' },
-      { id: 5, string: 'Custom Branding' },
-      { id: 6, string: '24/7 Priority Access' }
-    ]
-  }
-]
 
 // Styled Components
 const Icon = styled('i')({})
@@ -293,7 +253,9 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
           ?.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
 
         const lastSubscribedPlan =
-          sortedPayments?.length > 0 ? planDetails.find(plan => plan.stripePriceId === sortedPayments[0].planId) : null
+          sortedPayments?.length > 0
+            ? planDetails?.find(plan => plan?.stripePriceId === sortedPayments[0]?.planId)
+            : null
 
         return <Typography color='primary'>{lastSubscribedPlan ? lastSubscribedPlan.plan : '-'}</Typography>
       }

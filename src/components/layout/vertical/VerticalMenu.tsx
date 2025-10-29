@@ -32,6 +32,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { RootState } from '@/redux-store'
 import { setChatUnReadMessageStatus } from '@/redux-store/slices/notification'
 import { Box, Typography } from '@mui/material'
+import { useSession } from 'next-auth/react'
 
 // Menu Data Imports
 // import menuData from '@/data/navigation/verticalMenuData'
@@ -54,11 +55,13 @@ const RenderExpandIcon = ({ open, transitionDuration }: RenderExpandIconProps) =
 
 const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
   const dispatch = useDispatch()
+  const [tenantData, setTenantData] = useState<any>(null)
   const chatUnReadMessageStatus = useSelector((state: RootState) => state.notificationReducer.chatUnReadMessageStatus)
   // Hooks
   const theme = useTheme()
   const params = useParams()
   const verticalNavOptions = useVerticalNav()
+  const { data: session } = useSession()
   const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
   // Vars
   const { transitionDuration, isBreakpointReached } = verticalNavOptions
@@ -73,6 +76,21 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
 
     return authUser.userRoles.rolePermissions.some((rp: any) => rp.permission?.name === permissionName)
   }
+
+  const fetchTenantData = async () => {
+    try {
+      const response = await api.get(`/tenant/${authUser.tenant.id}`)
+      const data = response.data
+      setTenantData(data)
+      return data
+    } catch (error) {
+      console.error('Error fetching tenant data:', error)
+    }
+  }
+
+  useEffect(() => {
+    fetchTenantData()
+  }, [])
 
   useEffect(() => {
     const fetchUserUnreadMessagesCount = async () => {
@@ -126,6 +144,7 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
               icon={<i className='bx-money' />}
               exactMatch={false}
               activeUrl='/apps/rcm'
+              disabled={authUser.userRoles.title !== 'Super Admin' && !session?.user?.subscribedPlan?.id}
             >
               {dictionary['navigation'].rcm}
             </MenuItem>
@@ -138,6 +157,7 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
               icon={<i className='bx-dollar' />}
               exactMatch={false}
               activeUrl='/apps/billing'
+              disabled={authUser.userRoles.title !== 'Super Admin' && !session?.user?.subscribedPlan?.id}
             >
               {dictionary['navigation'].billing}
             </MenuItem>
@@ -155,6 +175,7 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
               icon={<i className='bx-bxs-heart-circle' />}
               exactMatch={false}
               activeUrl='/apps/caregiver'
+              disabled={authUser.userRoles.title !== 'Super Admin' && !session?.user?.subscribedPlan?.id}
             >
               {dictionary['navigation'].caregivers}
             </MenuItem>
@@ -167,6 +188,7 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
               icon={<i className='bx-user' />}
               exactMatch={false}
               activeUrl='/apps/client'
+              disabled={authUser.userRoles.title !== 'Super Admin' && !session?.user?.subscribedPlan?.id}
             >
               {dictionary['navigation'].clients}
             </MenuItem>
@@ -195,6 +217,7 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
               icon={<i className='bx-calendar-alt' />}
               exactMatch={false}
               activeUrl='/apps/schedules'
+              disabled={authUser.userRoles.title !== 'Super Admin' && !session?.user?.subscribedPlan?.id}
             >
               {dictionary['navigation'].schedules}
             </MenuItem>
@@ -207,6 +230,7 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
               icon={<i className='bx-mobile-alt' />}
               exactMatch={false}
               activeUrl='/apps/evv-tracking'
+              disabled={authUser.userRoles.title !== 'Super Admin' && !session?.user?.subscribedPlan?.id}
             >
               {dictionary['navigation'].evv}
             </MenuItem>
@@ -219,32 +243,36 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
               icon={<i className='bx-spreadsheet' />}
               exactMatch={false}
               activeUrl='/apps/timesheets'
+              disabled={authUser.userRoles.title !== 'Super Admin' && !session?.user?.subscribedPlan?.id}
             >
               {dictionary['navigation'].timesheets}
             </MenuItem>
           )}
 
           {/* Chat - requires Chat permission */}
-          {hasPermission('Chat') && ( //&& authUser.tenant
-            <MenuItem
-              href={`/${locale}/apps/chat`}
-              icon={<i className='bx-chat' />}
-              exactMatch={false}
-              activeUrl='/apps/chat'
-              suffix={
-                chatUnReadMessageStatus ? (
-                  <span className='relative inline-block'>
-                    <span className='absolute top-[-5] right-0 w-3 h-3 bg-red-500 rounded-full' />
-                  </span>
-                ) : (
-                  ''
-                )
-              }
-              onActiveChange={() => dispatch(setChatUnReadMessageStatus(false))}
-            >
-              {dictionary['navigation'].chat}
-            </MenuItem>
-          )}
+          {hasPermission('Chat') &&
+            (authUser?.userRoles?.title === 'Super Admin' ||
+              session?.user?.subscribedPlan?.features?.chat_and_messaging) && ( // Super Admin bypasses feature check
+              <MenuItem
+                href={`/${locale}/apps/chat`}
+                icon={<i className='bx-chat' />}
+                exactMatch={false}
+                activeUrl='/apps/chat'
+                disabled={authUser.userRoles.title !== 'Super Admin' && !session?.user?.subscribedPlan?.id}
+                suffix={
+                  chatUnReadMessageStatus ? (
+                    <span className='relative inline-block'>
+                      <span className='absolute top-[-5] right-0 w-3 h-3 bg-red-500 rounded-full' />
+                    </span>
+                  ) : (
+                    ''
+                  )
+                }
+                onActiveChange={() => dispatch(setChatUnReadMessageStatus(false))}
+              >
+                {dictionary['navigation'].chat}
+              </MenuItem>
+            )}
 
           {/* Reports - requires Reports permission */}
           {hasPermission('Reports') && authUser.tenant && (
@@ -253,6 +281,7 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
               icon={<i className='bx-alarm-exclamation' />}
               exactMatch={false}
               activeUrl='/apps/reports'
+              disabled={authUser.userRoles.title !== 'Super Admin' && !session?.user?.subscribedPlan?.id}
             >
               {dictionary['navigation'].reports}
             </MenuItem>
@@ -265,6 +294,7 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
               icon={<i className='bx-bug-alt' />}
               exactMatch={false}
               activeUrl='/apps/advance'
+              disabled={authUser.userRoles.title !== 'Super Admin' && !session?.user?.subscribedPlan?.id}
             >
               {dictionary['navigation'].advance}
             </MenuItem>

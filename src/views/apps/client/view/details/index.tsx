@@ -16,6 +16,7 @@ import ProfileBanner from '@/@layouts/components/horizontal/ProfileBanner'
 import { CircularProgress, Typography } from '@mui/material'
 import { useParams } from 'next/navigation'
 import api from '@/utils/api'
+import { useSession } from 'next-auth/react'
 
 interface BottomBodyProps {
   tabContentList: Record<string, ReactElement>
@@ -25,9 +26,13 @@ const ClientDetails = ({ tabContentList }: BottomBodyProps) => {
   // States
   const [activeTab, setActiveTab] = useState('profile')
   const [clientData, setClientData] = useState<any>()
+  const [tenantData, setTenantData] = useState<any>()
   const [isLoading, setIsLoading] = useState<boolean>(false)
 
+  const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
+
   const { id } = useParams()
+  const { data: session } = useSession()
 
   const handleChange = (event: SyntheticEvent, value: string) => {
     setActiveTab(value)
@@ -74,8 +79,18 @@ const ClientDetails = ({ tabContentList }: BottomBodyProps) => {
     }
   }
 
+  const fetchTenantData = async () => {
+    try {
+      const response = await api.get(`/tenant/${authUser?.tenant?.id}`)
+      setTenantData(response.data)
+    } catch (error) {
+      console.error('Error getting Tenant Data: ', error)
+    }
+  }
+
   useEffect(() => {
     fetchClientData()
+    fetchTenantData()
   }, [])
 
   return (
@@ -110,10 +125,15 @@ const ClientDetails = ({ tabContentList }: BottomBodyProps) => {
               <Grid size={{ xs: 12 }}>
                 <CustomTabList onChange={handleChange} variant='scrollable' pill='true'>
                   <Tab value='profile' label='PROFILE' />
-                  <Tab value='e-doc' label='E-DOC' />
-                  <Tab value='forms' label='FORMS' />
+                  {(session?.user?.userRoles?.title === 'Super Admin' ||
+                    session?.user?.subscribedPlan?.features?.e_docs_and_forms) && <Tab value='e-doc' label='E-DOC' />}
+                  {(session?.user?.userRoles?.title === 'Super Admin' ||
+                    session?.user?.subscribedPlan?.features?.e_docs_and_forms) && <Tab value='forms' label='FORMS' />}
                   <Tab value='services' label='SERVICES' />
-                  <Tab value='account-history' label='LOGS' />
+                  {(session?.user?.userRoles?.title === 'Super Admin' ||
+                    session?.user?.subscribedPlan?.features?.client_and_caregiver_history_logs) && (
+                    <Tab value='account-history' label='LOGS' />
+                  )}
                   <Tab value='timelogs' label='TIME LOGS' />
                   <Tab value='service-authorization' label='SERVICE AUTH' />
                   <Tab value='incidents' label='INCIDENTS' />

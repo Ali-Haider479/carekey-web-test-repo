@@ -14,6 +14,7 @@ declare module 'next-auth' {
     accessToken?: string // Add accessToken
     refreshToken?: string // Add refreshToken
     expiresIn?: number // Add expiresIn
+    subscribedPlan?: any
   }
 
   interface Session {
@@ -28,6 +29,7 @@ declare module 'next-auth' {
       accessToken?: string
       refreshToken?: string // Add refreshToken
       expiresIn?: number
+      subscribedPlan?: any
     } & DefaultSession['user']
     error?: string // For handling refresh token errors
   }
@@ -46,5 +48,6 @@ declare module 'next-auth/jwt' {
     refreshToken?: string
     expiresIn?: number
     error?: string // For handling refresh token errors
+    subscribedPlan?: any
   }
 }
