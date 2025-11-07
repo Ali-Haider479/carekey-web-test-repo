@@ -29,19 +29,19 @@ type PdfField = {
 
 type DeepValueType<T, P extends string> = P extends `${infer Key}[${infer Index}].${infer Rest}`
   ? Key extends keyof T
-    ? T[Key] extends (infer U)[]
-      ? DeepValueType<U, `${Rest}`>
-      : never
-    : never
+  ? T[Key] extends (infer U)[]
+  ? DeepValueType<U, `${Rest}`>
+  : never
+  : never
   : P extends `${infer Key}[${infer Index}]`
-    ? Key extends keyof T
-      ? T[Key] extends (infer U)[]
-        ? U
-        : never
-      : never
-    : P extends keyof T
-      ? T[P]
-      : never
+  ? Key extends keyof T
+  ? T[Key] extends (infer U)[]
+  ? U
+  : never
+  : never
+  : P extends keyof T
+  ? T[P]
+  : never
 
 // Define form sections
 const formSections: { [key: string]: string } = {
@@ -734,7 +734,7 @@ const E_Document = () => {
 
       const formData = new FormData()
       formData.append('file', pdfFile)
-      formData.append('recipientEmail', 'alihaider@vantadev.com')
+      formData.append('recipientEmail', caseManagerEmail)
       formData.append('subject', emailSubject)
       formData.append('emailBody', emailBody)
       formData.append('clientId', clientData.id.toString())
