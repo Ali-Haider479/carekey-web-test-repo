@@ -33,6 +33,7 @@ import { RootState } from '@/redux-store'
 import { setChatUnReadMessageStatus } from '@/redux-store/slices/notification'
 import { Box, Typography } from '@mui/material'
 import { useSession } from 'next-auth/react'
+import { selectPlan } from '@/redux-store/slices/plan'
 
 // Menu Data Imports
 // import menuData from '@/data/navigation/verticalMenuData'
@@ -63,6 +64,7 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
   const verticalNavOptions = useVerticalNav()
   const { data: session } = useSession()
   const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
+  const plan = useSelector(selectPlan)
   // Vars
   const { transitionDuration, isBreakpointReached } = verticalNavOptions
   const { lang: locale } = params
@@ -144,7 +146,7 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
               icon={<i className='bx-money' />}
               exactMatch={false}
               activeUrl='/apps/rcm'
-              disabled={authUser.userRoles.title !== 'Super Admin' && !session?.user?.subscribedPlan?.id}
+              disabled={authUser.userRoles.title !== 'Super Admin' && !plan?.id}
             >
               {dictionary['navigation'].rcm}
             </MenuItem>
@@ -157,7 +159,7 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
               icon={<i className='bx-dollar' />}
               exactMatch={false}
               activeUrl='/apps/billing'
-              disabled={authUser.userRoles.title !== 'Super Admin' && !session?.user?.subscribedPlan?.id}
+              disabled={authUser.userRoles.title !== 'Super Admin' && !plan?.id}
             >
               {dictionary['navigation'].billing}
             </MenuItem>
@@ -175,7 +177,7 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
               icon={<i className='bx-bxs-heart-circle' />}
               exactMatch={false}
               activeUrl='/apps/caregiver'
-              disabled={authUser.userRoles.title !== 'Super Admin' && !session?.user?.subscribedPlan?.id}
+              disabled={authUser.userRoles.title !== 'Super Admin' && !plan?.id}
             >
               {dictionary['navigation'].caregivers}
             </MenuItem>
@@ -188,7 +190,7 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
               icon={<i className='bx-user' />}
               exactMatch={false}
               activeUrl='/apps/client'
-              disabled={authUser.userRoles.title !== 'Super Admin' && !session?.user?.subscribedPlan?.id}
+              disabled={authUser.userRoles.title !== 'Super Admin' && !plan?.id}
             >
               {dictionary['navigation'].clients}
             </MenuItem>
@@ -217,7 +219,7 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
               icon={<i className='bx-calendar-alt' />}
               exactMatch={false}
               activeUrl='/apps/schedules'
-              disabled={authUser.userRoles.title !== 'Super Admin' && !session?.user?.subscribedPlan?.id}
+              disabled={authUser.userRoles.title !== 'Super Admin' && !plan?.id}
             >
               {dictionary['navigation'].schedules}
             </MenuItem>
@@ -230,7 +232,7 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
               icon={<i className='bx-mobile-alt' />}
               exactMatch={false}
               activeUrl='/apps/evv-tracking'
-              disabled={authUser.userRoles.title !== 'Super Admin' && !session?.user?.subscribedPlan?.id}
+              disabled={authUser.userRoles.title !== 'Super Admin' && !plan?.id}
             >
               {dictionary['navigation'].evv}
             </MenuItem>
@@ -243,7 +245,7 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
               icon={<i className='bx-spreadsheet' />}
               exactMatch={false}
               activeUrl='/apps/timesheets'
-              disabled={authUser.userRoles.title !== 'Super Admin' && !session?.user?.subscribedPlan?.id}
+              disabled={authUser.userRoles.title !== 'Super Admin' && !plan?.id}
             >
               {dictionary['navigation'].timesheets}
             </MenuItem>
@@ -251,14 +253,13 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
 
           {/* Chat - requires Chat permission */}
           {hasPermission('Chat') &&
-            (authUser?.userRoles?.title === 'Super Admin' ||
-              session?.user?.subscribedPlan?.features?.chat_and_messaging) && ( // Super Admin bypasses feature check
+            (authUser?.userRoles?.title === 'Super Admin' || plan?.features?.chat_and_messaging) && ( // Super Admin bypasses feature check
               <MenuItem
                 href={`/${locale}/apps/chat`}
                 icon={<i className='bx-chat' />}
                 exactMatch={false}
                 activeUrl='/apps/chat'
-                disabled={authUser.userRoles.title !== 'Super Admin' && !session?.user?.subscribedPlan?.id}
+                disabled={authUser.userRoles.title !== 'Super Admin' && !plan?.id}
                 suffix={
                   chatUnReadMessageStatus ? (
                     <span className='relative inline-block'>
@@ -281,7 +282,7 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
               icon={<i className='bx-alarm-exclamation' />}
               exactMatch={false}
               activeUrl='/apps/reports'
-              disabled={authUser.userRoles.title !== 'Super Admin' && !session?.user?.subscribedPlan?.id}
+              disabled={authUser.userRoles.title !== 'Super Admin' && !plan?.id}
             >
               {dictionary['navigation'].reports}
             </MenuItem>
@@ -294,7 +295,7 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
               icon={<i className='bx-bug-alt' />}
               exactMatch={false}
               activeUrl='/apps/advance'
-              disabled={authUser.userRoles.title !== 'Super Admin' && !session?.user?.subscribedPlan?.id}
+              disabled={authUser.userRoles.title !== 'Super Admin' && !plan?.id}
             >
               {dictionary['navigation'].advance}
             </MenuItem>

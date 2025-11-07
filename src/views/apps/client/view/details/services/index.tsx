@@ -17,14 +17,16 @@ import {
   Button,
   CircularProgress,
   FormLabel,
-  Checkbox
+  Checkbox,
+  Autocomplete
 } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
 import CloseIcon from '@mui/icons-material/Close'
 import { useParams } from 'next/navigation'
-import React, { useEffect, useState, useRef } from 'react'
+import React, { useEffect, useState, useRef, useLayoutEffect } from 'react'
 import { useForm, FormProvider, Controller, useFieldArray, useWatch } from 'react-hook-form'
 import { Delete } from '@mui/icons-material'
+import CustomAlert from '@/@core/components/mui/Alter'
 
 type ServiceType = {
   id: string
@@ -56,6 +58,11 @@ type FormValues = {
 
 const CareplanTab = () => {
   const { id } = useParams()
+  const itemsPerPage = 50
+  const [displayedServices, setDisplayedServices] = useState<ServiceType[]>([])
+  const [searchTerm, setSearchTerm] = useState('')
+  const [page, setPage] = useState(1)
+  const listboxRef = useRef<HTMLUListElement | null>(null) as React.MutableRefObject<HTMLUListElement | null>
   const [clientServices, setClientServices] = useState<ServiceType[]>([])
   const [servicesResponse, setServicesResponse] = useState<any>([])
   const [servicesActivities, setServicesActivities] = useState<ActivityType[]>([])
@@ -64,6 +71,8 @@ const CareplanTab = () => {
   const [saveChangesButtonLoading, setSaveChangesButtonLoading] = useState<boolean>(false)
   const [customActivityButtonLoading, setCustomActivityButtonLoading] = useState<boolean>(false)
   const [loading, setLoading] = useState<boolean>(false)
+  const [alertOpen, setAlertOpen] = useState(false)
+  const [alertProps, setAlertProps] = useState<any>()
   const prevServiceIdsRef = useRef<string[]>([]) // Tracks service IDs (cs.service.id or cs.serviceAuthService.id)
   const prevClientServiceIdsRef = useRef<string[]>([]) // Tracks ClientServiceJoin IDs (cs.id)
   const prevSelectedServiceIdsRef = useRef<string[]>([])
@@ -363,6 +372,78 @@ const CareplanTab = () => {
     fetchClient()
   }, [id])
 
+  useEffect(() => {
+    const filtered = clientServices.filter(
+      service =>
+        service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (service.procedureCode && service.procedureCode.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (service.modifierCode && service.modifierCode.toLowerCase().includes(searchTerm.toLowerCase()))
+    )
+
+    setDisplayedServices(filtered.slice(0, itemsPerPage))
+    setPage(1)
+  }, [searchTerm, clientServices])
+
+  const handleListboxScroll = () => {
+    const listbox = listboxRef.current
+    if (!listbox) return
+
+    const { scrollTop, scrollHeight, clientHeight } = listbox
+    if (scrollTop + clientHeight < scrollHeight - 150) return // not near bottom
+
+    const filtered = clientServices.filter(
+      service =>
+        service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (service.procedureCode && service.procedureCode.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (service.modifierCode && service.modifierCode.toLowerCase().includes(searchTerm.toLowerCase()))
+    )
+
+    const nextPage = page + 1
+    const start = page * itemsPerPage
+    const end = nextPage * itemsPerPage
+    const moreItems = filtered.slice(start, end)
+
+    if (moreItems.length > 0) {
+      const prevScrollTop = listbox.scrollTop
+      const prevItemCount = displayedServices.length
+
+      setDisplayedServices(prev => [...prev, ...moreItems])
+      setPage(nextPage)
+
+      // Restore scroll position after items added
+      requestAnimationFrame(() => {
+        if (listboxRef.current) {
+          const addedHeight = moreItems.length * 48 // ~48px per item
+          listboxRef.current.scrollTop = prevScrollTop + addedHeight
+        }
+      })
+    }
+  }
+
+  const ListboxComponent = React.forwardRef<HTMLUListElement, React.HTMLAttributes<HTMLUListElement>>((props, ref) => {
+    const { style, ...other } = props
+    return (
+      <ul
+        {...other}
+        key={`listbox-${searchTerm}-${page}`}
+        ref={node => {
+          listboxRef.current = node
+          // Forward ref to MUI
+          if (typeof ref === 'function') ref(node)
+          else if (ref) (ref as React.MutableRefObject<HTMLUListElement | null>).current = node
+        }}
+        onScroll={handleListboxScroll}
+        style={{
+          ...(style as React.CSSProperties),
+          maxHeight: 400,
+          overflow: 'auto',
+          padding: 0,
+          margin: 0
+        }}
+      />
+    )
+  })
+
   const onSubmit = async (data: FormValues) => {
     setSaveChangesButtonLoading(true)
     try {
@@ -370,6 +451,33 @@ const CareplanTab = () => {
       const clientId = Number(id)
       if (isNaN(clientId)) {
         throw new Error('Invalid client ID')
+      }
+
+      const activeTimelogRes = await api.get(`/time-log/active-timelogs`)
+
+      console.log('ACTIVE TIMELOGS FOUND ---->> ', activeTimelogRes.data)
+      if (activeTimelogRes.data.length > 0) {
+        // Extract clientService.id from active timelogs and convert to string for comparison
+        const activeClientServiceIds = activeTimelogRes.data
+          .map((log: any) => log.clientService?.id)
+          .filter((id: any) => id != null)
+          .map(String) // Convert to string to match prevClientServiceIdsRef.current format
+
+        // Check if any of the previous client service IDs are in active timelogs
+        const hasConflict = prevClientServiceIdsRef.current.some((id: string) => activeClientServiceIds.includes(id))
+
+        console.log('Conflicting Client Service IDs ---->> ', activeClientServiceIds, hasConflict)
+
+        if (hasConflict) {
+          console.log('CANNOT UPDATE SERVICES DUE TO ACTIVE TIMELOGS ---->> ')
+          setAlertOpen(true)
+          setAlertProps({
+            message: 'Cannot update or remove the client services as the client has an ongoing shift.',
+            severity: 'error'
+          })
+          fetchClient()
+          return
+        }
       }
 
       console.log('PREV SERVICE IDS BEFORE FILTER', prevServiceIdsRef.current)
@@ -518,6 +626,7 @@ const CareplanTab = () => {
         </Box>
       ) : (
         <FormProvider {...methods}>
+          <CustomAlert AlertProps={alertProps} openAlert={alertOpen} setOpenAlert={setAlertOpen} />
           <form onSubmit={handleSubmit(onSubmit)}>
             <Card>
               <CardContent>
@@ -587,30 +696,50 @@ const CareplanTab = () => {
                                   control={control}
                                   rules={{ required: 'Service is required' }}
                                   render={({ field }) => (
-                                    <FormControl fullWidth error={!!errors.services?.[index]?.service}>
-                                      <InputLabel size='small'>Select Service</InputLabel>
-                                      <Select
-                                        {...field}
-                                        label='Select Service'
-                                        size='small'
-                                        value={field.value || ''}
-                                        onChange={e => field.onChange(e.target.value)}
-                                      >
-                                        {clientServices.map(item => (
-                                          <MenuItem
-                                            key={`${item.id}-${item.name}`}
-                                            value={item.id}
-                                            disabled={selectedServiceIds.includes(item.id) && item.id !== field.value}
-                                          >
-                                            {item.name} ({item.procedureCode || 'N/A'} - {item.modifierCode || 'N/A'})
-                                            {item.dummyService ? ' (Demo Service)' : ' (S.A Service)'}
-                                          </MenuItem>
-                                        ))}
-                                      </Select>
-                                      {errors.services?.[index]?.service && (
-                                        <FormHelperText>{errors.services[index]?.service?.message}</FormHelperText>
+                                    <Autocomplete
+                                      size='small'
+                                      options={clientServices}
+                                      getOptionLabel={option =>
+                                        option
+                                          ? `${option?.name} (${option?.procedureCode || 'N/A'} - ${option?.modifierCode || 'N/A'})${option?.dummyService ? ' (Demo Service)' : ' (S.A Service)'}`
+                                          : ''
+                                      }
+                                      getOptionDisabled={option =>
+                                        selectedServiceIds.includes(option?.id) && option?.id !== field.value
+                                      }
+                                      isOptionEqualToValue={(option: any, value) => option?.id === value}
+                                      value={clientServices.find(svc => svc?.id === field?.value) || null}
+                                      onChange={(_, newValue) => {
+                                        field.onChange(newValue?.id || '')
+                                      }}
+                                      onInputChange={(_, newInputValue) => {
+                                        setSearchTerm(newInputValue)
+                                      }}
+                                      // ListboxComponent={ListboxComponent}
+                                      // slotProps={{ listbox: { component: ListboxComponent } }}
+                                      renderInput={params => (
+                                        <TextField
+                                          {...params}
+                                          label='Select Service'
+                                          error={!!errors.services?.[index]?.service}
+                                          helperText={errors.services?.[index]?.service?.message}
+                                        />
                                       )}
-                                    </FormControl>
+                                      renderOption={(props, option, { index }) => (
+                                        <li {...props} key={`${option?.id}-${option?.name}-${index}`}>
+                                          {option?.name} ({option?.procedureCode || 'N/A'} -{' '}
+                                          {option?.modifierCode || 'N/A'})
+                                          {option?.dummyService ? ' (Demo Service)' : ' (S.A Service)'}
+                                        </li>
+                                      )}
+                                      noOptionsText={
+                                        searchTerm === ''
+                                          ? 'Type to search services...'
+                                          : displayedServices.length === 0
+                                            ? 'No services found'
+                                            : 'Scroll down to load more...'
+                                      }
+                                    />
                                   )}
                                 />
                               </Grid>

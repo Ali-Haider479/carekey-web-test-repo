@@ -65,15 +65,10 @@ export const authOptions: NextAuthOptions = {
       }
 
       if (trigger == 'update') {
-        if (session?.user.subscribedPlan) {
-          console.log("Here's the session subscribed plan:", session.user.subscribedPlan)
-          token.subscribedPlan = session.user.subscribedPlan // Trust but verify via backend fetch (done client-side)
-        } else {
-          token.accessToken = session.user.accessToken
-          token.refreshToken = session.user.refreshToken
-          token.expiresIn = session.expiresIn
-          token.subscribedPlan = null
-        }
+        token.accessToken = session.user.accessToken
+        token.refreshToken = session.user.refreshToken
+        token.expiresIn = session.expiresIn
+        token.subscribedPlan = session.user.subscribedPlan
       }
 
       // Check if access token is expired

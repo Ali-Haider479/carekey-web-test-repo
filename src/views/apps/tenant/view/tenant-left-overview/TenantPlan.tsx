@@ -16,6 +16,8 @@ import axios from 'axios'
 import api from '@/utils/api'
 import { planDetails } from '@/utils/constants'
 import { useSession } from 'next-auth/react'
+import { useSelector } from 'react-redux'
+import { selectPlan } from '@/redux-store/slices/plan'
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
 
@@ -25,6 +27,7 @@ const TenantPlan = ({ tenantData }: any) => {
   const [loadingStates, setLoadingStates] = useState<any>({})
   const [planDetailsData, setPlanDetailsData] = useState<any>(null)
   const [isModalShow, setIsModalShow] = useState(false)
+  const plan = useSelector(selectPlan)
 
   const fetchPlanDetails = async () => {
     try {
@@ -49,7 +52,7 @@ const TenantPlan = ({ tenantData }: any) => {
     sortedPayments?.length > 0 ? planDetails?.find(plan => plan.stripePriceId === sortedPayments[0].planId) : null
 
   // Get all active subscribed plan IDs
-  const subscribedPlanIds = [session?.user?.subscribedPlan?.planId]
+  const subscribedPlanIds = [plan?.planId]
 
   const handleModalClose = () => {
     setIsModalShow(false)
@@ -96,7 +99,7 @@ const TenantPlan = ({ tenantData }: any) => {
     <>
       <Card className='border-2 border-[#4B0082] shadow-primarySm'>
         <CardContent className='flex flex-col gap-6'>
-          {session?.user?.subscribedPlan?.id ? (
+          {plan?.id ? (
             <div className='flex flex-col'>
               <Typography variant='h4' className='font-bold text-center'>
                 Subscribed Plan

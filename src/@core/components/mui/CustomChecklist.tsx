@@ -19,7 +19,7 @@ import {
   DialogActions,
   Button
 } from '@mui/material'
-import { MoreVert, DeleteOutline as DeleteOutlineIcon } from '@mui/icons-material'
+import { MoreVert, DeleteOutline as DeleteOutlineIcon, Visibility } from '@mui/icons-material'
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf'
 import api from '@/utils/api'
 
@@ -34,6 +34,8 @@ const CustomCheckList = (props: Props) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const [selectedDocId, setSelectedDocId] = useState<number | null>(null)
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false)
+  const [openPreviewModal, setOpenPreviewModal] = useState(false)
+  const [pdfUrl, setPdfUrl] = useState<any>(null)
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 10
 
@@ -52,10 +54,23 @@ const CustomCheckList = (props: Props) => {
     handleMenuClose()
   }
 
+  const handlePreviewClick = async (fileKey: string) => {
+    setOpenPreviewModal(true)
+    handleMenuClose()
+    try {
+      const docResponse = await api.get(`/tenant/getPdf/${fileKey}`)
+      console.log('Document Get Response: ', docResponse)
+      setPdfUrl(docResponse?.data)
+    } catch (error) {
+      console.error(`Error fetching pdf file from S3: `, error)
+    }
+  }
+
   const handleDeleteConfirm = async () => {
     if (selectedDocId) {
       try {
-        await api.delete(`/tenant/documents/${selectedDocId}`)
+        const delResponse = await api.patch(`/tenant/tenant-document/${selectedDocId}`, { isDeleted: true })
+        console.log('Del Response: ', delResponse)
         props.onDocumentDeleted?.()
       } catch (error) {
         console.error('Error deleting document:', error)
@@ -67,6 +82,11 @@ const CustomCheckList = (props: Props) => {
 
   const handleDeleteCancel = () => {
     setOpenDeleteDialog(false)
+    setSelectedDocId(null)
+  }
+
+  const handlePreviewCancel = () => {
+    setOpenPreviewModal(false)
     setSelectedDocId(null)
   }
 
@@ -96,44 +116,53 @@ const CustomCheckList = (props: Props) => {
                 No documents available
               </Typography>
             ) : (
-              paginatedDocuments?.map((doc: any) => (
-                <ListItem
-                  key={doc.id}
-                  className='border-[1px]'
-                  secondaryAction={
-                    <>
-                      <IconButton edge='end' aria-label='menu' onClick={e => handleMenuClick(e, doc.id)}>
-                        <MoreVert />
-                      </IconButton>
-                      <Menu
-                        anchorEl={anchorEl}
-                        open={Boolean(anchorEl) && selectedDocId === doc.id}
-                        onClose={handleMenuClose}
-                        anchorOrigin={{
-                          vertical: 'bottom',
-                          horizontal: 'right'
-                        }}
-                        transformOrigin={{
-                          vertical: 'top',
-                          horizontal: 'right'
-                        }}
-                      >
-                        <MenuItem onClick={handleDeleteClick}>
-                          <div className='flex flex-row items-center'>
-                            <DeleteOutlineIcon className='size-4' color='error' />
-                            <Typography className='ml-2 text-error'>Delete</Typography>
-                          </div>
-                        </MenuItem>
-                      </Menu>
-                    </>
-                  }
-                >
-                  <ListItemAvatar>
-                    <PictureAsPdfIcon fontSize='medium' />
-                  </ListItemAvatar>
-                  <ListItemText primary={doc?.fileName} className='mb-1' />
-                </ListItem>
-              ))
+              paginatedDocuments?.map((doc: any) => {
+                console.log('Paginated Documents: ', paginatedDocuments)
+                return (
+                  <ListItem
+                    key={doc.id}
+                    className='border-[1px]'
+                    secondaryAction={
+                      <>
+                        <IconButton edge='end' aria-label='menu' onClick={e => handleMenuClick(e, doc.id)}>
+                          <MoreVert />
+                        </IconButton>
+                        <Menu
+                          anchorEl={anchorEl}
+                          open={Boolean(anchorEl) && selectedDocId === doc.id}
+                          onClose={handleMenuClose}
+                          anchorOrigin={{
+                            vertical: 'bottom',
+                            horizontal: 'right'
+                          }}
+                          transformOrigin={{
+                            vertical: 'top',
+                            horizontal: 'right'
+                          }}
+                        >
+                          <MenuItem onClick={() => handlePreviewClick(doc.fileKey)}>
+                            <div className='flex flex-row items-center'>
+                              <Visibility className='size-4' />
+                              <Typography className='ml-2'>View</Typography>
+                            </div>
+                          </MenuItem>
+                          <MenuItem onClick={handleDeleteClick}>
+                            <div className='flex flex-row items-center'>
+                              <DeleteOutlineIcon className='size-4' color='error' />
+                              <Typography className='ml-2 text-error'>Delete</Typography>
+                            </div>
+                          </MenuItem>
+                        </Menu>
+                      </>
+                    }
+                  >
+                    <ListItemAvatar>
+                      <PictureAsPdfIcon fontSize='medium' />
+                    </ListItemAvatar>
+                    <ListItemText primary={doc?.fileName} className='mb-1' />
+                  </ListItem>
+                )
+              })
             )}
           </List>
 
@@ -172,6 +201,37 @@ const CustomCheckList = (props: Props) => {
           <Button onClick={handleDeleteConfirm} color='error' autoFocus>
             Delete
           </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Pdf Preview Dialog */}
+      <Dialog
+        open={openPreviewModal}
+        onClose={handlePreviewCancel}
+        aria-labelledby='preview-dialog-title'
+        aria-describedby='preview-dialog-description'
+        sx={{ minWidth: 200, minHeight: 500 }}
+      >
+        <DialogTitle id='delete-dialog-title'>Preview Pdf</DialogTitle>
+        <DialogContent>
+          {/* <DialogContentText id='delete-dialog-description'>
+            Are you sure you want to delete this document? This action cannot be undone.
+          </DialogContentText> */}
+          <iframe
+            src={pdfUrl}
+            key={pdfUrl}
+            title='PDF Preview'
+            className='border-none w-[500px] h-[600px]'
+            allowFullScreen
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handlePreviewCancel} color='primary'>
+            Close
+          </Button>
+          {/* <Button onClick={handleDeleteConfirm} color='error' autoFocus>
+            Delete
+          </Button> */}
         </DialogActions>
       </Dialog>
     </div>

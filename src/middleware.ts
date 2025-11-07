@@ -9,13 +9,29 @@ const protectedPaths = [
   'apps/dashboard',
   'apps/rcm',
   'apps/billing',
-  'apps/caregiver/list',
-  'apps/client/list',
-  'apps/accounts/tenant-list',
+  'apps/caregiver',
+  'apps/client',
+  'apps/accounts/',
   'apps/schedules/calendar-view',
   'apps/evv-tracking',
   'apps/timesheets',
   'apps/chat',
+  'apps/reports',
+  'apps/advance'
+]
+
+const notSubscribedPaths = ['apps/dashboard', 'apps/accounts/']
+
+const standardPlanPaths = [
+  'apps/dashboard',
+  'apps/rcm',
+  'apps/billing',
+  'apps/caregiver',
+  'apps/client',
+  'apps/accounts/',
+  'apps/schedules/calendar-view',
+  'apps/evv-tracking',
+  'apps/timesheets',
   'apps/reports',
   'apps/advance'
 ]
@@ -36,6 +52,45 @@ export default withAuth(
     // Deny and redirect if no token
     if (!token) {
       return NextResponse.redirect(new URL('/en/auth/sign-in', req.nextUrl.origin))
+    }
+
+    const planName = token.subscribedPlan as string | undefined
+
+    // Determine allowed paths based on plan
+    let allowedPaths: string[] = protectedPaths
+
+    if (planName === null || planName === undefined) {
+      allowedPaths = notSubscribedPaths
+    } else if (planName === 'Standard') {
+      allowedPaths = standardPlanPaths
+    }
+    // else: use full protectedPaths (Premium or other)
+
+    // Check if current path is allowed
+    const isPathAllowed = allowedPaths.some(path => pathname.includes(path))
+
+    console.log('Checking access for path:', { allowedPaths, pathname, planName, isPathAllowed })
+
+    if (!isPathAllowed) {
+      console.log('Access denied: Path not allowed for plan', { pathname, planName })
+
+      // Redirect logic based on role and plan
+      const userRole = token.userRoles?.title
+      const caregiverId = token.caregiver?.id
+
+      let redirectPath = 'apps/dashboard' // default fallback
+
+      if (userRole === 'Caregiver' && caregiverId) {
+        redirectPath = `apps/caregiver/${caregiverId}/detail`
+      } else if (!planName) {
+        redirectPath = notSubscribedPaths[0] // e.g., /apps/dashboard
+      } else if (planName === 'Standard') {
+        redirectPath = standardPlanPaths[0]
+      } else {
+        redirectPath = protectedPaths[0]
+      }
+
+      return NextResponse.redirect(new URL(redirectPath, req.nextUrl.origin))
     }
 
     // Check permissions

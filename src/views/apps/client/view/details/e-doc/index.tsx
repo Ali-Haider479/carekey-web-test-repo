@@ -63,173 +63,6 @@ const formSections: { [key: string]: string } = {
   Signed: 'Signature Section'
 }
 
-// Define options for radio groups and dropdowns
-const fieldOptions: { [key: string]: { key: string; value: string; optionString: string }[] } = {
-  '5recip-info-gender': [
-    { key: '1', value: 'Male', optionString: 'Male' },
-    { key: '2', value: 'Female', optionString: 'Female' }
-  ],
-  '16recip-info-PCAmodel': [
-    { key: '1', value: 'Agency', optionString: 'Agency' },
-    { key: '2', value: 'Consumer', optionString: 'Consumer' }
-  ],
-  '26recip-info-prepaid-health-plan': [
-    { key: '1', value: 'Yes', optionString: 'Yes' },
-    { key: '2', value: 'No', optionString: 'No' }
-  ],
-  '27recip-info-medicare-number': [
-    { key: '1', value: 'Yes', optionString: 'Yes' },
-    { key: '2', value: 'No', optionString: 'No' }
-  ],
-  '28recip-info-3rd-party-insurance': [
-    { key: '1', value: 'Yes', optionString: 'Yes' },
-    { key: '2', value: 'No', optionString: 'No' }
-  ],
-  '29recip-info-waiverAC': [
-    { key: '1', value: 'Yes', optionString: 'Yes' },
-    { key: '2', value: 'No', optionString: 'No' }
-  ],
-  '54language-interpreter': [
-    { key: '1', value: 'Yes', optionString: 'Yes' },
-    { key: '2', value: 'No', optionString: 'No' }
-  ],
-  '55language-ASL': [
-    { key: '1', value: 'Yes', optionString: 'Yes' },
-    { key: '2', value: 'No', optionString: 'No' }
-  ],
-  '56direct-own-care': [
-    { key: '1', value: 'Yes', optionString: 'Yes' },
-    { key: '2', value: 'No', optionString: 'No' }
-  ],
-  '57direct-own-care-responsible-party-lives-with': [
-    { key: '1', value: 'Yes', optionString: 'Yes' },
-    { key: '2', value: 'No', optionString: 'No' }
-  ],
-  'major-program': [
-    { key: '1', value: 'EH', optionString: 'Emergency MA' },
-    { key: '2', value: 'IM', optionString: 'Institute for Mental Disease' },
-    { key: '3', value: 'KK', optionString: 'MinnesotaCare KK' },
-    { key: '4', value: 'LL', optionString: 'MinnesotaCare LL' },
-    { key: '5', value: 'MA', optionString: 'Medical Assistance' },
-    { key: '6', value: 'NM', optionString: 'Non-citizen Medical' },
-    { key: '7', value: 'RM', optionString: 'Refugee Medical' },
-    { key: '8', value: 'Other', optionString: 'Other' }
-  ]
-}
-
-// Define mapping for field labels
-const fieldLabels: { [key: string]: string } = {
-  '1date-of-referral 2': 'Date of Referral',
-  '2date-SA-ends 2': 'Service Agreement End Date',
-  '3date-of-assesessment 2': 'Date of Assessment',
-  '4recip-info-name 2': 'Recipient Name',
-  '5recip-info-gender': 'Gender',
-  '6recip-info-DOB 2': 'Date of Birth',
-  '7recip-info-PMI 2': 'PMI Number',
-  '8recip-info-phone 2': 'Phone',
-  '9recip-info-address 2': 'Address',
-  '10recip-info-city 2': 'City',
-  '11recip-info-county 2': 'County',
-  '12recip-info-state 2': 'State',
-  '13recip-info-zip 2': 'Zip Code',
-  '14recip-info-primary-contact 2': 'Primary Contact',
-  '15recip-info-primary-contact-phone 2': 'Primary Contact Phone',
-  '16recip-info-PCAmodel': 'PCA Model',
-  '17recip-info-EVS-verification-date 2': 'EVS Verification Date',
-  '18recip-info-major-program 2': 'Major Program EH',
-  '19recip-info-major-program 2': 'Major Program IM',
-  '20recip-info-major-program 2': 'Major Program KK',
-  '21recip-info-major-program 2': 'Major Program LL',
-  '22recip-info-major-program 2': 'Major Program MA',
-  '23recip-info-major-program 2': 'Major Program NM',
-  '24recip-info-major-program 2': 'Major Program RM',
-  '25recip-info-major-program 2': 'Major Program Other',
-  '26recip-info-prepaid-health-plan': 'Prepaid Health Plan',
-  '26recip-info-prepaid-health-plan-name 2': 'Prepaid Health Plan Name',
-  '27recip-info-medicare-number': 'Medicare Number',
-  '27recip-info-medicare 2': 'Medicare',
-  '28recip-info-3rd-party-insurance': 'Third Party Insurance',
-  '28recip-info-3rd-party-insurance-name 2': 'Third Party Insurance Name',
-  '29recip-info-waiverAC': 'Waiver/AC',
-  '29recip-info-waiverAC-type 2': 'Waiver/AC Type',
-  '30physician-name 2': 'Physician Name',
-  '31physician-clinic-name 2': 'Clinic Name',
-  '32physician-phone-number 2': 'Physician Phone',
-  '33physician-street-address 2': 'Physician Address',
-  '34physician-city 2': 'Physician City',
-  '35physician-state 2': 'Physician State',
-  '36physician-zip 2': 'Physician Zip',
-  '37PCA-provider1-name 2': 'PCA Provider Name',
-  '38PCA-provider1-taxonomy-code 2': 'Taxonomy Code',
-  '39PCA-provider1-NPI 2': 'Provider NPI',
-  '40PCA-provider1-street-address 2': 'Provider Address',
-  '41PCA-provider1-city 2': 'Provider City',
-  '42PCA-provider1-state 2': 'Provider State',
-  '43PCA-provider1-zip-code 2': 'Provider Zip',
-  '44PCA-provider1-phone 2': 'Provider Phone',
-  '45PCA-provider1-fax 2': 'Provider Fax',
-  '46PCA-provider2-name 2': 'PCA Provider Name',
-  '47PCA-provider2-taxonomy-code 2': 'Taxonomy Code',
-  '48PCA-provider2-NPI 2': 'Provider NPI',
-  '49PCA-provider2-street-address 2': 'Provider Address',
-  '50PCA-provider2-city 2': 'Provider City',
-  '51PCA-provider2-state 2': 'Provider State',
-  '52PCA-provider2-zip 2': 'Provider Zip',
-  '53PCA-provider2-phone 2': 'Provider Phone',
-  '53PCA-provider2-fax 2': 'Provider Fax',
-  '54language-interpreter': 'Interpreter Needed',
-  '54language-spoken 2': 'Language Spoken',
-  '55language-ASL': 'ASL Needed',
-  '56direct-own-care': 'Direct Own Care',
-  '57direct-own-care-responsible-party 2': 'Responsible Party',
-  '57direct-own-care-responsible-party-lives-with': 'Responsible Party Lives With',
-  '59direct-own-care-responsible-party-phone 2': 'Responsible Party Phone',
-  '60diagnosis2': 'Diagnosis 1',
-  '61diagnosis1-onset-date 2': 'Diagnosis 1 Onset Date',
-  '61diagnosis1-ICDcode 2': 'Diagnosis 1 ICD Code',
-  '63diagnosis3': 'Diagnosis 2',
-  '64diagnosis2-onset-date 2': 'Diagnosis 2 Onset Date',
-  '65diagnosis2-ICDcode 2': 'Diagnosis 2 ICD Code',
-  '66diagnosis4': 'Diagnosis 3',
-  '67diagnosis3-onset-date 2': 'Diagnosis 3 Onset Date',
-  '68diagnosis3-ICDcode 2': 'Diagnosis 3 ICD Code',
-  '69living-arrangement 2': 'Living Arrangement',
-  '70other-comments 2': 'Other Comments',
-  'form1[0].#pageSet[0].Pages[0].PWDNameLast[0]': 'Page 0 Last Name',
-  'form1[0].#pageSet[0].Pages[0].PWDmhcpIDnumber[0]': 'Page 0 MHCP ID Number',
-  'form1[0].#pageSet[0].Pages[1].PWDNameLast[0]': 'Page 1 Last Name',
-  'form1[0].#pageSet[0].Pages[1].PWDmhcpIDnumber[0]': 'Page 1 MHCP ID Number',
-  'form1[0].#pageSet[0].Pages[2].PWDNameLast[0]': 'Page 2 Last Name',
-  'form1[0].#pageSet[0].Pages[2].PWDmhcpIDnumber[0]': 'Page 2 MHCP ID Number',
-  'form1[0].#pageSet[0].Pages[3].PWDNameLast[0]': 'Page 3 Last Name',
-  'form1[0].#pageSet[0].Pages[3].PWDmhcpIDnumber[0]': 'Page 3 MHCP ID Number',
-  'form1[0].P1[0].sfIntro[0].sfPWDs[0].sfInfo[0].PWDNameFirst[0]': 'Person First Name',
-  'form1[0].P1[0].sfIntro[0].sfPWDs[0].sfInfo[0].PWDNameMI[0]': 'Person MI',
-  'form1[0].P1[0].sfIntro[0].sfPWDs[0].sfInfo[0].PWDNameLast[0]': 'Person Last Name',
-  'form1[0].P1[0].sfIntro[0].sfPWDs[0].sfInfo[0].PWDmhcpIDnumber[0]': 'Person MHCP ID Number',
-  'form1[0].P1[0].sfIntro[0].sfPWDs[0].sfInfo[0].NameFirstResponsible[0]': 'First Name',
-  'form1[0].P1[0].sfIntro[0].sfPWDs[0].sfInfo[0].NameLastResponsible[0]': 'Last Name',
-  'form1[0].P1[0].sfIntro[0].sfPWDs[0].sfInfo[0].ProviderName[0]': 'Provider Name',
-  'form1[0].P1[0].sfIntro[0].sfPWDs[0].sfInfo[0].NPIUMPI[0]': 'Provider NPI or UMPI',
-  'form1[0].P1[0].sfIntro[0].sfPWDs[0].sfInfo[0].NameFirstRep[0]': 'Provider Rep First Name',
-  'form1[0].P1[0].sfIntro[0].sfPWDs[0].sfInfo[0].NameLastRep[0]': 'Provider Rep Last Name',
-  'form1[0].P1[0].sfIntro[0].sfPWDs[0].sfAgree[0].FirstOtherPerson[0].NameFirst[0]': ' First Name 0',
-  'form1[0].P1[0].sfIntro[0].sfPWDs[0].sfAgree[0].FirstOtherPerson[0].NameMI[0]': ' MI 0',
-  'form1[0].P1[0].sfIntro[0].sfPWDs[0].sfAgree[0].FirstOtherPerson[0].NameLast[0]': 'Last Name 0',
-  'form1[0].P1[0].sfIntro[0].sfPWDs[0].sfAgree[0].FirstOtherPerson[0].MHCPidNumber[0]': 'MHCP ID Number 0',
-  'form1[0].P1[0].sfIntro[0].sfPWDs[0].sfAgree[0].SecondtOtherPerson[0].NameFirst[0]': ' First Name 1',
-  'form1[0].P1[0].sfIntro[0].sfPWDs[0].sfAgree[0].SecondtOtherPerson[0].NameMI[0]': ' MI 1',
-  'form1[0].P1[0].sfIntro[0].sfPWDs[0].sfAgree[0].SecondtOtherPerson[0].NameLast[0]': 'Last Name 1',
-  'form1[0].P1[0].sfIntro[0].sfPWDs[0].sfAgree[0].SecondtOtherPerson[0].MHCPidNumber[0]':
-    'Other People MHCP ID Number 1',
-  'form1[0].P1[0].sfIntro[0].sfPWDs[0].sfAgree[0].sfSignatures[0].PWDSignatureField[0]': 'Person Signature',
-  'form1[0].P1[0].sfIntro[0].sfPWDs[0].sfAgree[0].sfSignatures[0].PWDDateSigned[0]': 'Person Date Signed',
-  'form1[0].P1[0].sfIntro[0].sfPWDs[0].sfAgree[0].sfSignatures[0].RepSignatureField[0]': 'Responsible Party Signature',
-  'form1[0].P1[0].sfIntro[0].sfPWDs[0].sfAgree[0].sfSignatures[0].RepDateSigned[0]': 'Responsible Party Date Signed',
-  'form1[0].P1[0].sfIntro[0].sfPWDs[0].sfAgree[0].sfSignatures[0].ProviderSignatureField[0]': 'Provider Signature',
-  'form1[0].P1[0].sfIntro[0].sfPWDs[0].sfAgree[0].sfSignatures[0].ProviderDateSigned[0]': 'Provider Signature Date'
-}
-
 const E_Document = () => {
   // State declarations
   const [activeTab, setActiveTab] = useState('allFilesTab')
@@ -249,6 +82,14 @@ const E_Document = () => {
   const [alertProps, setAlertProps] = useState<any>()
   const { id } = useParams()
   const [docTitle, setDocTitle] = useState<string>()
+  const [pdfFormMappings, setPdfFormMappings] = useState<any[]>([])
+  const [selectedMapping, setSelectedMapping] = useState<any>(null)
+  const [dynamicFieldMappings, setDynamicFieldMappings] = useState<any[]>([])
+  const [emailSubject, setEmailSubject] = useState<string>('')
+  const [emailBody, setEmailBody] = useState<string>('')
+  const [emailSending, setEmailSending] = useState<boolean>(false)
+  const [showHtmlForm, setShowHtmlForm] = useState<boolean>(true)
+  const [htmlFormData, setHtmlFormData] = useState<{ [key: string]: string }>({})
 
   useEffect(() => {
     fetchData()
@@ -285,11 +126,103 @@ const E_Document = () => {
   const fetchInitialData = async () => {
     try {
       const response = await api.get(`/tenant/tenant-documents/${authUser?.tenant?.id}`)
-      const options = generateOptions(response.data)
-      setTenantDocuments(options)
+      console.log('TENANT DOCS RESP', response.data)
+      const tenantDocs = response?.data?.filter((item: any) => !item.isDeleted)
+
+      const resp = await api.get(`/pdf-form-mapping/tenant/${authUser?.tenant?.id}`)
+      console.log('PDF FORM MAPPING RESP', resp.data)
+      setPdfFormMappings(resp.data)
+
+      // Create options from both tenant documents and mapped forms
+      const tenantOptions = generateOptions(tenantDocs)
+
+      // Add mapped forms to options
+      const mappedFormOptions = resp.data
+        .filter((mapping: any) => !mapping.tenantDocument.isDeleted)
+        .map((mapping: any) => ({
+          key: mapping.tenantDocument.fileKey,
+          value: mapping.tenantDocument.fileName,
+          mappingId: mapping.id,
+          hasMappings: true
+        }))
+
+      // Combine and deduplicate options
+      const allOptions = [
+        ...tenantOptions,
+        ...mappedFormOptions.filter((mapped: any) => !tenantOptions.some((tenant: any) => tenant.value === mapped.key))
+      ]
+
+      setTenantDocuments(allOptions)
+
+      const clientEmailsHistoryRes = await api.get(`/client/email-history`)
+      console.log("Client's Email History Retrieved ---->> ", clientEmailsHistoryRes.data)
+      setClientDocuments(clientEmailsHistoryRes.data)
     } catch (error) {
       console.error('Error fetching initial data:', error)
     }
+  }
+
+  const getClientDataValue = (clientDataKey: string): string => {
+    if (!clientData) return ''
+    console.log('ClientData', clientData)
+
+    // Handle special cases first
+    if (clientDataKey === 'fullName') {
+      const firstName = clientData.firstName || ''
+      const lastName = clientData.lastName || ''
+      return `${firstName} ${lastName}`.trim()
+    }
+
+    // Handle nested properties like "address.city", "clientPhysician.name"
+    const keys = clientDataKey.split('.')
+    console.log('keys', keys)
+    let value = clientData
+
+    for (let i = 0; i < keys.length; i++) {
+      const key = keys[i]
+
+      if (key === 'address' && keys.length > 1 && i === 0) {
+        // Only use addresses array if it's a nested property like "address.city" and it's the first key
+        const residentialAddress = clientData?.addresses?.find(
+          (addr: any) => addr.address.addressType === 'Residential'
+        )?.address
+
+        const mailingAddress = clientData?.addresses?.find(
+          (addr: any) => addr.address.addressType === 'Mailing'
+        )?.address
+
+        // Use residential address first, then mailing, then first available
+        value = residentialAddress || mailingAddress || clientData?.addresses?.[0]?.address || {}
+      } else if (key === 'address' && keys.length === 1) {
+        // For single "address" key, use the address string directly from residential address
+        const residentialAddress = clientData?.addresses?.find(
+          (addr: any) => addr.address.addressType === 'Residential'
+        )?.address?.address
+
+        const mailingAddress = clientData?.addresses?.find((addr: any) => addr.address.addressType === 'Mailing')
+          ?.address?.address
+
+        return residentialAddress || mailingAddress || clientData?.addresses?.[0]?.address?.address || ''
+      } else if (key === 'address' && i > 0) {
+        // If "address" appears again in the path (like "address.address"),
+        // access the address property of the address object
+        value = value?.address || ''
+        break // Return early since we found the final address string
+      } else if (key === 'clientPhysician') {
+        value = clientData?.clientPhysician || {}
+      } else if (key === 'clientResponsibilityParty') {
+        value = clientData?.clientResponsibilityParty || {}
+      } else if (key === 'clientCaseManager') {
+        value = clientData?.clientCaseManager || {}
+      } else {
+        // For direct properties or continuation of nested access
+        value = value?.[key]
+      }
+
+      if (value === null || value === undefined) return ''
+    }
+
+    return String(value || '')
   }
 
   const fetchClientsForm = async () => {
@@ -299,7 +232,7 @@ const E_Document = () => {
       const clientDocs = await api.get(`/client/client-documents/${id}`)
       const clientData = await api.get(`/client/case-manager/${id}`)
       setCaseManagerEmail(clientData?.data?.clientCaseManager?.caseManagerEmail)
-      setClientDocuments(clientDocs?.data)
+      // setClientDocuments(clientDocs?.data)
       setClientDocsLoading(false)
       setLoading(false)
     } catch (error) {
@@ -317,8 +250,15 @@ const E_Document = () => {
   // Load and extract PDF fields
 
   const GetPrePopulatedPdf = async (key: any) => {
+    console.log('Selected PDF Key ---->> ', key)
     try {
       setLoading(true)
+
+      // Find if this PDF has mappings
+      const mappingData = pdfFormMappings.find(mapping => mapping.tenantDocument.fileKey === key)
+
+      setSelectedMapping(mappingData)
+
       const { data: existingPdf } = await axios.get(`https://carekey-docs-dev.s3.us-east-1.amazonaws.com/${key}`, {
         responseType: 'arraybuffer'
       })
@@ -330,8 +270,11 @@ const E_Document = () => {
       const form = pdfDoc.getForm()
       const fields = form.getFields()
 
+      console.log('EDOCS EXTRACTED FIELDS ---->> ', fields)
+
       const extractedFields: PdfField[] = fields.map(field => {
         let type = 'unknown'
+        console.log('FIELD INSTANCE ---->> ', field)
         if (field instanceof PDFTextField) {
           type = 'PDFTextField'
         } else if (field instanceof PDFRadioGroup) {
@@ -353,135 +296,22 @@ const E_Document = () => {
 
       setPdfFields(extractedFields)
 
-      // Pre-populate fields with client data
-      if (docTitle?.includes('DHS-3244P')) {
-        const nameField = form.getTextField('4recip-info-name 2')
-        const pmiField = form.getTextField('7recip-info-PMI 2')
-        const genderField = form.getRadioGroup('5recip-info-gender')
-        const dobField = form.getTextField('6recip-info-DOB 2')
-        const phoneField = form.getTextField('8recip-info-phone 2')
-        const addressField = form.getTextField('9recip-info-address 2')
-        const cityField = form.getTextField('10recip-info-city 2')
-        const stateField = form.getTextField('12recip-info-state 2')
-        const zipField = form.getTextField('13recip-info-zip 2')
-        const primaryContactField = form.getTextField('14recip-info-primary-contact 2')
-        const primaryContactPhoneField = form.getTextField('15recip-info-primary-contact-phone 2')
-        const physicianNameField = form.getTextField('30physician-name 2')
-        const physicianClinicField = form.getTextField('31physician-clinic-name 2')
-        const physicianPhoneField = form.getTextField('32physician-phone-number 2')
-        const physicianAddressField = form.getTextField('33physician-street-address 2')
-        const physicianCityField = form.getTextField('34physician-city 2')
-        const physicianStateField = form.getTextField('35physician-state 2')
-        const physicianZipField = form.getTextField('36physician-zip 2')
+      // If mappings exist, prepare HTML form data and show HTML form first
+      if (mappingData?.mappedFields?.fieldMappings) {
+        const fieldMappings = mappingData.mappedFields.fieldMappings
+        setDynamicFieldMappings(fieldMappings)
 
-        // Set client name
-        nameField.setText(`${clientData?.firstName} ${clientData?.lastName}`)
-        nameField.setFontSize(8)
-        // nameField.setTextColor(rgb(0, 0, 0))
+        // Initialize HTML form data with client values
+        const initialFormData: { [key: string]: string } = {}
+        fieldMappings.forEach((mapping: any) => {
+          const { pdfFieldName, clientDataKey } = mapping
+          const clientValue = getClientDataValue(clientDataKey)
+          initialFormData[pdfFieldName] = clientValue
+        })
+        setHtmlFormData(initialFormData)
 
-        // Set PMI number
-        pmiField.setText(clientData?.pmiNumber || 'PMI-3010')
-        pmiField.setFontSize(8)
-        // pmiField.setTextColor(rgb(0, 0, 0))
-
-        // Set date of birth
-        dobField.setText(clientData?.dateOfBirth || '26 Feb,2025')
-        dobField.setFontSize(8)
-        // dobField.setTextColor(rgb(0, 0, 0))
-
-        // Set gender
-        const genderValue = clientData?.gender?.toLowerCase() === 'female' ? 'Female' : 'Male'
-        genderField.select(genderValue)
-
-        // Set phone number
-        phoneField.setText(clientData?.primaryPhoneNumber || '')
-        phoneField.setFontSize(8)
-        // phoneField.setTextColor(rgb(0, 0, 0))
-
-        // Set address (prefer Residential address)
-        const residentialAddress = clientData?.addresses?.find(
-          (addr: any) => addr.address.addressType === 'Residential'
-        )?.address
-        addressField.setText(residentialAddress?.address || clientData?.addresses?.[0]?.address?.address || '')
-        addressField.setFontSize(8)
-        // addressField.setTextColor(rgb(0, 0, 0))
-
-        cityField.setText(residentialAddress?.city || clientData?.addresses?.[0]?.address?.city || '')
-        cityField.setFontSize(8)
-        // cityField.setTextColor(rgb(0, 0, 0))
-
-        stateField.setText(residentialAddress?.state || clientData?.addresses?.[0]?.address?.state || '')
-        stateField.setFontSize(8)
-        // stateField.setTextColor(rgb(0, 0, 0))
-
-        zipField.setText(residentialAddress?.zipCode || clientData?.addresses?.[0]?.address?.zipCode || '')
-        zipField.setFontSize(8)
-        // zipField.setTextColor(rgb(0, 0, 0))
-
-        // Set primary contact (emergency contact)
-        primaryContactField.setText(clientData?.emergencyContactName || '')
-        primaryContactField.setFontSize(8)
-        // primaryContactField.setTextColor(rgb(0, 0, 0))
-
-        primaryContactPhoneField.setText(clientData?.emergencyContactNumber || '')
-        primaryContactPhoneField.setFontSize(8)
-        // primaryContactPhoneField.setTextColor(rgb(0, 0, 0))
-
-        // Set physician details
-        physicianNameField.setText(clientData?.clientPhysician?.name || '')
-        physicianNameField.setFontSize(8)
-        // physicianNameField.setTextColor(rgb(0, 0, 0))
-
-        physicianClinicField.setText(clientData?.clientPhysician?.clinicName || '')
-        physicianClinicField.setFontSize(8)
-        // physicianClinicField.setTextColor(rgb(0, 0, 0))
-
-        physicianPhoneField.setText(
-          clientData?.clientPhysician?.phoneNumber || clientData?.clientPhysician?.primaryPhoneNumber || ''
-        )
-        physicianPhoneField.setFontSize(8)
-        // physicianPhoneField.setTextColor(rgb(0, 0, 0))
-
-        physicianAddressField.setText(clientData?.clientPhysician?.address || '')
-        physicianAddressField.setFontSize(8)
-        // physicianAddressField.setTextColor(rgb(0, 0, 0))
-
-        physicianCityField.setText(clientData?.clientPhysician?.city || '')
-        physicianCityField.setFontSize(8)
-        // physicianCityField.setTextColor(rgb(0, 0, 0))
-
-        physicianStateField.setText(clientData?.clientPhysician?.state || '')
-        physicianStateField.setFontSize(8)
-        // physicianStateField.setTextColor(rgb(0, 0, 0))
-
-        physicianZipField.setText(clientData?.clientPhysician?.zipCode || '')
-        physicianZipField.setFontSize(8)
-        // physicianZipField.setTextColor(rgb(0, 0, 0))
-      } else if (docTitle?.includes('DHS-6893E')) {
-        const firstNameField = form.getTextField('form1[0].P1[0].sfIntro[0].sfPWDs[0].sfInfo[0].PWDNameFirst[0]')
-        const lastNameField = form.getTextField('form1[0].P1[0].sfIntro[0].sfPWDs[0].sfInfo[0].PWDNameLast[0]')
-        const npiUmpiNumber = form.getTextField('form1[0].P1[0].sfIntro[0].sfPWDs[0].sfInfo[0].NPIUMPI[0]')
-        const resPartyFirstName = form.getTextField(
-          'form1[0].P1[0].sfIntro[0].sfPWDs[0].sfInfo[0].NameFirstResponsible[0]'
-        )
-        const resPartyLastName = form.getTextField(
-          'form1[0].P1[0].sfIntro[0].sfPWDs[0].sfInfo[0].NameLastResponsible[0]'
-        )
-
-        firstNameField.setText(clientData?.firstName || '')
-        firstNameField.setFontSize(8)
-
-        lastNameField.setText(clientData?.lastName || '')
-        lastNameField.setFontSize(8)
-
-        npiUmpiNumber.setText(clientData?.pmiNumber || '')
-        npiUmpiNumber.setFontSize(8)
-
-        resPartyFirstName.setText(clientData?.clientResponsibilityParty?.name?.split(' ')[0] || '')
-        resPartyFirstName.setFontSize(8)
-
-        resPartyLastName.setText(clientData?.clientResponsibilityParty?.name?.split(' ')[1] || '')
-        resPartyLastName.setFontSize(8)
+        // Set to show HTML form first
+        setShowHtmlForm(true)
       }
 
       const pdfBytes = await pdfDoc.save()
@@ -528,7 +358,6 @@ const E_Document = () => {
             const textField = form.getTextField(field.name)
             textField.setText(data[field.name] || getDeepValue(data, field.name))
             textField.setFontSize(8)
-            // textField.setTextColor(rgb(0, 0, 0))
           } else if (field.type === 'PDFRadioGroup' && data[field.name]) {
             form.getRadioGroup(field.name).select(data[field.name])
           } else if (field.type === 'PDFCheckBox' && data[field.name]) {
@@ -542,51 +371,22 @@ const E_Document = () => {
       const pdfBytes = await pdfDoc.save()
       const blob = new Blob([new Uint8Array(pdfBytes)], { type: 'application/pdf' })
       const blobUrl = URL.createObjectURL(blob)
+
+      // Update both the blob URL and pdfObj state
       setPdfBlob(blobUrl)
-      setPdfObj(pdfBytes)
+      setPdfObj(pdfBytes) // This is the key addition
+
       console.log('PDF saved successfully, new blob URL:', blobUrl)
     } catch (error) {
       console.error('Error saving PDF:', error)
     }
   }
 
-  // Handle upload to S3
-  const handleUpload = async () => {
-    if (!pdfObj) {
-      console.error('No PDF data available to upload')
-      return
-    }
-
-    try {
-      // Create a File object from pdfObj
-      const pdfFile = new File([pdfObj], `filled_form_${Date.now()}.pdf`, { type: 'application/pdf' })
-      // const email = 'usamamanghat917@gmail.com'
-      // Create FormData and append the File
-      const formData = new FormData()
-      formData.append('file', pdfFile)
-
-      // Make API call to upload to S3
-      await api.post(`/client/upload-e-docs/${id}/${caseManagerEmail}`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      })
-      await fetchClientsForm()
-      setAlertOpen(true)
-      setAlertProps({
-        message: 'The form is saved successfully.',
-        severity: 'success'
-      })
-      setOpenModal(false)
-      console.log('PDF uploaded successfully to S3')
-    } catch (error) {
-      console.error('Error uploading PDF to S3:', error)
-    }
-  }
-
   // Handle form selection
   const onFormChange = (e: any) => {
     setSelectedForm(e.target.value)
+    setDynamicFieldMappings([])
+    setSelectedMapping(null)
     GetPrePopulatedPdf(e.target.value)
   }
 
@@ -596,9 +396,169 @@ const E_Document = () => {
     setSelectedForm('')
     setPdfBlob(null)
     setPdfFields([])
+    setDynamicFieldMappings([])
+    setSelectedMapping(null)
+    setEmailSubject('') // Add this
+    setEmailBody('') // Add this
+    setEmailSending(false) // Add this
+    setShowHtmlForm(true) // Reset to HTML form view
+    setHtmlFormData({}) // Clear HTML form data
     reset()
   }
 
+  // Handle HTML form input change
+  const handleHtmlFormChange = (fieldName: string, value: string) => {
+    setHtmlFormData(prev => ({
+      ...prev,
+      [fieldName]: value
+    }))
+  }
+
+  // Handle HTML form finish - map values to PDF
+  const handleHtmlFormFinish = async () => {
+    try {
+      setLoading(true)
+
+      // Load the PDF
+      const pdfDoc = await PDFDocument.load(pdfObj)
+      const form = pdfDoc.getForm()
+
+      // Map HTML form data to PDF fields using dynamicFieldMappings
+      dynamicFieldMappings.forEach((mapping: any) => {
+        const { pdfFieldName, fieldType } = mapping
+        const value = htmlFormData[pdfFieldName]
+
+        if (value && form) {
+          try {
+            if (fieldType === 'PDFTextField') {
+              const textField = form.getTextField(pdfFieldName)
+              textField.setText(value)
+              textField.setFontSize(8)
+            } else if (fieldType === 'PDFRadioGroup') {
+              const radioGroup = form.getRadioGroup(pdfFieldName)
+              const options = radioGroup.getOptions()
+              if (options.includes(value)) {
+                radioGroup.select(value)
+              }
+            } else if (fieldType === 'PDFCheckBox') {
+              const checkbox = form.getCheckBox(pdfFieldName)
+              if (value.toLowerCase() === 'true' || value === '1' || value.toLowerCase() === 'yes') {
+                checkbox.check()
+              }
+            } else if (fieldType === 'PDFDropdown') {
+              const dropdown = form.getDropdown(pdfFieldName)
+              const options = dropdown.getOptions()
+              if (options.includes(value)) {
+                dropdown.select(value)
+              }
+            }
+          } catch (error) {
+            console.error(`Error setting field ${pdfFieldName}:`, error)
+          }
+        }
+      })
+
+      // Save and update PDF
+      const pdfBytes = await pdfDoc.save()
+      const blob = new Blob([new Uint8Array(pdfBytes)], { type: 'application/pdf' })
+      setPdfObj(pdfBytes)
+      const blobUrl = URL.createObjectURL(blob)
+      setPdfBlob(blobUrl)
+
+      // Switch to PDF view
+      setShowHtmlForm(false)
+    } catch (error) {
+      console.error('Error processing HTML form:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Handle back to HTML form
+  const handleBackToHtmlForm = () => {
+    setShowHtmlForm(true)
+  }
+
+  // Render HTML form field based on mapping
+  const renderHtmlFormField = (mapping: any) => {
+    const { pdfFieldName, clientDataLabel, fieldType, clientDataKey, options } = mapping
+    const defaultValue = getClientDataValue(clientDataKey)
+    const currentValue = htmlFormData[pdfFieldName] || defaultValue || ''
+
+    console.log('PDF field Name and Type ---->> ', pdfFieldName, fieldType, ' | Client Data Key ---->> ', clientDataKey)
+
+    if (fieldType === 'PDFTextField') {
+      return (
+        <div key={pdfFieldName} className='mb-4'>
+          <label className='block text-sm font-medium text-gray-700 mb-1'>{clientDataLabel}</label>
+          <input
+            type='text'
+            className='w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+            value={currentValue}
+            onChange={e => handleHtmlFormChange(pdfFieldName, e.target.value)}
+            placeholder={`Enter ${clientDataLabel}`}
+          />
+        </div>
+      )
+    } else if (fieldType === 'PDFRadioGroup' || fieldType === 'PDFDropdown') {
+      // For radio groups and dropdowns, we need to get options
+      let optionsArray: string[] = []
+      if (clientDataKey === 'gender') {
+        optionsArray = ['Male', 'Female']
+      } else {
+        // Try to extract optionsArray from the PDF field if available
+        // For now, use a text input as fallback
+        optionsArray = options ? options : []
+      }
+
+      if (optionsArray.length > 0) {
+        return (
+          <div key={pdfFieldName} className='mb-4'>
+            <label className='block text-sm font-medium text-gray-700 mb-1'>{clientDataLabel}</label>
+            <select
+              className='w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+              value={currentValue}
+              onChange={e => handleHtmlFormChange(pdfFieldName, e.target.value)}
+            >
+              <option value=''>Select {clientDataLabel}</option>
+              {optionsArray.map(opt => (
+                <option key={opt} value={opt}>
+                  {opt}
+                </option>
+              ))}
+            </select>
+          </div>
+        )
+      } else {
+        return (
+          <div key={pdfFieldName} className='mb-4'>
+            <label className='block text-sm font-medium text-gray-700 mb-1'>{clientDataLabel}</label>
+            <input
+              type='text'
+              className='w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+              value={currentValue}
+              onChange={e => handleHtmlFormChange(pdfFieldName, e.target.value)}
+              placeholder={`Enter ${clientDataLabel}`}
+            />
+          </div>
+        )
+      }
+    } else if (fieldType === 'PDFCheckBox') {
+      return (
+        <div key={pdfFieldName} className='mb-4 flex items-center'>
+          <input
+            type='checkbox'
+            className='h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded'
+            checked={currentValue === 'true' || currentValue === '1' || currentValue.toLowerCase() === 'yes'}
+            onChange={e => handleHtmlFormChange(pdfFieldName, e.target.checked ? 'true' : 'false')}
+          />
+          <label className='ml-2 block text-sm font-medium text-gray-700'>{clientDataLabel}</label>
+        </div>
+      )
+    }
+
+    return null
+  }
   const handleFillReferenceButton = () => {
     if (!caseManagerEmail) {
       setAlertOpen(true)
@@ -623,119 +583,17 @@ const E_Document = () => {
     groupedFields[section].push(field)
   })
 
-  // Render form field
-  // const renderFormField = (field: PdfField) => {
-  //   console.log("FIELDS--------",field);
-  //   const label = fieldLabels[field.name] || field.name
-  //   const error = errors[field.name]
+  const renderFormField = async (field: PdfField) => {
+    if (field.name.includes('Pages') || field.name === 'clear_button 2' || field.name.includes('Clear')) return null
 
-  //   if (field.type === 'PDFTextField') {
-  //     let maxLength: number | undefined
-  //     // if (field.name.includes('state') || field.name.includes('State')) {
-  //     //   maxLength = 2
-  //     // }
-  //     return (
-  //       <Grid
-  //         size={{ xs: 12, sm: field.name.includes('state') || field.name.includes('zip') ? 3 : 6 }}
-  //         key={field.name}
-  //       >
-  //         <CustomTextField
-  //           label={label}
-  //           placeHolder={label}
-  //           name={field.name}
-  //           defaultValue=''
-  //           type='text'
-  //           maxLength={maxLength}
-  //           error={error}
-  //           control={control}
-  //           isRequired={true}
-  //         />
-  //       </Grid>
-  //     )
-  //   } else if (field.type === 'PDFRadioGroup' || field.name.includes('major-program')) {
-  //     const options = fieldOptions[field.name] || fieldOptions['major-program'] || []
-  //     return (
-  //       <Grid size={{ xs: 12, sm: 6 }} key={field.name}>
-  //         <CustomDropDown
-  //           name={field.name}
-  //           control={control}
-  //           error={error}
-  //           label={label}
-  //           optionList={options}
-  //           defaultValue=''
-  //           isRequired={false}
-  //         />
-  //       </Grid>
-  //     )
-  //   } else if (field.type === 'PDFCheckBox') {
-  //     // Checkboxes are handled via dropdown for major-program
-  //     return null // Skip individual checkboxes as they are grouped in dropdown
-  //   }
-  //   return null
-  // }
+    // Find mapping for this field
+    const fieldMapping = dynamicFieldMappings.find(mapping => mapping.pdfFieldName === field.name)
 
-  const renderFormField = (field: PdfField) => {
-    if (field.name.includes('Pages')) return
-    const label = fieldLabels[field.name] || field.name
+    if (!fieldMapping) return null // Only render fields that have mappings
+
+    const label = fieldMapping.clientDataLabel || field.name
     const error = errors[field.name]
-
-    // Determine default value based on clientData
-    let defaultValue = ''
-    const residentialAddress = clientData?.addresses?.find(
-      (addr: any) => addr.address.addressType === 'Residential'
-    )?.address
-
-    if (docTitle?.includes('DHS-3244P')) {
-      if (field.name === '4recip-info-name 2') {
-        defaultValue = `${clientData?.firstName || ''} ${clientData?.lastName || ''}`
-      } else if (field.name === '7recip-info-PMI 2') {
-        defaultValue = clientData?.pmiNumber || 'PMI-3010'
-      } else if (field.name === '6recip-info-DOB 2') {
-        defaultValue = clientData?.dateOfBirth || '26 Feb,2025'
-      } else if (field.name === '8recip-info-phone 2') {
-        defaultValue = clientData?.primaryPhoneNumber || ''
-      } else if (field.name === '9recip-info-address 2') {
-        defaultValue = residentialAddress?.address || clientData?.addresses?.[0]?.address?.address || ''
-      } else if (field.name === '10recip-info-city 2') {
-        defaultValue = residentialAddress?.city || clientData?.addresses?.[0]?.address?.city || ''
-      } else if (field.name === '12recip-info-state 2') {
-        defaultValue = residentialAddress?.state || clientData?.addresses?.[0]?.address?.state || ''
-      } else if (field.name === '13recip-info-zip 2') {
-        defaultValue = residentialAddress?.zipCode || clientData?.addresses?.[0]?.address?.zipCode || ''
-      } else if (field.name === '14recip-info-primary-contact 2') {
-        defaultValue = clientData?.emergencyContactName || ''
-      } else if (field.name === '15recip-info-primary-contact-phone 2') {
-        defaultValue = clientData?.emergencyContactNumber || ''
-      } else if (field.name === '30physician-name 2') {
-        defaultValue = clientData?.clientPhysician?.name || ''
-      } else if (field.name === '31physician-clinic-name 2') {
-        defaultValue = clientData?.clientPhysician?.clinicName || ''
-      } else if (field.name === '32physician-phone-number 2') {
-        defaultValue = clientData?.clientPhysician?.phoneNumber || clientData?.clientPhysician?.primaryPhoneNumber || ''
-      } else if (field.name === '33physician-street-address 2') {
-        defaultValue = clientData?.clientPhysician?.address || ''
-      } else if (field.name === '34physician-city 2') {
-        defaultValue = clientData?.clientPhysician?.city || ''
-      } else if (field.name === '35physician-state 2') {
-        defaultValue = clientData?.clientPhysician?.state || ''
-      } else if (field.name === '36physician-zip 2') {
-        defaultValue = clientData?.clientPhysician?.zipCode || ''
-      } else if (field.name === '5recip-info-gender') {
-        defaultValue = clientData?.gender?.toLowerCase() === 'female' ? 'Female' : 'Male'
-      }
-    } else if (docTitle?.includes('DHS-6893E')) {
-      if (field.name === 'form1[0].P1[0].sfIntro[0].sfPWDs[0].sfInfo[0].PWDNameFirst[0]') {
-        defaultValue = `${clientData?.firstName || ''}`
-      } else if (field.name === 'form1[0].P1[0].sfIntro[0].sfPWDs[0].sfInfo[0].PWDNameLast[0]') {
-        defaultValue = `${clientData?.lastName || ''}`
-      } else if (field.name === 'form1[0].P1[0].sfIntro[0].sfPWDs[0].sfInfo[0].NPIUMPI[0]') {
-        defaultValue = clientData?.pmiNumber || 'PMI-3010'
-      } else if (field.name === 'form1[0].P1[0].sfIntro[0].sfPWDs[0].sfInfo[0].NameFirstResponsible[0]') {
-        defaultValue = clientData?.clientResponsibilityParty?.name?.split(' ')[0] || ''
-      } else if (field.name === 'form1[0].P1[0].sfIntro[0].sfPWDs[0].sfInfo[0].NameLastResponsible[0]') {
-        defaultValue = clientData?.clientResponsibilityParty?.name?.split(' ')[1] || ''
-      }
-    }
+    const defaultValue = getClientDataValue(fieldMapping.clientDataKey)
 
     if (field.type === 'PDFTextField') {
       let maxLength: number | undefined
@@ -746,6 +604,7 @@ const E_Document = () => {
       } else if (field.name.includes('NPIUMPI')) {
         maxLength = 10
       }
+
       return (
         <Grid
           size={{ xs: 12, sm: field.name.includes('state') || field.name.includes('zip') ? 3 : 6 }}
@@ -764,8 +623,33 @@ const E_Document = () => {
           />
         </Grid>
       )
-    } else if (field.type === 'PDFRadioGroup' || field.name.includes('major-program')) {
-      const options = fieldOptions[field.name] || fieldOptions['major-program'] || []
+    } else if (field.type === 'PDFRadioGroup') {
+      // For radio groups, create dynamic options or use default
+      let options = []
+      if (fieldMapping.clientDataKey === 'gender') {
+        options = [
+          { key: 'Male', value: 'Male', optionString: 'Male' },
+          { key: 'Female', value: 'Female', optionString: 'Female' }
+        ]
+      } else {
+        // Try to get options from the PDF field itself
+        try {
+          const { data: existingPdf } = await axios.get(
+            `https://carekey-docs-dev.s3.us-east-1.amazonaws.com/${selectedForm}`,
+            {
+              responseType: 'arraybuffer'
+            }
+          )
+          const pdfDoc = await PDFDocument.load(existingPdf, { ignoreEncryption: true })
+          const form = pdfDoc.getForm()
+          const radioGroup = form.getRadioGroup(field.name)
+          const pdfOptions = radioGroup.getOptions()
+          options = pdfOptions.map(opt => ({ key: opt, value: opt, optionString: opt }))
+        } catch {
+          options = [{ key: defaultValue, value: defaultValue, optionString: defaultValue }]
+        }
+      }
+
       return (
         <Grid size={{ xs: 12, sm: 6 }} key={field.name}>
           <CustomDropDown
@@ -779,11 +663,107 @@ const E_Document = () => {
           />
         </Grid>
       )
-    } else if (field.type === 'PDFCheckBox') {
-      // Checkboxes are handled via dropdown for major-program
-      return null // Skip individual checkboxes as they are grouped in dropdown
     }
+
     return null
+  }
+
+  const updatePdfWithCurrentFormData = async () => {
+    try {
+      // Get current form values
+      const formData = methods.getValues()
+
+      // Only update if there are form changes or if it's a manual form
+      if (Object.keys(formData).length > 0 || !selectedMapping) {
+        await handleSave(formData)
+      }
+
+      // Fetch the current PDF state from the blob
+      const response = await fetch(pdfBlob)
+      const arrayBuffer = await response.arrayBuffer()
+
+      // Update pdfObj state
+      setPdfObj(arrayBuffer)
+
+      return arrayBuffer
+    } catch (error) {
+      console.error('Error updating PDF with form data:', error)
+      throw error
+    }
+  }
+
+  const handleDownloadPdf = async () => {
+    try {
+      // Always update PDF with current form data first
+      const formData = methods.getValues()
+      await handleSave(formData) // This updates pdfObj with form data
+
+      // Then use the updated pdfObj for download
+      const blob = new Blob([pdfObj], { type: 'application/pdf' })
+      const downloadUrl = URL.createObjectURL(blob)
+
+      const link = document.createElement('a')
+      link.href = downloadUrl
+      link.download = `${selectedMapping.tenantDocument.fileName.replace('.pdf', '')}_${clientData?.firstName || 'client'}_${clientData?.lastName || 'form'}.pdf`
+
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(downloadUrl)
+    } catch (error) {
+      console.error('Error downloading PDF:', error)
+    }
+  }
+
+  const handleSendEmailWithPdf = async () => {
+    if (!caseManagerEmail) {
+      console.error('No case manager email available')
+      return
+    }
+
+    try {
+      setEmailSending(true)
+
+      // Update PDF with current form data
+      const currentPdfData = await updatePdfWithCurrentFormData()
+
+      // Create and send email
+      const pdfFile = new File([currentPdfData], `${selectedMapping.tenantDocument.fileName}`, {
+        type: 'application/pdf'
+      })
+
+      const formData = new FormData()
+      formData.append('file', pdfFile)
+      formData.append('recipientEmail', 'alihaider@vantadev.com')
+      formData.append('subject', emailSubject)
+      formData.append('emailBody', emailBody)
+      formData.append('clientId', clientData.id.toString())
+      formData.append('senderName', authUser?.userName || 'System')
+      formData.append('clientName', `${clientData?.firstName || ''} ${clientData?.lastName || ''}`.trim())
+
+      await api.post(`/client/send-pdf-email/${clientData.id}`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      })
+
+      // Success handling
+      setAlertOpen(true)
+      setAlertProps({
+        message: `PDF successfully sent to ${caseManagerEmail}`,
+        severity: 'success'
+      })
+
+      setEmailSubject('')
+      setEmailBody('')
+    } catch (error) {
+      console.error('Error sending email:', error)
+      setAlertOpen(true)
+      setAlertProps({
+        message: 'Failed to send PDF via email. Please try again.',
+        severity: 'error'
+      })
+    } finally {
+      setEmailSending(false)
+    }
   }
 
   return (
@@ -798,7 +778,7 @@ const E_Document = () => {
             '& .MuiDialog-paper': {
               overflow: 'visible',
               width: '90vw',
-              height: '90vh',
+              height: selectedForm ? '90vh' : '30vh',
               maxWidth: '1600px',
               maxHeight: '1000px',
               position: 'relative'
@@ -839,43 +819,186 @@ const E_Document = () => {
               />
             </div>
 
-            {selectedForm && pdfBlob && !loading && (
+            {/* {selectedForm && pdfBlob && !loading && (
               <Button variant='contained' onClick={handleUpload} disabled={!isDirty}>
                 Save
               </Button>
-            )}
+            )} */}
           </div>
 
           {selectedForm && pdfBlob && !loading && (
             <Grid className='w-full h-full flex flex-row'>
-              <Card className='w-[50%] h-[100%] overflow-y-auto'>
-                <Typography className='font-semibold text-2xl m-4'>
-                  {docTitle || 'Referral for Reassessment for PCA Services Form'}
-                </Typography>
-                <CardContent>
-                  <FormProvider {...methods}>
-                    <form onSubmit={handleSubmit(handleSave)} autoComplete='off'>
-                      {Object.entries(groupedFields).map(([section, fields]) => (
-                        <div key={section}>
-                          <Typography className='text-xl mb-2 mt-6'>{section}</Typography>
-                          <Grid container spacing={4}>
-                            {fields.map(field => renderFormField(field))}
-                          </Grid>
+              {showHtmlForm && selectedMapping ? (
+                // Show HTML form for mapped PDFs
+                <Card className='w-full h-[100%] overflow-y-auto'>
+                  <CardContent className='p-6'>
+                    <Typography className='font-semibold text-2xl mb-4'>
+                      Fill Form: {selectedMapping.tenantDocument.fileName}
+                    </Typography>
+
+                    <div className='mb-4 p-4 bg-blue-50 border border-blue-200 rounded-md'>
+                      <Typography className='text-blue-800 font-medium'>
+                        ℹ️ Please fill in the form fields below
+                      </Typography>
+                      <Typography className='text-blue-600 text-sm mt-1'>
+                        Fields are pre-populated with client data where available. You can modify any values before
+                        generating the PDF.
+                      </Typography>
+                    </div>
+
+                    {/* Render form fields */}
+                    <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                      {dynamicFieldMappings.map(mapping => renderHtmlFormField(mapping))}
+                    </div>
+
+                    {/* Finish button */}
+                    <div className='flex justify-end mt-6 pt-4 border-t border-gray-200'>
+                      <Button variant='contained' onClick={handleHtmlFormFinish} size='large'>
+                        Done - Generate PDF
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : (
+                // Show PDF view with case manager section
+                <>
+                  <Card className='w-[50%] h-[100%] overflow-y-auto'>
+                    <Typography className='font-semibold text-2xl m-4'>
+                      {selectedMapping
+                        ? `${selectedMapping.tenantDocument.fileName} (Generated)`
+                        : docTitle || 'PDF Form'}
+                    </Typography>
+                    <CardContent>
+                      {selectedMapping ? (
+                        <div>
+                          {/* Back button */}
+                          <div className='mb-4'>
+                            <Button
+                              variant='outlined'
+                              startIcon={<i className='bx-arrow-back' />}
+                              onClick={handleBackToHtmlForm}
+                            >
+                              Back to Form
+                            </Button>
+                          </div>
+
+                          <div className='mb-4 p-4 bg-green-50 border border-green-200 rounded-md'>
+                            <Typography className='text-green-800 font-medium'>
+                              ✓ PDF has been generated with your form data
+                            </Typography>
+                            <Typography className='text-green-600 text-sm mt-1'>
+                              Review the PDF on the right. You can go back to edit or send it to the case manager.
+                            </Typography>
+                          </div>
+
+                          {/* Case Manager Information */}
+                          <div className='mb-4 p-4 border border-gray-200 rounded-md'>
+                            <Typography className='font-medium mb-2'>📧 Case Manager Information</Typography>
+                            <div className='grid grid-cols-1 md:grid-cols-2 gap-3'>
+                              <div>
+                                <Typography className='text-sm font-semibold'>Name:</Typography>
+                                <Typography className='text-sm font-medium'>
+                                  {clientData?.clientCaseManager?.caseManagerName || 'Not assigned'}
+                                </Typography>
+                              </div>
+                              <div>
+                                <Typography className='text-sm font-semibold'>Email:</Typography>
+                                <Typography className='text-sm font-medium'>
+                                  {caseManagerEmail || 'No email provided'}
+                                </Typography>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Email Composition Section */}
+                          <div className='mb-4 p-4 border border-green-200 rounded-md'>
+                            <Typography className='text-green-800 font-medium mb-3'>
+                              ✉️ Send PDF to Case Manager
+                            </Typography>
+
+                            <div className='mb-3'>
+                              <Typography className='text-sm text-gray-50 mb-1'>Email Subject:</Typography>
+                              <input
+                                type='text'
+                                className='w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-green-400'
+                                placeholder='Enter email subject...'
+                                value={emailSubject}
+                                onChange={e => setEmailSubject(e.target.value)}
+                              />
+                            </div>
+
+                            <div className='mb-4'>
+                              <Typography className='text-sm text-gray-50 mb-1'>Email Body:</Typography>
+                              <textarea
+                                className='w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-green-400 resize-none'
+                                rows={4}
+                                placeholder='Enter email message body...'
+                                value={emailBody}
+                                onChange={e => setEmailBody(e.target.value)}
+                              />
+                            </div>
+
+                            <div className='flex gap-3 justify-end'>
+                              <Button
+                                variant='outlined'
+                                color='secondary'
+                                onClick={() => {
+                                  setEmailSubject('')
+                                  setEmailBody('')
+                                }}
+                              >
+                                Clear
+                              </Button>
+
+                              {/* Add Download Button */}
+                              <Button
+                                variant='outlined'
+                                color='primary'
+                                onClick={handleDownloadPdf}
+                                startIcon={<i className='bx-download' />}
+                              >
+                                Download PDF
+                              </Button>
+                              <Button
+                                variant='contained'
+                                color='primary'
+                                onClick={handleSendEmailWithPdf}
+                                disabled={
+                                  !caseManagerEmail || !emailSubject.trim() || !emailBody.trim() || emailSending
+                                }
+                                startIcon={emailSending ? <CircularProgress size={16} color='inherit' /> : null}
+                              >
+                                {emailSending ? 'Sending...' : 'Send PDF via Email'}
+                              </Button>
+                            </div>
+                          </div>
                         </div>
-                      ))}
-                      <div className='flex gap-4 justify-end mt-5 mb-20'>
-                        <Button variant='outlined' color='secondary' onClick={onClose}>
-                          CANCEL
-                        </Button>
-                        <Button type='submit' variant='contained'>
-                          View
-                        </Button>
-                      </div>
-                    </form>
-                  </FormProvider>
-                </CardContent>
-              </Card>
-              <iframe key={pdfBlob} className='w-[50%] h-[100%]' src={pdfBlob} title='PDF Preview' />
+                      ) : (
+                        // Show form fields for manual entry if no mappings exist
+                        <FormProvider {...methods}>
+                          <form onSubmit={handleSubmit(handleSave)} autoComplete='off'>
+                            <Typography className='text-xl mb-4'>Manual Entry Required</Typography>
+                            <Grid container spacing={4}>
+                              {pdfFields
+                                .filter(field => field.type !== 'PDFButton' && !field.name.includes('clear'))
+                                .map(field => renderFormField(field))}
+                            </Grid>
+                            <div className='flex gap-4 justify-end mt-5 mb-20'>
+                              <Button variant='outlined' color='secondary' onClick={onClose}>
+                                CANCEL
+                              </Button>
+                              <Button type='submit' variant='contained'>
+                                View
+                              </Button>
+                            </div>
+                          </form>
+                        </FormProvider>
+                      )}
+                    </CardContent>
+                  </Card>
+                  <iframe key={pdfBlob} className='w-[50%] h-[100%]' src={pdfBlob} title='PDF Preview' />
+                </>
+              )}
             </Grid>
           )}
         </Dialog>

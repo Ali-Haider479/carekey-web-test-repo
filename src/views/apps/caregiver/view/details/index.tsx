@@ -18,6 +18,8 @@ import { useParams, useRouter } from 'next/navigation'
 import api from '@/utils/api'
 import CustomAlert from '@/@core/components/mui/Alter'
 import { useSession } from 'next-auth/react'
+import { useSelector } from 'react-redux'
+import { selectPlan } from '@/redux-store/slices/plan'
 
 interface BottomBodyProps {
   tabContentList: Record<string, (props: { data: any }) => ReactElement>
@@ -30,6 +32,7 @@ const CaregiverDetails = ({ tabContentList }: BottomBodyProps) => {
   const [tenantData, setTenantData] = useState<any>()
   const [alertProps, setAlertProps] = useState({ message: '', severity: 'info' })
   const [isLoading, setIsLoading] = useState<boolean>(false)
+  const plan = useSelector(selectPlan)
 
   const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
 
@@ -148,9 +151,7 @@ const CaregiverDetails = ({ tabContentList }: BottomBodyProps) => {
                 <CustomTabList onChange={handleChange} variant='scrollable' pill='true'>
                   <Tab value='profile' label='PROFILE' />
                   {session?.user?.userRoles?.title === 'Super Admin' ||
-                    (session?.user?.subscribedPlan?.features?.client_and_caregiver_history_logs && (
-                      <Tab value='account-history' label='LOGS' />
-                    ))}
+                    (plan?.features?.client_and_caregiver_history_logs && <Tab value='account-history' label='LOGS' />)}
                   <Tab value='assigned-service' label='ASSIGNED SERVICE' />
                   <Tab value='time-log' label='VIEW TIME LOG' />
                   <Tab value='schedule' label='VIEW SCHEDULE' />

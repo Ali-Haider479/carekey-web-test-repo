@@ -120,6 +120,12 @@ const TenantConfiguration = () => {
   const [enableNotification, setEnableNotification] = useState<boolean>(authUser?.tenant?.enableNotification || false)
   const [isModalShow, setIsModalShow] = useState<boolean>(false)
   const [serviceSearchValue, setServiceSearchValue] = useState<string>('')
+  const [dhsServicesModal, setDhsServicesModal] = useState<boolean>(false)
+  const [dhsUploadData, setDhsUploadData] = useState<any>(null)
+
+  const handleDhsServicesModalClose = () => {
+    setDhsServicesModal(false)
+  }
 
   const label = { inputProps: { 'aria-label': 'Switch demo' } }
 
@@ -334,6 +340,39 @@ const TenantConfiguration = () => {
     setIsServiceEvvModalShow(false)
   }
 
+  const handlePDFUpload = async (event: React.ChangeEvent<HTMLInputElement>): Promise<void> => {
+    try {
+      const file = event.target.files?.[0]
+      if (!file) return
+
+      if (file.type !== 'application/pdf') {
+        alert('Please upload a valid PDF file.')
+        return
+      }
+
+      // Create FormData and append file + tenantId
+      const formData = new FormData()
+      formData.append('files', file) // 'files' matches FilesInterceptor field name
+      formData.append('tenantId', String(id)) // Send as string, will be parsed
+
+      const response = await api.post('/service/extract-pdf', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      })
+
+      console.log('PDF Upload Response:', response.data)
+      setDhsUploadData(response.data)
+      getAllServices()
+      setDhsServicesModal(true)
+    } catch (error: any) {
+      console.error('Error uploading PDF:', error)
+      alert('Failed to upload PDF: ' + (error.response?.data?.message || error.message))
+    }
+  }
+
+  console.log('DHS upload data --->> ', dhsUploadData)
+
   const newColumns: Column[] = [
     {
       id: 'services',
@@ -464,19 +503,25 @@ const TenantConfiguration = () => {
           <Typography variant='h5' sx={{ mt: 0 }}>
             Service EVV
           </Typography>
-          <TextField
-            size='small'
-            placeholder='Search Service'
-            id='service-search'
-            value={serviceSearchValue}
-            onChange={handleSearchChange}
-            className='w-2/4'
-            slotProps={{
-              input: {
-                startAdornment: <i className='bx bx-search-alt-2 text-gray-500' style={{ fontSize: '1.2rem' }} />
-              }
-            }}
-          />
+          <Box sx={{ display: 'flex', flexDirection: 'row', gap: 2 }}>
+            <Button variant='contained' component='label'>
+              Upload DHS File
+              <input type='file' hidden accept='application/pdf' onChange={handlePDFUpload} />
+            </Button>
+            <TextField
+              size='small'
+              placeholder='Search Service'
+              id='service-search'
+              value={serviceSearchValue}
+              onChange={handleSearchChange}
+              className='w-2/4'
+              slotProps={{
+                input: {
+                  startAdornment: <i className='bx bx-search-alt-2 text-gray-500' style={{ fontSize: '1.2rem' }} />
+                }
+              }}
+            />
+          </Box>
         </Box>
 
         <ReactTable
@@ -588,6 +633,41 @@ const TenantConfiguration = () => {
               </Button>
             </div>
           </form>
+        </div>
+      </Dialog>
+
+      <Dialog
+        open={dhsServicesModal}
+        onClose={handleDhsServicesModalClose}
+        closeAfterTransition={false}
+        sx={{ '& .MuiDialog-paper': { overflow: 'visible', minWidth: 500 } }}
+        maxWidth='md'
+      >
+        <DialogCloseButton onClick={handleDhsServicesModalClose} disableRipple>
+          <i className='bx-x' />
+        </DialogCloseButton>
+        <div className='flex w-full px-5 flex-col'>
+          <div>
+            <h2 className='text-xl font-semibold mt-5 mb-4'>DHS Services Mapped Successfully</h2>
+          </div>
+          <div>
+            <Typography className='mb-3'>
+              Total Services Extracted: {dhsUploadData?.data?.totalExtractedServices}
+            </Typography>
+          </div>
+          <div>
+            <Typography className='mb-3'>
+              Services Uploaded Successfully: {dhsUploadData?.data?.successfulUploads}
+            </Typography>
+          </div>
+          <div>
+            <Typography className='mb-3'>Failed Entries: {dhsUploadData?.data?.failedEntries}</Typography>
+          </div>
+          <div className='flex gap-4 justify-end mt-4 mb-4 w-full'>
+            <Button variant='contained' onClick={handleDhsServicesModalClose}>
+              OK
+            </Button>
+          </div>
         </div>
       </Dialog>
     </>

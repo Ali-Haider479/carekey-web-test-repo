@@ -25,6 +25,8 @@ import { Avatar, Card, Theme, Typography, useTheme } from '@mui/material'
 import { useEffect, useState } from 'react'
 import api from '@/utils/api'
 import { useSession } from 'next-auth/react'
+import { useDispatch, useSelector } from 'react-redux'
+import { setPlan, selectPlan } from '@/redux-store/slices/plan'
 
 interface DashboardData {
   caregiverCount: number
@@ -46,6 +48,11 @@ const AppDashboard = () => {
   const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
   const theme = useTheme<Theme>()
   const { data: session, update } = useSession()
+  const dispatch = useDispatch()
+
+  const plan = useSelector(selectPlan)
+
+  console.log('CURRENT PLAN FROM DASHBOARD (REDUX):', plan)
 
   const tenantId = authUser?.tenant?.id
 
@@ -89,22 +96,26 @@ const AppDashboard = () => {
     }
   }
 
+  console.log('Session Data in Dashboard---', session)
+
   useEffect(() => {
     const updateSession = async () => {
       if (tenantData) {
         const tenantSubscriptionPlan = tenantData?.subscribedPlan || null
         console.log('TENANT SUBSCRIPTION PLAN---', tenantSubscriptionPlan)
 
+        const reduxUpdate = dispatch(setPlan(tenantSubscriptionPlan))
+
         const updateResult = await update({
           user: {
             ...session?.user,
-            subscribedPlan: { ...tenantSubscriptionPlan },
+            subscribedPlan: tenantSubscriptionPlan?.planName,
             accessToken: session?.user?.accessToken,
             refreshToken: session?.user?.refreshToken
           }
         })
 
-        console.log('Session Updated result:', updateResult)
+        console.log('Redux Updated result:', reduxUpdate)
       }
     }
     updateSession()
@@ -113,7 +124,7 @@ const AppDashboard = () => {
   return (
     <>
       <Grid container spacing={6}>
-        {!session?.user?.subscribedPlan?.id && (
+        {!plan && (
           <Grid size={{ xs: 12, md: 12, lg: 12 }}>
             <Card className='p-6 text-center mb-0 rounded-lg w-full'>
               <div className='text-center'>

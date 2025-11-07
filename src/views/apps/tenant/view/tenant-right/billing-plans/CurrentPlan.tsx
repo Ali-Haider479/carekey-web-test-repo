@@ -31,6 +31,8 @@ import { CheckCircle } from '@mui/icons-material'
 import { planDetails } from '@/utils/constants'
 import axios from 'axios'
 import { loadStripe } from '@stripe/stripe-js'
+import { useDispatch, useSelector } from 'react-redux'
+import { clearPlan, selectPlan, setPlan } from '@/redux-store/slices/plan'
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
 
@@ -51,6 +53,10 @@ const CurrentPlan = ({ data }: { data?: PricingPlanType[] }) => {
   const { data: session, update } = useSession()
   const { id } = useParams()
   const tenantId = id
+
+  const dispatch = useDispatch()
+
+  const plan = useSelector(selectPlan)
 
   console.log('Session Data in billing: ', session)
 
@@ -137,16 +143,16 @@ const CurrentPlan = ({ data }: { data?: PricingPlanType[] }) => {
   console.log('REMAINING DAYS---', remainingDays)
 
   // Get all active subscribed plan IDs
-  const subscribedPlanIds = [session?.user?.subscribedPlan?.planId]
+  const subscribedPlanIds = [plan?.planId]
 
-  const currentPlan = session?.user?.subscribedPlan || null
+  const currentPlan = plan || null
 
   const handleCancelSubscription = async (e: React.FormEvent) => {
     try {
       e.preventDefault()
       setCancelButtonLoading(true)
       const response = await api.post(`/stripe/cancel-subscription`, { tenantId: tenantId })
-      await update({
+      const updateSession = await update({
         user: {
           ...session?.user,
           subscribedPlan: null,
@@ -154,6 +160,8 @@ const CurrentPlan = ({ data }: { data?: PricingPlanType[] }) => {
           refreshToken: session?.user?.refreshToken
         }
       })
+      console.log('Session after cancelling subscription---', updateSession)
+      dispatch(clearPlan())
       fetchTenantData()
       handleCancelSubscriptionModalClose()
     } catch (error) {
@@ -165,7 +173,7 @@ const CurrentPlan = ({ data }: { data?: PricingPlanType[] }) => {
 
   return (
     <>
-      {!session?.user?.subscribedPlan?.id ? (
+      {!plan?.id ? (
         <Grid size={{ xs: 12, md: 12, lg: 12 }}>
           <Card className='p-6 text-center mb-0 rounded-lg w-full'>
             <div className='text-center'>

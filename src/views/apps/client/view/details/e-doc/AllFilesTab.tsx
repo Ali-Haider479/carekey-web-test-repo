@@ -1,5 +1,5 @@
 'use client'
-import { DeleteOutline, FileDownloadOutlined, MoreVert } from '@mui/icons-material'
+import { DeleteOutline, FileDownloadOutlined, MoreVert, Visibility } from '@mui/icons-material'
 import {
   IconButton,
   List,
@@ -26,19 +26,40 @@ import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf'
 const AllFilesTab = ({ clientDocuments, clientDocsLoading, onDocumentDeleted }: any) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const [selectedDocId, setSelectedDocId] = useState<number | null>(null)
+  const [openPreviewModal, setOpenPreviewModal] = useState(false)
+  const [pdfUrl, setPdfUrl] = useState<any>(null)
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false)
+  const [selectedDoc, setSelectedDoc] = useState<any>(null)
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 10
 
-  const handleMenuClick = (event: React.MouseEvent<HTMLElement>, docId: number) => {
+  const handleMenuClick = (event: React.MouseEvent<HTMLElement>, docId: number, doc: any) => {
     console.log('USAMA MENU CLICK', docId)
     setSelectedDocId(docId)
+    setSelectedDoc(doc)
     setAnchorEl(event.currentTarget)
   }
 
   const handleMenuClose = () => {
     setAnchorEl(null)
     // setSelectedDocId(null)
+  }
+
+  const handlePreviewClick = async (fileKey: string) => {
+    setOpenPreviewModal(true)
+    handleMenuClose()
+    try {
+      const docResponse = await api.get(`/tenant/getPdf/${fileKey}`)
+      console.log('Document Get Response: ', docResponse)
+      setPdfUrl(docResponse?.data)
+    } catch (error) {
+      console.error(`Error fetching pdf file from S3: `, error)
+    }
+  }
+
+  const handlePreviewCancel = () => {
+    setOpenPreviewModal(false)
+    setSelectedDocId(null)
   }
 
   const handleDownload = (fileKey: string, fileName: string) => {
@@ -104,6 +125,48 @@ const AllFilesTab = ({ clientDocuments, clientDocsLoading, onDocumentDeleted }: 
         </DialogActions>
       </Dialog>
 
+      <Dialog
+        open={openPreviewModal}
+        onClose={handlePreviewCancel}
+        aria-labelledby='preview-dialog-title'
+        aria-describedby='preview-dialog-description'
+        sx={{ '& .MuiDialog-paper': { minWidth: 1000 } }}
+        maxWidth='md'
+      >
+        <div className='flex flex-row justify-between items-center mr-7'>
+          <DialogTitle id='delete-dialog-title'>Preview Sent Email</DialogTitle>
+          {/* <DialogActions> */}
+          <Button onClick={handlePreviewCancel} color='primary'>
+            Close
+          </Button>
+          {/* <Button onClick={handleDeleteConfirm} color='error' autoFocus>
+                  Delete
+                </Button> */}
+          {/* </DialogActions> */}
+        </div>
+        <DialogContent>
+          <div className='flex flex-row gap-2'>
+            <div className='w-[50%]'>
+              <Typography className='font-bold'>Subject:</Typography>
+              <Typography className='mb-2'>{selectedDoc?.subject}</Typography>
+              <Typography className='font-bold'>Body:</Typography>
+              <Typography className='mb-2'>{selectedDoc?.body}</Typography>
+              <Typography className='font-bold'>Sent to:</Typography>
+              <Typography className='mb-2'>{selectedDoc?.emailAddress}</Typography>
+            </div>
+            <div className='w-[full] h-[600px]'>
+              <iframe
+                src={pdfUrl}
+                key={pdfUrl}
+                title='PDF Preview'
+                className='border-none w-[550px] h-[600px]'
+                allowFullScreen
+              />
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Loading Indicator */}
       {clientDocsLoading ? (
         <Box display='flex' justifyContent='center' alignItems='center' minHeight='200px'>
@@ -124,7 +187,7 @@ const AllFilesTab = ({ clientDocuments, clientDocsLoading, onDocumentDeleted }: 
                   className='border-[1px]'
                   secondaryAction={
                     <>
-                      <IconButton edge='end' aria-label='menu' onClick={e => handleMenuClick(e, doc.id)}>
+                      <IconButton edge='end' aria-label='menu' onClick={e => handleMenuClick(e, doc.id, doc)}>
                         <MoreVert />
                       </IconButton>
                       <Menu
@@ -140,7 +203,13 @@ const AllFilesTab = ({ clientDocuments, clientDocsLoading, onDocumentDeleted }: 
                           horizontal: 'right'
                         }}
                       >
-                        <MenuItem onClick={() => handleDownload(doc.fileKey, doc.fileName)}>
+                        <MenuItem onClick={() => handlePreviewClick(doc.fileKey)}>
+                          <div className='flex flex-row items-center'>
+                            <Visibility className='size-4' />
+                            <Typography className='ml-2'>View</Typography>
+                          </div>
+                        </MenuItem>
+                        {/* <MenuItem onClick={() => handleDownload(doc.fileKey, doc.fileName)}>
                           <div className='flex flex-row items-center'>
                             <FileDownloadOutlined className='size-5' />
                             <Typography className='ml-2'>Download</Typography>
@@ -151,7 +220,7 @@ const AllFilesTab = ({ clientDocuments, clientDocsLoading, onDocumentDeleted }: 
                             <DeleteOutline className='size-4' color='error' />
                             <Typography className='ml-2 text-error'>Delete</Typography>
                           </div>
-                        </MenuItem>
+                        </MenuItem> */}
                       </Menu>
                     </>
                   }
@@ -159,7 +228,10 @@ const AllFilesTab = ({ clientDocuments, clientDocsLoading, onDocumentDeleted }: 
                   <ListItemAvatar>
                     <PictureAsPdfIcon fontSize='medium' />
                   </ListItemAvatar>
-                  <ListItemText primary={doc.uploadedDocument.fileName} />
+                  <ListItemText primary={doc.fileName} />
+                  {/* <Typography>Subject: {doc.subject}</Typography> */}
+                  {/* <Typography>Body: {doc.body}</Typography> */}
+                  <Typography>Sent to: {doc.emailAddress}</Typography>
                 </ListItem>
               ))
             )}

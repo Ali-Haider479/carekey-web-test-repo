@@ -10,12 +10,17 @@ import { useEffect, useState } from 'react'
 import { useParams, useSearchParams } from 'next/navigation'
 import api from '@/utils/api'
 import { useSession } from 'next-auth/react'
+import { useDispatch, useSelector } from 'react-redux'
+import { selectPlan, setPlan } from '@/redux-store/slices/plan'
 
 const TenantLeftOverview = () => {
   const { id } = useParams()
   const searchParams = useSearchParams()
   const { data: session, update } = useSession()
   const [tenantData, setTenantData] = useState<any>([])
+  const dispatch = useDispatch()
+
+  const plan = useSelector(selectPlan)
 
   const fetchTenantData = async () => {
     try {
@@ -41,7 +46,8 @@ const TenantLeftOverview = () => {
         const updatedTenant = await fetchTenantData() // Refetch tenant data
         if (updatedTenant) {
           const newPlan = updatedTenant.subscribedPlan // Adjust based on your data structure, e.g., updatedTenant.stripePayments[0]?.planType or similar
-          await update({ subscribedPlan: newPlan }) // Update session with new plan
+          await update({ subscribedPlan: newPlan?.planName }) // Update session with new plan
+          dispatch(setPlan(newPlan))
         }
       }
       handlePostSubscription()

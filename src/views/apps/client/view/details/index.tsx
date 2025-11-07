@@ -17,6 +17,8 @@ import { CircularProgress, Typography } from '@mui/material'
 import { useParams } from 'next/navigation'
 import api from '@/utils/api'
 import { useSession } from 'next-auth/react'
+import { useSelector } from 'react-redux'
+import { selectPlan } from '@/redux-store/slices/plan'
 
 interface BottomBodyProps {
   tabContentList: Record<string, ReactElement>
@@ -28,6 +30,7 @@ const ClientDetails = ({ tabContentList }: BottomBodyProps) => {
   const [clientData, setClientData] = useState<any>()
   const [tenantData, setTenantData] = useState<any>()
   const [isLoading, setIsLoading] = useState<boolean>(false)
+  const plan = useSelector(selectPlan)
 
   const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
 
@@ -125,15 +128,15 @@ const ClientDetails = ({ tabContentList }: BottomBodyProps) => {
               <Grid size={{ xs: 12 }}>
                 <CustomTabList onChange={handleChange} variant='scrollable' pill='true'>
                   <Tab value='profile' label='PROFILE' />
-                  {(session?.user?.userRoles?.title === 'Super Admin' ||
-                    session?.user?.subscribedPlan?.features?.e_docs_and_forms) && <Tab value='e-doc' label='E-DOC' />}
-                  {(session?.user?.userRoles?.title === 'Super Admin' ||
-                    session?.user?.subscribedPlan?.features?.e_docs_and_forms) && <Tab value='forms' label='FORMS' />}
+                  {(session?.user?.userRoles?.title === 'Super Admin' || plan?.features?.e_docs_and_forms) && (
+                    <Tab value='e-doc' label='E-DOC' />
+                  )}
+                  {(session?.user?.userRoles?.title === 'Super Admin' || plan?.features?.e_docs_and_forms) && (
+                    <Tab value='forms' label='FORMS' />
+                  )}
                   <Tab value='services' label='SERVICES' />
                   {(session?.user?.userRoles?.title === 'Super Admin' ||
-                    session?.user?.subscribedPlan?.features?.client_and_caregiver_history_logs) && (
-                    <Tab value='account-history' label='LOGS' />
-                  )}
+                    plan?.features?.client_and_caregiver_history_logs) && <Tab value='account-history' label='LOGS' />}
                   <Tab value='timelogs' label='TIME LOGS' />
                   <Tab value='service-authorization' label='SERVICE AUTH' />
                   <Tab value='incidents' label='INCIDENTS' />
