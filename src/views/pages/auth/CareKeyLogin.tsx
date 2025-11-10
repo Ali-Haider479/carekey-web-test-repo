@@ -138,6 +138,8 @@ const CareKeyLogin = () => {
           severity: 'success'
         })
 
+        await update() // To Refresh session data for updated subscription plan info
+
         const session = await getSession()
         console.log('Session Login', session)
         console.log('Tenant Id', session?.user?.tenant?.id)
