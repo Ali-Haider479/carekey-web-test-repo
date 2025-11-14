@@ -1,81 +1,80 @@
-import DataTable from '@/@core/components/mui/DataTable'
-import { Card, CardContent, Button } from '@mui/material'
-import { GridColDef } from '@mui/x-data-grid'
+import ReactTable from '@/@core/components/mui/ReactTable'
+import { Card, CardContent, Button, Typography } from '@mui/material'
 import React from 'react'
 
-const CostReportTable = () => {
-  const columns: GridColDef[] = [
-    { field: 'typeOfService', headerName: 'TYPE OF SERVICE', flex: 1 },
-    { field: 'payor', headerName: 'PAYER', flex: 1 },
-    { field: 'units', headerName: 'UNITS', flex: 1 },
+const CostReportTable = (serviceData: any, loading: any) => {
+  const columns = [
     {
-      field: 'billedAmount',
-      headerName: 'BILLED AMOUNT',
-      flex: 1,
-      renderCell: params => {
-        return <span>{`$ ${params.value}`}</span>
+      id: 'seviceName',
+      label: 'SERVICE NAME',
+      minWidth: 170,
+      render: (item: any) => <Typography>{item?.serviceName}</Typography>
+    },
+    {
+      id: 'serviceType',
+      label: 'SERVICE TYPE',
+      minWidth: 170,
+      render: (item: any) => <Typography>{item?.serviceType}</Typography>
+    },
+    {
+      id: 'payer',
+      label: 'PAYER',
+      minWidth: 170,
+      render: (item: any) => <Typography>{item?.matchedServiceAuth?.payer || '---'}</Typography>
+    },
+    {
+      id: 'procedureAndModifier',
+      label: 'PRO/MOD',
+      minWidth: 170,
+      render: (item: any) => (
+        <Typography>
+          {item?.procedureCode} {item?.modifierCode}
+        </Typography>
+      )
+    },
+    {
+      id: 'serviceRate',
+      label: 'RATE',
+      minWidth: 170,
+      render: (item: any) => <Typography>{item?.matchedServiceAuth?.serviceRate || '---'}</Typography>
+    },
+    {
+      id: 'totalUnits',
+      label: 'UNITS',
+      minWidth: 170,
+      render: (item: any) => <Typography>{item?.matchedServiceAuth?.units || '---'}</Typography>
+    },
+    {
+      id: 'usedUnits',
+      label: 'UNITS DELIVERED',
+      minWidth: 170,
+      render: (item: any) => <Typography>{item?.matchedServiceAuth?.usedUnits || '---'}</Typography>
+    },
+    {
+      id: 'remainingUnits',
+      label: 'REM. UNITS',
+      minWidth: 170,
+      render: (item: any) => {
+        const remainingUnits = Number(item?.matchedServiceAuth?.units) - Number(item?.matchedServiceAuth?.usedUnits)
+        return <Typography>{remainingUnits || '---'}</Typography>
       }
     },
     {
-      field: 'receivedAmount',
-      headerName: 'RECEIVED AMOUNT',
-      flex: 1,
-      renderCell: params => {
-        return <span>{`$ ${params.value}`}</span>
+      id: 'caregiversInvolved',
+      label: 'CAREGIVERS',
+      minWidth: 170,
+      render: (item: any) => {
+        return <Typography>{item?.uniqueCaregivers}</Typography>
       }
     },
     {
-      field: 'noOfClaims',
-      headerName: 'NO. OF CLAIMS',
-      flex: 1
-    },
-    {
-      field: 'noOfClients',
-      headerName: 'NO. OF CLIENTS',
-      flex: 1
-    }
-  ]
-
-  const data = [
-    {
-      id: 1,
-      typeOfService: 'IHS',
-      payor: '4512312',
-      units: 12412232315,
-      billedAmount: 100,
-      receivedAmount: 90,
-      noOfClaims: 1,
-      noOfClients: 1
-    },
-    {
-      id: 2,
-      typeOfService: 'IHS',
-      payor: '4512312',
-      units: 12412232315,
-      billedAmount: 100,
-      receivedAmount: 90,
-      noOfClaims: 1,
-      noOfClients: 1
-    },
-    {
-      id: 3,
-      typeOfService: 'IHS',
-      payor: '4512312',
-      units: 12412232315,
-      billedAmount: 100,
-      receivedAmount: 90,
-      noOfClaims: 1,
-      noOfClients: 1
-    },
-    {
-      id: 4,
-      typeOfService: 'IHS',
-      payor: '4512312',
-      units: 12412232315,
-      billedAmount: 100,
-      receivedAmount: 90,
-      noOfClaims: 1,
-      noOfClients: 1
+      id: 'clientsInvolved',
+      label: 'CLIENTS',
+      minWidth: 170,
+      render: (item: any) => {
+        const remainingUnits = item?.units - item?.usedUnits
+        return <Typography>{item.uniqueClients}</Typography>
+      }
     }
   ]
 
@@ -90,7 +89,16 @@ const CostReportTable = () => {
         </Button>
       </CardContent>
 
-      <DataTable columns={columns} data={data} />
+      <ReactTable
+        data={serviceData.serviceData || []}
+        columns={columns}
+        keyExtractor={user => user.id.toString()}
+        enablePagination
+        pageSize={20}
+        stickyHeader
+        maxHeight={600}
+        containerStyle={{ borderRadius: 2 }}
+      />
     </Card>
   )
 }

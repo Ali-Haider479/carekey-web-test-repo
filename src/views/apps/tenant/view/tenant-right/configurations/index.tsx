@@ -7,12 +7,11 @@ import {
   Button,
   Card,
   CardContent,
+  CircularProgress,
   Dialog,
   MenuItem,
   Switch,
   TextField,
-  ToggleButton,
-  ToggleButtonGroup,
   Typography,
   useTheme
 } from '@mui/material'
@@ -94,7 +93,7 @@ const GenericCard: React.FC<CardProps> = ({ evvSelected }) => {
 
 const TenantConfiguration = () => {
   const authUser: any = JSON.parse(localStorage?.getItem('AuthUser') ?? '{}')
-  const tenantEvvConfig: any = JSON.parse(localStorage?.getItem('evvConfig') ?? '{}')
+  // const tenantEvvConfig: any = JSON.parse(localStorage?.getItem('evvConfig') ?? '{}')
   const { id } = useParams()
 
   console.log("Auth User's Data --->> ", authUser)
@@ -105,14 +104,17 @@ const TenantConfiguration = () => {
   const [filteredServicesList, setFilteredServicesList] = useState<any>()
   const [isServiceEvvModalSHow, setIsServiceEvvModalShow] = useState<boolean>(false)
   const [serviceToChange, setServiceToChange] = useState<any>()
+  const [tenantEvvConfig, setTenantEvvConfig] = useState<any>()
+  const [initialDataLoading, setInitialDataLoading] = useState<boolean>(false)
   const [evvConfig, setEvvConfig] = useState<EvvConfig>(
-    tenantEvvConfig || {
-      enableEVV: false,
-      evvEnforcement: 'evvRelaxed',
-      locationService: false
-    }
+    tenantEvvConfig
+    // || {
+    //   enableEVV: false,
+    //   evvEnforcement: 'evvRelaxed',
+    //   locationService: false
+    // }
   )
-  const [evvEnforcementValue, setEvvEnforcementValue] = useState<EvvEnforcement>(tenantEvvConfig.evvEnforcement)
+  const [evvEnforcementValue, setEvvEnforcementValue] = useState<EvvEnforcement>(tenantEvvConfig?.evvEnforcement)
   const [allowManualEdits, setAllowManualEdits] = useState<boolean>(authUser?.tenant?.allowManualEdits || false)
   const [allowOverlappingVisits, setAllowOverlappingVisits] = useState<boolean>(
     authUser?.tenant?.allowOverLappingVisits || false
@@ -152,12 +154,22 @@ const TenantConfiguration = () => {
   }
 
   const fetchInitialData = async () => {
+    setInitialDataLoading(true)
     const payPeriodRes = await api.get(`/pay-period/history/tenant/${id}`)
     if (payPeriodRes.data) {
       setPayPeriod(payPeriodRes.data)
     } else {
       console.log('failed to fetch pay period')
     }
+    const tenantDataRes = await api.get(`/tenant/${id}`)
+    console.log('TENANT DATA RES ---->> ', tenantDataRes.data)
+    if (tenantDataRes.data) {
+      setTenantEvvConfig(tenantDataRes.data.evvConfig)
+      setEvvConfig(tenantDataRes.data.evvConfig)
+    } else {
+      console.log('failed to fetch tenant data')
+    }
+    setInitialDataLoading(false)
   }
 
   useEffect(() => {
@@ -399,172 +411,189 @@ const TenantConfiguration = () => {
       label: 'MODIFIER CODE',
       minWidth: 170,
       render: item => <Typography className='mt-0'>{item?.modifierCode ? item?.modifierCode : '....'}</Typography>
-    },
-    {
-      id: 'evvEnforce',
-      label: 'EVV',
-      minWidth: 170,
-      render: item => (
-        <div>
-          <div className='p-0 flex rounded-sm'>
-            <Switch
-              {...label}
-              checked={item?.evv === true}
-              onChange={() => handleServiceEvvModalShow(item)}
-              color='primary'
-              disabled={authUser?.userRoles?.title !== 'Super Admin' && authUser?.userRoles?.title !== 'Tenant Admin'}
-            />
-          </div>
-        </div>
-      )
     }
+    // {
+    //   id: 'evvEnforce',
+    //   label: 'EVV',
+    //   minWidth: 170,
+    //   render: item => (
+    //     <div>
+    //       <div className='p-0 flex rounded-sm'>
+    //         <Switch
+    //           {...label}
+    //           checked={item?.evv === true}
+    //           onChange={() => handleServiceEvvModalShow(item)}
+    //           color='primary'
+    //           disabled={authUser?.userRoles?.title !== 'Super Admin' && authUser?.userRoles?.title !== 'Tenant Admin'}
+    //         />
+    //       </div>
+    //     </div>
+    //   )
+    // }
   ]
 
   return (
     <>
-      <Box
-        component={'div'}
-        sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 3,
-          backgroundColor: 'background.paper',
-          p: 4,
-          borderRadius: 1
-        }}
-      >
-        <Typography variant='h5'>Tenant Configurations</Typography>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Typography variant='h6'>Pay Periods</Typography>
-          <Button
-            variant='contained'
-            onClick={() => {
-              setOpenAddPayPeriodModal(true)
-            }}
-            size='small'
-            sx={{ width: 'fit-content', ml: 'auto' }}
-            disabled={true}
-          >
-            Edit Pay Period
-          </Button>
-        </Box>
-
-        <AppReactDatepicker
-          inline
-          className='clean-calendar-override'
-          calendarClassName='clean-calendar custom-calendar'
-          renderDayContents={(day, date) => <DayContents date={date} label={day.toString()} />}
-          showDisabledMonthNavigation={false}
-          minDate={newCurrentPayPeriod.startDate}
-          maxDate={nextPayPeriod.endDate}
-          formatWeekDay={day => day.substring(0, 3)}
-        />
-
-        <div className='legend'>
-          <div className='legend-item'>
-            <span className='current-color'></span> Current Pay Period
-          </div>
-          <div className='legend-item'>
-            <span className='next-color'></span> Next Pay Period
-          </div>
-        </div>
-
-        <Typography variant='h5' sx={{ mt: 3 }}>
-          EVV Configuration
-        </Typography>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Typography variant='h6'>EVV Enforcement</Typography>
-
-          <TextField
-            select
-            size='small'
-            placeholder='EVV Enforcement'
-            id='select-evv-enforcement'
-            value={evvConfig.evvEnforcement}
-            defaultValue={evvConfig.evvEnforcement}
-            onChange={e => handleModalOpen(e.target.value as EvvEnforcement)}
-            slotProps={{
-              select: { displayEmpty: true }
-            }}
-            className='w-1/4'
-          >
-            <MenuItem value={'evvRelaxed'}>EVV Relaxed</MenuItem>
-            <MenuItem value={'evvEnforced'}>EVV Enforced</MenuItem>
-            <MenuItem value={'evvDisabled'}>EVV Disabled</MenuItem>
-          </TextField>
-        </Box>
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }}>
-          <GenericCard evvSelected={evvConfig.evvEnforcement} />
-        </Box>
-
+      {initialDataLoading ? (
         <Box
-          sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', mt: 3 }}
+          component={'div'}
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 3,
+            // backgroundColor: 'background.paper',
+            p: 4,
+            borderRadius: 1
+          }}
         >
-          <Typography variant='h5' sx={{ mt: 0 }}>
-            Service EVV
-          </Typography>
-          <Box sx={{ display: 'flex', flexDirection: 'row', gap: 2 }}>
-            <Button variant='contained' component='label'>
-              Upload DHS File
-              <input type='file' hidden accept='application/pdf' onChange={handlePDFUpload} />
-            </Button>
-            <TextField
-              size='small'
-              placeholder='Search Service'
-              id='service-search'
-              value={serviceSearchValue}
-              onChange={handleSearchChange}
-              className='w-2/4'
-              slotProps={{
-                input: {
-                  startAdornment: <i className='bx bx-search-alt-2 text-gray-500' style={{ fontSize: '1.2rem' }} />
-                }
+          <CircularProgress size={40} />
+        </Box>
+      ) : (
+        <Box
+          component={'div'}
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 3,
+            backgroundColor: 'background.paper',
+            p: 4,
+            borderRadius: 1
+          }}
+        >
+          <Typography variant='h5'>Tenant Configurations</Typography>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Typography variant='h6'>Pay Periods</Typography>
+            <Button
+              variant='contained'
+              onClick={() => {
+                setOpenAddPayPeriodModal(true)
               }}
+              size='small'
+              sx={{ width: 'fit-content', ml: 'auto' }}
+              disabled={true}
+            >
+              Edit Pay Period
+            </Button>
+          </Box>
+
+          <AppReactDatepicker
+            inline
+            className='clean-calendar-override'
+            calendarClassName='clean-calendar custom-calendar'
+            renderDayContents={(day, date) => <DayContents date={date} label={day.toString()} />}
+            showDisabledMonthNavigation={false}
+            minDate={newCurrentPayPeriod.startDate}
+            maxDate={nextPayPeriod.endDate}
+            formatWeekDay={day => day.substring(0, 3)}
+          />
+
+          <div className='legend'>
+            <div className='legend-item'>
+              <span className='current-color'></span> Current Pay Period
+            </div>
+            <div className='legend-item'>
+              <span className='next-color'></span> Next Pay Period
+            </div>
+          </div>
+
+          <Typography variant='h5' sx={{ mt: 3 }}>
+            EVV Configuration
+          </Typography>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Typography variant='h6'>EVV Enforcement</Typography>
+
+            <TextField
+              select
+              size='small'
+              placeholder='EVV Enforcement'
+              id='select-evv-enforcement'
+              value={evvConfig?.evvEnforcement}
+              defaultValue={evvConfig?.evvEnforcement}
+              onChange={e => handleModalOpen(e.target.value as EvvEnforcement)}
+              slotProps={{
+                select: { displayEmpty: true }
+              }}
+              className='w-1/4'
+            >
+              <MenuItem value={'evvRelaxed'}>EVV Relaxed</MenuItem>
+              <MenuItem value={'evvEnforced'}>EVV Enforced</MenuItem>
+              <MenuItem value={'evvDisabled'}>EVV Disabled</MenuItem>
+            </TextField>
+          </Box>
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }}>
+            <GenericCard evvSelected={evvConfig?.evvEnforcement} />
+          </Box>
+
+          <Box
+            sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', mt: 3 }}
+          >
+            <Typography variant='h5' sx={{ mt: 0 }}>
+              Service EVV
+            </Typography>
+            <Box sx={{ display: 'flex', flexDirection: 'row', gap: 2 }}>
+              <Button variant='contained' component='label'>
+                Upload DHS File
+                <input type='file' hidden accept='application/pdf' onChange={handlePDFUpload} />
+              </Button>
+              <TextField
+                size='small'
+                placeholder='Search Service'
+                id='service-search'
+                value={serviceSearchValue}
+                onChange={handleSearchChange}
+                className='w-2/4'
+                slotProps={{
+                  input: {
+                    startAdornment: <i className='bx bx-search-alt-2 text-gray-500' style={{ fontSize: '1.2rem' }} />
+                  }
+                }}
+              />
+            </Box>
+          </Box>
+
+          <ReactTable
+            data={filteredServicesList ? filteredServicesList : []}
+            columns={newColumns}
+            keyExtractor={user => user?.id?.toString()}
+            enablePagination
+            pageSize={10}
+            stickyHeader
+            maxHeight={600}
+            containerStyle={{ borderRadius: 2 }}
+          />
+
+          <Typography variant='h5' sx={{ mt: 3 }}>
+            Other Configurations
+          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <Typography variant='h6'>Add Manual Edits</Typography>
+            <CustomSwitch
+              checked={allowManualEdits}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAllowManualEdits(e.target.checked)}
+              sx={{ ml: 'auto' }}
+            />
+          </Box>
+
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <Typography variant='h6'>Add Overlapping Visits</Typography>
+            <CustomSwitch
+              checked={allowOverlappingVisits}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAllowOverlappingVisits(e.target.checked)}
+              sx={{ ml: 'auto' }}
+            />
+          </Box>
+
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <Typography variant='h6'>Enable Notification</Typography>
+            <CustomSwitch
+              checked={enableNotification}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEnableNotification(e.target.checked)}
+              sx={{ ml: 'auto' }}
             />
           </Box>
         </Box>
-
-        <ReactTable
-          data={filteredServicesList ? filteredServicesList : []}
-          columns={newColumns}
-          keyExtractor={user => user?.id?.toString()}
-          enablePagination
-          pageSize={10}
-          stickyHeader
-          maxHeight={600}
-          containerStyle={{ borderRadius: 2 }}
-        />
-
-        <Typography variant='h5' sx={{ mt: 3 }}>
-          Other Configurations
-        </Typography>
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <Typography variant='h6'>Add Manual Edits</Typography>
-          <CustomSwitch
-            checked={allowManualEdits}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAllowManualEdits(e.target.checked)}
-            sx={{ ml: 'auto' }}
-          />
-        </Box>
-
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <Typography variant='h6'>Add Overlapping Visits</Typography>
-          <CustomSwitch
-            checked={allowOverlappingVisits}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAllowOverlappingVisits(e.target.checked)}
-            sx={{ ml: 'auto' }}
-          />
-        </Box>
-
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <Typography variant='h6'>Enable Notification</Typography>
-          <CustomSwitch
-            checked={enableNotification}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEnableNotification(e.target.checked)}
-            sx={{ ml: 'auto' }}
-          />
-        </Box>
-      </Box>
+      )}
 
       <EditPayPeriodModal
         isModalOpen={openAddPayPeriodModal}

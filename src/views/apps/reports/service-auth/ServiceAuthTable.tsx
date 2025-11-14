@@ -1,107 +1,217 @@
 'use client'
 import DataTable from '@/@core/components/mui/DataTable'
+import ReactTable from '@/@core/components/mui/ReactTable'
 import { Avatar, Box, Button, Card, CardContent, Typography } from '@mui/material'
 import { GridColDef } from '@mui/x-data-grid'
 
-const ServiceAuthTable = () => {
-  const columns: GridColDef[] = [
+const ServiceAuthTable = (serviceAuthData: any, loading: boolean) => {
+  const calculateQuantityPerFrequency = ({
+    startDate,
+    endDate,
+    quantity,
+    frequency
+  }: {
+    startDate?: string | Date
+    endDate?: string | Date
+    quantity?: string | number
+    frequency?: string
+  }): number => {
+    const parseQuantity = (qty: string | number | undefined): number => {
+      if (qty === undefined || qty === null) return NaN
+      if (typeof qty === 'number') return isNaN(qty) ? NaN : qty
+      const cleaned = qty.replace(/,/g, '')
+      const parsed = parseFloat(cleaned)
+      return isNaN(parsed) ? NaN : parsed
+    }
+
+    const parsedQuantity = parseQuantity(quantity)
+
+    if (!startDate || !endDate || isNaN(parsedQuantity) || !frequency) {
+      return NaN
+    }
+
+    const start = new Date(startDate)
+    const end = new Date(endDate)
+
+    if (isNaN(start.getTime()) || isNaN(end.getTime()) || end <= start) {
+      return NaN
+    }
+
+    const timeDiffMs = end.getTime() - start.getTime()
+    let frequencyUnits: number
+    switch (frequency.toLowerCase()) {
+      case 'daily':
+        frequencyUnits = timeDiffMs / (1000 * 60 * 60 * 24)
+        break
+      case 'weekly':
+        frequencyUnits = timeDiffMs / (1000 * 60 * 60 * 24 * 7)
+        break
+      case 'monthly':
+        frequencyUnits = timeDiffMs / (1000 * 60 * 60 * 24 * 30.42)
+        break
+      default:
+        return NaN
+    }
+
+    return frequencyUnits <= 0 ? NaN : parsedQuantity / frequencyUnits
+  }
+  const columns = [
     {
-      field: 'clientName',
-      headerName: 'CLIENT NAME',
-      flex: 1.5,
-      renderCell: params => (
-        <Box
-          sx={{
-            display: 'flex',
-            marginTop: 1,
-            alignItems: 'center',
-            width: '100%',
-            overflow: 'hidden' // Prevent overflow
-          }}
-        >
-          <Avatar className='w-8 h-8 rounded-full' />
-          <Box
-            sx={{
-              ml: 2,
-              flex: 1,
-              overflow: 'hidden', // Prevent overflow
-              textOverflow: 'ellipsis', // Add ellipsis for long text
-              whiteSpace: 'nowrap' // Prevent text wrapping
-            }}
-          >
-            <Typography
-              variant='body1'
-              sx={{
-                fontWeight: 'bold',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap'
-              }}
-            >
-              {params.row.clientName}
-            </Typography>
-            <Typography
-              variant='body2'
-              sx={{
-                color: 'text.secondary',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap'
-              }}
-            >
-              {params.row.cellNumber}
-            </Typography>
-          </Box>
-        </Box>
+      id: 'client',
+      label: 'CLIENT',
+      minWidth: 170,
+      render: (item: any) => (
+        <Typography>
+          {item?.client?.firstName} {item?.client?.lastName}
+        </Typography>
       )
     },
-    { field: 'payor', headerName: 'PAYER', flex: 1 },
-    { field: 'startDate', headerName: 'START DATE', flex: 1 },
-    { field: 'endDate', headerName: 'END DATE', flex: 1 },
-    { field: 'serviceType', headerName: 'SERVICE TYPE', flex: 1 },
-    { field: 'perDay', headerName: 'PER DAY', flex: 1 },
-    { field: 'perWeek', headerName: 'PER WEEK', flex: 1 },
-    { field: 'userHrs', headerName: 'USER HRS', flex: 1 }
+    {
+      id: 'payer',
+      label: 'PAYER',
+      minWidth: 170,
+      render: (item: any) => <Typography>{item?.payer}</Typography>
+    },
+    {
+      id: 'memberId',
+      label: 'MEMBER ID',
+      minWidth: 170,
+      render: (item: any) => <Typography>{item?.memberId}</Typography>
+    },
+    {
+      id: 'serviceAuthNumber',
+      label: 'AUTH NO.',
+      minWidth: 170,
+      render: (item: any) => <Typography>{item?.serviceAuthNumber}</Typography>
+    },
+    {
+      id: 'diagnosisCode',
+      label: 'DIAGNOSIS CODE',
+      minWidth: 170,
+      render: (item: any) => <Typography>{item?.diagnosisCode || '---'}</Typography>
+    },
+    {
+      id: 'procedureAndModifier',
+      label: 'PRO/MOD',
+      minWidth: 170,
+      render: (item: any) => (
+        <Typography>
+          {item?.procedureCode}, {item?.modifierCode}
+        </Typography>
+      )
+    },
+    {
+      id: 'startDateEndDate',
+      label: 'DATE RANGE',
+      minWidth: 170,
+      render: (item: any) => {
+        const formatDate = (dateString: string) => {
+          const date = new Date(dateString)
+          return date.toLocaleDateString('en-US', {
+            month: '2-digit',
+            day: '2-digit',
+            year: 'numeric'
+          })
+        }
+        const startDate = formatDate(item?.startDate)
+        const endDate = formatDate(item?.endDate)
+        return (
+          <Typography>
+            {startDate} - {endDate}
+          </Typography>
+        )
+      }
+    },
+    {
+      id: 'serviceRate',
+      label: 'RATE',
+      minWidth: 170,
+      render: (item: any) => <Typography>{item?.serviceRate}</Typography>
+    },
+    {
+      id: 'totalUnits',
+      label: 'UNITS',
+      minWidth: 170,
+      render: (item: any) => <Typography>{item?.units}</Typography>
+    },
+    {
+      id: 'remainingUnits',
+      label: 'REM. UNITS',
+      minWidth: 170,
+      render: (item: any) => {
+        const remainingUnits = item?.units - item?.usedUnits
+        return <Typography>{remainingUnits}</Typography>
+      }
+    }
+    // {
+    //   id: 'usedHours',
+    //   label: 'USED HOURS',
+    //   minWidth: 170,
+    //   render: (item: any) => {
+    //     const usedHours = ((item?.usedUnits * 15) / 60).toFixed(2) || 0
+    //     return <Typography>{usedHours}</Typography>
+    //   }
+    // },
+    // {
+    //   id: 'perDayHours',
+    //   label: 'DAILY HRS',
+    //   minWidth: 170,
+    //   render: (item: any) => {
+    //     return (
+    //       <Typography>
+    //         {isNaN(
+    //           calculateQuantityPerFrequency({
+    //             startDate: item.startDate,
+    //             endDate: item.endDate,
+    //             quantity: item.units,
+    //             frequency: 'daily'
+    //           })
+    //         )
+    //           ? 'N/A'
+    //           : (
+    //               calculateQuantityPerFrequency({
+    //                 startDate: item.startDate,
+    //                 endDate: item.endDate,
+    //                 quantity: item.units,
+    //                 frequency: 'daily'
+    //               }) / 4
+    //             ).toFixed(2)}
+    //       </Typography>
+    //     )
+    //   }
+    // },
+    // {
+    //   id: 'perWeekHours',
+    //   label: 'WEEKLY HRS',
+    //   minWidth: 170,
+    //   render: (item: any) => {
+    //     return (
+    //       <Typography>
+    //         {isNaN(
+    //           calculateQuantityPerFrequency({
+    //             startDate: item.startDate,
+    //             endDate: item.endDate,
+    //             quantity: item.units,
+    //             frequency: 'weekly'
+    //           })
+    //         )
+    //           ? 'N/A'
+    //           : (
+    //               calculateQuantityPerFrequency({
+    //                 startDate: item.startDate,
+    //                 endDate: item.endDate,
+    //                 quantity: item.units,
+    //                 frequency: 'weekly'
+    //               }) / 4
+    //             ).toFixed(2)}
+    //       </Typography>
+    //     )
+    //   }
+    // }
   ]
 
-  const data = [
-    {
-      id: 1,
-      clientName: 'Robert Fox',
-      cellNumber: '123-456-7890',
-      payor: '4512312',
-      startDate: '12/12/2021',
-      endDate: '12/12/2021',
-      serviceType: 'IHS',
-      perDay: 5,
-      perWeek: 5,
-      userHrs: 5
-    },
-    {
-      id: 2,
-      clientName: 'Tonny Stark',
-      cellNumber: '123-456-7890',
-      payor: '4512312',
-      startDate: '12/12/2021',
-      endDate: '12/12/2021',
-      serviceType: 'IHS',
-      perDay: 5,
-      perWeek: 5,
-      userHrs: 5
-    },
-    {
-      id: 3,
-      clientName: 'Jimmy Daniels',
-      cellNumber: '123-456-7890',
-      payor: '4512312',
-      startDate: '12/12/2021',
-      endDate: '12/12/2021',
-      serviceType: 'IHS',
-      perDay: 5,
-      perWeek: 5,
-      userHrs: 5
-    }
-  ]
+  console.log('serviceAuthData in table:', serviceAuthData)
+
   return (
     <Card className='mt-3'>
       <CardContent className='flex justify-end'>
@@ -113,7 +223,17 @@ const ServiceAuthTable = () => {
         </Button>
       </CardContent>
 
-      <DataTable columns={columns} data={data} />
+      {/* <DataTable columns={columns} data={data} /> */}
+      <ReactTable
+        data={serviceAuthData.serviceAuthData || []}
+        columns={columns}
+        keyExtractor={user => user.id.toString()}
+        enablePagination
+        pageSize={20}
+        stickyHeader
+        maxHeight={600}
+        containerStyle={{ borderRadius: 2 }}
+      />
     </Card>
   )
 }
