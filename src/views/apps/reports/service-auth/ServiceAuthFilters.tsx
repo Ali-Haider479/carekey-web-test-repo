@@ -113,17 +113,6 @@ const ServiceAuthFilters = ({ onFilterApplied }: { onFilterApplied: (data: any) 
                 <strong>Filters</strong>
               </span>
             </Grid>
-            <div className=''>
-              <FormLabel className=''>Show Expired</FormLabel>
-              <Switch
-                {...label}
-                checked={serviceAuthFilters.showExpired}
-                onChange={() =>
-                  setServiceAuthFilters({ ...serviceAuthFilters, showExpired: !serviceAuthFilters.showExpired })
-                }
-                color='primary'
-              />
-            </div>
           </div>
           <Grid container spacing={4} marginTop={4}>
             <Grid size={{ xs: 12, sm: 6, md: 4, lg: 4 }}>
@@ -198,7 +187,18 @@ const ServiceAuthFilters = ({ onFilterApplied }: { onFilterApplied: (data: any) 
                 </MenuItem>
               </TextField>
             </Grid>
-            <Grid container spacing={12} marginTop={8} marginLeft={2} className='mb-4'>
+            <Grid size={{ xs: 12, sm: 8 }} marginTop={8}>
+              <FormLabel>Show Expired</FormLabel>
+              <Switch
+                {...label}
+                checked={serviceAuthFilters.showExpired}
+                onChange={() =>
+                  setServiceAuthFilters({ ...serviceAuthFilters, showExpired: !serviceAuthFilters.showExpired })
+                }
+                color='primary'
+              />
+            </Grid>
+            <Grid container spacing={12} marginTop={2} marginLeft={2} className='mb-2'>
               <Grid size={{ xs: 12, sm: 4 }}>
                 <Button type='submit' variant='contained' className={`p-1`}>
                   Apply

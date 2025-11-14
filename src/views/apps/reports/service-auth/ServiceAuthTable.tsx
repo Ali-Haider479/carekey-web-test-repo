@@ -1,10 +1,14 @@
 'use client'
 import DataTable from '@/@core/components/mui/DataTable'
 import ReactTable from '@/@core/components/mui/ReactTable'
-import { Avatar, Box, Button, Card, CardContent, Typography } from '@mui/material'
+import { Avatar, Box, Button, Card, CardContent, CircularProgress, Typography } from '@mui/material'
 import { GridColDef } from '@mui/x-data-grid'
 
-const ServiceAuthTable = (serviceAuthData: any, loading: boolean) => {
+const ServiceAuthTable = (props: any) => {
+  const { serviceAuthData, loading } = props
+
+  console.log('serviceAuthData received in table:', serviceAuthData)
+
   const calculateQuantityPerFrequency = ({
     startDate,
     endDate,
@@ -223,17 +227,24 @@ const ServiceAuthTable = (serviceAuthData: any, loading: boolean) => {
         </Button>
       </CardContent>
 
+      {loading === true ? (
+        <div className='flex justify-center items-center pb-5'>
+          <CircularProgress size={35} />
+        </div>
+      ) : (
+        <ReactTable
+          data={serviceAuthData || []}
+          columns={columns}
+          keyExtractor={user => user.id.toString()}
+          enablePagination
+          pageSize={20}
+          stickyHeader
+          maxHeight={600}
+          containerStyle={{ borderRadius: 2 }}
+        />
+      )}
+
       {/* <DataTable columns={columns} data={data} /> */}
-      <ReactTable
-        data={serviceAuthData.serviceAuthData || []}
-        columns={columns}
-        keyExtractor={user => user.id.toString()}
-        enablePagination
-        pageSize={20}
-        stickyHeader
-        maxHeight={600}
-        containerStyle={{ borderRadius: 2 }}
-      />
     </Card>
   )
 }

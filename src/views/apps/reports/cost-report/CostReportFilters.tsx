@@ -206,19 +206,18 @@ const CostReportFilters = ({ onFilterApplied }: { onFilterApplied: (data: any) =
                 // popperPlacement='bottom'
               />
             </Grid>
-
-            <Grid container spacing={12} marginTop={8} marginLeft={2} className='mb-4'>
-              <Grid size={{ xs: 12, sm: 4 }}>
-                <Button type='submit' variant='contained' className={`p-1`}>
-                  Apply
-                </Button>
-              </Grid>
-              <Grid size={{ xs: 12, sm: 4 }}>
-                <Button onClick={handleReset} variant='contained' color='error' className={`p-1`}>
-                  Reset
-                </Button>
-              </Grid>
-            </Grid>
+          </Grid>
+          <Grid container spacing={4} marginTop={4} marginLeft={1} className='mb-0'>
+            {/* <Grid size={{ xs: 12, sm: 1 }}> */}
+            <Button type='submit' variant='contained' className={`p-1`}>
+              Apply
+            </Button>
+            {/* </Grid> */}
+            {/* <Grid size={{ xs: 12, sm: 1 }}> */}
+            <Button onClick={handleReset} variant='contained' color='error' className={`p-1`}>
+              Reset
+            </Button>
+            {/* </Grid> */}
           </Grid>
         </CardContent>
       </Card>

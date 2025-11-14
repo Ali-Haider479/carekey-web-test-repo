@@ -1,8 +1,9 @@
 import ReactTable from '@/@core/components/mui/ReactTable'
-import { Card, CardContent, Button, Typography } from '@mui/material'
+import { Card, CardContent, Button, Typography, CircularProgress } from '@mui/material'
 import React from 'react'
 
-const CostReportTable = (serviceData: any, loading: any) => {
+const CostReportTable = (props: any) => {
+  const { serviceData, loading } = props
   const columns = [
     {
       id: 'seviceName',
@@ -89,16 +90,22 @@ const CostReportTable = (serviceData: any, loading: any) => {
         </Button>
       </CardContent>
 
-      <ReactTable
-        data={serviceData.serviceData || []}
-        columns={columns}
-        keyExtractor={user => user.id.toString()}
-        enablePagination
-        pageSize={20}
-        stickyHeader
-        maxHeight={600}
-        containerStyle={{ borderRadius: 2 }}
-      />
+      {loading === true ? (
+        <div className='flex justify-center items-center pb-5'>
+          <CircularProgress size={35} />
+        </div>
+      ) : (
+        <ReactTable
+          data={serviceData || []}
+          columns={columns}
+          keyExtractor={user => user.id.toString()}
+          enablePagination
+          pageSize={20}
+          stickyHeader
+          maxHeight={600}
+          containerStyle={{ borderRadius: 2 }}
+        />
+      )}
     </Card>
   )
 }

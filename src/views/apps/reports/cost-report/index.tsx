@@ -20,12 +20,15 @@ const CostReport = () => {
   }
 
   const fetchInitialData = async () => {
+    setLoading(true)
     try {
       const response = await api.get(`/reports/${authUser?.tenant?.id}/service-cost`)
       console.log('Initial Cost Data:', response.data)
       setServiceData(response.data)
     } catch (error) {
       console.error('Error fetching initial data:', error)
+    } finally {
+      setLoading(false)
     }
   }
 

@@ -33,15 +33,15 @@ const ReportsView = ({ tabContentList }: { tabContentList: { [key: string]: Reac
           <CustomTabList orientation='horizontal' onChange={handleChange} className='is-fit' pill='true'>
             <Tab label='COST REPORT' iconPosition='start' value='cost-report' className='flex-row justify-start' />
             <Tab
-              label='REMITTANCE REPORT'
-              iconPosition='start'
-              value='remittance-report'
-              className='flex-row justify-start'
-            />
-            <Tab
               label='SERVICE AUTH'
               iconPosition='start'
               value='service-auth-report'
+              className='flex-row justify-start'
+            />
+            <Tab
+              label='REMITTANCE REPORT'
+              iconPosition='start'
+              value='remittance-report'
               className='flex-row justify-start'
             />
             <Tab
