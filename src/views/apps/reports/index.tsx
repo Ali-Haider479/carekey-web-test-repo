@@ -38,6 +38,7 @@ const ReportsView = ({ tabContentList }: { tabContentList: { [key: string]: Reac
               value='service-auth-report'
               className='flex-row justify-start'
             />
+            <Tab label='SCHEDULE' iconPosition='start' value='schedule-report' className='flex-row justify-start' />
             <Tab
               label='REMITTANCE REPORT'
               iconPosition='start'

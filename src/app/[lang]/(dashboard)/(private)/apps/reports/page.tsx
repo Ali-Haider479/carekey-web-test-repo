@@ -12,6 +12,7 @@ const RemittanceReport = dynamic(() => import('@/views/apps/reports/remittance-r
 const ServiceAuthReport = dynamic(() => import('@/views/apps/reports/service-auth'))
 const FinancialSummary = dynamic(() => import('@/views/apps/reports/financial-summary'))
 const CustomReport = dynamic(() => import('@/views/apps/reports/custom-report'))
+const Schedule = dynamic(() => import('@/views/apps/reports/schedule-report'))
 
 // Vars
 const tabContentList = (): { [key: string]: ReactElement } => ({
@@ -19,7 +20,8 @@ const tabContentList = (): { [key: string]: ReactElement } => ({
   'remittance-report': <RemittanceReport />,
   'service-auth-report': <ServiceAuthReport />,
   'financial-summary': <FinancialSummary />,
-  'custom-report': <CustomReport />
+  'custom-report': <CustomReport />,
+  'schedule-report': <Schedule />
 })
 
 const ReportsViewApp = () => {

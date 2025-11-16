@@ -4,14 +4,14 @@ import ReactTable from '@/@core/components/mui/ReactTable'
 import { Avatar, Box, Button, Card, CardContent, CircularProgress, Typography } from '@mui/material'
 import { GridColDef } from '@mui/x-data-grid'
 
-const ServiceAuthTable = (props: any) => {
-  const { serviceAuthData, loading } = props
+const ScheduleTable = (props: any) => {
+  const { scheduleData, loading } = props
 
-  console.log('serviceAuthData received in table:', serviceAuthData)
+  console.log('scheduleData received in table:', scheduleData)
 
   // Function to export data to CSV
   const exportToCSV = () => {
-    if (!serviceAuthData || serviceAuthData.length === 0) {
+    if (!scheduleData || scheduleData.length === 0) {
       alert('No data available to export')
       return
     }
@@ -34,7 +34,7 @@ const ServiceAuthTable = (props: any) => {
     const csvRows = []
     csvRows.push(headers.join(','))
 
-    serviceAuthData.forEach((item: any) => {
+    scheduleData.forEach((item: any) => {
       const formatDate = (dateString: string) => {
         const date = new Date(dateString)
         return date.toLocaleDateString('en-US', {
@@ -291,7 +291,7 @@ const ServiceAuthTable = (props: any) => {
           variant='contained'
           className='mr-3 bg-[#E89C00]'
           onClick={exportToCSV}
-          disabled={loading || !serviceAuthData || serviceAuthData.length === 0}
+          disabled={loading || !scheduleData || scheduleData.length === 0}
         >
           Export to CSV
         </Button>
@@ -306,7 +306,7 @@ const ServiceAuthTable = (props: any) => {
         </div>
       ) : (
         <ReactTable
-          data={serviceAuthData || []}
+          data={scheduleData || []}
           columns={columns}
           keyExtractor={user => user.id.toString()}
           enablePagination
@@ -322,4 +322,4 @@ const ServiceAuthTable = (props: any) => {
   )
 }
 
-export default ServiceAuthTable
+export default ScheduleTable
