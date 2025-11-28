@@ -533,7 +533,7 @@ const ManualTimesheet = ({ caregiverList, payPeriodList }: any) => {
               timelogCreatedSchedule: true
             }
             console.log('New Schedule DTO --->> ', newScheduleDto)
-            const newScheduleRes = await api.post('/schedule', [newScheduleDto])
+            const newScheduleRes = await api.post('/schedule/timelog', [newScheduleDto])
             console.log('New Schedule Created --->> ', newScheduleRes)
           }
         }

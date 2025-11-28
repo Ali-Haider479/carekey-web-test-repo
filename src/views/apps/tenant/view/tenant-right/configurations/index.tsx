@@ -11,6 +11,7 @@ import {
   Dialog,
   MenuItem,
   Switch,
+  Grid2 as Grid,
   TextField,
   Typography,
   useTheme
@@ -23,6 +24,10 @@ import './payperiod-calendar.css'
 import DialogCloseButton from '@/components/dialogs/DialogCloseButton'
 import ReactTable from '@/@core/components/mui/ReactTable'
 import { useParams } from 'next/navigation'
+import { FormProvider, useForm } from 'react-hook-form'
+import CustomTextField from '@/@core/components/custom-inputs/CustomTextField'
+import CustomAlert from '@/@core/components/mui/Alter'
+import { Delete, Edit } from '@mui/icons-material'
 
 type EvvEnforcement = 'evvRelaxed' | 'evvEnabled' | 'evvDisabled'
 interface Column {
@@ -97,6 +102,8 @@ const TenantConfiguration = () => {
   const { id } = useParams()
 
   console.log("Auth User's Data --->> ", authUser)
+  const [alertOpen, setAlertOpen] = useState(false)
+  const [alertProps, setAlertProps] = useState<any>()
   const [payPeriod, setPayPeriod] = useState<any[]>([])
   const [currentPayPeriod, setCurrentPayPeriod] = useState<any>()
   const [openAddPayPeriodModal, setOpenAddPayPeriodModal] = useState<boolean>(false)
@@ -124,6 +131,100 @@ const TenantConfiguration = () => {
   const [serviceSearchValue, setServiceSearchValue] = useState<string>('')
   const [dhsServicesModal, setDhsServicesModal] = useState<boolean>(false)
   const [dhsUploadData, setDhsUploadData] = useState<any>(null)
+  const [isAddServiceModalShow, setIsAddServiceModalShow] = useState<boolean>(false)
+  const [isEditServiceModalShow, setIsEditServiceModalShow] = useState<boolean>(false)
+  const [serviceToEdit, setServiceToEdit] = useState<any>(null)
+  const [addServiceLoading, setAddServiceLoading] = useState<boolean>(false)
+  const [editServiceLoading, setEditServiceLoading] = useState<boolean>(false)
+
+  const methods = useForm({
+    mode: 'onSubmit',
+    reValidateMode: 'onChange'
+  })
+
+  const {
+    control,
+    handleSubmit,
+    reset,
+    watch,
+    setValue,
+    formState: { errors }
+  } = methods
+
+  const handleAddServiceModalShow = () => {
+    setIsAddServiceModalShow(true)
+  }
+
+  const handleEditServiceModalShow = (item: any) => {
+    setIsEditServiceModalShow(true)
+    setServiceToEdit(item)
+  }
+
+  const handleEditServiceModalClose = () => {
+    setServiceToEdit(null)
+    reset()
+    setIsEditServiceModalShow(false)
+  }
+
+  const handleAddServiceModalClose = () => {
+    setIsAddServiceModalShow(false)
+    reset()
+  }
+
+  const handleAddNewService = async (data: any) => {
+    setAddServiceLoading(true)
+    try {
+      const payload = {
+        name: data.serviceName,
+        description: data.serviceDescription,
+        procedureCode: data.procedureCode,
+        modifierCode: data.modifierCode === '' ? null : data.modifierCode,
+        rate: data.serviceRate === '' ? 100 : parseFloat(data.serviceRate),
+        tenantId: id,
+        evv: false
+      }
+
+      const response = await api.post('/service', payload)
+      handleAddServiceModalClose()
+      getAllServices()
+    } catch (error) {
+      console.error('Error adding new service: ', error)
+      setAlertOpen(true)
+      setAlertProps({
+        severity: 'error',
+        message: 'Service with the same procedure code and modifier code already exists for this tenant'
+      })
+    } finally {
+      setAddServiceLoading(false)
+    }
+  }
+
+  const handleServiceEdit = async (data: any) => {
+    setEditServiceLoading(true)
+    console.log('Service to Edit --->> ', data)
+    try {
+      const payload = {
+        name: data.serviceName,
+        description: data.serviceDescription,
+        procedureCode: data.procedureCode,
+        modifierCode: data.modifierCode === '' ? null : data.modifierCode,
+        rate: data.serviceRate === '' ? 100 : parseFloat(data.serviceRate)
+      }
+      const updateResponse = await api.patch(`/service/${serviceToEdit?.id}`, payload)
+      console.log('Update Service Response ---->> ', updateResponse)
+      getAllServices()
+      handleEditServiceModalClose()
+    } catch (error) {
+      console.error('Error editing service: ', error)
+      setAlertOpen(true)
+      setAlertProps({
+        severity: 'error',
+        message: 'Service with the same procedure code and modifier code already exists for this tenant'
+      })
+    } finally {
+      setEditServiceLoading(false)
+    }
+  }
 
   const handleDhsServicesModalClose = () => {
     setDhsServicesModal(false)
@@ -411,6 +512,19 @@ const TenantConfiguration = () => {
       label: 'MODIFIER CODE',
       minWidth: 170,
       render: item => <Typography className='mt-0'>{item?.modifierCode ? item?.modifierCode : '....'}</Typography>
+    },
+    {
+      id: 'actions',
+      label: 'ACTIONS',
+      minWidth: 170,
+      render: item => {
+        return (
+          <div className='flex flex-row gap-3'>
+            <Edit className='cursor-pointer hover:text-blue-400' onClick={() => handleEditServiceModalShow(item)} />
+            {/* <Delete className='cursor-pointer hover:text-red-500' /> */}
+          </div>
+        )
+      }
     }
     // {
     //   id: 'evvEnforce',
@@ -434,271 +548,474 @@ const TenantConfiguration = () => {
 
   return (
     <>
-      {initialDataLoading ? (
-        <Box
-          component={'div'}
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 3,
-            // backgroundColor: 'background.paper',
-            p: 4,
-            borderRadius: 1
-          }}
-        >
-          <CircularProgress size={40} />
-        </Box>
-      ) : (
-        <Box
-          component={'div'}
-          sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 3,
-            backgroundColor: 'background.paper',
-            p: 4,
-            borderRadius: 1
-          }}
-        >
-          <Typography variant='h5'>Tenant Configurations</Typography>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Typography variant='h6'>Pay Periods</Typography>
-            <Button
-              variant='contained'
-              onClick={() => {
-                setOpenAddPayPeriodModal(true)
-              }}
-              size='small'
-              sx={{ width: 'fit-content', ml: 'auto' }}
-              disabled={true}
-            >
-              Edit Pay Period
-            </Button>
-          </Box>
-
-          <AppReactDatepicker
-            inline
-            className='clean-calendar-override'
-            calendarClassName='clean-calendar custom-calendar'
-            renderDayContents={(day, date) => <DayContents date={date} label={day.toString()} />}
-            showDisabledMonthNavigation={false}
-            minDate={newCurrentPayPeriod.startDate}
-            maxDate={nextPayPeriod.endDate}
-            formatWeekDay={day => day.substring(0, 3)}
-          />
-
-          <div className='legend'>
-            <div className='legend-item'>
-              <span className='current-color'></span> Current Pay Period
-            </div>
-            <div className='legend-item'>
-              <span className='next-color'></span> Next Pay Period
-            </div>
-          </div>
-
-          <Typography variant='h5' sx={{ mt: 3 }}>
-            EVV Configuration
-          </Typography>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Typography variant='h6'>EVV Enforcement</Typography>
-
-            <TextField
-              select
-              size='small'
-              placeholder='EVV Enforcement'
-              id='select-evv-enforcement'
-              value={evvConfig?.evvEnforcement}
-              defaultValue={evvConfig?.evvEnforcement}
-              onChange={e => handleModalOpen(e.target.value as EvvEnforcement)}
-              slotProps={{
-                select: { displayEmpty: true }
-              }}
-              className='w-1/4'
-            >
-              <MenuItem value={'evvRelaxed'}>EVV Relaxed</MenuItem>
-              <MenuItem value={'evvEnforced'}>EVV Enforced</MenuItem>
-              <MenuItem value={'evvDisabled'}>EVV Disabled</MenuItem>
-            </TextField>
-          </Box>
-          <Box sx={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }}>
-            <GenericCard evvSelected={evvConfig?.evvEnforcement} />
-          </Box>
-
+      <FormProvider {...methods}>
+        <CustomAlert AlertProps={alertProps} openAlert={alertOpen} setOpenAlert={setAlertOpen} />
+        {initialDataLoading ? (
           <Box
-            sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', mt: 3 }}
+            component={'div'}
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 3,
+              // backgroundColor: 'background.paper',
+              p: 4,
+              borderRadius: 1
+            }}
           >
+            <CircularProgress size={40} />
+          </Box>
+        ) : (
+          <Box
+            component={'div'}
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 3,
+              backgroundColor: 'background.paper',
+              p: 4,
+              borderRadius: 1
+            }}
+          >
+            <Typography variant='h5'>Tenant Configurations</Typography>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Typography variant='h6'>Pay Periods</Typography>
+              <Button
+                variant='contained'
+                onClick={() => {
+                  setOpenAddPayPeriodModal(true)
+                }}
+                size='small'
+                sx={{ width: 'fit-content', ml: 'auto' }}
+                disabled={true}
+              >
+                Edit Pay Period
+              </Button>
+            </Box>
+
+            <AppReactDatepicker
+              inline
+              className='clean-calendar-override'
+              calendarClassName='clean-calendar custom-calendar'
+              renderDayContents={(day, date) => <DayContents date={date} label={day.toString()} />}
+              showDisabledMonthNavigation={false}
+              minDate={newCurrentPayPeriod.startDate}
+              maxDate={nextPayPeriod.endDate}
+              formatWeekDay={day => day.substring(0, 3)}
+            />
+
+            <div className='legend'>
+              <div className='legend-item'>
+                <span className='current-color'></span> Current Pay Period
+              </div>
+              <div className='legend-item'>
+                <span className='next-color'></span> Next Pay Period
+              </div>
+            </div>
+
+            <Typography variant='h5' sx={{ mt: 3 }}>
+              EVV Configuration
+            </Typography>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Typography variant='h6'>EVV Enforcement</Typography>
+
+              <TextField
+                select
+                size='small'
+                placeholder='EVV Enforcement'
+                id='select-evv-enforcement'
+                value={evvConfig?.evvEnforcement}
+                defaultValue={evvConfig?.evvEnforcement}
+                onChange={e => handleModalOpen(e.target.value as EvvEnforcement)}
+                slotProps={{
+                  select: { displayEmpty: true }
+                }}
+                className='w-1/4'
+              >
+                <MenuItem value={'evvRelaxed'}>EVV Relaxed</MenuItem>
+                <MenuItem value={'evvEnforced'}>EVV Enforced</MenuItem>
+                <MenuItem value={'evvDisabled'}>EVV Disabled</MenuItem>
+              </TextField>
+            </Box>
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }}>
+              <GenericCard evvSelected={evvConfig?.evvEnforcement} />
+            </Box>
+
             <Typography variant='h5' sx={{ mt: 0 }}>
               Service EVV
             </Typography>
-            <Box sx={{ display: 'flex', flexDirection: 'row', gap: 2 }}>
-              <Button variant='contained' component='label'>
-                Upload DHS File
-                <input type='file' hidden accept='application/pdf' onChange={handlePDFUpload} />
-              </Button>
-              <TextField
-                size='small'
-                placeholder='Search Service'
-                id='service-search'
-                value={serviceSearchValue}
-                onChange={handleSearchChange}
-                className='w-2/4'
-                slotProps={{
-                  input: {
-                    startAdornment: <i className='bx bx-search-alt-2 text-gray-500' style={{ fontSize: '1.2rem' }} />
-                  }
-                }}
+            <Box
+              sx={{
+                display: 'flex',
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                mt: 3
+              }}
+            >
+              <Box sx={{ width: '55%' }}>
+                <TextField
+                  size='small'
+                  placeholder='Search Service'
+                  id='service-search'
+                  fullWidth
+                  value={serviceSearchValue}
+                  onChange={handleSearchChange}
+                  className='w-2/4'
+                  slotProps={{
+                    input: {
+                      startAdornment: <i className='bx bx-search-alt-2 text-gray-500' style={{ fontSize: '1.2rem' }} />
+                    }
+                  }}
+                />
+              </Box>
+              <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', mt: 0, gap: 2 }}>
+                <Button variant='contained' component='label'>
+                  Upload DHS File
+                  <input type='file' hidden accept='application/pdf' onChange={handlePDFUpload} />
+                </Button>
+                <Button variant='contained' onClick={handleAddServiceModalShow}>
+                  Add New Service
+                </Button>
+              </Box>
+            </Box>
+
+            <ReactTable
+              data={filteredServicesList ? filteredServicesList : []}
+              columns={newColumns}
+              keyExtractor={user => user?.id?.toString()}
+              enablePagination
+              pageSize={10}
+              stickyHeader
+              maxHeight={600}
+              containerStyle={{ borderRadius: 2 }}
+            />
+
+            <Typography variant='h5' sx={{ mt: 3 }}>
+              Other Configurations
+            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <Typography variant='h6'>Add Manual Edits</Typography>
+              <CustomSwitch
+                checked={allowManualEdits}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAllowManualEdits(e.target.checked)}
+                sx={{ ml: 'auto' }}
+              />
+            </Box>
+
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <Typography variant='h6'>Add Overlapping Visits</Typography>
+              <CustomSwitch
+                checked={allowOverlappingVisits}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAllowOverlappingVisits(e.target.checked)}
+                sx={{ ml: 'auto' }}
+              />
+            </Box>
+
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <Typography variant='h6'>Enable Notification</Typography>
+              <CustomSwitch
+                checked={enableNotification}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEnableNotification(e.target.checked)}
+                sx={{ ml: 'auto' }}
               />
             </Box>
           </Box>
+        )}
 
-          <ReactTable
-            data={filteredServicesList ? filteredServicesList : []}
-            columns={newColumns}
-            keyExtractor={user => user?.id?.toString()}
-            enablePagination
-            pageSize={10}
-            stickyHeader
-            maxHeight={600}
-            containerStyle={{ borderRadius: 2 }}
-          />
+        <EditPayPeriodModal
+          isModalOpen={openAddPayPeriodModal}
+          setIsModalOpen={setOpenAddPayPeriodModal}
+          onSubmit={handlePayPeriodSetup}
+        />
 
-          <Typography variant='h5' sx={{ mt: 3 }}>
-            Other Configurations
-          </Typography>
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <Typography variant='h6'>Add Manual Edits</Typography>
-            <CustomSwitch
-              checked={allowManualEdits}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAllowManualEdits(e.target.checked)}
-              sx={{ ml: 'auto' }}
-            />
-          </Box>
+        <Dialog
+          open={isModalShow}
+          onClose={handleModalClose}
+          closeAfterTransition={false}
+          sx={{ '& .MuiDialog-paper': { overflow: 'visible' } }}
+          maxWidth='sm'
+        >
+          <DialogCloseButton onClick={handleModalClose} disableRipple>
+            <i className='bx-x' />
+          </DialogCloseButton>
+          <div className='flex items-center justify-center w-full px-5 flex-col'>
+            <form onSubmit={handleEvvEnforcementChange}>
+              <div>
+                <h2 className='text-xl font-semibold mt-5 mb-4'>EVV Mode Change Warning</h2>
+              </div>
+              <div>
+                <Typography className='mb-7'>Are you sure you want to change the EVV mode?</Typography>
+              </div>
+              <div className='flex gap-4 justify-end mt-4 mb-4 w-full'>
+                <Button variant='outlined' color='secondary' onClick={handleModalClose}>
+                  No
+                </Button>
+                <Button type='submit' variant='contained'>
+                  Yes
+                </Button>
+              </div>
+            </form>
+          </div>
+        </Dialog>
+        <Dialog
+          open={isServiceEvvModalSHow}
+          onClose={handleServiceEvvModalClose}
+          closeAfterTransition={false}
+          sx={{ '& .MuiDialog-paper': { overflow: 'visible' } }}
+          maxWidth='sm'
+        >
+          <DialogCloseButton onClick={handleServiceEvvModalClose} disableRipple>
+            <i className='bx-x' />
+          </DialogCloseButton>
+          <div className='flex items-center justify-center w-full px-5 flex-col'>
+            <form onSubmit={updateEVV}>
+              <div>
+                <h2 className='text-xl font-semibold mt-5 mb-4'>Potential Non-Compliance Warning</h2>
+              </div>
+              <div>
+                <Typography className='mb-7'>
+                  You are disabling EVV for a service that may be subject to electronic visit verification (EVV)
+                  requirements under state or federal guidelines, including those of the Minnesota Department of Human
+                  Services (DHS). Disabling EVV may result in non-compliance with those requirements. Proceed only if
+                  you understand and accept responsibility for this configuration
+                </Typography>
+              </div>
+              <div className='flex gap-4 justify-end mt-4 mb-4 w-full'>
+                <Button variant='outlined' color='secondary' onClick={handleServiceEvvModalClose}>
+                  Cancel
+                </Button>
+                <Button type='submit' variant='contained'>
+                  Yes, I Understand and Accept Responsibility
+                </Button>
+              </div>
+            </form>
+          </div>
+        </Dialog>
 
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <Typography variant='h6'>Add Overlapping Visits</Typography>
-            <CustomSwitch
-              checked={allowOverlappingVisits}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAllowOverlappingVisits(e.target.checked)}
-              sx={{ ml: 'auto' }}
-            />
-          </Box>
-
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <Typography variant='h6'>Enable Notification</Typography>
-            <CustomSwitch
-              checked={enableNotification}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEnableNotification(e.target.checked)}
-              sx={{ ml: 'auto' }}
-            />
-          </Box>
-        </Box>
-      )}
-
-      <EditPayPeriodModal
-        isModalOpen={openAddPayPeriodModal}
-        setIsModalOpen={setOpenAddPayPeriodModal}
-        onSubmit={handlePayPeriodSetup}
-      />
-
-      <Dialog
-        open={isModalShow}
-        onClose={handleModalClose}
-        closeAfterTransition={false}
-        sx={{ '& .MuiDialog-paper': { overflow: 'visible' } }}
-        maxWidth='sm'
-      >
-        <DialogCloseButton onClick={handleModalClose} disableRipple>
-          <i className='bx-x' />
-        </DialogCloseButton>
-        <div className='flex items-center justify-center w-full px-5 flex-col'>
-          <form onSubmit={handleEvvEnforcementChange}>
+        <Dialog
+          open={dhsServicesModal}
+          onClose={handleDhsServicesModalClose}
+          closeAfterTransition={false}
+          sx={{ '& .MuiDialog-paper': { overflow: 'visible', minWidth: 500 } }}
+          maxWidth='md'
+        >
+          <DialogCloseButton onClick={handleDhsServicesModalClose} disableRipple>
+            <i className='bx-x' />
+          </DialogCloseButton>
+          <div className='flex w-full px-5 flex-col'>
             <div>
-              <h2 className='text-xl font-semibold mt-5 mb-4'>EVV Mode Change Warning</h2>
+              <h2 className='text-xl font-semibold mt-5 mb-4'>DHS Services Mapped Successfully</h2>
             </div>
             <div>
-              <Typography className='mb-7'>Are you sure you want to change the EVV mode?</Typography>
-            </div>
-            <div className='flex gap-4 justify-end mt-4 mb-4 w-full'>
-              <Button variant='outlined' color='secondary' onClick={handleModalClose}>
-                No
-              </Button>
-              <Button type='submit' variant='contained'>
-                Yes
-              </Button>
-            </div>
-          </form>
-        </div>
-      </Dialog>
-      <Dialog
-        open={isServiceEvvModalSHow}
-        onClose={handleServiceEvvModalClose}
-        closeAfterTransition={false}
-        sx={{ '& .MuiDialog-paper': { overflow: 'visible' } }}
-        maxWidth='sm'
-      >
-        <DialogCloseButton onClick={handleServiceEvvModalClose} disableRipple>
-          <i className='bx-x' />
-        </DialogCloseButton>
-        <div className='flex items-center justify-center w-full px-5 flex-col'>
-          <form onSubmit={updateEVV}>
-            <div>
-              <h2 className='text-xl font-semibold mt-5 mb-4'>Potential Non-Compliance Warning</h2>
-            </div>
-            <div>
-              <Typography className='mb-7'>
-                You are disabling EVV for a service that may be subject to electronic visit verification (EVV)
-                requirements under state or federal guidelines, including those of the Minnesota Department of Human
-                Services (DHS). Disabling EVV may result in non-compliance with those requirements. Proceed only if you
-                understand and accept responsibility for this configuration
+              <Typography className='mb-3'>
+                Total Services Extracted: {dhsUploadData?.data?.totalExtractedServices}
               </Typography>
             </div>
+            <div>
+              <Typography className='mb-3'>
+                Services Uploaded Successfully: {dhsUploadData?.data?.successfulUploads}
+              </Typography>
+            </div>
+            <div>
+              <Typography className='mb-3'>Failed Entries: {dhsUploadData?.data?.failedEntries}</Typography>
+            </div>
             <div className='flex gap-4 justify-end mt-4 mb-4 w-full'>
-              <Button variant='outlined' color='secondary' onClick={handleServiceEvvModalClose}>
-                Cancel
-              </Button>
-              <Button type='submit' variant='contained'>
-                Yes, I Understand and Accept Responsibility
+              <Button variant='contained' onClick={handleDhsServicesModalClose}>
+                OK
               </Button>
             </div>
-          </form>
-        </div>
-      </Dialog>
+          </div>
+        </Dialog>
 
-      <Dialog
-        open={dhsServicesModal}
-        onClose={handleDhsServicesModalClose}
-        closeAfterTransition={false}
-        sx={{ '& .MuiDialog-paper': { overflow: 'visible', minWidth: 500 } }}
-        maxWidth='md'
-      >
-        <DialogCloseButton onClick={handleDhsServicesModalClose} disableRipple>
-          <i className='bx-x' />
-        </DialogCloseButton>
-        <div className='flex w-full px-5 flex-col'>
-          <div>
-            <h2 className='text-xl font-semibold mt-5 mb-4'>DHS Services Mapped Successfully</h2>
+        {/** Add New Service Modal **/}
+
+        <Dialog
+          open={isAddServiceModalShow}
+          onClose={handleAddServiceModalClose}
+          closeAfterTransition={false}
+          sx={{ '& .MuiDialog-paper': { overflow: 'visible' } }}
+          maxWidth='md'
+        >
+          <DialogCloseButton onClick={handleAddServiceModalClose} disableRipple>
+            <i className='bx-x' />
+          </DialogCloseButton>
+          <div className='flex items-center justify-center w-full px-5 flex-col'>
+            <form onSubmit={handleSubmit(handleAddNewService)}>
+              <div>
+                <h2 className='text-xl font-semibold mt-5 mb-4'>Add New Service</h2>
+              </div>
+              <Grid container spacing={4}>
+                <Grid size={{ xs: 12, sm: 4 }}>
+                  <CustomTextField
+                    label={'Service Name'}
+                    placeHolder={'Service Name'}
+                    name={'serviceName'}
+                    defaultValue={''}
+                    type={'text'}
+                    error={errors.serviceName}
+                    control={control}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 4 }}>
+                  <CustomTextField
+                    label={'Service Description'}
+                    placeHolder={'Service Description'}
+                    name={'serviceDescription'}
+                    defaultValue={''}
+                    type={'text'}
+                    error={errors.serviceDescription}
+                    control={control}
+                    isRequired={false}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 4 }}>
+                  <CustomTextField
+                    label={'Procedure Code'}
+                    placeHolder={'Procedure Code'}
+                    name={'procedureCode'}
+                    defaultValue={''}
+                    type={'text'}
+                    error={errors.procedureCode}
+                    control={control}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 4 }}>
+                  <CustomTextField
+                    label={'Modifier Code'}
+                    placeHolder={'Modifier Code'}
+                    name={'modifierCode'}
+                    defaultValue={''}
+                    type={'text'}
+                    error={errors.modifierCode}
+                    control={control}
+                    isRequired={false}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 4 }}>
+                  <CustomTextField
+                    label={'Service Rate'}
+                    placeHolder={'Service Rate'}
+                    name={'serviceRate'}
+                    defaultValue={''}
+                    type={'number'}
+                    error={errors.serviceRate}
+                    control={control}
+                    isRequired={false}
+                  />
+                </Grid>
+              </Grid>
+              <div className='flex gap-4 justify-end mt-4 mb-4 w-full'>
+                <Button variant='outlined' color='secondary' onClick={handleAddServiceModalClose}>
+                  CANCEL
+                </Button>
+                <Button
+                  type='submit'
+                  variant='contained'
+                  disabled={addServiceLoading}
+                  startIcon={addServiceLoading ? <CircularProgress size={16} /> : null}
+                >
+                  CREATE
+                </Button>
+              </div>
+            </form>
           </div>
-          <div>
-            <Typography className='mb-3'>
-              Total Services Extracted: {dhsUploadData?.data?.totalExtractedServices}
-            </Typography>
+        </Dialog>
+
+        {/** Edit Existing Service Modal **/}
+
+        <Dialog
+          open={isEditServiceModalShow}
+          onClose={handleEditServiceModalClose}
+          closeAfterTransition={false}
+          sx={{ '& .MuiDialog-paper': { overflow: 'visible' } }}
+          maxWidth='md'
+        >
+          <DialogCloseButton onClick={handleEditServiceModalClose} disableRipple>
+            <i className='bx-x' />
+          </DialogCloseButton>
+          <div className='flex items-center justify-center w-full px-5 flex-col'>
+            <form onSubmit={handleSubmit(handleServiceEdit)}>
+              <div>
+                <h2 className='text-xl font-semibold mt-5 mb-4'>Edit Service</h2>
+              </div>
+              <Grid container spacing={4}>
+                <Grid size={{ xs: 12, sm: 4 }}>
+                  <CustomTextField
+                    label={'Service Name'}
+                    placeHolder={'Service Name'}
+                    name={'serviceName'}
+                    defaultValue={serviceToEdit?.name || ''}
+                    type={'text'}
+                    error={errors.serviceName}
+                    control={control}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 4 }}>
+                  <CustomTextField
+                    label={'Service Description'}
+                    placeHolder={'Service Description'}
+                    name={'serviceDescription'}
+                    defaultValue={serviceToEdit?.description || ''}
+                    type={'text'}
+                    error={errors.serviceDescription}
+                    control={control}
+                    isRequired={false}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 4 }}>
+                  <CustomTextField
+                    label={'Procedure Code'}
+                    placeHolder={'Procedure Code'}
+                    name={'procedureCode'}
+                    defaultValue={serviceToEdit?.procedureCode || ''}
+                    type={'text'}
+                    error={errors.procedureCode}
+                    control={control}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 4 }}>
+                  <CustomTextField
+                    label={'Modifier Code'}
+                    placeHolder={'Modifier Code'}
+                    name={'modifierCode'}
+                    defaultValue={serviceToEdit?.modifierCode || ''}
+                    type={'text'}
+                    error={errors.modifierCode}
+                    control={control}
+                    isRequired={false}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 4 }}>
+                  <CustomTextField
+                    label={'Service Rate'}
+                    placeHolder={'Service Rate'}
+                    name={'serviceRate'}
+                    defaultValue={serviceToEdit?.rate || ''}
+                    type={'number'}
+                    error={errors.serviceRate}
+                    control={control}
+                    isRequired={false}
+                  />
+                </Grid>
+              </Grid>
+              <div className='flex gap-4 justify-end mt-4 mb-4 w-full'>
+                <Button variant='outlined' color='secondary' onClick={handleEditServiceModalClose}>
+                  CANCEL
+                </Button>
+                <Button
+                  type='submit'
+                  variant='contained'
+                  disabled={editServiceLoading}
+                  startIcon={editServiceLoading ? <CircularProgress size={16} /> : null}
+                >
+                  UPDATE
+                </Button>
+              </div>
+            </form>
           </div>
-          <div>
-            <Typography className='mb-3'>
-              Services Uploaded Successfully: {dhsUploadData?.data?.successfulUploads}
-            </Typography>
-          </div>
-          <div>
-            <Typography className='mb-3'>Failed Entries: {dhsUploadData?.data?.failedEntries}</Typography>
-          </div>
-          <div className='flex gap-4 justify-end mt-4 mb-4 w-full'>
-            <Button variant='contained' onClick={handleDhsServicesModalClose}>
-              OK
-            </Button>
-          </div>
-        </div>
-      </Dialog>
+        </Dialog>
+      </FormProvider>
     </>
   )
 }

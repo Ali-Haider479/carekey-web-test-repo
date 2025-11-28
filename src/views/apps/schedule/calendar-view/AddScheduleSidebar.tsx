@@ -318,7 +318,11 @@ const AddEventModal = (props: AddEventSidebarType) => {
   }
 
   useEffect(() => {
-    if (values.client) {
+    if (calendarStore.selectedEvent !== null) {
+      setClientServiceAuth([calendarStore.selectedEvent.serviceAuth])
+      setActiveClientServiceAuth([calendarStore.selectedEvent.serviceAuth])
+      fetchClientServiceAuth()
+    } else {
       fetchClientServiceAuth()
     }
   }, [values.client, calendarStore.selectedEvent])
@@ -383,7 +387,25 @@ const AddEventModal = (props: AddEventSidebarType) => {
   }
 
   useEffect(() => {
-    fetchClientServiceType()
+    if (calendarStore.selectedEvent !== null) {
+      setServiceType([
+        {
+          id: calendarStore?.selectedEvent?.clientService?.serviceAuthService?.id,
+          clientServiceId: calendarStore?.selectedEvent?.clientService?.id,
+          name: calendarStore?.selectedEvent?.clientService?.name,
+          description: calendarStore?.selectedEvent?.clientService?.serviceAuthService?.description,
+          procedureCode: calendarStore?.selectedEvent?.clientService?.serviceAuthService?.procedureCode,
+          modifierCode: calendarStore?.selectedEvent?.clientService?.serviceAuthService?.modifierCode,
+          evv: calendarStore?.selectedEvent?.clientService?.evvEnforce,
+          evvService: calendarStore?.selectedEvent?.clientService?.serviceAuthService?.evv,
+          rate: calendarStore?.selectedEvent?.clientService?.serviceAuthService?.rate,
+          dummyService: false
+        }
+      ])
+      fetchClientServiceType()
+    } else {
+      fetchClientServiceType()
+    }
     clientServiceActivities()
   }, [values.client, calendarStore.selectedEvent])
 
